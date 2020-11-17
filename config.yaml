@@ -1,0 +1,79 @@
+mysql:
+  local:
+    host: localhost
+    user: root
+    pass: KLM2012a
+    database: mpc_real_time
+  mpc:
+    host: external-db.s133624.gridserver.com
+    user: db133624_titan
+    password: 9Cbf{9t[Ub
+    database: db133624_multiscreens
+    queries:
+      survey: SELECT MAX(S.id) AS surve_id FROM survey S WHERE S.periodicity = "quarterly" AND S.published = 1
+      platforms: SELECT * FROM survey_platform SP WHERE SP.survey_id = %s AND SP.published = 1 AND SP.code <> 'netflix-panregional' AND SP.code <> 'claro-video-panregional'
+      excahnge: SELECT ct.code_alpha2, ex.exchange_rate, cr.code FROM survey_exchange_rate ex INNER JOIN country ct ON ex.country_id = ct.id INNER JOIN currency cr ON ex.currency_id = cr.id WHERE ex.survey_id = %s
+      mpc_presence: SELECT C.code, C.package, C.title_alternative, C.title, CASE WHEN C.content_type_id = 1 THEN 'movie' WHEN C.content_type_id = 2 THEN 'serie' END AS content_type, C.launch_year, CC.id, CC.imdb_id, CASE WHEN CC.content_genre_id = 2 THEN 1 ELSE 0 END AS is_adult, P.website, C.available_seasons FROM survey_platform_content C INNER JOIN content CC ON C.content_id = CC.id INNER JOIN survey_platform P ON C.code = P.code AND C.survey_id = P.survey_id WHERE C.survey_id = %s AND C.STATUS <> 'inactive'
+proxy:
+  start_url: 'https://proxy.dlv.app/api/auth/login'
+  proxy_url: 'https://proxy.dlv.app/api/proxies'
+  username: titan
+  password: titan_secret_8426
+  proxyRedirect: 'https://click.dlv.app/api/redirect/{id}'
+mongo:
+  host: 'mongodb://localhost:27017/'
+  collections:
+    prescraping: titanPreScraping
+    scraping: titanScraping
+    episode: titanScrapingEpisodes
+types:
+  movie: movie
+  serie: serie
+ott_sites:
+  AcornTV:
+    countries:
+      US: us.acorntv
+      CA: ca.acorntv
+      MX: mx.acorntv
+      AU: au.acorntv
+      NZ: nz.acorntv
+      AR: ar.acorntv
+      CL: cl.acorntv
+      CO: co.acorntv
+      PE: pe.acorntv
+      ES: es.acorntv
+      DK: dk.acorntv
+      NO: no.acorntv
+      SE: se.acorntv
+      NL: nl.acorntv
+      ZA: za.acorntv
+  AdultSwim:
+    countries:
+      US: us.adultswim
+  FlixFling:
+    countries:
+      US: us.flixfling
+  CinemaUno:
+    movie: 'movie'
+    serie: 'serie'
+    start_url: 'https://cinemauno.com/{category}'
+    countries:
+      MX: 'mx.cinema-uno'
+  Quibi:
+    countries:
+      US: us.quibi
+  TruTV:
+    countries:
+      US: us.trutv
+  Pongalo:
+    movie: 'movie'
+    serie: 'serie'
+    countries:
+      LATAM: 'pongalo' #Esta Automatizada
+    start_url: 'https://catalog.pongalo.com/categories.json'
+    categories: 'https://catalog.pongalo.com/{category}/{category}.json'
+    url_detail: 'https://catalog.pongalo.com/{category}/{mediaKey}/{mediaKey}.json'
+    url: 'https://pongalo.com/{category}/{id}'
+  Optimum:
+    countries:
+      US: us.optimum
