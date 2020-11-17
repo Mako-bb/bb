@@ -208,7 +208,7 @@ class Pongalo():
         self.currentSession.close()
 
         print('Finished')
-        Upload(self._platform_code, self._created_at, False)
+        Upload(self._platform_code, self._created_at, testing=True)
 
 
     def cast(self, content):

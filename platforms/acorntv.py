@@ -166,6 +166,6 @@ class AcornTV():
         '''
         self.sesion.close()
         if not testing:
-            Upload(self._platform_code, self._created_at, False)               
+            Upload(self._platform_code, self._created_at, testing=True)               
                 
         

@@ -189,4 +189,4 @@ class FlixFling():
         Upload
         '''
         self.sesion.close()
-        Upload(self._platform_code, self._created_at, False, has_episodes=False)    
+        Upload(self._platform_code, self._created_at, testing=True, has_episodes=False)    

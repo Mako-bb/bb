@@ -416,7 +416,7 @@ class Optimum():
 
         self.currentSession.close()
 
-        Upload(self._platform_code, self._created_at, False)
+        Upload(self._platform_code, self._created_at, testing=True)
 
 
         

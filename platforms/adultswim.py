@@ -209,6 +209,6 @@ class AdultSwim():
         Upload
         '''
         self.sesion.close()
-        Upload(self._platform_code, self._created_at, False)                
+        Upload(self._platform_code, self._created_at, testing=True)                
                 
         
