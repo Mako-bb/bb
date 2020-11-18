@@ -10,6 +10,7 @@ from platforms.flixfling            import FlixFling
 from platforms.trutv                import TruTV
 from platforms.quibi                import Quibi
 from platforms.optimum              import Optimum
+from platforms.acorntv_test         import AcornTV_Test
 
 from common                         import config
 

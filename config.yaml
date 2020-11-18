@@ -77,3 +77,6 @@ ott_sites:
   Optimum:
     countries:
       US: us.optimum
+  AcornTV_Test:
+    countries:
+      AR: ar.acorntv

@@ -89,31 +89,31 @@ class Quibi():
                 cast = None
 
             payload = {
-                'PlatformCode':  self._platform_code,
-                'Id':            str(title['id']),
-                'Title':         title['title'],
-                'CleanTitle':    _replace(title['title']),
-                'OriginalTitle': None,
-                'Type':          'serie', # 'movie' o 'serie'
-                'Year':          None,
-                'Duration':      None, # duracion en minutos
+                'PlatformCode':  self._platform_code, #str
+                'Id':            str(title['id']), #str
+                'Title':         title['title'], #str
+                'CleanTitle':    _replace(title['title']), #str
+                'OriginalTitle': None,#str
+                'Type':          'serie', # 'movie' o 'serie'#str
+                'Year':          None, #int
+                'Duration':      None, # duracion en minutos #int
                 'Deeplinks': {
-                    'Web':       title['deeplink_url'],
+                    'Web':       title['deeplink_url'], #str
                     'Android':   None,
                     'iOS':       None,
                 },
                 'Playback':      None,
                 'Synopsis':      dataSerie['description'] if dataSerie != None else None,
                 'Image':         images, # [str, str, str...] # []
-                'Rating':        None,
+                'Rating':        None, #str
                 'Provider':      None,
                 'Genres':        genres, # [str, str, str...]
                 'Cast':          cast, # [str, str, str...]
                 'Directors':     None, # [str, str, str...]
                 'Availability':  None,
-                'Download':      None,
-                'IsOriginal':    None,
-                'IsAdult':       None,
+                'Download':      None, #bool
+                'IsOriginal':    None, #bool
+                'IsAdult':       None, #bool
                 'Packages':      packages,
                 'Country':       None, # [str, str, str...]
                 'Timestamp':     datetime.now().isoformat(),
