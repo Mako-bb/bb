@@ -80,3 +80,6 @@ ott_sites:
   AcornTV_Test:
     countries:
       AR: ar.acorntv
+  AcornTV_Test_Carlos:
+    countries:
+      AR: ar.acorntv

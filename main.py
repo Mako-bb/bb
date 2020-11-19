@@ -11,6 +11,7 @@ from platforms.trutv                import TruTV
 from platforms.quibi                import Quibi
 from platforms.optimum              import Optimum
 from platforms.acorntv_test         import AcornTV_Test
+from platforms.acorntv_test_carlos  import AcornTV_Test_Carlos
 
 from common                         import config
 
