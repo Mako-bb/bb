@@ -80,3 +80,6 @@ ott_sites:
   AcornTV_Test:
     countries:
       AR: ar.acorntv
+  AcornTV_Test_Diego:
+    countries:
+      AR: ar.acorntv
