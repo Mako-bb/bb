@@ -73,74 +73,88 @@ class Optimum_test_diego():
         return query
 
     def _scraping(self):
-        URL = 'https://www.optimum.net/api/vod-webapp/services/v1/onyx/getTitlesForPagination/48265008/20/0?sort=1&filter=0'
-        req = Datamanager._getJSON(self,URL)
-        titles = req['data']['result']['titles']
-
-        for each in titles:
-            ### ID
-            _id = each['title_id']
-            ### TYPE
-            type = 'movie'
-            ### TITLE
-            title = (each['title'] if len(each['title']) > len(each['tms_title']) else each['tms_title'])
-            ### YEAR
-            year = each['release_year']
-            ### DURATION
-            duration = each['stream_runtime']//60
-            ### DEEPLINK
-            deeplink = 'https://www.optimum.net/tv/asset/#/movie/'+str(each['hd_asset'])
-            ### SYNOPSIS
-            description = each['long_desc']
-            ### GENRES
-            if each.get('genres'):
-                genres = each['genres'].split(', ')
-            else:
-                genres = None
-            ### CAST
-            if each.get('actors'):
-                cast = each['actors'].split(', ')
-            else:
-                cast = None
-            ### DIRECTORS
-            if each.get('directors'):
-                directors = each['directors'].split(', ')
-            else:
-                directors = None
-            ### AVAILABILITY
-            availability = each['offer_end_date']
-            
-            payload = {
-                    'PlatformCode'      : self._platform_code,
-                    'Id'                : _id ,
-                    'Type'              : type,
-                    'Title'             : title,
-                    'CleanTitle'        : _replace(title),
-                    'OriginalTitle'     : None,
-                    'Year'              : year,
-                    'Duration'          : duration,
-                    'Deeplinks'         : {
-                                        'Web': deeplink,
-                                        'Android': None,
-                                        'iOS': None
-                    },
-                    'Synopsis'          : description,
-                    'Rating'            : None,
-                    'Provider'          : None,
-                    'Genres'            : genres,
-                    'Cast'              : cast,
-                    'Directors'         : directors,
-                    'Availability'      : None,
-                    'Download'          : None,
-                    'IsOriginal'        : None,
-                    'IsAdult'           : None,
-                    'Packages'          : None,
-                    'Country'           : None,
-                    'Timestamp'         : datetime.now().isoformat(),
-                    'CreatedAt'         : self._created_at
-                }
-            print(payload)
+        offset = 0
+        while True:
         
+            URL = 'https://www.optimum.net/api/vod-webapp/services/v1/onyx/getTitlesForPagination/48265008/20/'+str(offset)+'?sort=1&filter=0'
+            req = Datamanager._getJSON(self,URL)
+            titles = req['data']['result']['titles']
+
+            for each in titles:
+                ### ID
+                _id = each['title_id']
+                ### TYPE
+                type = 'movie'
+                ### TITLE
+                if each.get('tms_title'):
+                    title = (each['title'] if len(each['title']) > len(each['tms_title']) else each['tms_title'])
+                else:
+                    title = each['title']
+                ### YEAR
+                year = each['release_year']
+                ### DURATION
+                duration = each['stream_runtime']//60
+                ### DEEPLINK
+                if each.get('asset_id'):
+                    deeplink = 'https://www.optimum.net/tv/asset/#/movie/'+str(each['asset_id'])
+                elif each.get('hd_asset'):
+                    deeplink = 'https://www.optimum.net/tv/asset/#/movie/'+str(each['hd_asset'])
+                else:
+                    deeplink = 'https://www.optimum.net/tv/asset/#/movie/'+str(each['sd_asset'])
+                ### SYNOPSIS
+                description = each['long_desc']
+                ### GENRES
+                if each.get('genres'):
+                    genres = each['genres'].split(', ')
+                else:
+                    genres = None
+                ### CAST
+                if each.get('actors'):
+                    cast = each['actors'].split(', ')
+                else:
+                    cast = None
+                ### DIRECTORS
+                if each.get('directors'):
+                    directors = each['directors'].split(', ')
+                else:
+                    directors = None
+                ### AVAILABILITY
+                availability = each['offer_end_date']
+
+                payload = {
+                        'PlatformCode'      : self._platform_code,
+                        'Id'                : _id ,
+                        'Type'              : type,
+                        'Title'             : title,
+                        'CleanTitle'        : _replace(title),
+                        'OriginalTitle'     : None,
+                        'Year'              : year,
+                        'Duration'          : duration,
+                        'Deeplinks'         : {
+                                            'Web': deeplink,
+                                            'Android': None,
+                                            'iOS': None
+                        },
+                        'Synopsis'          : description,
+                        'Rating'            : None,
+                        'Provider'          : None,
+                        'Genres'            : genres,
+                        'Cast'              : cast,
+                        'Directors'         : directors,
+                        'Availability'      : None,
+                        'Download'          : None,
+                        'IsOriginal'        : None,
+                        'IsAdult'           : None,
+                        'Packages'          : None,
+                        'Country'           : None,
+                        'Timestamp'         : datetime.now().isoformat(),
+                        'CreatedAt'         : self._created_at
+                    }
+                
+            if req['data']['result']['next'] == '0':
+                break
+            else:
+                offset += 20
         
 
 
