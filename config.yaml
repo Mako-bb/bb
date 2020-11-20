@@ -92,3 +92,6 @@ ott_sites:
   Optimum_Test_Carlos:
     countries:
       US: us.optimum
+  AmazonLogin:
+    countries:
+      AR: ar.amazon_login
