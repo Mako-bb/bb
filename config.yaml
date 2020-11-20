@@ -101,4 +101,7 @@ ott_sites:
   AmazonLogin:
     countries:
       AR: ar.amazon_login
+  CwSeed_Tati:
+    countries:
+      US: us.cwseed
 
