@@ -11,7 +11,8 @@ from platforms.trutv                import TruTV
 from platforms.quibi                import Quibi
 from platforms.optimum              import Optimum
 from platforms.acorntv_test         import AcornTV_Test
-
+from platforms.acorntv_test_tatiana import AcornTV_Tati
+from platforms.optimum_test_tatiana    import OptimumTati
 from common                         import config
 
 logging.basicConfig(level=logging.INFO)
