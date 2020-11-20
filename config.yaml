@@ -98,4 +98,13 @@ ott_sites:
   Optimum_test_diego:
     countries:
       US: us.optimum
+<<<<<<< HEAD
 
+=======
+  Optimum_Test_Carlos:
+    countries:
+      US: us.optimum
+  AmazonLogin:
+    countries:
+      AR: ar.amazon_login
+>>>>>>> 70bcb92cbfab4ebe3fba38bbd03b01e0fd8d1741
