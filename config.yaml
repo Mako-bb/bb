@@ -80,6 +80,7 @@ ott_sites:
   AcornTV_Test:
     countries:
       AR: ar.acorntv
+
   AcornTV_Tati:
     countries:
       AR: ar.acorntv_tati
@@ -87,3 +88,14 @@ ott_sites:
     countries:
       AR: ar.optimumtati
   
+
+  AcornTV_Test_Diego:
+    countries:
+      AR: ar.acorntv
+  AcornTV_Test_Carlos:
+    countries:
+      AR: ar.acorntv
+  Optimum_test_diego:
+    countries:
+      US: us.optimum
+
