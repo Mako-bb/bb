@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import json
 import time
 import requests
@@ -31,10 +32,7 @@ class AcornTV_Test_Carlos():
     def _scraping(self, testing=False):
 
         URL = "https://acorn.tv/wp-admin/admin-ajax.php"
-        token_URL = "https://acorn.tv/"
-        get_token = Datamanager._getSoup(self,token_URL).find('script',{'id':'rlje-carousel-pagination-js-js-extra'}).text
-        token = get_token.split('token":"')[1].split('\"};')[0]
-        data = f"action=browse_order_filter&active_section=all&order_by=a-z&filter_by=all&token={token}"
+        data = "action=browse_order_filter&active_section=all&order_by=a-z&filter_by=all&token=a23f19d2f0"
         headers = {
             'content-type': 'application/x-www-form-urlencoded; charset=UTF-8'
         }
@@ -58,8 +56,9 @@ class AcornTV_Test_Carlos():
         for item in soup.findAll("div", {"class":"col-sm-6 col-md-6 col-lg-3"}):
 
             title = item.find("p", {"class":"franchise-title"}).text.replace(" (Danish Version)", "").replace(" (Scandinavian Version)", "")
+            title = title.split(" (")[0] if f" ({range(1800-datetime.now().year)})" in title else title
 
-            if title == 'What is Acorn TV?' or "Coming Soon".lower() in title.lower():
+            if title == 'What is Acorn TV?' or "coming soon" in title.lower():
                 continue
 
             deeplink = item.find("a").get("href")
@@ -70,11 +69,11 @@ class AcornTV_Test_Carlos():
             tipo = "movie" if soup.find("div", {"class":"franchise-eps-bg"}).find("h6").text.strip().lower() in ("movie", "feature") else "serie"
             desc = soup.find("p", {"id":"franchise-description"}).text
 
-            id = hashlib.md5(deeplink.encode('utf-8')).hexdigest()
+            id_ = hashlib.md5(deeplink.encode('utf-8')).hexdigest()
 
             payload = {
                 'PlatformCode'      : self._platform_code,
-                'Id'                : id,
+                'Id'                : id_,
                 'Type'              : tipo,
                 'Title'             : title,
                 'CleanTitle'        : _replace(title),
@@ -114,7 +113,7 @@ class AcornTV_Test_Carlos():
 
                         payloadEpi = {
                             'PlatformCode'  : self._platform_code,
-                            'ParentId'      : id,
+                            'ParentId'      : id_,
                             'ParentTitle'   : title,
                             'Id'            : idEpi,
                             'Title'         : nombreEpi,
@@ -143,7 +142,7 @@ class AcornTV_Test_Carlos():
                             'Timestamp'     : datetime.now().isoformat(),
                             'CreatedAt'     : self._created_at
                         }
-                        Datamanager._checkDBandAppend(self, payloadEpi, listDBEpi, listPayloadEpi)
+                        Datamanager._checkDBandAppend(self, payloadEpi, listDBEpi, listPayloadEpi, isEpi=True)
 
 
 

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import time
 import requests
-import hashlib
 import pymongo
 import re
 import json
@@ -10,11 +9,7 @@ from handle.replace         import _replace
 from common                 import config
 from datetime               import datetime
 from handle.mongo           import mongo
-from slugify                import slugify
 from bs4                    import BeautifulSoup
-from selenium               import webdriver
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.keys import Keys
 from handle.datamanager  import Datamanager
 from updates.upload         import Upload
 
@@ -82,18 +77,23 @@ class Optimum_Test_Carlos():
             for movie in json_with_movies["data"]["result"]["titles"]:
                 title = movie["tms_title"] if movie.get("tms_title") else movie["title"]
 
-                id = ""
-                if movie.get("asset_id") in movie.keys():
-                    id = movie["asset_id"]
+                if "coming soon" in title.lower():
+                    continue
+
+                title = title.split(" (")[0] if f" ({range(1870-datetime.now().year)})" in title else title
+
+                id_movie = ""
+                if movie.get("asset_id"):
+                    id_movie = movie["asset_id"]
                 elif movie.get("hd_asset"):
-                    id = movie["hd_asset"]
+                    id_movie = movie["hd_asset"]
                 elif movie.get("sd_asset"):
-                    id = movie["sd_asset"]
+                    id_movie = movie["sd_asset"]
                 else:
                     print(f"Película '{title}' no contiene ID, imposible generar link. Skipeando.")
                     continue
 
-                deeplink = f"https://www.optimum.net/tv/asset/#/movie/{id}"
+                deeplink = f"https://www.optimum.net/tv/asset/#/movie/{id_movie}"
 
                 desc = ""
                 if movie.get("long_desc") and movie["long_desc"] != "":
@@ -103,17 +103,17 @@ class Optimum_Test_Carlos():
                 else:
                     desc = None
 
-                genres = movie["genres"].split(", ") if "genres" in movie.keys() else None
+                genres = movie["genres"].split(", ") if movie.get("genres") else None
 
-                actors = movie["actors"].split(", ") if "actors" in movie.keys() else None
+                actors = movie["actors"].split(", ") if movie.get("actors") else None
 
-                directors = movie["directors"].split(", ") if "directors" in movie.keys() else None
+                directors = movie["directors"].split(", ") if movie.get("directors") else None
 
-                rent_price = float(movie["price"])
+                rent_price = float(movie["price"]) if movie.get("rent_price") else None
 
                 payload = {
                     'PlatformCode':  self._platform_code,
-                    'Id':            str(id),
+                    'Id':            str(id_movie),
                     'Title':         title,
                     'OriginalTitle': None,
                     'CleanTitle':    _replace(title),
@@ -129,7 +129,7 @@ class Optimum_Test_Carlos():
                     'Synopsis':      desc,
                     'Image':         None,
                     'Rating':        movie['rating_system'],
-                    'Provider':      [category] if category not in optimum_categories else "Optimum",
+                    'Provider':      category if category not in optimum_categories else "Optimum",
                     'Genres':        genres,
                     'Cast':          actors,
                     'Directors':     directors,
@@ -146,7 +146,3 @@ class Optimum_Test_Carlos():
                 Datamanager._checkDBandAppend(self, payload, listDBMovie, listPayload)
 
         Datamanager._insertIntoDB(self, listPayload, self.titanScraping)
-
-"""
-FALTA CONECTAR Y COMPARAR CON MONGO
-"""
