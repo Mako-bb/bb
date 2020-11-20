@@ -80,3 +80,10 @@ ott_sites:
   AcornTV_Test:
     countries:
       AR: ar.acorntv
+  AcornTV_Tati:
+    countries:
+      AR: ar.acorntv_tati
+  OptimumTati:
+    countries:
+      AR: ar.optimumtati
+  
