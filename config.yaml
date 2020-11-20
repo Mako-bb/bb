@@ -89,3 +89,6 @@ ott_sites:
   Optimum_test_diego:
     countries:
       US: us.optimum
+  Optimum_Test_Carlos:
+    countries:
+      US: us.optimum

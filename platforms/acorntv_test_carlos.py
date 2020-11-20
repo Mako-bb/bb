@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# -*- coding: utf-8 -*-
 import json
 import time
 import requests
@@ -32,7 +31,10 @@ class AcornTV_Test_Carlos():
     def _scraping(self, testing=False):
 
         URL = "https://acorn.tv/wp-admin/admin-ajax.php"
-        data = "action=browse_order_filter&active_section=all&order_by=a-z&filter_by=all&token=a23f19d2f0"
+        token_URL = "https://acorn.tv/"
+        get_token = Datamanager._getSoup(self,token_URL).find('script',{'id':'rlje-carousel-pagination-js-js-extra'}).text
+        token = get_token.split('token":"')[1].split('\"};')[0]
+        data = f"action=browse_order_filter&active_section=all&order_by=a-z&filter_by=all&token={token}"
         headers = {
             'content-type': 'application/x-www-form-urlencoded; charset=UTF-8'
         }
