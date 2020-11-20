@@ -83,6 +83,9 @@ ott_sites:
   AcornTV_Test_Diego:
     countries:
       AR: ar.acorntv
+  AcornTV_Test_Carlos:
+    countries:
+      AR: ar.acorntv
   Optimum_test_diego:
     countries:
       US: us.optimum
