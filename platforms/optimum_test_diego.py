@@ -191,32 +191,44 @@ class Optimum_test_diego():
         for title in titles_serie:
             URL = 'https://www.optimum.net/api/vod-webapp/services/v1/onyx/getSeriesDetails/'+str(title)+'/menu/'
             req = Datamanager._getJSON(self, URL)
-            ### ID SERIE
             check_info = req['data']['result']
             if check_info.get('title') and check_info.get('series_id'):
+                ### ID
                 id_serie = req['data']['result']['series_id']
                 if not id_serie in ids_series:
                     ids_series.append(id_serie)
+                    ### TYPE
                     type_serie = 'serie'
+                    ### TITLE
                     title_serie = req['data']['result']['title']
+                    ### YEAR
                     year_serie = req['data']['result']['release_date'][0:4]
+                    ### DURATION
                     duration_serie = req['data']['result']['duration']
+                    ### DEEPLINK
                     deeplink_serie = 'VERIFICAR'
+                    ### SYNOPSIS
                     synopsis_serie = req['data']['result']['description']
+                    ### IMAGES
                     images_serie = 'VERIFICAR'
+                    ### RATING
                     rating_serie = req['data']['result']['rating']
+                    ### GENRES
                     if check_info.get('genres'):
                         genres_serie = req['data']['result']['genres'].split(', ')
                     else:
                         genres_serie = None
+                    ### DIRECTORS
                     if check_info.get('directors'):
                         directors_serie = req['data']['result']['directors'].split(', ')
                     else:
                         directors_serie = None
+                    ### CAST
                     if check_info.get('actors'):
                         cast_serie = req['data']['result']['actors'].split(', ')
                     else:
                         cast_serie = None
+                    ### PACKAGES
                     packages = [
                             {
                             'Type': 'subscription-vod'
