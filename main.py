@@ -10,17 +10,17 @@ from platforms.flixfling            import FlixFling
 from platforms.trutv                import TruTV
 from platforms.quibi                import Quibi
 from platforms.optimum              import Optimum
-from platforms.acorntv_test         import AcornTV_Test
-from platforms.acorntv_test_tatiana import AcornTV_Tati
-from platforms.optimum_test_tatiana    import OptimumTati
+# from platforms.acorntv_test         import AcornTV_Test
 from platforms.acorntv_test_diego   import AcornTV_Test_Diego
-from platforms.acorntv_test_carlos  import AcornTV_Test_Carlos
 from platforms.optimum_test_diego   import Optimum_test_diego
-from platforms.optimum_test_carlos  import Optimum_Test_Carlos
-from platforms.amazon_login         import AmazonLogin
 from common                         import config
+<<<<<<< HEAD
 from platforms.cwseed_tati          import CwSeed_Tati
 from platforms.myoutdoortv_diego    import myOutdoorTV
+=======
+from platforms.optimum_test_alexis  import OptimumTest
+from platforms.freeform             import Freeform
+>>>>>>> c92a245b1f5d3d7844559d07a576853c8ee2fa6f
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

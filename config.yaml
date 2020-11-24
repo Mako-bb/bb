@@ -80,31 +80,23 @@ ott_sites:
   AcornTV_Test:
     countries:
       AR: ar.acorntv
-  AcornTV_Tati:
+  OptimumTest:
     countries:
-      AR: ar.acorntv_tati
-  OptimumTati:
-    countries:
-      AR: ar.optimumtati
+      US: us.optimum-test
   AcornTV_Test_Diego:
-    countries:
-      AR: ar.acorntv
-  AcornTV_Test_Carlos:
     countries:
       AR: ar.acorntv
   Optimum_test_diego:
     countries:
       US: us.optimum
-  Optimum_Test_Carlos:
+  Freeform:
     countries:
-      US: us.optimum
-  AmazonLogin:
-    countries:
-      AR: ar.amazon_login
-  CwSeed_Tati:
-    countries:
+<<<<<<< HEAD
       US: us.cwseed
   MyOutdoorTV:
     countries:
       US: us.myoutdoortv
 
+=======
+      US: us.freeform
+>>>>>>> c92a245b1f5d3d7844559d07a576853c8ee2fa6f
