@@ -10,10 +10,12 @@ from platforms.flixfling            import FlixFling
 from platforms.trutv                import TruTV
 from platforms.quibi                import Quibi
 from platforms.optimum              import Optimum
-from platforms.acorntv_test         import AcornTV_Test
+# from platforms.acorntv_test         import AcornTV_Test
 from platforms.acorntv_test_diego   import AcornTV_Test_Diego
 from platforms.optimum_test_diego   import Optimum_test_diego
 from common                         import config
+from platforms.optimum_test_alexis  import OptimumTest
+from platforms.freeform             import Freeform
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
