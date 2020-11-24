@@ -14,6 +14,8 @@ from platforms.optimum              import Optimum
 from platforms.acorntv_test_diego   import AcornTV_Test_Diego
 from platforms.optimum_test_diego   import Optimum_test_diego
 from common                         import config
+from platforms.cwseed_tati          import CwSeed_Tati
+from platforms.myoutdoortv_diego    import myOutdoorTV
 from platforms.optimum_test_alexis  import OptimumTest
 from platforms.freeform             import Freeform
 
