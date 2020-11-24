@@ -28,7 +28,7 @@ class OptimumTati():
         self.titanScraping          = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodes  = config()['mongo']['collections']['episode']
 
-        self.currentSession = requests.session()
+        self.sesion = requests.session()
         self.headers  = {"Accept":"application/json",
                          "Content-Type":"application/json; charset=utf-8"}
 
@@ -72,8 +72,11 @@ class OptimumTati():
         return query
 
     def _scraping(self):
+        #Declaramos lista DB
+        listDBMovie: Datamanager._getListDB(self,self.titanScraping)
         
-        ids_scrap = self.__query_field("titanScraping", "Id")
+        #Declaramos payloads
+        listPayload = []
 
         #Establecemos las páginas de A-E; F-J; K-O; P-T; U-Z; OTROS.
         categories = [
@@ -91,40 +94,48 @@ class OptimumTati():
             index = 0
             
             while True:
+                """
                 req = self.currentSession.get(f"https://optimum.net/api/vod-webapp/services/v1/onyx/getTitlesForPagination/{categorie}/20/{index}?sort=1&filter=0")
                 print(req.status_code, req.url)
                 getjson = req.json()
+                """
+
+                url = f"https://optimum.net/api/vod-webapp/services/v1/onyx/getTitlesForPagination/{categorie}/20/{index}?sort=1&filter=0"
+                getjson = Datamanager._getJSON(self,url)
 
                 all_info = getjson["data"]["result"] ["titles"]
 
 
                 for title in all_info:
-                    titulo = title["tms_title"] #Titulo
+                    if title.get("tms_title"):          #Titulo
+                        titulo = title["tms_title"] 
+                    else:
+                        titulo = title["title"]
 
-                    id_ = title["title_id"] #ID en int
+                    id_ = title["title_id"]             #ID en int
 
-                    if title.get("actors"): #Actors
+                    if title.get("actors"):             #Actors
                         actors = title["actors"]
                     else:
                         actors = None
 
-                    if title.get("directors"):  #Directors
+                    if title.get("directors"):          #Directors
                         directors = title["directors"]
                     else:
                         directors = None
 
-                    year = title["release_year"]    #Year en int
+                    year = title["release_year"]        #Year en int
                     
                     rent_price = title["price"]
                     
-                    packs = [                       #Packages
+                    packs = [                           #Packages
                         {
                             "Type": "transaction-vod",
                             "RentPrice": rent_price
                         }
                     ]
 
-                    duration = title["steam_runtime"] / 90      #Duration
+                    duration = title["stream_runtime"] // 60      #Duration
 
                     genero = title["genres"]                    #Genero
 
@@ -171,17 +182,15 @@ class OptimumTati():
                         'Timestamp':     datetime.now().isoformat(),
                         'CreatedAt':     self._created_at
                     }
-
+                    Datamanager._checkDBandAppend(self,payload,listDBMovie,listPayload)
+                
             #Avanzamos a siguiente pag        
                 if getjson["data"]["result"]["next"] == "0":
                     break
                 else:
-                    index += 20    
+                    index += 20
+
+        Datamanager._insertIntoDB(self,listPayload,self.titanScraping)
+                        
         
-        """
-        ids_scrap = Datamanager._getListDB(self, self.titanScraping)
-    
-        url = "https://optimum.net/api/vod-webapp/services/v1/onyx/getTitlesForPagination/48265007/20/0?sort=1&filter=0"
-        getjson = Datamanager._getJSON(self,url,usePOST=True,data=None,headers=None)
-        print(getjson)
-        """
+        
