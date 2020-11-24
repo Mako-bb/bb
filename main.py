@@ -15,7 +15,7 @@ from platforms.acorntv_test_diego   import AcornTV_Test_Diego
 from platforms.acorntv_test_carlos  import AcornTV_Test_Carlos
 from platforms.optimum_test_diego   import Optimum_test_diego
 from platforms.optimum_test_carlos  import Optimum_Test_Carlos
-from platforms.cwtv_test_carlos     import CWtv_Test_Carlos
+from platforms.cwtv                 import CWtv
 from common                         import config
 
 logging.basicConfig(level=logging.INFO)

@@ -10,12 +10,8 @@ from handle.mongo           import mongo
 from updates.upload         import Upload
 from handle.datamanager  import Datamanager
 from handle.replace         import _replace
-from selenium               import webdriver
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.keys import Keys
 
-
-class CWtv_Test_Carlos():
+class CWtv():
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config                = config()['ott_sites'][ott_site_uid]
         self._created_at            = time.strftime("%Y-%m-%d")

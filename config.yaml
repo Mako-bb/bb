@@ -92,6 +92,6 @@ ott_sites:
   Optimum_Test_Carlos:
     countries:
       US: us.optimum
-  CWtv_Test_Carlos:
+  CWtv:
     countries:
       US: us.thecw
