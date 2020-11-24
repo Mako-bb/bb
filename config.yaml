@@ -92,3 +92,6 @@ ott_sites:
   Freeform:
     countries:
       US: us.freeform
+  MyOutdoorTV:
+    countries:
+      US: us.myoutdoortv
