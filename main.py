@@ -14,13 +14,10 @@ from platforms.optimum              import Optimum
 from platforms.acorntv_test_diego   import AcornTV_Test_Diego
 from platforms.optimum_test_diego   import Optimum_test_diego
 from common                         import config
-<<<<<<< HEAD
 from platforms.cwseed_tati          import CwSeed_Tati
 from platforms.myoutdoortv_diego    import myOutdoorTV
-=======
 from platforms.optimum_test_alexis  import OptimumTest
 from platforms.freeform             import Freeform
->>>>>>> c92a245b1f5d3d7844559d07a576853c8ee2fa6f
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

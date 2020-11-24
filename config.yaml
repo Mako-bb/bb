@@ -91,12 +91,4 @@ ott_sites:
       US: us.optimum
   Freeform:
     countries:
-<<<<<<< HEAD
-      US: us.cwseed
-  MyOutdoorTV:
-    countries:
-      US: us.myoutdoortv
-
-=======
       US: us.freeform
->>>>>>> c92a245b1f5d3d7844559d07a576853c8ee2fa6f
