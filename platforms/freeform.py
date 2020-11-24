@@ -15,7 +15,6 @@ from bs4                                        import BeautifulSoup
 from selenium                                   import webdriver
 from selenium.webdriver.common.action_chains    import ActionChains
 from selenium.webdriver.common.keys             import Keys
-from webdriver_manager.firefox                  import GeckoDriverManager
 from handle.datamanager                         import Datamanager
 from updates.upload                             import Upload
 
@@ -101,7 +100,7 @@ class Freeform:
                 'Image': None,  # html
                 'Rating': None,  # html
                 'Provider': None,
-                'Genres': pelicula['show']['genre'],
+                'Genres': [pelicula['show']['genre']],
                 'Cast': None,
                 'Directors': None,
                 'Availability': None,
@@ -115,11 +114,8 @@ class Freeform:
             }
             Datamanager._checkDBandAppend(self, payload, listDBMovie, listPayload)
         Datamanager._insertIntoDB(self, listPayload, self.titanScraping)
-        """
-        Upload
-        """
-        self.sesion.close()
-        Upload(self._platform_code, self._created_at, testing=True)
+
+    url_series = []  # ESTO GUARDA TODOS LOS LINKS DE LAS SERIES QUE SIRVE PARA SCRAPPEARLAS. ¡¡¡¡¡ NO TOCAR !!!!!
 
     def _scraping_series(self):
 
@@ -127,21 +123,17 @@ class Freeform:
               "/tilegroup/3376167?start=0&size=50&authlevel=0&brand=002&device=001"
         listaSeries = []
         listaSeriesDB = Datamanager._getListDB(self, self.titanScraping)
-        listaEpiDB = []
-        listaEpi = []
-        listaEpiDB = Datamanager._getListDB(self, self.titanScrapingEpisodios)
 
         packages = [
             {
                 'Type': 'tv-everywhere',
             }
         ]
-
         data_series = Datamanager._getJSON(self, url)
 
         for serie in data_series['tiles']:
-           if serie['title'] != "Kickoff to Christmas":
-               payload = {
+            if serie['title'] != "Kickoff to Christmas":  # esto es un compilado de
+                payload = {
                     'PlatformCode': self._platform_code,
                     'Id': str(serie['link']['id']),
                     'Title': serie['title'],
@@ -151,7 +143,11 @@ class Freeform:
                     'Year': None,
                     'Duration': None,  # duracion en minutos
                     'Deeplinks': {
-                        'Web': self.url(serie),
+                        """
+                            agrega el link de las series a una lista para scrappearlas, ya que toda la informacion
+                            de las temporadas y sus respectivos capítulos están en el html
+                        """
+                        'Web': self.url(serie) and self.url_series.append(self.url(serie)),
                         'Android': None,
                         'iOS': None,
                     },
@@ -160,7 +156,7 @@ class Freeform:
                     'Image': None,  # [str, str, str...] # []
                     'Rating': None,
                     'Provider': None,
-                    'Genres': serie['show']['genre'],
+                    'Genres': [serie['show']['genre']],
                     'Cast': None,
                     'Directors': None,  # [str, str, str...]
                     'Availability': None,
@@ -171,19 +167,34 @@ class Freeform:
                     'Country': None,  # [str, str, str...]
                     'Timestamp': datetime.now().isoformat(),
                     'CreatedAt': self._created_at
-               }
-               Datamanager._checkDBandAppend(self, payload, listaSeriesDB, listaSeries)
-        Datamanager._insertIntoDB(self, listaSeriesDB, self.titanScraping)
+                }
+                Datamanager._checkDBandAppend(self, payload, listaSeriesDB, listaSeries)
+        Datamanager._insertIntoDB(self, listaSeries, self.titanScraping)
         """
         Upload
         """
         self.sesion.close()
         Upload(self._platform_code, self._created_at, testing=True)
 
+    def _scraping_capitulos(self):
+        listaEpiDB = []
+        listaEpi = []
+        listaEpiDB = Datamanager._getListDB(self, self.titanScrapingEpisodios)
+        packages = [
+            {
+                'Type': 'tv-everywhere',
+            }
+        ]
+
+        for serie in self.url_series:
+            pass
+
+
+    # algunas series y películas no tienen la key con el link, por lo que esta funcion hace que todos la tengan
     @staticmethod
     def url(pelicula):
         try:
-            return pelicula['link']['urlValue']
+            return "https://www.freeform.com/movies-and-specials/{}".format(pelicula['link']['urlValue'])
         except KeyError:
             titulo = pelicula['title']
             palabras_separadas = titulo.lower().replace(':', '').replace(' -', '')\
