@@ -104,4 +104,7 @@ ott_sites:
   CwSeed_Tati:
     countries:
       US: us.cwseed
+  MyOutdoorTV:
+    countries:
+      US: us.myoutdoortv
 

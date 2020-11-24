@@ -20,6 +20,7 @@ from platforms.optimum_test_carlos  import Optimum_Test_Carlos
 from platforms.amazon_login         import AmazonLogin
 from common                         import config
 from platforms.cwseed_tati          import CwSeed_Tati
+from platforms.myoutdoortv_diego    import myOutdoorTV
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
