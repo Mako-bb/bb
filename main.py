@@ -18,6 +18,7 @@ from platforms.cwseed_tati          import CwSeed_Tati
 from platforms.myoutdoortv          import MyOutdoorTV
 from platforms.optimum_test_alexis  import OptimumTest
 from platforms.freeform             import Freeform
+from platforms.cwseed               import CwSeed
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
