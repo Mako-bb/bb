@@ -18,7 +18,7 @@ from selenium.webdriver.common.keys import Keys
 from handle.datamanager     import Datamanager
 from updates.upload         import Upload
 
-class myOutdoorTV():
+class MyOutdoorTV():
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config                = config()['ott_sites'][ott_site_uid]
         self._created_at            = time.strftime("%Y-%m-%d")
@@ -83,11 +83,11 @@ class myOutdoorTV():
             serie_title = series_list[serie]['title']
             ### DEEPLINK ###
             serie_deeplink = series_list[serie]['deeplink']
-            contentType = series_list[serie]['contentType']
+            #contentType = series_list[serie]['contentType']
             URL = 'https://prod-api-cached-2.viewlift.com/content/pages?path='+serie_deeplink+'&site=myoutdoortv&includeContent=true&moduleOffset=0&moduleLimit=6&languageCode=en&countryCode=AR'
             request = Datamanager._getJSON(self,URL)
             ### TYPE ### 
-            typeOf = 'serie' if contentType == 'SERIES' else 'movie'
+            typeOf = 'serie' 
             ### SYNOPSIS ###
             synopsis = request['metadataMap']['description']
             ### IMAGE ###
