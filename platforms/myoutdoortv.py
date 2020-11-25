@@ -42,6 +42,8 @@ class MyOutdoorTV():
 
         listPayload = []
         listPayloadEpi = []
+        scraped = self.__query_field(self.titanScraping, 'Id')
+        scraped_episodes = self.__query_field(self.titanScrapingEpisodes, 'Id')
         ### {ID : {TITLE,DEEPLINK}} OF SERIES ###
         series_list = {}
         ### CATEGORIES WEBSITE
@@ -130,4 +132,10 @@ class MyOutdoorTV():
                     'Timestamp'         : datetime.now().isoformat(),
                     'CreatedAt'         : self._created_at
                 }
-            print(payload)
+
+            if payload['Id'] in scraped:
+                print("Ya existe el id {}".format(payload['Id']))
+            else:
+                listPayload.append(payload)
+                scraped.add(payload['Id'])
+                print("Insertado {} - ({} / {})".format(payload['Title'], i + 1))
