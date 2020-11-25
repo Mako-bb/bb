@@ -6,17 +6,13 @@ import pymongo
 import re
 import json
 import platform
-from handle.replace                             import _replace
-from common                                     import config
-from datetime                                   import datetime
-from handle.mongo                               import mongo
-from slugify                                    import slugify
-from bs4                                        import BeautifulSoup
-from selenium                                   import webdriver
-from selenium.webdriver.common.action_chains    import ActionChains
-from selenium.webdriver.common.keys             import Keys
-from handle.datamanager                         import Datamanager
-from updates.upload                             import Upload
+from handle.replace     import _replace
+from common             import config
+from datetime           import datetime
+from handle.mongo       import mongo
+from handle.datamanager import Datamanager
+from updates.upload     import Upload
+from bs4                import BeautifulSoup
 
 
 class Freeform:
@@ -45,7 +41,7 @@ class Freeform:
             self._scraping_series()
 
         if type == 'scraping':
-            self._scraping_peliculas()
+            # self._scraping_peliculas()
             self._scraping_series()
 
     def __query_field(self, collection, field, extra_filter=None):
@@ -91,7 +87,7 @@ class Freeform:
                 'Year': None,  # html
                 'Duration': None,  # html
                 'Deeplinks': {
-                    'Web': self.url(pelicula),
+                    'Web': self.url_pelicula(pelicula),
                     'Android': None,
                     'iOS': None,
                 },
@@ -115,14 +111,15 @@ class Freeform:
             Datamanager._checkDBandAppend(self, payload, listDBMovie, listPayload)
         Datamanager._insertIntoDB(self, listPayload, self.titanScraping)
 
-    url_series = []  # ESTO GUARDA TODOS LOS LINKS DE LAS SERIES QUE SIRVE PARA SCRAPPEARLAS. ¡¡¡¡¡ NO TOCAR !!!!!
-
     def _scraping_series(self):
 
         url = "https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module" \
               "/tilegroup/3376167?start=0&size=50&authlevel=0&brand=002&device=001"
         listaSeries = []
         listaSeriesDB = Datamanager._getListDB(self, self.titanScraping)
+        listaEpiDB = []
+        listaEpi = []
+        listaEpiDB = Datamanager._getListDB(self, self.titanScrapingEpisodios)
 
         packages = [
             {
@@ -131,8 +128,11 @@ class Freeform:
         ]
         data_series = Datamanager._getJSON(self, url)
 
+        links_series = []  # ESTO GUARDA TODOS LOS LINKS DE LAS SERIES QUE SIRVE PARA SCRAPPEARLAS. ¡¡¡¡¡ NO TOCAR !!!!!
+
         for serie in data_series['tiles']:
             if serie['title'] != "Kickoff to Christmas":  # esto es un compilado de
+                links_series.append(self.url_serie(serie))  # agrega el link de la serie a la lista
                 payload = {
                     'PlatformCode': self._platform_code,
                     'Id': str(serie['link']['id']),
@@ -143,11 +143,7 @@ class Freeform:
                     'Year': None,
                     'Duration': None,  # duracion en minutos
                     'Deeplinks': {
-                        """
-                            agrega el link de las series a una lista para scrappearlas, ya que toda la informacion
-                            de las temporadas y sus respectivos capítulos están en el html
-                        """
-                        'Web': self.url(serie) and self.url_series.append(self.url(serie)),
+                        'Web': self.url_serie(serie),
                         'Android': None,
                         'iOS': None,
                     },
@@ -170,34 +166,84 @@ class Freeform:
                 }
                 Datamanager._checkDBandAppend(self, payload, listaSeriesDB, listaSeries)
         Datamanager._insertIntoDB(self, listaSeries, self.titanScraping)
+
+        for serie in links_series:
+            url = requests.get(serie)
+            soup = BeautifulSoup(url.content, 'lxml')
+            temporadas = soup.find_all('div', {'class': 'Carousel__Inner flex items-center'})
+            for capitulos in temporadas:
+                """for episode in capitulo.find_all('a'):
+                    print(episode['href'])  # imprime los links de las series
+                for episode in capitulo.find_all('span', {'class': "tile__details-date-duration"}):
+                    print(episode.text)  # imprime la fecha de estreno y la duración"""
+                payloadEpi = {
+                    'PlatformCode': self._platform_code,
+                    'ParentId': None,  # serie['slug'],
+                    'ParentTitle': self.get_titulo_serie(serie),
+                    'Id': None,  # str(episodio['titleId']),
+                    'Title': "Titulo de prueba",  # episodio['title'],
+                    'Episode': None,  # episodio['episodeNum'],
+                    'Season':  None,  # episodio['seasonNum'],
+                    'Year': self.get_year(capitulos),
+                    'Duration': None,  #  int(episodio['duration']) // 60,
+                    'Deeplinks': {
+                        'Web': "https://www.freeform.com{}".format(capitulos.a['href']),
+                        'Android': None,
+                        'iOS': None
+                    },
+                    'Synopsis': None,  # episodio['description'],
+                    'Rating': None,  # dataSerie['about']['rating'],
+                    'Provider': None,
+                    'Genres': None,
+                    'Cast': None,  # castList,
+                    'Directors': None,
+                    'Availability': None,
+                    'Download': None,
+                    'IsOriginal': None,
+                    'IsAdult': None,
+                    'Country': None,
+                    'Packages': packages,
+                    'Timestamp': datetime.now().isoformat(),
+                    'CreatedAt': self._created_at
+                }
+                Datamanager._checkDBandAppend(self, payloadEpi, listaEpiDB, listaEpi, isEpi=True)
+        Datamanager._insertIntoDB(self, listaEpi, self.titanScrapingEpisodios)
         """
         Upload
         """
         self.sesion.close()
         Upload(self._platform_code, self._created_at, testing=True)
 
-    def _scraping_capitulos(self):
-        listaEpiDB = []
-        listaEpi = []
-        listaEpiDB = Datamanager._getListDB(self, self.titanScrapingEpisodios)
-        packages = [
-            {
-                'Type': 'tv-everywhere',
-            }
-        ]
-
-        for serie in self.url_series:
-            pass
-
-
-    # algunas series y películas no tienen la key con el link, por lo que esta funcion hace que todos la tengan
-    @staticmethod
-    def url(pelicula):
+    # algunas películas no tienen la key con el link, por lo que esta funcion hace que todos la tengan
+    # TODO: limpíar el título de fallen 2 porque la api lo devuelve como serie
+    @classmethod
+    def url_pelicula(cls, pelicula):
         try:
-            return "https://www.freeform.com/movies-and-specials/{}".format(pelicula['link']['urlValue'])
+            return "https://www.freeform.com{}".format(pelicula['link']['urlValue'])
         except KeyError:
             titulo = pelicula['title']
-            palabras_separadas = titulo.lower().replace(':', '').replace(' -', '')\
-                .replace("'", '').replace(',', '').replace('!', '').split(' ')
-            url = '-'.join(palabras_separadas)
+            url = '-'.join(cls.limpia_titulo(titulo))
             return "https://www.freeform.com/movies-and-specials/{}".format(url)
+
+    # algunas serie no tienen la key con el link, por lo que esta funcion hace que todos la tengan
+    @classmethod
+    def url_serie(cls, serie):
+        try:
+            url = serie['link']['urlValue'].split('/index')
+            return "https://www.freeform.com{}".format(url[0])
+        except KeyError:
+            titulo = serie['title']
+            url = '-'.join(cls.limpia_titulo(titulo))
+            return "https://www.freeform.com/show/{}".format(url)
+
+    # limpia el título para poder generar la parte del link que usa el nombre
+    @staticmethod
+    def limpia_titulo(titulo):
+        return titulo.lower().replace(':', '').replace(' -', '').replace('ñ', 'n')\
+                .replace("'", '').replace(',', '').replace('!', '').replace(' &', '').split(' ')
+
+    @staticmethod
+    def get_titulo_serie(serie): return serie.split("/")[-1].capitalize()
+
+    @staticmethod
+    def get_year(capitulo): return capitulo.span.split('.')[2].split('|')[0]
