@@ -92,12 +92,9 @@ ott_sites:
   Freeform:
     countries:
       US: us.freeform
-<<<<<<< HEAD
   CwSeed:
     countries:
       US: us.cwseed
-=======
   MyOutdoorTV:
     countries:
       US: us.myoutdoortv
->>>>>>> 506e2be46d69013851b68a97d5570055ae1bd159
