@@ -76,6 +76,7 @@ class CwSeed():
                              
             long_prod = len(all_data)
             
+            prod_def = []
 
             # Cast & Producers sin limpiar
             if long_prod == 3:
@@ -95,17 +96,15 @@ class CwSeed():
                     if prod.find('(') != -1:
                         aux = prod[prod.index('('):prod.index(')') + 1]
                         prod = prod.replace(aux, '')
-                        prod_def = prod.split("  ")
                     else:
+                        prod_def = prod.split("  ")
+                        for product in prod_def:
+                            prod_def1 = product.replace("\r",",")
+                            prod_def2 = prod_def1.split(",")
                         break
             else:
                 prod_def = None
 
-            #print(titulo)
-            
-
-            #FALTA LIMPIAR ALGUNOS COMO /R reemplazar por "," O "AS HIMSELF" reemplaza x ""
-            
             
             
             # Limpia el CAST 
@@ -120,7 +119,7 @@ class CwSeed():
             
 
             # Quita el cast sucio
-            
+            """
             if titulo == "Being Reuben":
                 cast2 = None
                 prod_def = None
@@ -132,9 +131,9 @@ class CwSeed():
                 prod_def = None
             elif titulo == "Whose Line Is It Anyway?":
                 cast2 = None
+            """
             
-            
-            
+            print(prod_def2)
             
 
             #RATING
@@ -195,7 +194,7 @@ class CwSeed():
                 'Timestamp':     datetime.now().isoformat(),
                 'CreatedAt':     self._created_at
             }
-            Datamanager._checkDBandAppend(self,payload,listDBMovie,listPayload)
+            #Datamanager._checkDBandAppend(self,payload,listDBMovie,listPayload)
             
 
 
@@ -265,10 +264,10 @@ class CwSeed():
                         'Timestamp'     : datetime.now().isoformat(),
                         'CreatedAt'     : self._created_at
                     }
-                    Datamanager._checkDBandAppend(self,payloadEpi,listDBEpi,listPayloadEpi,isEpi=True)
+                    #Datamanager._checkDBandAppend(self,payloadEpi,listDBEpi,listPayloadEpi,isEpi=True)
                                         
-                Datamanager._insertIntoDB(self,listPayload,self.titanScraping)
-                Datamanager._insertIntoDB(self,listPayloadEpi,self.titanScrapingEpisodios)
+                #Datamanager._insertIntoDB(self,listPayload,self.titanScraping)
+                #Datamanager._insertIntoDB(self,listPayloadEpi,self.titanScrapingEpisodios)
 
                 # Upload
                 #Upload(self._platform_code, self._created_at, testing=True)   
