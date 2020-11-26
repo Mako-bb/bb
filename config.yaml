@@ -95,3 +95,6 @@ ott_sites:
   MyOutdoorTV:
     countries:
       US: us.myoutdoortv
+  CwSeed:
+    countries:
+      US: us.cwseed

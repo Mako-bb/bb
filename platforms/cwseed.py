@@ -76,6 +76,7 @@ class CwSeed():
                              
             long_prod = len(all_data)
             
+            prod_def = []
 
             # Cast & Producers sin limpiar
             if long_prod == 3:
@@ -91,36 +92,42 @@ class CwSeed():
             
             # Limpia el Directors
             if prod != None:
-                while True:
-                    if prod.find('(') != -1:
-                        aux = prod[prod.index('('):prod.index(')') + 1]
-                        prod = prod.replace(aux, '')
-                        prod_def = prod.split("  ")
-                    else:
-                        break
+                prod_def = []
+                lista1 = prod.split(')')
+                for i in lista1:
+                    if i != '':
+                        x = i.split(' (')[0].strip(' ')
+                        if '\r' in x:
+                            y = x.split('\r')
+                            for item in y:
+                                prod_def.append(item)
+                        else:
+                            prod_def.append(x)
+                
             else:
                 prod_def = None
-
-            #print(titulo)
-            
-
-            #FALTA LIMPIAR ALGUNOS COMO /R reemplazar por "," O "AS HIMSELF" reemplaza x ""
+            print(prod_def)
             
             
-            
-            # Limpia el CAST 
-            while True:
-                if cast.find('(') != -1:
-                    aux = cast[cast.index('('):cast.index(')') + 1]
-                    cast = cast.replace(aux, '')
-                else:
-                    break
-            cast2 = cast.split("  ")            # Cast definitivo
+            # Limpia el CAST
+            cast_def = []
+            cast_list = cast.split(')')
+            for i in cast_list:
+                if i != '':
+                    x = i.split(' (')[0].strip(' ')
+                    if '\r' in x:
+                        y = x.split('\r')
+                        for item in y:
+                            cast_def.append(item)
+                    else:
+                        cast_def.append(x)    
+            print(cast_def) 
+                      # Cast definitivo
             
             
 
             # Quita el cast sucio
-            
+            """
             if titulo == "Being Reuben":
                 cast2 = None
                 prod_def = None
@@ -132,7 +139,7 @@ class CwSeed():
                 prod_def = None
             elif titulo == "Whose Line Is It Anyway?":
                 cast2 = None
-            
+            """
             
             
             
@@ -184,7 +191,7 @@ class CwSeed():
                 'Rating':        rating,
                 'Provider':      None,
                 'Genres':        None,
-                'Cast':          cast2,
+                'Cast':          cast_def,
                 'Directors':     prod_def,
                 'Availability':  None,
                 'Download':      None,
@@ -271,7 +278,7 @@ class CwSeed():
                 Datamanager._insertIntoDB(self,listPayloadEpi,self.titanScrapingEpisodios)
 
                 # Upload
-                #Upload(self._platform_code, self._created_at, testing=True)   
+                Upload(self._platform_code, self._created_at, testing=True)   
             
             
 
