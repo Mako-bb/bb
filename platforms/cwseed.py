@@ -66,9 +66,9 @@ class CwSeed():
             # Armar un soup del armalink y extraer data
 
             epi_soup = Datamanager._getSoup(self,arma_link)
-
             # Extraer la data ABOUT THE SHOW
             about = epi_soup.find("div",{"class": "synopsis"})
+            
             
             
             all_data = about.findAll("p")             
@@ -76,7 +76,6 @@ class CwSeed():
                              
             long_prod = len(all_data)
             
-
 
             # Cast & Producers sin limpiar
             if long_prod == 3:
@@ -89,36 +88,26 @@ class CwSeed():
                 prod = None
                 cast = all_data[1].text
                 
-
+            
             # Limpia el Directors
             if prod != None:
                 while True:
                     if prod.find('(') != -1:
                         aux = prod[prod.index('('):prod.index(')') + 1]
                         prod = prod.replace(aux, '')
-                        print(prod)
                         prod_def = prod.split("  ")
-                        print(prod_def)
-                        """
-                        if "\r" in prod_def:
-                            prod_def = prod_def.replace('\r',", ")
-                        elif "Herself" in prod_def:
-                            prod_def = prod_def.replace(' as Herself',"")
-                        elif "Himself" in prod_def:
-                            prod_def = prod_def.replace(" as Himself","")
-                            """
                     else:
                         break
             else:
                 prod_def = None
 
-        
-            #print(prod_def)
+            #print(titulo)
+            
 
             #FALTA LIMPIAR ALGUNOS COMO /R reemplazar por "," O "AS HIMSELF" reemplaza x ""
             
             
-    
+            
             # Limpia el CAST 
             while True:
                 if cast.find('(') != -1:
@@ -127,10 +116,26 @@ class CwSeed():
                 else:
                     break
             cast2 = cast.split("  ")            # Cast definitivo
+            
+            
 
-            print("************ CAST ***********")
-            print(cast)                   
-            print(cast2)
+            # Quita el cast sucio
+            
+            if titulo == "Being Reuben":
+                cast2 = None
+                prod_def = None
+            elif titulo == "Dead Pixels":
+                prod_def = None
+            elif titulo == "Taskmaster":
+                cast2 = None
+            elif titulo == "The Secret Circle":
+                prod_def = None
+            elif titulo == "Whose Line Is It Anyway?":
+                cast2 = None
+            
+            
+            
+            
 
             #RATING
             rating = epi_soup.find("span",{"class":"rating"}).text
@@ -190,80 +195,83 @@ class CwSeed():
                 'Timestamp':     datetime.now().isoformat(),
                 'CreatedAt':     self._created_at
             }
-            #Datamanager._checkDBandAppend(self,payload,listDBMovie,listPayload)
+            Datamanager._checkDBandAppend(self,payload,listDBMovie,listPayload)
             
 
 
 #           ---------------------------------------------------------------------------
 #                                       EPISODIOS
+            if tipo == "serie":
+                for epi in all_episodes.findAll("li"):
+                    epi_dataurl = epi.get("data-videourl") #Links a todos los episodios de cada serie
+                    epi_deeplink = 'https://www.cwseed.com{}'.format(epi_dataurl)
 
-            for epi in all_episodes.findAll("li"):
-                epi_dataurl = epi.get("data-videourl") #Links a todos los episodios de cada serie
-                epi_deeplink = 'https://www.cwseed.com{}'.format(epi_dataurl)
+                    epi_id = epi.get("data-videoguid")      #ID -guid- de cada episodio
 
-                epi_id = epi.get("data-videoguid")      #ID -guid- de cada episodio
+                    epi_titulo = epi.find("span",{"class":"et"}).text
 
-                epi_titulo = epi.find("span",{"class":"et"}).text
+                    #Consigue el numero de la Season
+                    get_season = epi.find("span",{"class":"en"}).text
+                    get_season2 = get_season.replace("S","")
+                    get_season3 = get_season2.split(":")
+                    nroSeason = get_season3[0]              #nro de Season
+                    
 
-                #Consigue el numero de la Season
-                get_season = epi.find("span",{"class":"en"}).text
-                get_season2 = get_season.replace("S","")
-                get_season3 = get_season2.split(":")
-                nroSeason = get_season3[0]              #nro de Season
-                
+                    #Consigue el numero de Episodio
+                    get_episode = epi.find("span",{"class":"en"}).text
+                    get_episode = get_episode.replace("E","")
+                    get_episode = get_episode.split(": ")
+                    nroEpi = get_episode[1]
+                    
 
-                #Consigue el numero de Episodio
-                get_episode = epi.find("span",{"class":"en"}).text
-                get_episode = get_episode.replace("E","")
-                get_episode = get_episode.split(": ")
-                nroEpi = get_episode[1]
-                
+                    #Consigue la duracion del episode
+                    duration = epi.find("span",{"class":"dura"}).text
+                    duration_epi = duration.replace(" min", "")     #Duracion
 
-                #Consigue la duracion del episode
-                duration = epi.find("span",{"class":"dura"}).text
-                duration_epi = duration.replace(" min", "")     #Duracion
-
-                #Consigue el rating del episodio
-                rating_epi = epi.find("span",{"class":"rating"}).text
-                if "L, V" in rating_epi:
-                    rating_epi = rating_epi.replace(" L, V","")
-                
-                                
-                
-                payloadEpi = {
-                    'PlatformCode'  : self._platform_code,
-                    'ParentId'      : str(id_link),
-                    'ParentTitle'   : titulo,
-                    'Id'            : epi_id,
-                    'Title'         : epi_titulo,
-                    'Episode'       : int(nroEpi),
-                    'Season'        : int(nroSeason),
-                    'Year'          : None,
-                    'Duration'      : int(duration_epi),
-                    'Deeplinks'     : {
-                        'Web': epi_deeplink,
-                        'Android': None,
-                        'iOS': None
-                    },
-                    'Synopsis'      : None,
-                    'Rating'        : rating_epi,
-                    'Provider'      : None,
-                    'Genres'        : None,
-                    'Cast'          : None,
-                    'Directors'     : None,
-                    'Availability'  : None,
-                    'Download'      : None,
-                    'IsOriginal'    : None,
-                    'IsAdult'       : None,
-                    'Country'       : None,
-                    'Packages'      : packages,
-                    'Timestamp'     : datetime.now().isoformat(),
-                    'CreatedAt'     : self._created_at
-                }
-                #Datamanager._checkDBandAppend(self,payloadEpi,listDBEpi,listPayloadEpi,isEpi=True)
+                    #Consigue el rating del episodio
+                    rating_epi = epi.find("span",{"class":"rating"}).text
+                    if "L, V" in rating_epi:
+                        rating_epi = rating_epi.replace(" L, V","")
+                    
                                     
-            #Datamanager._insertIntoDB(self,listPayload,self.titanScraping)
-            #Datamanager._insertIntoDB(self,listPayloadEpi,self.titanScrapingEpisodios) 
+                    
+                    payloadEpi = {
+                        'PlatformCode'  : self._platform_code,
+                        'ParentId'      : str(id_link),
+                        'ParentTitle'   : titulo,
+                        'Id'            : epi_id,
+                        'Title'         : epi_titulo,
+                        'Episode'       : int(nroEpi),
+                        'Season'        : int(nroSeason),
+                        'Year'          : None,
+                        'Duration'      : int(duration_epi),
+                        'Deeplinks'     : {
+                            'Web': epi_deeplink,
+                            'Android': None,
+                            'iOS': None
+                        },
+                        'Synopsis'      : None,
+                        'Rating'        : rating_epi,
+                        'Provider'      : None,
+                        'Genres'        : None,
+                        'Cast'          : None,
+                        'Directors'     : None,
+                        'Availability'  : None,
+                        'Download'      : None,
+                        'IsOriginal'    : None,
+                        'IsAdult'       : None,
+                        'Country'       : None,
+                        'Packages'      : packages,
+                        'Timestamp'     : datetime.now().isoformat(),
+                        'CreatedAt'     : self._created_at
+                    }
+                    Datamanager._checkDBandAppend(self,payloadEpi,listDBEpi,listPayloadEpi,isEpi=True)
+                                        
+                Datamanager._insertIntoDB(self,listPayload,self.titanScraping)
+                Datamanager._insertIntoDB(self,listPayloadEpi,self.titanScrapingEpisodios)
+
+                # Upload
+                #Upload(self._platform_code, self._created_at, testing=True)   
             
             
 

@@ -42,8 +42,8 @@ class MyOutdoorTV():
 
         listPayload = []
         listPayloadEpi = []
-        scraped = self.__query_field(self.titanScraping, 'Id')
-        scraped_episodes = self.__query_field(self.titanScrapingEpisodes, 'Id')
+        test_list = []
+
         ### {ID : {TITLE,DEEPLINK}} OF SERIES ###
         series_list = {}
         ### CATEGORIES WEBSITE
@@ -58,9 +58,12 @@ class MyOutdoorTV():
             '/category/hunters-video-channel',
             '/category/recipes',
             '/category/tips']
+        ### ROOT WEBLINK ###
+        weblink = 'https://app.myoutdoortv.com'
         ### GET SERIES LIST
-        offset = 0
+        #offset = 0
         for category in path:
+            offset = 0
             URL = ('https://prod-api-cached-2.viewlift.com/content/pages?site=myoutdoortv&path='+category+'&includeContent=true&offset='+str(offset)+'&languageCode=en&countryCode=AR')
             reqjson = Datamanager._getJSON(self,URL)
             content_list = reqjson['modules'][1]['contentData']
@@ -69,9 +72,8 @@ class MyOutdoorTV():
                     content_id = content['gist']['id']
                     content_title = content['gist']['title']
                     deeplink = content['gist']['permalink']
-                    contentType = content['gist']['contentType']
                     if not content_id in series_list:
-                        series_list[content_id] = {'title':content_title,'deeplink':deeplink,'type':contentType}
+                        series_list[content_id] = {'title':content_title,'deeplink':deeplink}
                         
                 offset += 20
                 URL = ('https://prod-api-cached-2.viewlift.com/content/pages?site=myoutdoortv&path='+category+'&includeContent=true&offset='+str(offset)+'&languageCode=en&countryCode=AR')
@@ -85,23 +87,28 @@ class MyOutdoorTV():
             serie_title = series_list[serie]['title']
             ### DEEPLINK ###
             serie_deeplink = series_list[serie]['deeplink']
-            #contentType = series_list[serie]['contentType']
+            
             URL = 'https://prod-api-cached-2.viewlift.com/content/pages?path='+serie_deeplink+'&site=myoutdoortv&includeContent=true&moduleOffset=0&moduleLimit=6&languageCode=en&countryCode=AR'
             request = Datamanager._getJSON(self,URL)
+            #### TEST START
+            check_type = request['modules'][1]['metadataMap']
+            if check_type.get('programLabel'):
+                if not check_type['programLabel'] in test_list:
+                    test_list.append(check_type['programLabel'])
+            #### TEST END
             ### TYPE ### 
             typeOf = 'serie' 
             ### SYNOPSIS ###
-            synopsis = request['metadataMap']['description']
+            serie_synopsis = request['metadataMap']['description']
             ### IMAGE ###
-            image = request['metadataMap']['image']
+            serie_image = request['metadataMap']['image'].split(',')
             ### PACKAGE ### 
             packages = [
                             {
                             'Type': 'subscription-vod'
                             }
                         ]
-
-
+            ### SERIE PAYLOAD ###
             payload = {
                     'PlatformCode'      : self._platform_code,
                     'Id'                : serie_id,
@@ -112,12 +119,12 @@ class MyOutdoorTV():
                     'Year'              : None,
                     'Duration'          : None,
                     'Deeplinks'         : {
-                                        'Web': serie_deeplink,
+                                        'Web': weblink + serie_deeplink,
                                         'Android': None,
                                         'iOS': None
                     },
-                    'Synopsis'          : synopsis,
-                    'Image'             : image,
+                    'Synopsis'          : serie_synopsis,
+                    'Image'             : serie_image,
                     'Rating'            : None,
                     'Provider'          : None,
                     'Genres'            : None,
@@ -132,10 +139,95 @@ class MyOutdoorTV():
                     'Timestamp'         : datetime.now().isoformat(),
                     'CreatedAt'         : self._created_at
                 }
+            Datamanager._checkDBandAppend(self,payload,listDBMovie,listPayload)    
+            if request['modules'][1]['contentData'][0].get('seasons') :
+                seasons = request['modules'][1]['contentData'][0]['seasons']
+                for season in seasons:
+                    if 'Season' in season['title']:
+                        try:
+                            season_number = int(season['title'].strip('Season '))
+                        except ValueError:
+                            season_number = None
+                    else:
+                        season_number = 0
+                    ### PARENT ID ###
+                    parent_id = serie_id
+                    episodes = season['episodes']
+                    ### MANUAL EPISODES NUMBER ###
+                    episodes_number = None
+                    for episode in episodes:
+                        ### EPISODE ID ###
+                        episode_id = episode['id']
+                        ### PARENT TITLE ###
+                        parent_title = serie_title
+                        ### EPISODE TITLE ###
+                        episode_title = episode['title']
+                        ### EPISODE TYPE ###
+                        episode_type = typeOf
+                        ### EPISODE DURATION ###
+                        episode_duration = episode['gist']['runtime']//60
+                        ### EPISODE DEELINK ###
+                        episode_deeplink = episode['gist']['permalink']
+                        ### EPISODE SYNOPSIS ###
+                        episode_synopsis = episode['gist']['description']
+                        ### EPISODE LIST OF IMAGES ###
+                        if episode['gist'].get('videoImageUrl'):
+                            episode_image = episode['gist']['videoImageUrl'].split(',')
+                        else:
+                            episode_image = None
+                        ### EPISODE RATING ###
+                        episode_rating = episode['parentalRating']
+                        ### EPISODE PACKAGE ###
+                        episode_package = episode['pricing']['type']
+                        if episode_package == 'AVOD':
+                            episode_package = 'free-vod'
+                        else:
+                            episode_package = 'subscription-vod'
+                        packages = [
+                            {
+                            'Type': episode_package
+                            }
+                        ]
+                        ### EPISODE PAYLOAD ###
+                        payloadEpi = {
+                        'PlatformCode'  : self._platform_code,
+                        'ParentId'      : parent_id,
+                        'ParentTitle'   : parent_title,
+                        'Id'            : episode_id,
+                        'Title'         : episode_title,
+                        'Episode'       : episodes_number,
+                        'Season'        : season_number,
+                        'Year'          : None,
+                        'Duration'      : episode_duration,
+                        'Deeplinks'     : {
+                            'Web': weblink + episode_deeplink,
+                            'Android': None,
+                            'iOS': None
+                        },
+                        'Synopsis'      : episode_synopsis,
+                        'Image'         : episode_image,
+                        'Rating'        : episode_rating,
+                        'Provider'      : None,
+                        'Genres'        : None,
+                        'Cast'          : None,
+                        'Directors'     : None,
+                        'Availability'  : None,
+                        'Download'      : None,
+                        'IsOriginal'    : None,
+                        'IsAdult'       : None,
+                        'Country'       : None,
+                        'Packages'      : packages,
+                        'Timestamp'     : datetime.now().isoformat(),
+                        'CreatedAt'     : self._created_at
+                        }
+                        
+                        Datamanager._checkDBandAppend(self,payloadEpi,listDBEpi,listPayloadEpi,isEpi=True)
 
-            if payload['Id'] in scraped:
-                print("Ya existe el id {}".format(payload['Id']))
-            else:
-                listPayload.append(payload)
-                scraped.add(payload['Id'])
-                print("Insertado {} - ({} / {})".format(payload['Title'], i + 1))
+
+            
+        Datamanager._insertIntoDB(self,listPayload, self.titanScraping)
+        Datamanager._insertIntoDB(self,listPayloadEpi,self.titanScrapingEpisodios)
+
+        self.sesion.close()
+        Upload(self._platform_code, self._created_at, testing=True)
+        print(test_list)
