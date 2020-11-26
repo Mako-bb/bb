@@ -60,8 +60,7 @@ class MyOutdoorTV():
             '/category/tips']
         ### ROOT WEBLINK ###
         weblink = 'https://app.myoutdoortv.com'
-        ### GET SERIES LIST
-        #offset = 0
+        ### GET SERIES LIST OF CATEGORIES ###
         for category in path:
             offset = 0
             URL = ('https://prod-api-cached-2.viewlift.com/content/pages?site=myoutdoortv&path='+category+'&includeContent=true&offset='+str(offset)+'&languageCode=en&countryCode=AR')
@@ -86,16 +85,9 @@ class MyOutdoorTV():
             ### TITLE ### 
             serie_title = series_list[serie]['title']
             ### DEEPLINK ###
-            serie_deeplink = series_list[serie]['deeplink']
-            
+            serie_deeplink = series_list[serie]['deeplink']           
             URL = 'https://prod-api-cached-2.viewlift.com/content/pages?path='+serie_deeplink+'&site=myoutdoortv&includeContent=true&moduleOffset=0&moduleLimit=6&languageCode=en&countryCode=AR'
             request = Datamanager._getJSON(self,URL)
-            #### TEST START
-            check_type = request['modules'][1]['metadataMap']
-            if check_type.get('programLabel'):
-                if not check_type['programLabel'] in test_list:
-                    test_list.append(check_type['programLabel'])
-            #### TEST END
             ### TYPE ### 
             typeOf = 'serie' 
             ### SYNOPSIS ###
@@ -230,4 +222,4 @@ class MyOutdoorTV():
 
         self.sesion.close()
         Upload(self._platform_code, self._created_at, testing=True)
-        print(test_list)
+        

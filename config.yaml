@@ -92,9 +92,6 @@ ott_sites:
   Freeform:
     countries:
       US: us.freeform
-  CwSeed:
-    countries:
-      US: us.cwseed
   MyOutdoorTV:
     countries:
       US: us.myoutdoortv
