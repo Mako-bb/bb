@@ -41,7 +41,7 @@ class Freeform:
             self._scraping_series()
 
         if type == 'scraping':
-            # self._scraping_peliculas()
+            self._scraping_peliculas()
             self._scraping_series()
 
     def __query_field(self, collection, field, extra_filter=None):
@@ -113,8 +113,7 @@ class Freeform:
 
     def _scraping_series(self):
 
-        url = "https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module" \
-              "/tilegroup/3376167?start=0&size=50&authlevel=0&brand=002&device=001"
+        url = "https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module/tilegroup/3376167?start=0&size=50&authlevel=0&brand=002&device=001"
         listaSeries = []
         listaSeriesDB = Datamanager._getListDB(self, self.titanScraping)
         listaEpiDB = []
@@ -128,11 +127,8 @@ class Freeform:
         ]
         data_series = Datamanager._getJSON(self, url)
 
-        links_series = []  # ESTO GUARDA TODOS LOS LINKS DE LAS SERIES QUE SIRVE PARA SCRAPPEARLAS. ¡¡¡¡¡ NO TOCAR !!!!!
-
         for serie in data_series['tiles']:
             if serie['title'] != "Kickoff to Christmas":  # esto es un compilado de
-                links_series.append(self.url_serie(serie))  # agrega el link de la serie a la lista
                 payload = {
                     'PlatformCode': self._platform_code,
                     'Id': str(serie['link']['id']),
@@ -165,49 +161,46 @@ class Freeform:
                     'CreatedAt': self._created_at
                 }
                 Datamanager._checkDBandAppend(self, payload, listaSeriesDB, listaSeries)
-        Datamanager._insertIntoDB(self, listaSeries, self.titanScraping)
 
-        for serie in links_series:
-            url = requests.get(serie)
-            soup = BeautifulSoup(url.content, 'lxml')
-            temporadas = soup.find_all('div', {'class': 'Carousel__Inner flex items-center'})
-            for capitulos in temporadas:
-                """for episode in capitulo.find_all('a'):
-                    print(episode['href'])  # imprime los links de las series
-                for episode in capitulo.find_all('span', {'class': "tile__details-date-duration"}):
-                    print(episode.text)  # imprime la fecha de estreno y la duración"""
-                payloadEpi = {
-                    'PlatformCode': self._platform_code,
-                    'ParentId': None,  # serie['slug'],
-                    'ParentTitle': self.get_titulo_serie(serie),
-                    'Id': None,  # str(episodio['titleId']),
-                    'Title': "Titulo de prueba",  # episodio['title'],
-                    'Episode': None,  # episodio['episodeNum'],
-                    'Season':  None,  # episodio['seasonNum'],
-                    'Year': self.get_year(capitulos),
-                    'Duration': None,  #  int(episodio['duration']) // 60,
-                    'Deeplinks': {
-                        'Web': "https://www.freeform.com{}".format(capitulos.a['href']),
-                        'Android': None,
-                        'iOS': None
-                    },
-                    'Synopsis': None,  # episodio['description'],
-                    'Rating': None,  # dataSerie['about']['rating'],
-                    'Provider': None,
-                    'Genres': None,
-                    'Cast': None,  # castList,
-                    'Directors': None,
-                    'Availability': None,
-                    'Download': None,
-                    'IsOriginal': None,
-                    'IsAdult': None,
-                    'Country': None,
-                    'Packages': packages,
-                    'Timestamp': datetime.now().isoformat(),
-                    'CreatedAt': self._created_at
-                }
-                Datamanager._checkDBandAppend(self, payloadEpi, listaEpiDB, listaEpi, isEpi=True)
+                url = requests.get(self.url_serie(serie))
+                soup = BeautifulSoup(url.content, 'lxml')
+                temporadas = soup.find_all('div', {'class': 'Carousel__Inner flex items-center'})
+                for temporada in temporadas:
+                    for episode in temporada.find_all('a'):
+                        if re.search(r"episode-guide", episode['href']):
+                            payloadEpi = {
+                                'PlatformCode': self._platform_code,
+                                'ParentId': str(serie['link']['id']),
+                                'ParentTitle': _replace(serie['title']),
+                                'Id': self.get_id_episode(episode),
+                                'Title': self.get_title_episode(episode),  # episodio['title'],
+                                'Episode': self.get_number_episode(episode),
+                                'Season':  self.get_season(episode),
+                                'Year': self.get_year(episode),  # rompe en Alone Together
+                                'Duration': self.get_duration(episode),  # rompe en Alone Together
+                                'Deeplinks': {
+                                    'Web': "https://www.freeform.com{}".format(episode['href']),
+                                    'Android': None,
+                                    'iOS': None
+                                },
+                                'Synopsis': self.get_synopsis_episode(episode),  # episodio['description'],
+                                'Rating': None,  # dataSerie['about']['rating'],
+                                'Provider': None,
+                                'Genres': [self.get_genre_episode(episode)],
+                                'Cast': None,  # castList,
+                                'Directors': None,
+                                'Availability': None,
+                                'Download': None,
+                                'IsOriginal': None,
+                                'IsAdult': None,
+                                'Country': None,
+                                'Packages': packages,
+                                'Timestamp': datetime.now().isoformat(),
+                                'CreatedAt': self._created_at
+                            }
+                            Datamanager._checkDBandAppend(self, payloadEpi, listaEpiDB, listaEpi, isEpi=True)
         Datamanager._insertIntoDB(self, listaEpi, self.titanScrapingEpisodios)
+        Datamanager._insertIntoDB(self, listaSeries, self.titanScraping)
         """
         Upload
         """
@@ -234,7 +227,7 @@ class Freeform:
         except KeyError:
             titulo = serie['title']
             url = '-'.join(cls.limpia_titulo(titulo))
-            return "https://www.freeform.com/show/{}".format(url)
+            return "https://www.freeform.com/shows/{}".format(url)
 
     # limpia el título para poder generar la parte del link que usa el nombre
     @staticmethod
@@ -246,4 +239,36 @@ class Freeform:
     def get_titulo_serie(serie): return serie.split("/")[-1].capitalize()
 
     @staticmethod
-    def get_year(capitulo): return capitulo.span.split('.')[2].split('|')[0]
+    def get_year(episode):
+        estreno = episode.find('div').div['data-track-video_air_date']
+        match = re.search(r"\d{4}", estreno)
+        return match.group(0)
+
+    @staticmethod
+    def get_duration(episode):
+        duracion = episode.find('div').div["data-track-video_episode_length"]
+        return int(duracion) // 60000
+
+    @staticmethod
+    def get_title_episode(episode):
+        titulo = episode.find('span', {'class': 'tile__details-season-data'}).span.text
+        return titulo.split('-')[1]
+
+    @staticmethod
+    def get_season(episode):
+        season = episode.find('span', {'class': 'tile__details-season-data'}).span.text
+        return int(re.findall(r"[0-9]+", season)[0])
+
+    @staticmethod
+    def get_number_episode(episode):
+        number = episode.find('span', {'class': 'tile__details-season-data'}).span.text
+        return int(re.findall(r"[0-9]+", number)[1])
+
+    @staticmethod
+    def get_id_episode(episode): return episode.find('div').div['data-track-video_id_code']
+
+    @staticmethod
+    def get_genre_episode(episode): return episode.find('div').div["data-track-video_genre"]
+
+    @staticmethod
+    def get_synopsis_episode(episode): return episode.find('span', {'class': 'tile__details-description'}).span.span.text
