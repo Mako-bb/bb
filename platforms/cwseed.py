@@ -92,14 +92,12 @@ class CwSeed():
             
             # Limpia el Directors
             if prod != None:
-                print(prod)
                 while True:
                     if prod.find('(') != -1:
                         aux = prod[prod.index('('):prod.index(')') + 1]
                         prod = prod.replace(aux, '')
                     else:
                         prod_def = prod.split("  ")
-                        
                         for product in prod_def:
                             prod_def1 = product.replace("\r",",")
                             prod_def2 = prod_def1.split(",")
