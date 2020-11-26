@@ -92,29 +92,37 @@ class CwSeed():
             
             # Limpia el Directors
             if prod != None:
-                while True:
-                    if prod.find('(') != -1:
-                        aux = prod[prod.index('('):prod.index(')') + 1]
-                        prod = prod.replace(aux, '')
-                    else:
-                        prod_def = prod.split("  ")
-                        for product in prod_def:
-                            prod_def1 = product.replace("\r",",")
-                            prod_def2 = prod_def1.split(",")
-                        break
+                prod_def = []
+                lista1 = prod.split(')')
+                for i in lista1:
+                    if i != '':
+                        x = i.split(' (')[0].strip(' ')
+                        if '\r' in x:
+                            y = x.split('\r')
+                            for item in y:
+                                prod_def.append(item)
+                        else:
+                            prod_def.append(x)
+                
             else:
                 prod_def = None
-
+            print(prod_def)
             
             
-            # Limpia el CAST 
-            while True:
-                if cast.find('(') != -1:
-                    aux = cast[cast.index('('):cast.index(')') + 1]
-                    cast = cast.replace(aux, '')
-                else:
-                    break
-            cast2 = cast.split("  ")            # Cast definitivo
+            # Limpia el CAST
+            cast_def = []
+            cast_list = cast.split(')')
+            for i in cast_list:
+                if i != '':
+                    x = i.split(' (')[0].strip(' ')
+                    if '\r' in x:
+                        y = x.split('\r')
+                        for item in y:
+                            cast_def.append(item)
+                    else:
+                        cast_def.append(x)    
+            print(cast_def) 
+                      # Cast definitivo
             
             
 
@@ -133,7 +141,7 @@ class CwSeed():
                 cast2 = None
             """
             
-            print(prod_def2)
+            
             
 
             #RATING
@@ -183,7 +191,7 @@ class CwSeed():
                 'Rating':        rating,
                 'Provider':      None,
                 'Genres':        None,
-                'Cast':          cast2,
+                'Cast':          cast_def,
                 'Directors':     prod_def,
                 'Availability':  None,
                 'Download':      None,
@@ -194,7 +202,7 @@ class CwSeed():
                 'Timestamp':     datetime.now().isoformat(),
                 'CreatedAt':     self._created_at
             }
-            #Datamanager._checkDBandAppend(self,payload,listDBMovie,listPayload)
+            Datamanager._checkDBandAppend(self,payload,listDBMovie,listPayload)
             
 
 
@@ -264,13 +272,13 @@ class CwSeed():
                         'Timestamp'     : datetime.now().isoformat(),
                         'CreatedAt'     : self._created_at
                     }
-                    #Datamanager._checkDBandAppend(self,payloadEpi,listDBEpi,listPayloadEpi,isEpi=True)
+                    Datamanager._checkDBandAppend(self,payloadEpi,listDBEpi,listPayloadEpi,isEpi=True)
                                         
-                #Datamanager._insertIntoDB(self,listPayload,self.titanScraping)
-                #Datamanager._insertIntoDB(self,listPayloadEpi,self.titanScrapingEpisodios)
+                Datamanager._insertIntoDB(self,listPayload,self.titanScraping)
+                Datamanager._insertIntoDB(self,listPayloadEpi,self.titanScrapingEpisodios)
 
                 # Upload
-                #Upload(self._platform_code, self._created_at, testing=True)   
+                Upload(self._platform_code, self._created_at, testing=True)   
             
             
 
