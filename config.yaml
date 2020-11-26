@@ -98,3 +98,6 @@ ott_sites:
   CwSeed:
     countries:
       US: us.cwseed
+  CWtv:
+    countries:
+      US: us.thecw

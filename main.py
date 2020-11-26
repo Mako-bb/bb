@@ -13,6 +13,8 @@ from platforms.optimum              import Optimum
 # from platforms.acorntv_test         import AcornTV_Test
 from platforms.acorntv_test_diego   import AcornTV_Test_Diego
 from platforms.optimum_test_diego   import Optimum_test_diego
+from platforms.optimum_test_carlos  import Optimum_Test_Carlos
+from platforms.cwtv                 import CWtv
 from common                         import config
 from platforms.optimum_test_alexis  import OptimumTest
 from platforms.freeform             import Freeform
