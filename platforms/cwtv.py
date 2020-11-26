@@ -36,13 +36,31 @@ class CWtv():
         listDBEpi = Datamanager._getListDB(self,self.titanScrapingEpisodios)
 
         HOME_URL = "https://www.cwtv.com/"
+        data_js = "https://images.cwtv.com/data/r_20201126090/shows/data.js"
         episode_metadata_url = "https://images.cwtv.com/feed/mobileapp/video-meta/apiversion_9/guid_"
 
-        soup_home = Datamanager._getSoup(self, HOME_URL)
+        list_of_specials = self._scrape_specials()
 
-        for serie in soup_home.find("div",{"class":"footercol fcol1"}).findAll("a"):
+        #gets slugs to build all the links for all content
+        list_of_slugs = []
+        list_of_content = requests.get(data_js).content.decode("utf-8").split("shows_list = ")[1].split(";")[0]
+        decoder = json.JSONDecoder()
+        list_of_content = decoder.decode(list_of_content)
+        for content in list_of_content.keys():
+            if list_of_content[content]["schedule"] == "cwtv":
+                list_of_slugs.append(list_of_content[content]["slug"])
+            else:
+                title = list_of_content[content]["title"]
+                print(f"{title} is a CW Seed exclusive and has been skipped.")
+                self.skippedTitles += 1
 
-            deeplink = HOME_URL + serie.get("href")[1:]
+        for slug in list_of_slugs:
+
+            #so it doesn't include the "specials" section which is full of cast interviews and repeated episodes
+            if slug == "more-video":
+                continue
+
+            deeplink = HOME_URL + "shows/" + slug
 
             try:
                 guid_serie = requests.get(deeplink).url.split("?play=")[1]
@@ -51,16 +69,11 @@ class CWtv():
                 self.skippedTitles += 1
                 continue
 
-            #obtiene json con ficha técnica que contiene un poco más de info de la serie
             json_serie = Datamanager._getJSON(self, episode_metadata_url+guid_serie)["video"]
             soup_serie = Datamanager._getSoup(self, deeplink)
 
-            #skips if the series is a CW Seed platform exclusive
-            if json_serie["show_type"] == "cw-seed":
-                print("CW Seed exclusive. skipped.")
-                self.skippedTitles += 1
-                continue
-            elif json_serie["orig_content_type"] != "Full Episodes":
+            #skips if the series is marked as anything other than an episode
+            if json_serie["orig_content_type"] != "Full Episodes":
                 print("No episodes available yet. skipped.")
                 self.skippedTitles += 1
                 continue
@@ -71,7 +84,7 @@ class CWtv():
             payload = {
                 'PlatformCode'      : self._platform_code,
                 'Id'                : id_,
-                'Type'              : "serie",
+                'Type'              : "serie" if json_serie["orig_content_type"] == "Full Episodes" else json_serie["orig_content_type"],
                 'Title'             : title,
                 'CleanTitle'        : _replace(title),
                 'OriginalTitle'     : None,
@@ -100,6 +113,8 @@ class CWtv():
             #self._append_to_list(payload, listPayload)
             Datamanager._checkDBandAppend(self, payload, listDBMovie, listPayload)
 
+            specials_episode_count = 1
+
             season_container = soup_serie.find("section", {"id":"videosandtouts"}).findAll("div")[0]
 
             for episode_link in season_container.find("ul",{"id":"list_1"}).findAll("a", {"class":"thumbLink"}):
@@ -110,18 +125,38 @@ class CWtv():
                     print("Not a valid link, doesn't contain slug.")
                     continue
 
+                #skips the episode if it's an special episode contained in the more-video section of the website
+                if guid_epi in list_of_specials:
+                    self.skippedEpis += 1
+                    print(f"{episode_link} links to an special episode that is part of the 'more-video' section and is not valid.")
+                    continue
+
                 json_epi = Datamanager._getJSON(self, episode_metadata_url+guid_epi)["video"]
+
+                title_epi = json_epi["title"]
+                season_epi = 0 if "special:" in title_epi.lower() else int(json_epi["season"])
+
+                #set episode number depending if episode is an special or not
+                if season_epi == 0:
+                    episode_number = specials_episode_count
+                    specials_episode_count += 1
+                else:
+                    episode_number = int(json_epi["episode"].replace(str(season_epi),"", 1))
+
+                    external_id = None
+                    if json_epi["tms_id"] != "":
+                        external_id = [{'Provider': 'tms', 'Id': json_epi["tms_id"]}]
 
                 payloadEpi = {
                     'PlatformCode'  : self._platform_code,
                     'ParentId'      : id_,
                     'ParentTitle'   : title,
                     'Id'            : guid_epi,
-                    'ExternalIds'   : [{'Provider': 'tms', 'Id': json_epi["tms_id"]}],
-                    'Title'         : json_epi["title"],
+                    'ExternalIds'   : external_id,
+                    'Title'         : title_epi,
                     #'SeasonName'    : seasonName,
-                    'Episode'       : int(json_epi["episode"][1:]),
-                    'Season'        : int(json_epi["season"]),
+                    'Episode'       : episode_number,
+                    'Season'        : season_epi,
                     'Year'          : None,
                     'Duration'      : int(json_epi["duration_secs"])//60,
                     'Deeplinks'     : {
@@ -161,6 +196,19 @@ class CWtv():
         if not testing:
             Upload(self._platform_code, self._created_at, testing=True)
 
-    def _append_to_list(self, payload, list_of_payloads):
-        if payload not in list_of_payloads:
-            list_of_payloads.append(payload)
+    def _scrape_specials(self):
+        URL = "https://www.cwtv.com/shows/more-video"
+        specials_guid_list = []
+
+        specials_soup = Datamanager._getSoup(self, URL).find("section", {"id":"videosandtouts"}).findAll("div")[0]
+
+        for link in specials_soup.find("ul",{"id":"list_1"}).findAll("a", {"class":"thumbLink"}):
+            link = link.get("href")
+            try:
+                guid = link.split("?play=")[1]
+                specials_guid_list.append(guid)
+            except IndexError:
+                print("Not a valid link, doesn't contain slug.")
+                continue
+
+        return specials_guid_list
