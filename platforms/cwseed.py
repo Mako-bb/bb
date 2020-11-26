@@ -93,20 +93,33 @@ class CwSeed():
             # Limpia el Directors
             if prod != None:
                 print(prod)
-                while True:
-                    if prod.find('(') != -1:
-                        aux = prod[prod.index('('):prod.index(')') + 1]
-                        prod = prod.replace(aux, '')
-                    else:
-                        prod_def = prod.split("  ")
-                        
-                        for product in prod_def:
-                            prod_def1 = product.replace("\r",",")
-                            prod_def2 = prod_def1.split(",")
-                        break
+                prod_def = []
+                lista1 = prod.split(')')
+                for i in lista1:
+                    if i != '':
+                        x = i.split(' (')[0].strip(' ')
+                        if '\r' in x:
+                            y = x.split('\r')
+                            for item in y:
+                                prod_def.append(item)
+                        else:
+                            prod_def.append(x)
+                #while True:
+                #    if prod.find('(') != -1:
+                #        aux = prod[prod.index('('):prod.index(')') + 1]
+                #        
+                #        prod = prod.replace(aux, '')
+                #        
+                #    else:
+                #        prod_def = prod.split("  ")
+                #   
+                #        for product in prod_def:
+                #            prod_def1 = product.replace("\r",",")
+                #            prod_def2 = prod_def1.split(",")
+                #        break
             else:
                 prod_def = None
-
+            print(prod_def)
             
             
             # Limpia el CAST 
@@ -135,7 +148,7 @@ class CwSeed():
                 cast2 = None
             """
             
-            print(prod_def2)
+            
             
 
             #RATING
