@@ -125,10 +125,19 @@ class Freeform:
                 'Type': 'tv-everywhere',
             }
         ]
-        data_series = Datamanager._getJSON(self, url)
+
+        headers = {
+            'Referer': 'https://www.freeform.com/',
+            'DNT': '1',
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:83.0) Gecko/20100101 Firefox/83.0',
+            'appversion': '5.37.0'
+        }
+
+        data_series = Datamanager._getJSON(self, url, headers=headers)
 
         for serie in data_series['tiles']:
-            if serie['title'] != "Kickoff to Christmas":  # esto es un compilado de
+            if serie['title'] != "Kickoff to Christmas" and serie['title'] != "The Clock Is Ticking with Yara Shahidi":
+                #           esto es un compilado de peliculas                          esto es un especial
                 payload = {
                     'PlatformCode': self._platform_code,
                     'Id': str(serie['link']['id']),
@@ -167,6 +176,8 @@ class Freeform:
                 temporadas = soup.find_all('div', {'class': 'Carousel__Inner flex items-center'})
                 for temporada in temporadas:
                     for episode in temporada.find_all('a'):
+                        # find_all('a') devuelve muchos links basuras,
+                        # lo que hace el if de abajo es filtrar los son útiles
                         if re.search(r"episode-guide", episode['href']):
                             payloadEpi = {
                                 'PlatformCode': self._platform_code,
