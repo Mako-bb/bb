@@ -75,7 +75,7 @@ class CwSeed():
             sinopsis = all_data[0].text             # Sinopsis
                              
             long_prod = len(all_data)
-            #print(long_prod)
+            
 
 
             # Cast & Producers sin limpiar
@@ -96,23 +96,27 @@ class CwSeed():
                     if prod.find('(') != -1:
                         aux = prod[prod.index('('):prod.index(')') + 1]
                         prod = prod.replace(aux, '')
+                        print(prod)
                         prod_def = prod.split("  ")
-                        if "/r" in prod_def:
-                            prod_def = prod_def.replace("\\\\r",", ")
+                        print(prod_def)
+                        """
+                        if "\r" in prod_def:
+                            prod_def = prod_def.replace('\r',", ")
                         elif "Herself" in prod_def:
-                            prod_def = prod_def.replace(" as Herself","")
+                            prod_def = prod_def.replace(' as Herself',"")
                         elif "Himself" in prod_def:
                             prod_def = prod_def.replace(" as Himself","")
+                            """
                     else:
                         break
             else:
                 prod_def = None
 
         
-            print(prod_def)
+            #print(prod_def)
 
             #FALTA LIMPIAR ALGUNOS COMO /R reemplazar por "," O "AS HIMSELF" reemplaza x ""
-             # FALTA LIMPIAR EL RATING sacar "l,v"
+            
             
     
             # Limpia el CAST 
@@ -122,15 +126,38 @@ class CwSeed():
                     cast = cast.replace(aux, '')
                 else:
                     break
-            cast2 = cast.split("  ")
-            print(cast2)                    # Cast definitivo
-            
+            cast2 = cast.split("  ")            # Cast definitivo
+
+            print("************ CAST ***********")
+            print(cast)                   
+            print(cast2)
+
             #RATING
             rating = epi_soup.find("span",{"class":"rating"}).text
-            print(rating)
+            if "L, V" in rating:
+                rating = rating.replace(" L, V","")
             
             
             
+            #DIFERENCIA MOVIE O SERIE según duración
+            
+            dif_dur = epi_soup.find("span",{"class":"dura"}).text
+            dur = dif_dur.replace(" min", "")
+            dur = int(dur)          # Duracion solo para comparar
+            
+
+            # Entramos a TODOS los episodios
+            all_episodes = epi_soup.find("div",{"class": "secondary-videos video-thumbnail-list"})
+            lista = len(all_episodes.findAll("li"))
+
+            #DIFERENCIA MOVIE O SERIE segun cantidad de episodios & duración
+            if lista == 1 and dur > 70:
+                tipo = "movie"
+                all_duration = dur              # Duracion definitiva
+            else:
+                tipo = "serie"
+                all_duration = None             # Duracion definitiva
+
 
             payload = {
                 'PlatformCode':  self._platform_code,
@@ -138,9 +165,9 @@ class CwSeed():
                 'Title':         titulo,
                 'OriginalTitle': None,
                 'CleanTitle':    _replace(titulo),
-                'Type':          "serie",
+                'Type':          tipo,
                 'Year':          None,
-                'Duration':      None,
+                'Duration':      all_duration,
                 'Deeplinks': {
                     'Web':       arma_link,
                     'Android':   None,
@@ -170,8 +197,6 @@ class CwSeed():
 #           ---------------------------------------------------------------------------
 #                                       EPISODIOS
 
-            all_episodes = epi_soup.find("div",{"class": "secondary-videos video-thumbnail-list"})
-
             for epi in all_episodes.findAll("li"):
                 epi_dataurl = epi.get("data-videourl") #Links a todos los episodios de cada serie
                 epi_deeplink = 'https://www.cwseed.com{}'.format(epi_dataurl)
@@ -197,9 +222,13 @@ class CwSeed():
                 #Consigue la duracion del episode
                 duration = epi.find("span",{"class":"dura"}).text
                 duration_epi = duration.replace(" min", "")     #Duracion
-                
 
-                       
+                #Consigue el rating del episodio
+                rating_epi = epi.find("span",{"class":"rating"}).text
+                if "L, V" in rating_epi:
+                    rating_epi = rating_epi.replace(" L, V","")
+                
+                                
                 
                 payloadEpi = {
                     'PlatformCode'  : self._platform_code,
@@ -217,7 +246,7 @@ class CwSeed():
                         'iOS': None
                     },
                     'Synopsis'      : None,
-                    'Rating'        : None,
+                    'Rating'        : rating_epi,
                     'Provider'      : None,
                     'Genres'        : None,
                     'Cast'          : None,

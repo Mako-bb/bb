@@ -97,4 +97,8 @@ ott_sites:
       US: us.cwseed
   MyOutdoorTV:
     countries:
+<<<<<<< HEAD
       US: us.myoutdoortv
+=======
+      US: us.myoutdoortv
+>>>>>>> c635b13f804ddc2e92acaf9b98db75b62d0c0aa2
