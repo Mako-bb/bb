@@ -14,6 +14,24 @@ from handle.datamanager import Datamanager
 from updates.upload     import Upload
 from bs4                import BeautifulSoup
 
+"""
+    El scraping de la plataforma está dividido en dos funciones principales, una que scrapea las películas y 
+    otra que lo hace con las series. Ambos tienen una api separada que devuelve todo lo necesario para el payload
+    -y puede modificarse la cantidad de contenidos que trae, teniendo que cambiar los valores de start y size en el
+    link de la api-. salvo el de las series que no tiene una api para los capítulos.
+    
+    La plataforma es un tv-everywhere ya que pide loguearse con un operador de cable para poder ver el contenido.
+    
+    Los datos de los capítulos de todas las series se sacó del html, teniendo que mandar un único request a cada serie.
+    
+    Dato importante #1: en la categoría de series aparecen dos contenidos que no son series, siendo uno un compilado
+    de películas navideñas (que no va a estar después de que pasen las fiestas) y un especial que no aparece en 
+    IMDb.
+    
+    Dato importante #2: Fallen 2: The Journey tiene mal la url en la api, por lo que al ser un caso específico 
+    en 50 películas está hardcodeado.
+"""
+
 
 class Freeform:
 
@@ -113,10 +131,10 @@ class Freeform:
 
     def _scraping_series(self):
 
-        url = "https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module/tilegroup/3376167?start=0&size=50&authlevel=0&brand=002&device=001"
+        url = "https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module" \
+              "/tilegroup/3376167?start=0&size=50&authlevel=0&brand=002&device=001"
         listaSeries = []
         listaSeriesDB = Datamanager._getListDB(self, self.titanScraping)
-        listaEpiDB = []
         listaEpi = []
         listaEpiDB = Datamanager._getListDB(self, self.titanScrapingEpisodios)
 
@@ -219,11 +237,13 @@ class Freeform:
         Upload(self._platform_code, self._created_at, testing=True)
 
     # algunas películas no tienen la key con el link, por lo que esta funcion hace que todos la tengan
-    # TODO: limpíar el título de fallen 2 porque la api lo devuelve como serie
     @classmethod
     def url_pelicula(cls, pelicula):
         try:
-            return "https://www.freeform.com{}".format(pelicula['link']['urlValue'])
+            if pelicula['title'] == "Fallen: The Journey":
+                return "https://www.freeform.com/movies-and-specials/fallen-ii-the-journey"
+            else:
+                return "https://www.freeform.com{}".format(pelicula['link']['urlValue'])
         except KeyError:
             titulo = pelicula['title']
             url = '-'.join(cls.limpia_titulo(titulo))
@@ -282,4 +302,5 @@ class Freeform:
     def get_genre_episode(episode): return episode.find('div').div["data-track-video_genre"]
 
     @staticmethod
-    def get_synopsis_episode(episode): return episode.find('span', {'class': 'tile__details-description'}).span.span.text
+    def get_synopsis_episode(episode):
+        return episode.find('span', {'class': 'tile__details-description'}).span.span.text
