@@ -82,37 +82,32 @@ class CartoonNetwork:
 
         url = requests.get("https://www.cartoonnetwork.com/video/index.html?atclk_vn=vn_link_homeImg&")
         soup = BeautifulSoup(url.content, 'html.parser')
-        for script in soup.findAll('script'):
-            if "_cnglobal.searchData" in script.text:
-                print(script.text)
-        """for series in soup.find_all('li', {'class': 'showLink'}):
-            show = requests.get(self.get_url_serie(series))
-            soup = BeautifulSoup(show.content, 'html.parser')
-            for serie in soup.find_all('section', {'id': 'episodes'}):
-                id_serie = hashlib.md5(self.get_url_serie(serie).encode()).hexdigest()
+        series = self.get_json(soup)
+        for serie in range(len(series)):
+            if series[serie]["videoIndexCanonicalUrl"] is not None:  # esto hace que no se metan juegos en las series
                 payload = {
                     'PlatformCode': self._platform_code,
-                    'Id': id_serie,
-                    'Title': self.get_titulo_serie(series),
-                    'CleanTitle': _replace(self.get_titulo_serie(series)),
+                    'Id': series[serie]['id'],
+                    'Title': series[serie]['display_title'],
+                    'CleanTitle': _replace(series[serie]['display_title']),
                     'OriginalTitle': None,
                     'Type': 'serie',  # 'movie' o 'serie'
                     'Year': None,
                     'Duration': None,  # duracion en minutos
                     'Deeplinks': {
-                        'Web': self.get_url_serie(series),
+                        'Web': self.get_url_serie(series, serie), # peanuts no tiene link
                         'Android': None,
                         'iOS': None,
                     },
                     'Playback': None,
                     'Synopsis': None,
-                    'Image': None,  # [str, str, str...] # []
+                    'Image': series[serie]['search_thumbnail'],
                     'Rating': None,
                     'Provider': None,
                     'Genres': None,
                     'Cast': None,
                     'Directors': None,  # [str, str, str...]
-                    'Availability': None,
+                    'Availability': self.get_avaibility(series, serie),
                     'Download': None,
                     'IsOriginal': None,
                     'IsAdult': None,
@@ -122,46 +117,29 @@ class CartoonNetwork:
                     'CreatedAt': self._created_at
                 }
                 Datamanager._checkDBandAppend(self, payload, listaSeriesDB, listaSeries)
-
-                for episode in soup.find_all('a', {'class': 'feature-vide-a'}):
-                    payloadEpi = {
-                        'PlatformCode': self._platform_code,
-                        'ParentId': id_serie,
-                        'ParentTitle': _replace(self.get_titulo_serie(series)),
-                        'Id': None,
-                        'Title': "Titulo de prueba",  # self.get_titulo_episodio(episode),  # episodio['title'],
-                        'Episode': None,
-                        'Season': None,
-                        'Year': None,  # rompe en Alone Together
-                        'Duration': None,  # rompe en Alone Together
-                        'Deeplinks': {
-                            'Web': None,
-                            'Android': None,
-                            'iOS': None
-                        },
-                        'Synopsis': None,  # episodio['description'],
-                        'Rating': None,  # dataSerie['about']['rating'],
-                        'Provider': None,
-                        'Genres': None,
-                        'Cast': None,  # castList,
-                        'Directors': None,
-                        'Availability': None,
-                        'Download': None,
-                        'IsOriginal': None,
-                        'IsAdult': None,
-                        'Country': None,
-                        'Packages': packages,
-                        'Timestamp': datetime.now().isoformat(),
-                        'CreatedAt': self._created_at
-                    }
-                    Datamanager._checkDBandAppend(self, payloadEpi, listaEpiDB, listaEpi, isEpi=True)
-                    print(payloadEpi)"""
+        Datamanager._insertIntoDB(self, listaSeries, self.titanScraping)
 
     @staticmethod
-    def get_titulo_serie(serie): return serie.a.span.text
+    def get_json(soup):
+        for script in soup.findAll('script'):
+            if "_cnglobal.searchData" in script.text:
+                script_data = script.text.replace("\n        _cnglobal.searchData = apiObjArrayToValidObjArray(", '')\
+                    .replace(')', '').replace(";", '')
+                return json.loads(script_data)
 
     @staticmethod
-    def get_url_serie(serie): return "https://cartoonnetwork.com{}".format(serie.a['href'])
+    def get_avaibility(series, serie):
+        try:
+            anio = series[serie]['video_index_end_date']
+            match = re.search(r"\d{4}", anio)
+            return int(match.group(0))
+        except TypeError:
+            return None
 
     @staticmethod
-    def get_titulo_episodio(episode): return episode.div.div.text
+    def get_url_serie(series, serie):
+        link = series[serie]["videoIndexCanonicalUrl"]
+        if link is not None:
+            return "https://cartoonnetwork.com{}".format(link)
+        else:
+            return "https://cartoonnetwork.com/{}".format(series[serie]["title"])
