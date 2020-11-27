@@ -12,6 +12,50 @@ from handle.datamanager  import Datamanager
 from handle.replace         import _replace
 
 class CWtv():
+
+    '''
+    Esta plataforma es gratuita y no requiere suscripción ni cuenta. Solo se puede
+    acceder con vpn en USA. Por cuestiones de licencia, la mayoría de los contenidos
+    solo muestran los últimos 5 episodios añadidos a la plataforma, y a medida que
+    añaden más, los más antiguos dejan de estar disponibles. A veces hacen "reruns",
+    de forma que episodios que dejaron de estar disponibles pueden volver a estarlo
+    en el futuro. La plataforma solo ofrece series/webseries.
+
+    Problemas: A veces bloquea algunas IPs de los vpn, así que hay que desconectar
+    y reconectar para que el vpn asigne una IP distinta y volver a probar. Tampoco
+    encontré forma sencilla de sacar el contenido sin tener que hacer muchos requests,
+    pero por suerte la plataforma tiene muy poco contenido por el momento así que hasta
+    ahora no representa un problema importante. En casos puntuales a veces meten
+    episodios especiales como parte de temporadas en lugar de la sección de extras
+    (como es el caso de Penn & Teller season 1) así que agregué un filtro simple
+    para eso.
+
+    Los contenidos de la plataforma se pueden acceder a través de "https://www.cwtv.com/"
+    seguido de un SLUG que es único para cada contenido. La plataforma tiene una categoría
+    llamada "Specials" a la que se puede acceder con el slug "more-video", esta solo
+    contiene una compilación de episodios "especiales" (cast interviews, etc) de distintos
+    contenidos. Estos episodios no son válidos, pero la categoría nos sirve para armar
+    una lista que usaremos para filtrar este tipo de episodios si el scraper los llega a
+    encontrar.
+
+    Las series como tal no parecen tener ficha técnica, pero los episodios sí. Cada
+    episodio tiene un "guid" único que se puede extraer fácilmente de la URL. Este guid
+    nos sirve para hacer un request a una api y obtener la "ficha técnica" de cada episodio.
+    Esta misma ficha nos sirve también para popular el payload del contenido padre con
+    un poquito más de info.
+
+    Al correr el scraper, se arma la lista de especiales, se saca una lista de slugs de
+    todos los contenidos de la plataforma a través del data.js (se limpia el script en
+    forma de string y se utiliza un json decoder para obtener un diccionario de python,
+    luego se filtra de acuerdo a si forman parte de CWtv o de la otra plataforma sw-seed)
+    y se procede a scrapear cada contenido usando los slugs. Primero se arma un soup y se
+    obtiene el guid, se saca el json con la ficha técnica de cualquier episodio y se usa
+    esa info para armar el payload del contenido. Luego a partir del soup se obtienen los
+    guid de todos los episodios y se hace lo mismo pero para el payload de episodios. El
+    episodio se skippea si su guid se encuentra en la lista de especiales que armamos
+    antes, luego se hace un request a la api por cada episodio y se arma el payload.
+    '''
+
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config                = config()['ott_sites'][ott_site_uid]
         self._created_at            = time.strftime("%Y-%m-%d")
@@ -37,7 +81,7 @@ class CWtv():
 
         HOME_URL = "https://www.cwtv.com/"
         data_js = "https://images.cwtv.com/data/r_20201126090/shows/data.js"
-        episode_metadata_url = "https://images.cwtv.com/feed/mobileapp/video-meta/apiversion_9/guid_"
+        api_url = "https://images.cwtv.com/feed/mobileapp/video-meta/apiversion_9/guid_"
 
         list_of_specials = self._scrape_specials()
 
@@ -69,7 +113,7 @@ class CWtv():
                 self.skippedTitles += 1
                 continue
 
-            json_serie = Datamanager._getJSON(self, episode_metadata_url+guid_serie)["video"]
+            json_serie = Datamanager._getJSON(self, api_url+guid_serie)["video"]
             soup_serie = Datamanager._getSoup(self, deeplink)
 
             #skips if the series is marked as anything other than an episode
@@ -131,7 +175,7 @@ class CWtv():
                     print(f"{episode_link} links to an special episode that is part of the 'more-video' section and is not valid.")
                     continue
 
-                json_epi = Datamanager._getJSON(self, episode_metadata_url+guid_epi)["video"]
+                json_epi = Datamanager._getJSON(self, api_url+guid_epi)["video"]
 
                 title_epi = json_epi["title"]
                 season_epi = 0 if "special:" in title_epi.lower() else int(json_epi["season"])
