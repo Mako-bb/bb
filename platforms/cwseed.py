@@ -1,3 +1,18 @@
+"""
+La plataforma es sólo para USA, tiene sólo contenido de serie excepto por dos
+películas que figuran como serie. Es decir que la plataforma no diferencia
+entre peliculas y series sino que toma todo como serie. Esto se pudo diferenciar
+en el script gracias a un if en la línea 152 que toma la duración y la cantidad de
+episodios del título a analizar: si dura > 70 min y tiene 1 solo episodio, es peli.
+La plataforma cuenta con un json para cada episodio por lo que no pareció
+conveniente realizar un request a cada uno de ellos. En su lugar, se scrapeó
+a partir del html en donde la info estaba bastante completa.
+Hubo gran complicación a la hora de enlistar a los actores y directores ya que
+el html en su estructura tiene un salto de línea. Se logró sortear esta dificultad con 
+dos for que van de la linea 108 a la 140 aprox.
+La plataforma ofrece contenido gratuito a través de anuncios, es decir, para mirar
+un episodio se deben mirar varios anuncios.
+"""
 import json
 import time
 import requests
@@ -124,25 +139,7 @@ class CwSeed():
             print(cast_def) 
                       # Cast definitivo
             
-            
-
-            # Quita el cast sucio
-            """
-            if titulo == "Being Reuben":
-                cast2 = None
-                prod_def = None
-            elif titulo == "Dead Pixels":
-                prod_def = None
-            elif titulo == "Taskmaster":
-                cast2 = None
-            elif titulo == "The Secret Circle":
-                prod_def = None
-            elif titulo == "Whose Line Is It Anyway?":
-                cast2 = None
-            """
-            
-            
-            
+        
 
             #RATING
             rating = epi_soup.find("span",{"class":"rating"}).text

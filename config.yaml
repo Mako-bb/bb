@@ -98,6 +98,9 @@ ott_sites:
   CwSeed:
     countries:
       US: us.cwseed
-  CartoonNetwork:
+  CWtv:
     countries:
-      US: us.cartoonnetwork
+      US: us.thecw
+  Pantaya:
+    countries:
+      US: us.pantaya
