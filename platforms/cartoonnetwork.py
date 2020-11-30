@@ -214,7 +214,7 @@ class CartoonNetwork:
                             },
                             'Playback': None,
                             'Synopsis': None,
-                            'Image': None,
+                            'Image': [pelicula.find('img')['src']],
                             'Rating': None,
                             'Provider': None,
                             'Genres': None,
