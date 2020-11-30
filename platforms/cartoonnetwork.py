@@ -117,7 +117,48 @@ class CartoonNetwork:
                     'CreatedAt': self._created_at
                 }
                 Datamanager._checkDBandAppend(self, payload, listaSeriesDB, listaSeries)
+
+                url = requests.get(self.get_url_serie(series, serie))
+                soup = BeautifulSoup(url.content, 'html.parser')
+                for capitulo in soup.find_all('div', {'class': 'feature-video-wrapper clearfix'}):
+                    payloadEpi = {
+                        'PlatformCode': self._platform_code,
+                        'ParentId': series[serie]['id'],
+                        'ParentTitle': _replace(series[serie]['display_title']),
+                        'Id': hashlib.md5(capitulo.a['href'].encode('UTF-8')).hexdigest(),
+                        'Title': self.get_episode_title(capitulo),
+                        'Episode': self.get_number_episode(capitulo),
+                        'Season': self.get_season(capitulo),
+                        'Year': None,
+                        'Duration': None,
+                        'Deeplinks': {
+                            'Web': "https://www.cartoonnetwork.com{}".format(capitulo.a['href']),
+                            'Android': None,
+                            'iOS': None
+                        },
+                        'Synopsis': None,
+                        'Rating': None,
+                        'Provider': None,
+                        'Genres': None,
+                        'Cast': None,
+                        'Directors': None,
+                        'Availability': None,
+                        'Download': None,
+                        'IsOriginal': None,
+                        'IsAdult': None,
+                        'Country': None,
+                        'Packages': packages,
+                        'Timestamp': datetime.now().isoformat(),
+                        'CreatedAt': self._created_at
+                    }
+                    Datamanager._checkDBandAppend(self, payloadEpi, listaEpiDB, listaEpi, isEpi=True)
         Datamanager._insertIntoDB(self, listaSeries, self.titanScraping)
+        Datamanager._insertIntoDB(self, listaEpi, self.titanScrapingEpisodios)
+        """
+        Upload
+        """
+        self.sesion.close()
+        Upload(self._platform_code, self._created_at, testing=True)
 
     @staticmethod
     def get_json(soup):
@@ -143,3 +184,16 @@ class CartoonNetwork:
             return "https://cartoonnetwork.com{}".format(link)
         else:
             return "https://cartoonnetwork.com/{}".format(series[serie]["title"])
+
+    @staticmethod
+    def get_episode_title(capitulo): return capitulo.find('div', {'class': 'feature-video-title'}).text
+
+    @staticmethod
+    def get_season(capitulo):
+        temporada = capitulo.find('span', {'class': 'feature-video-info-season'}).text
+        return temporada.split(' ')[-1]
+
+    @staticmethod
+    def get_number_episode(capitulo):
+        episode = capitulo.find('span', {'class': 'feature-video-info-aired-date'}).text
+        return episode.split(' ')[-1]
