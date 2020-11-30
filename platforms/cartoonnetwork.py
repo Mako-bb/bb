@@ -91,9 +91,9 @@ class CartoonNetwork:
                     'Title': series[serie]['display_title'],
                     'CleanTitle': _replace(series[serie]['display_title']),
                     'OriginalTitle': None,
-                    'Type': 'serie',  # 'movie' o 'serie'
+                    'Type': 'serie',
                     'Year': None,
-                    'Duration': None,  # duracion en minutos
+                    'Duration': None,
                     'Deeplinks': {
                         'Web': self.get_url_serie(series, serie), # peanuts no tiene link
                         'Android': None,
