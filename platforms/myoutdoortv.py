@@ -17,7 +17,16 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from handle.datamanager     import Datamanager
 from updates.upload         import Upload
-
+'''
+MyOutdoorTV es una plataforma que requiere suscripcion paga para la mayoria de su contenido aunque cuenta con algun contenido free-vod. 
+Es posible acceder sin necesidad de VPN. La plataforma cuenta con todas series y en algunos casos el mismo epidosio forma parte de 2 series diferentes. 
+Este es un detalle a tener en cuenta, por lo que se optó por generar un ID de episodio compuesto por ID Serie + ID episodio con hashlib, de esta forma
+evitamos los IDs repetidos en aquellos episodios iguales que forman parte de 2 series a la vez. El scraping comienza haciendo una requests a traves de 
+una API a las categorias mostradas en el sitio (path), dentro de las cuales encuentra las series y luego se realiza un request mas a cada serie donde
+se obtienen los episodios de las mismas. Si bien el scraping lo realizamos a traves de API la misma no aporta mucha informacion para el payload. 
+Pensando a futuro, el codigo tiene comentado (linea 248 a 252) una parte que genera un archivo json con aquellos episodios repetidos para tenerlos 
+identificados. 
+'''
 class MyOutdoorTV():
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config                = config()['ott_sites'][ott_site_uid]
@@ -46,6 +55,9 @@ class MyOutdoorTV():
 
         ### {ID : {TITLE,DEEPLINK}} OF SERIES ###
         series_list = {}
+        ### CHECK REPEAT EPISODES ###
+        check_episodes = []  
+        repeat_episodes = {}  ### TO IDENTIFY REPEAT EPISODES
         ### CATEGORIES WEBSITE
         path = ['/category/hunting',
             '/category/eu-hunting',
@@ -72,7 +84,7 @@ class MyOutdoorTV():
                     content_title = content['gist']['title']
                     deeplink = content['gist']['permalink']
                     if not content_id in series_list:
-                        series_list[content_id] = {'title':content_title,'deeplink':deeplink}
+                        series_list[content_id] = {'title':content_title,'deeplink':deeplink,'category':category}
                         
                 offset += 20
                 URL = ('https://prod-api-cached-2.viewlift.com/content/pages?site=myoutdoortv&path='+category+'&includeContent=true&offset='+str(offset)+'&languageCode=en&countryCode=AR')
@@ -131,7 +143,8 @@ class MyOutdoorTV():
                     'Timestamp'         : datetime.now().isoformat(),
                     'CreatedAt'         : self._created_at
                 }
-            Datamanager._checkDBandAppend(self,payload,listDBMovie,listPayload)    
+            Datamanager._checkDBandAppend(self,payload,listDBMovie,listPayload)
+            
             if request['modules'][1]['contentData'][0].get('seasons') :
                 seasons = request['modules'][1]['contentData'][0]['seasons']
                 for season in seasons:
@@ -148,8 +161,18 @@ class MyOutdoorTV():
                     ### MANUAL EPISODES NUMBER ###
                     episodes_number = None
                     for episode in episodes:
-                        ### EPISODE ID ###
+                        #if 'watchlist' in serie_title.lower():
+                        #    continue
+                        ### EPISODE ID (HASHID) CREATED BY SERIEID + EPISODE ID###
                         episode_id = episode['id']
+                        if episode_id in check_episodes:
+                            episode_hash_id = hashlib.md5((parent_id+episode_id).encode("UTF-8")).hexdigest()
+                            repeat_episodes[episode_hash_id] = {'Id':episode_id,'title':episode['title'],'deeplink':episode['gist']['permalink'],'serieTitle':serie_title,'serieId':parent_id}
+                            episode_id = episode_hash_id
+                        else:
+                            check_episodes.append(episode_id)
+                            episode_hash_id = hashlib.md5((parent_id+episode_id).encode("UTF-8")).hexdigest()
+                            episode_id = episode_hash_id
                         ### PARENT TITLE ###
                         parent_title = serie_title
                         ### EPISODE TITLE ###
@@ -222,4 +245,10 @@ class MyOutdoorTV():
 
         self.sesion.close()
         Upload(self._platform_code, self._created_at, testing=True)
-        
+
+        ### CREATE JSON FILE WITH REPEAT EPISODES ###
+        #file = open('repeatEpi.json','w+')
+        #jsonfile = json.dumps(repeat_episodes)
+        #file.write(jsonfile)
+        #file.close()
+        ### python main.py MyOutdoorTV --c US --o scraping ###
