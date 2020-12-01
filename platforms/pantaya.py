@@ -84,7 +84,7 @@ class Pantaya():
                     else:
                         packages = [
                             {
-                                "Type": "suscription-vod"
+                                "Type": "subscription-vod"
                             }
                         ]
                     if "Celebremos Teaser" in title and runtime < 2:
@@ -240,7 +240,7 @@ class Pantaya():
                             else:
                                 packages_epi = [
                                     {
-                                        "Type": "suscription-vod"
+                                        "Type": "subscription-vod"
                                     }
                                 ]
 
