@@ -14,6 +14,20 @@ from handle.datamanager import Datamanager
 from updates.upload     import Upload
 from bs4                import BeautifulSoup
 
+"""
+    Cartoon Network no tiene api, pero sí un script type="text/javascript" que tiene casi toda la información necesaria,
+    la misma empieza con _cnglobal.searchData y toda la información contenida es una lista de diccionarios, por lo que
+    para acceder a los mismos se tiene que usar diccionario[índice][key].
+    
+    La página no divide series de películas, ya que las segundas estan basadas en las primeras, por lo que cada peli
+    va a estar adentro de cada serie como si fuera un capítulo más pero en su categoria especial. Es por esto que en la
+    función de scraping hay 4 payloads, ya que el primero lo que hace es cargar todas las series, el segundo y tercero
+    cargan el payload de los capítulos, tanto de los capítulos desbloqueados (free-vod) como de los bloqueados que piden
+    loguearse con el operador de cable (tv-everywhere)
+    
+    Importante: CN necesita sí o sí conexión vpn de US, ya que en caso de enviar request desde otro páis, el html cambia
+"""
+
 
 class CartoonNetwork:
 
@@ -87,11 +101,24 @@ class CartoonNetwork:
             }
         ]
 
+        packages_series = [
+            {
+                'Type': 'free-vod',
+            },
+            {
+                'Type': 'tv-everywhere',
+            }
+        ]
+
+        titulos_omitidos = ["Nexo Knights", "Over the Garden Wall", "Halloween Specials", "Holiday Specials",
+                            "New in 2020", "Old School", "Pride Month", "Hispanic Heritage Month"]
+
         url = requests.get("https://www.cartoonnetwork.com/video/index.html?atclk_vn=vn_link_homeImg&")
         soup = BeautifulSoup(url.content, 'html.parser')
         series = self.get_json(soup)
         for serie in range(len(series)):
-            if series[serie]["videoIndexCanonicalUrl"] is not None:  # esto hace que no se metan juegos en las series
+            if series[serie]["videoIndexCanonicalUrl"] is not None and series[serie]['display_title'] not in titulos_omitidos:
+                # esto hace que no se metan juegos en la series o colecciones de especiales
                 payload = {
                     'PlatformCode': self._platform_code,
                     'Id': str(series[serie]['id']),
@@ -118,7 +145,7 @@ class CartoonNetwork:
                     'Download': None,
                     'IsOriginal': None,
                     'IsAdult': None,
-                    'Packages': packages,
+                    'Packages': packages_series,
                     'Country': None,  # [str, str, str...]
                     'Timestamp': datetime.now().isoformat(),
                     'CreatedAt': self._created_at
