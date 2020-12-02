@@ -69,7 +69,12 @@ class CwSeed():
         for item in all_titles.findAll("li",{"class":"showitem"}):
             deeplink = item.find("a").get("href")       #No es link, falta rellener con el ID de cada episodio
             titulo = item.find("p").text                #Title del TV SHOW
-            
+            #Limpia el title
+            try:
+                titulo = titulo.split(' (')[0].strip(' ')
+            except:
+                continue
+
             #ID de serie
             id_link = item.find("a").get("data-slug")
            
@@ -110,17 +115,26 @@ class CwSeed():
                 prod_def = []
                 lista1 = prod.split(')')
                 for i in lista1:
+                    print(i)
                     if i != '':
                         x = i.split(' (')[0].strip(' ')
+                        print(x)
                         if '\r' in x:
                             y = x.split('\r')
                             for item in y:
                                 prod_def.append(item)
                         else:
                             prod_def.append(x)
-                
+                for item in prod_def:    
+                    if "&" in item:
+                        newitem = item.split(" & ")
+                        prod_def.remove(item)
+                        prod_def.append(newitem[0])
+                        prod_def.append(newitem[1])    
             else:
                 prod_def = None
+            
+            
             print(prod_def)
             
             
@@ -136,18 +150,30 @@ class CwSeed():
                             cast_def.append(item)
                     else:
                         cast_def.append(x)    
-            print(cast_def) 
-                      # Cast definitivo
             
-        
-
+            cast_def2 = []                  # Solo se reutiliza para cast_def2
+            
+            #Limpia el cast de Being Reuben
+            if titulo == "Being Reuben":
+                for name in cast_def:    
+                    try:
+                        name = name.replace(" as Himself","")
+                    except:
+                        continue
+                    try:
+                        name = name.replace(" as Herself","")
+                    except:
+                        continue
+                    cast_def2.append(name)
+                #print(lista2)
+                cast_def = cast_def2
+            
+            #print(cast_def)                 # Cast definitivo
+            
+    
             #RATING
             rating = epi_soup.find("span",{"class":"rating"}).text
-            if "L, V" in rating:
-                rating = rating.replace(" L, V","")
-            
-            
-            
+        
             #DIFERENCIA MOVIE O SERIE según duración
             
             dif_dur = epi_soup.find("span",{"class":"dura"}).text
@@ -234,8 +260,7 @@ class CwSeed():
 
                     #Consigue el rating del episodio
                     rating_epi = epi.find("span",{"class":"rating"}).text
-                    if "L, V" in rating_epi:
-                        rating_epi = rating_epi.replace(" L, V","")
+                    
                     
                                     
                     
@@ -274,8 +299,8 @@ class CwSeed():
                 Datamanager._insertIntoDB(self,listPayload,self.titanScraping)
                 Datamanager._insertIntoDB(self,listPayloadEpi,self.titanScrapingEpisodios)
 
-                # Upload
-                Upload(self._platform_code, self._created_at, testing=True)   
+        # Upload
+        Upload(self._platform_code, self._created_at, testing=True)   
             
             
 
