@@ -63,6 +63,7 @@ class CartoonNetwork:
 
     def _scraping(self):
         listDBMovie = Datamanager._getListDB(self, self.titanScraping)
+        listPayload = []
         listaEpiDB = Datamanager._getListDB(self, self.titanScrapingEpisodios)
         listaSeriesDB = Datamanager._getListDB(self, self.titanScraping)
         listaSeries = []
@@ -80,6 +81,12 @@ class CartoonNetwork:
             }
         ]
 
+        packages_unlocked = [
+            {
+                'Type': 'free-vod',
+            }
+        ]
+
         url = requests.get("https://www.cartoonnetwork.com/video/index.html?atclk_vn=vn_link_homeImg&")
         soup = BeautifulSoup(url.content, 'html.parser')
         series = self.get_json(soup)
@@ -87,13 +94,13 @@ class CartoonNetwork:
             if series[serie]["videoIndexCanonicalUrl"] is not None:  # esto hace que no se metan juegos en las series
                 payload = {
                     'PlatformCode': self._platform_code,
-                    'Id': series[serie]['id'],
+                    'Id': str(series[serie]['id']),
                     'Title': series[serie]['display_title'],
                     'CleanTitle': _replace(series[serie]['display_title']),
                     'OriginalTitle': None,
-                    'Type': 'serie',  # 'movie' o 'serie'
+                    'Type': 'serie',
                     'Year': None,
-                    'Duration': None,  # duracion en minutos
+                    'Duration': None,
                     'Deeplinks': {
                         'Web': self.get_url_serie(series, serie), # peanuts no tiene link
                         'Android': None,
@@ -101,7 +108,7 @@ class CartoonNetwork:
                     },
                     'Playback': None,
                     'Synopsis': None,
-                    'Image': series[serie]['search_thumbnail'],
+                    'Image': [series[serie]['search_thumbnail']],
                     'Rating': None,
                     'Provider': None,
                     'Genres': None,
@@ -120,38 +127,110 @@ class CartoonNetwork:
 
                 url = requests.get(self.get_url_serie(series, serie))
                 soup = BeautifulSoup(url.content, 'html.parser')
-                for capitulo in soup.find_all('div', {'class': 'feature-video-wrapper clearfix'}):
-                    payloadEpi = {
-                        'PlatformCode': self._platform_code,
-                        'ParentId': series[serie]['id'],
-                        'ParentTitle': _replace(series[serie]['display_title']),
-                        'Id': hashlib.md5(capitulo.a['href'].encode('UTF-8')).hexdigest(),
-                        'Title': self.get_episode_title(capitulo),
-                        'Episode': self.get_number_episode(capitulo),
-                        'Season': self.get_season(capitulo),
-                        'Year': None,
-                        'Duration': None,
-                        'Deeplinks': {
-                            'Web': "https://www.cartoonnetwork.com{}".format(capitulo.a['href']),
-                            'Android': None,
-                            'iOS': None
-                        },
-                        'Synopsis': None,
-                        'Rating': None,
-                        'Provider': None,
-                        'Genres': None,
-                        'Cast': None,
-                        'Directors': None,
-                        'Availability': None,
-                        'Download': None,
-                        'IsOriginal': None,
-                        'IsAdult': None,
-                        'Country': None,
-                        'Packages': packages,
-                        'Timestamp': datetime.now().isoformat(),
-                        'CreatedAt': self._created_at
-                    }
-                    Datamanager._checkDBandAppend(self, payloadEpi, listaEpiDB, listaEpi, isEpi=True)
+
+                for capitulos in soup.find_all('section', {'id': 'unlocked'}):
+                    for capitulo in capitulos.find_all('div', {'class': 'feature-video-wrapper clearfix'}):
+                        payloadEpi = {
+                            'PlatformCode': self._platform_code,
+                            'ParentId': str(series[serie]['id']),
+                            'ParentTitle': _replace(series[serie]['display_title']),
+                            'Id': str(hashlib.md5(capitulo.a['href'].encode('UTF-8')).hexdigest()),
+                            'Title': self.get_title(capitulo),
+                            'Episode': self.get_number_episode(capitulo),
+                            'Season': self.get_season(capitulo),
+                            'Year': None,
+                            'Duration': None,
+                            'Deeplinks': {
+                                'Web': "https://www.cartoonnetwork.com{}".format(capitulo.a['href']),
+                                'Android': None,
+                                'iOS': None
+                            },
+                            'Synopsis': None,
+                            'Rating': None,
+                            'Provider': None,
+                            'Genres': None,
+                            'Cast': None,
+                            'Directors': None,
+                            'Availability': None,
+                            'Download': None,
+                            'IsOriginal': None,
+                            'IsAdult': None,
+                            'Country': None,
+                            'Packages': packages_unlocked,
+                            'Timestamp': datetime.now().isoformat(),
+                            'CreatedAt': self._created_at
+                        }
+                        Datamanager._checkDBandAppend(self, payloadEpi, listaEpiDB, listaEpi, isEpi=True)
+
+                for capitulos in soup.find_all('section', {'id': 'episodes'}):
+                    for capitulo in capitulos.find_all('div', {'class': 'feature-video-wrapper clearfix'}):
+                        payloadEpi = {
+                            'PlatformCode': self._platform_code,
+                            'ParentId': str(series[serie]['id']),
+                            'ParentTitle': _replace(series[serie]['display_title']),
+                            'Id': str(hashlib.md5(capitulo.a['href'].encode('UTF-8')).hexdigest()),
+                            'Title': self.get_title(capitulo),
+                            'Episode': self.get_number_episode(capitulo),
+                            'Season': self.get_season(capitulo),
+                            'Year': None,
+                            'Duration': None,
+                            'Deeplinks': {
+                                'Web': "https://www.cartoonnetwork.com{}".format(capitulo.a['href']),
+                                'Android': None,
+                                'iOS': None
+                            },
+                            'Synopsis': None,
+                            'Rating': None,
+                            'Provider': None,
+                            'Genres': None,
+                            'Cast': None,
+                            'Directors': None,
+                            'Availability': None,
+                            'Download': None,
+                            'IsOriginal': None,
+                            'IsAdult': None,
+                            'Country': None,
+                            'Packages': packages,
+                            'Timestamp': datetime.now().isoformat(),
+                            'CreatedAt': self._created_at
+                        }
+                        Datamanager._checkDBandAppend(self, payloadEpi, listaEpiDB, listaEpi, isEpi=True)
+
+                for peliculas in soup.find_all('section', {'id': 'movie'}):
+                    for pelicula in peliculas.find_all('div', {'class': 'feature-video-wrapper clearfix'}):
+                        payload = {
+                            'PlatformCode': self._platform_code,
+                            'Id': str(hashlib.md5(str(series[serie]['id']).encode('UTF-8')).hexdigest()),
+                            'Title': self.get_title(pelicula),
+                            'CleanTitle': _replace(self.get_title(pelicula)),
+                            'OriginalTitle': None,
+                            'Type': 'movie',
+                            'Year': None,
+                            'Duration': None,
+                            'Deeplinks': {
+                                'Web': "https://www.cartoonnetwork.com{}".format(pelicula.a['href']),
+                                'Android': None,
+                                'iOS': None,
+                            },
+                            'Playback': None,
+                            'Synopsis': None,
+                            'Image': [pelicula.find('img')['src']],
+                            'Rating': None,
+                            'Provider': None,
+                            'Genres': None,
+                            'Cast': None,
+                            'Directors': None,
+                            'Availability': None,
+                            'Download': None,
+                            'IsOriginal': None,
+                            'IsAdult': None,
+                            'Packages': packages,
+                            'Country': None,
+                            'Timestamp': datetime.now().isoformat(),
+                            'CreatedAt': self._created_at
+                        }
+                        Datamanager._checkDBandAppend(self, payload, listDBMovie, listPayload)
+        Datamanager._insertIntoDB(self, listPayload, self.titanScraping)
         Datamanager._insertIntoDB(self, listaSeries, self.titanScraping)
         Datamanager._insertIntoDB(self, listaEpi, self.titanScrapingEpisodios)
         """
@@ -173,7 +252,7 @@ class CartoonNetwork:
         try:
             anio = series[serie]['video_index_end_date']
             match = re.search(r"\d{4}", anio)
-            return int(match.group(0))
+            return str(match.group(0))
         except TypeError:
             return None
 
@@ -186,14 +265,14 @@ class CartoonNetwork:
             return "https://cartoonnetwork.com/{}".format(series[serie]["title"])
 
     @staticmethod
-    def get_episode_title(capitulo): return capitulo.find('div', {'class': 'feature-video-title'}).text
+    def get_title(capitulo): return capitulo.find('div', {'class': 'feature-video-title'}).text
 
     @staticmethod
     def get_season(capitulo):
         temporada = capitulo.find('span', {'class': 'feature-video-info-season'}).text
-        return temporada.split(' ')[-1]
+        return int(temporada.split(' ')[-1])
 
     @staticmethod
     def get_number_episode(capitulo):
         episode = capitulo.find('span', {'class': 'feature-video-info-aired-date'}).text
-        return episode.split(' ')[-1]
+        return int(episode.split(' ')[-1])
