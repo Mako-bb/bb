@@ -310,8 +310,8 @@ class Freeform:
         return episode.find('span', {'class': 'tile__details-description'}).span.span.text
 
     # Esta función lo que hace es recibir el link de la serie mientras se está haciendo el payload del mismo. Lo que
-    # hace es guardar todos los payloads de todos los capítulos en una lista, lo pasa a set para eliminar los repetidos
-    # y lo vuelve a pasar a lista para que sea del tipo que corresponda y pueda subirse a la base de datos
+    # hace es guardar todos los packages de los capítulos en una lista y después elimina todos los repetidos, dejando
+    # la lista como corresponde para poder subir a la base de datos
     @staticmethod
     def get_package(link):
         url = requests.get(link)
