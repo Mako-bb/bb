@@ -237,6 +237,14 @@ class Pantaya():
                                         "Type": "free-vod"
                                     }
                                 ]
+                                payload["Packages"] = [
+                                    {
+                                        "Type": "subscription-vod"
+                                    },
+                                    {
+                                        "Type": "free-vod"
+                                    }
+                                ]
                             else:
                                 packages_epi = [
                                     {

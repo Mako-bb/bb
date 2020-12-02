@@ -51,7 +51,6 @@ class MyOutdoorTV():
 
         listPayload = []
         listPayloadEpi = []
-        test_list = []
 
         ### {ID : {TITLE,DEEPLINK}} OF SERIES ###
         series_list = {}
