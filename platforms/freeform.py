@@ -322,7 +322,7 @@ class Freeform:
                 packages.append({'Type': 'tv-everywhere'})
             else:
                 packages.append({'Type': 'free-vod'})
-        return list(set(packages))
+        return list(map(dict, set(tuple(sorted(p.items())) for p in packages)))
 
     # en series hay un compilado de navidad que en la api aparece como collection, esta función lo que hace es filtrarla
     @staticmethod
