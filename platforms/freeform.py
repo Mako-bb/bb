@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import time
+from typing import Dict
+
 import requests
 import hashlib
 import pymongo
@@ -20,9 +22,13 @@ from bs4                import BeautifulSoup
     -y puede modificarse la cantidad de contenidos que trae, teniendo que cambiar los valores de start y size en el
     link de la api-. salvo el de las series que no tiene una api para los capítulos.
     
-    La plataforma es un tv-everywhere ya que pide loguearse con un operador de cable para poder ver el contenido.
+    La plataforma es free-vod ytv-everywhere dependiendo del contenido, ya que pide loguearse con un operador de cable 
+    para poder ver algunas series en su totalidad, en otras todos los capítulos son gratis y en otros casos son
+    únicamente tv-everywhere
     
     Los datos de los capítulos de todas las series se sacó del html, teniendo que mandar un único request a cada serie.
+    Las funciones get_package y get_package_episode se encargan de ingresar el package de las series y capítulos de
+    todas las series.
     
     Dato importante #1: en la categoría de series aparecen dos contenidos que no son series, siendo uno un compilado
     de películas navideñas (que no va a estar después de que pasen las fiestas) y un especial que no aparece en 
@@ -90,59 +96,57 @@ class Freeform:
 
         packages = [
             {
-                'Type': 'tv-everywhere',
-            }
+                'Type': 'free-vod'
+             }
         ]
 
         for pelicula in data_peliculas['tiles']:
-            payload = {
-                'PlatformCode': self._platform_code,
-                'Id': str(pelicula['show']['id']),
-                'Title': pelicula['title'],
-                'OriginalTitle': None,
-                'CleanTitle': _replace(pelicula['title']),
-                'Type': 'movie',
-                'Year': None,  # html
-                'Duration': None,  # html
-                'Deeplinks': {
-                    'Web': self.url_pelicula(pelicula),
-                    'Android': None,
-                    'iOS': None,
-                },
-                'Playback': None,
-                'Synopsis': pelicula['show']['aboutTheShowSummary'],
-                'Image': None,  # html
-                'Rating': None,  # html
-                'Provider': None,
-                'Genres': [pelicula['show']['genre']],
-                'Cast': None,
-                'Directors': None,
-                'Availability': None,
-                'Download': None,
-                'IsOriginal': None,
-                'IsAdult': None,
-                'Packages': packages,
-                'Country': None,
-                'Timestamp': datetime.now().isoformat(),
-                'CreatedAt': self._created_at
-            }
-            Datamanager._checkDBandAppend(self, payload, listDBMovie, listPayload)
+            if pelicula['title'] != "31 Nights of Halloween Fan Fest":
+                # esto es un compilado de películas de halloween que aparece en la api como película y no hay forma
+                # de esquivarlo a menos que sea de esta forma
+                payload = {
+                    'PlatformCode': self._platform_code,
+                    'Id': str(pelicula['show']['id']),
+                    'Title': pelicula['title'],
+                    'OriginalTitle': None,
+                    'CleanTitle': _replace(pelicula['title']),
+                    'Type': 'movie',
+                    'Year': None,  # html
+                    'Duration': None,  # html
+                    'Deeplinks': {
+                        'Web': self.url_pelicula(pelicula),
+                        'Android': None,
+                        'iOS': None,
+                    },
+                    'Playback': None,
+                    'Synopsis': pelicula['show']['aboutTheShowSummary'],
+                    'Image': None,
+                    'Rating': None,
+                    'Provider': None,
+                    'Genres': None,
+                    'Cast': None,
+                    'Directors': None,
+                    'Availability': None,
+                    'Download': None,
+                    'IsOriginal': None,
+                    'IsAdult': None,
+                    'Packages': packages,
+                    'Country': None,
+                    'Timestamp': datetime.now().isoformat(),
+                    'CreatedAt': self._created_at
+                }
+                Datamanager._checkDBandAppend(self, payload, listDBMovie, listPayload)
         Datamanager._insertIntoDB(self, listPayload, self.titanScraping)
 
     def _scraping_series(self):
 
         url = "https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module" \
               "/tilegroup/3376167?start=0&size=50&authlevel=0&brand=002&device=001"
+
         listaSeries = []
         listaSeriesDB = Datamanager._getListDB(self, self.titanScraping)
         listaEpi = []
         listaEpiDB = Datamanager._getListDB(self, self.titanScrapingEpisodios)
-
-        packages = [
-            {
-                'Type': 'tv-everywhere',
-            }
-        ]
 
         headers = {
             'Referer': 'https://www.freeform.com/',
@@ -154,8 +158,8 @@ class Freeform:
         data_series = Datamanager._getJSON(self, url, headers=headers)
 
         for serie in data_series['tiles']:
-            if serie['title'] != "Kickoff to Christmas" and serie['title'] != "The Clock Is Ticking with Yara Shahidi":
-                #           esto es un compilado de peliculas                          esto es un especial
+            if self.show_valido(serie) and serie['title'] != "The Clock Is Ticking with Yara Shahidi":
+                # filtra el compilado de peliculas                          esto es un especial
                 payload = {
                     'PlatformCode': self._platform_code,
                     'Id': str(serie['link']['id']),
@@ -182,7 +186,7 @@ class Freeform:
                     'Download': None,
                     'IsOriginal': None,
                     'IsAdult': None,
-                    'Packages': packages,
+                    'Packages': self.get_package(self.url_serie(serie)),
                     'Country': None,  # [str, str, str...]
                     'Timestamp': datetime.now().isoformat(),
                     'CreatedAt': self._created_at
@@ -223,7 +227,7 @@ class Freeform:
                                 'IsOriginal': None,
                                 'IsAdult': None,
                                 'Country': None,
-                                'Packages': packages,
+                                'Packages': self.get_package_episode(episode),
                                 'Timestamp': datetime.now().isoformat(),
                                 'CreatedAt': self._created_at
                             }
@@ -304,3 +308,36 @@ class Freeform:
     @staticmethod
     def get_synopsis_episode(episode):
         return episode.find('span', {'class': 'tile__details-description'}).span.span.text
+
+    # Esta función lo que hace es recibir el link de la serie mientras se está haciendo el payload del mismo. Lo que
+    # hace es guardar todos los payloads de todos los capítulos en una lista, lo pasa a set para eliminar los repetidos
+    # y lo vuelve a pasar a lista para que sea del tipo que corresponda y pueda subirse a la base de datos
+    @staticmethod
+    def get_package(link):
+        url = requests.get(link)
+        soup = BeautifulSoup(url.content, 'html.parser')
+        packages = []
+        for capitulo in soup.find_all('div', {'class': 'tile__video__thumbnail'}):
+            if capitulo.find('section', {'class': 'tile__top-right-details'}):
+                packages.append({'Type': 'tv-everywhere'})
+            else:
+                packages.append({'Type': 'free-vod'})
+        return list(set(packages))
+
+    # en series hay un compilado de navidad que en la api aparece como collection, esta función lo que hace es filtrarla
+    @staticmethod
+    def show_valido(show):
+        try:
+            if show['collection']:
+                return False
+        except KeyError:
+            return True
+
+    # Devuelve el package de cada capítulo dependiendo de un tag en el html que muestra una llave, que significa que
+    # el capítulo en cuestión es tv-everywhere
+    @staticmethod
+    def get_package_episode(episode):
+        if episode.find('section', {'class': 'tile__top-right-details'}):
+            return [{'Type': 'tv-everywhere'}]
+        else:
+            return [{'Type': 'free-vod'}]
