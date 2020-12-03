@@ -22,6 +22,7 @@ from platforms.myoutdoortv          import MyOutdoorTV
 from platforms.cwseed               import CwSeed
 from platforms.pantaya              import Pantaya
 from platforms.cartoonnetwork       import CartoonNetwork
+from platforms.boomerang            import Boomerang
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

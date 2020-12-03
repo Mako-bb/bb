@@ -107,4 +107,7 @@ ott_sites:
   CartoonNetwork:
     countries:
       US: us.cartoonnetwork
+  Boomerang:
+    countries:
+      US: us.boomerang
 
