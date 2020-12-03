@@ -193,7 +193,7 @@ class MyOutdoorTV():
                         episode_rating = episode['parentalRating']
                         ### EPISODE PACKAGE ###
                         episode_package = episode['pricing']['type']
-                        if episode_package == 'AVOD':
+                        if episode_package == 'AVOD' or episode_package == 'FREE':
                             episode_package = 'free-vod'
                         else:
                             episode_package = 'subscription-vod'
