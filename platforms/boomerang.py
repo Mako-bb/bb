@@ -18,11 +18,11 @@ from updates.upload         import Upload
 - El sitio tiene 3 grandes categorías: Shows, Movies y Playlists.
     - Movies: contiene las peliculas de la plataforma.
     - Playlists: recopila espisodios especiales de series y los presenta como una playlist, ejemplo: Especial Navidad Looney-Toons y
-    contiene todos los episodios de cada temporada donde fue navidad. 
+    contiene todos los episodios de cada temporada donde fue navidad. Esta categoria no fue relevada. 
     - Shows: se presentan las franquicias de la plataforma, dentro de las cuales se encuentran sub-categorias:
         - Movies: las peliculas de ese franquicia que puede o no estar repetidas con la categoria Movies principal del sitio.
         - Shows: donde se presentan las series, dividas en volumenes y sus correspondientes capitulos. 
-        - Playlists: armadas exclusivamente con material de dicha franquicia.
+        - Playlists: armadas exclusivamente con material de dicha franquicia. Esta categoria no fue relevada. 
 // DISPONIBILIDAD MUNDIAL
 - La plataforma sólo está disponible para EEUU
 // RECORRIDO DEL SCRAPING
@@ -262,7 +262,7 @@ class Boomerang():
                         }
                         Datamanager._checkDBandAppend(self,payload,listDBMovie,listPayload)
                     page += 1  
-                    
+
         #### GET EPISODES OF SERIES ####
         print("------- GET EPISODES -------")
         root_weblink = 'https://watch.boomerang.com'
