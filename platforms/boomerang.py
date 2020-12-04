@@ -268,12 +268,13 @@ class Boomerang():
         root_weblink = 'https://watch.boomerang.com'
         for h in urls_item_series:
             url = urls_item_series[h]['url'].replace('/watch/','').strip('/')
-            seasons = urls_item_series[h]['num_seasons']
             typeOf = urls_item_series[h]['type'] if urls_item_series.get('type') else None
             page = 1
-            while not seasons <= page:
+            seasons = 1
+            while not page > seasons:
                 URL = 'https://watch.boomerang.com/api/5/series/'+url+'/seasons/'+str(page)+'?trans=en'
                 response = Datamanager._getJSON(self,URL,headers=headers)
+                seasons = urls_item_series[h]['num_seasons']
                 for elem in response['values']:
                     check_isfree = elem['program_schedule'][0]['name']
                     id_episode = elem['video_uuid']
@@ -328,8 +329,8 @@ class Boomerang():
                                 }
                     Datamanager._checkDBandAppend(self,payloadEpi,listDBEpi,listPayloadEpi,isEpi=True)
                 page += 1
-                URL = 'https://watch.boomerang.com/api/5/series/'+url+'/seasons/'+str(page)+'?trans=en'
-                response = Datamanager._getJSON(self,URL,headers=headers)
+                #URL = 'https://watch.boomerang.com/api/5/series/'+url+'/seasons/'+str(page)+'?trans=en'
+                #response = Datamanager._getJSON(self,URL,headers=headers)
         
         Datamanager._insertIntoDB(self,listPayload, self.titanScraping)
         Datamanager._insertIntoDB(self,listPayloadEpi,self.titanScrapingEpisodios)
