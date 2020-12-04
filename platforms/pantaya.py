@@ -285,11 +285,11 @@ class Pantaya():
                             }
                             Datamanager._checkDBandAppend(self,payloadEpi,listDBEpi,listPayloadEpi,isEpi=True)
                                                 
-                Datamanager._insertIntoDB(self,listPayload,self.titanScraping)
-                Datamanager._insertIntoDB(self,listPayloadEpi,self.titanScrapingEpisodios)
-                
-                # Upload
-                Upload(self._platform_code, self._created_at, testing=True)   
+        Datamanager._insertIntoDB(self,listPayload,self.titanScraping)
+        Datamanager._insertIntoDB(self,listPayloadEpi,self.titanScrapingEpisodios)
+        
+        # Upload
+        Upload(self._platform_code, self._created_at, testing=True)   
             
             
            
