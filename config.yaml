@@ -83,12 +83,6 @@ ott_sites:
   OptimumTest:
     countries:
       US: us.optimum-test
-  AcornTV_Test_Diego:
-    countries:
-      AR: ar.acorntv
-  Optimum_test_diego:
-    countries:
-      US: us.optimum
   Freeform:
     countries:
       US: us.freeform
@@ -110,4 +104,7 @@ ott_sites:
   Boomerang:
     countries:
       US: us.boomerang
+  FandangoNOW:
+    countries:
+      US: us.fandangonow
 

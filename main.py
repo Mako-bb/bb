@@ -11,17 +11,14 @@ from platforms.trutv                import TruTV
 from platforms.quibi                import Quibi
 from platforms.optimum              import Optimum
 # from platforms.acorntv_test         import AcornTV_Test
-from platforms.acorntv_test_diego   import AcornTV_Test_Diego
-from platforms.optimum_test_diego   import Optimum_test_diego
-from platforms.optimum_test_carlos  import Optimum_Test_Carlos
 from platforms.cwtv                 import CWtv
 from common                         import config
-from platforms.optimum_test_alexis  import OptimumTest
 from platforms.freeform             import Freeform
 from platforms.myoutdoortv          import MyOutdoorTV
 from platforms.cwseed               import CwSeed
 from platforms.pantaya              import Pantaya
 from platforms.cartoonnetwork       import CartoonNetwork
+from platforms.fandango             import FandangoNOW
 from platforms.boomerang            import Boomerang
 
 logging.basicConfig(level=logging.INFO)
