@@ -107,4 +107,7 @@ ott_sites:
   FandangoNOW:
     countries:
       US: us.fandangonow
+  OptimumTest:
+    countries:
+      US: us.optimum_test
 

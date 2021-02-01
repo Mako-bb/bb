@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+# -*- coding: utf-8 -*-
+>>>>>>> d90b7328bde901e8ed7fc4852c7952b90417d51e
 import time
 import requests
 import hashlib   
@@ -10,11 +14,15 @@ from common                 import config
 from datetime               import datetime
 from handle.mongo           import mongo
 from slugify                import slugify
+<<<<<<< HEAD
 from bs4                    import BeautifulSoup
 from selenium               import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from handle.datamanager  import Datamanager
+=======
+from handle.datamanager     import Datamanager
+>>>>>>> d90b7328bde901e8ed7fc4852c7952b90417d51e
 from updates.upload         import Upload
 
 class OptimumTest():
@@ -48,7 +56,7 @@ class OptimumTest():
             self._scraping()
 
         if type == 'testing':
-            self._scraping(testing=False)
+            self._scraping(testing = True)
 
     def __query_field(self, collection, field, extra_filter=None):
         if not extra_filter:
@@ -78,40 +86,101 @@ class OptimumTest():
 
         payloads = []
 
-        payload = {}
+        ids_guardados = self.__query_field('titanScraping', 'Id')
 
-        ids_guardados = self.__query_field('')
+        categorias = [
+            '48265008',
+            '48266008',
+            '48270008',
+        ]
 
-        request = self.currentSession.get('https://www.optimum.net/api/vod-webapp/services/v1/onyx/getTitlesForPagination/48265008/20/0?sort=1&filter=0')
-        print(request.status_code())
+        for cat in categorias:
 
-        data_json = request.json()
+            offset = 0
 
-        titulos = data_json['data']['result']['titles']
+            while True:
 
-        for titulo in titulos:
-            title = titulo['title']
+                request = self.currentSession.get('https://www.optimum.net/api/vod-webapp/services/v1/onyx/getTitlesForPagination/{}/20/{}?sort=1&filter=0'.format(cat, offset))
+                print(request.status_code, request.url)
 
-            year = titulo['release_year']
+                data = request.json()
 
-            cast = titulo['actors'].split(', ')
+                titulos = data['data']['result']['titles']
 
-            packages = [
-                {
-                    'Type' : 'transaction-vod',
-                    'RentPrice' : titulo['price']
-                }
-            ]
+                for titulo in titulos:
 
-            id_ = str(titulo['title_id'])
+                    title = titulo['title']
 
-        if payload['Id'] in ids_guardados:
-            print("Ya existe el id {}".format(payload['Id']))
-        else:
-            payloads.append(payload)
-            ids_guardados.add(payload['Id'])
-            print("Insertado {} - ({} / {})".format(payload['Title'], i + 1, len(data['titles'])))
+                    year = 900
 
+                    if titulo.get('actors'):
+                        actors = titulo['actors'].split(', ')
+                    else:
+                        actors = None
 
-        # if not testing
-            # Upload(self._platform_code, self._created_at, testing=True)
+                    packages = [
+                        {
+                            'Type': 'transaction-vod',
+                            'RentPrice': titulo['price'],
+                        }
+                    ]
+
+                    id_ = str(titulo['title_id'])
+
+                    # id_ = hashlib.md5(title.encode('utf-8')).hexdigest()
+
+                    payload = {
+                        'PlatformCode':  self._platform_code,
+                        'Id':            id_,
+                        'Title':         title,
+                        'OriginalTitle': None,
+                        'CleanTitle':    _replace(title),
+                        'Type':          'movie',
+                        'Year':          year,
+                        'Duration':      None,
+                        'Deeplinks': {
+                            'Web':       'https://www.optimum.net/tv/asset/#/movie/{}'.format(titulo['asset_id']),
+                            'Android':   None,
+                            'iOS':       None,
+                        },
+                        'Playback':      None,
+                        'Synopsis':      None,
+                        'Image':         None,
+                        'Rating':        None,
+                        'Provider':      None,
+                        'Genres':        None,
+                        'Cast':          actors,
+                        'Directors':     None,
+                        'Availability':  None,
+                        'Download':      None,
+                        'IsOriginal':    None,
+                        'IsAdult':       None,
+                        'Packages':      packages,
+                        'Country':       None,
+                        'Timestamp':     datetime.now().isoformat(),
+                        'CreatedAt':     self._created_at
+                    }
+
+                    # print(payload)
+
+                    if payload['Id'] not in ids_guardados:
+                        payloads.append(payload)
+                        ids_guardados.add(payload['Id'])
+                        print('Insertado titulo {}'.format(payload['Title']))
+                    else:
+                        print('Id ya guardado {}'.format(payload['Id']))
+
+                if data['data']['result']['next'] == '0':
+                    break
+                    
+                offset += 20
+
+        if payloads:
+            self.mongo.insertMany(self.titanScraping, payloads)
+            print('Insertados {} en {}'.format(len(payloads), self.titanScraping))
+
+        self.currentSession.close()
+
+        if not testing:
+            Upload(self._platform_code, self._created_at, testing=True)
+

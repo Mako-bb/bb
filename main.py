@@ -20,6 +20,7 @@ from platforms.pantaya              import Pantaya
 from platforms.cartoonnetwork       import CartoonNetwork
 from platforms.fandango             import FandangoNOW
 from platforms.boomerang            import Boomerang
+from platforms.optimum_test         import OptimumTest
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
