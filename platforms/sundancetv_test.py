@@ -6,13 +6,17 @@ import pymongo
 import re
 import json
 import platform
-from handle.replace         import _replace
-from common                 import config
-from datetime               import datetime
-from handle.mongo           import mongo
-from slugify                import slugify
-from handle.datamanager     import Datamanager
-from updates.upload         import Upload
+from handle.replace                   import _replace
+from common                           import config
+from datetime                         import datetime
+from handle.mongo                     import mongo
+from slugify                          import slugify
+from handle.datamanager               import Datamanager
+from updates.upload                   import Upload
+from selenium                         import webdriver
+from selenium.webdriver.support.wait  import WebDriverWait
+from selenium.webdriver.common.by     import By
+from selenium.webdriver.support       import expected_conditions as EC
 
 class SundanceTvTest():
     def __init__(self, ott_site_uid, ott_site_country, type):
@@ -91,14 +95,13 @@ class SundanceTvTest():
 
             info = titulo['properties']['cardData']
 
-            # Type y Genres tienen problemas de tipos, se cargan igual pero habria que revisarlo
             payload = {
                 'PlatformCode':  self._platform_code,
                 'Id':            str(info['meta']['nid']),
                 'Title':         info['text']['title'],
                 'OriginalTitle': None,
                 'CleanTitle':    _replace(info['text']['title']),
-                'Type':          str(info['meta']['schemaType']),
+                'Type':          "movie",
                 'Year':          None,
                 'Duration':      None,
                 'Deeplinks': {
@@ -111,7 +114,7 @@ class SundanceTvTest():
                 'Image':         None,
                 'Rating':        None,
                 'Provider':      None,
-                'Genres':        str(info['meta']['genre']),
+                'Genres':        [info['meta']['genre']],
                 'Cast':          None,
                 'Directors':     None,
                 'Availability':  None,
@@ -141,22 +144,72 @@ class SundanceTvTest():
 
         titulos = data['data']['children'][5]['children']
 
+        # Para obtener la API que contiene las temporadas es necesario obtener el link de los Episodios de una serie, es por eso que tengo que utilizar Selenium.
+        browser = webdriver.Firefox()
+
+        # Esta lista va a contener las referencias de cada contenido, para que luego sea facil de acceder en la parte de episodios.
+        content_references = []
+
         for titulo in titulos:
 
             info = titulo['properties']['cardData']
 
-            # Type tiene problema de tipo, se cargan igual pero habria que revisarlo
+            content_link = 'https://www.sundancetv.com{}'.format(info['meta']['permalink'])
+
+            # Creo una lista para almacenar los links de las temporadas de cada serie, para luego acceder a las APIs que tienen data de los episodios.
+            seasons_links = []
+
+            try:
+                browser.get(content_link)
+                # Obtengo el link la seccion de Episodios.
+                episodes = WebDriverWait(browser, 5).until(
+                EC.presence_of_element_located((By.XPATH, '/html/body/div[1]/div/div[3]/div[1]/a'))
+                )
+
+                episodes_link = episodes.get_attribute('href').replace('https://www.sundancetv.com', '')
+                print(episodes_link)
+
+                # Valido que el contenido cuenta con un apartado de episodios.
+                if 'episodes' in episodes_link:
+                    request = self.currentSession.get('https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/sundance/url{}?device=web'.format(episodes_link))
+
+                    data = request.json()
+
+                    seasons_data = data['data']['children'][3]['properties']['dropdownItems']
+
+                    for season in seasons_data:
+                        
+                        season_properties = season['properties']
+
+                        season_payload = {
+                                'Id':        season_properties['nid'],
+                                'Synopsis':  None,
+                                'Title':     season_properties['title'],
+                                'Deeplink':  'https://www.sundancetv.com{}'.format(season_properties['permalink']),
+                                'Number':    None,
+                                'Year':      None,
+                                'Image':     None,
+                                'Directors': None,
+                                'Cast':      None,
+                                }
+                        
+                        seasons_links.append(season_payload['Deeplink'])
+            
+            except:
+                print("Este contenido no cuenta con un apartado de Episodios")
+
             payload = {
                 'PlatformCode':  self._platform_code,
                 'Id':            str(info['meta']['nid']),
+                "Seasons":       season_payload,
                 'Title':         info['text']['title'],
                 'OriginalTitle': None,
                 'CleanTitle':    _replace(info['text']['title']),
-                'Type':          info['meta']['schemaType'],
+                'Type':          "serie",
                 'Year':          None,
                 'Duration':      None,
                 'Deeplinks': {
-                    'Web':       'https://www.sundancetv.com{}'.format(info['meta']['permalink']),
+                    'Web':       content_link,
                     'Android':   None,
                     'iOS':       None,
                 },
@@ -185,6 +238,80 @@ class SundanceTvTest():
             else:
                 print('Id ya guardado {}'.format(payload['Id']))
 
+            # Este diccionario va a guardar los ids, titulos y links a temporadas de cada contenido.
+            references = {
+                'Id': payload['Id'],
+                'Title': payload['Title'],
+                'SeasonsLinks': seasons_links
+            }
+            content_references.append(references)
+        
+        browser.close()
+
+        ###################
+        #### EPISODIOS ####
+        ###################
+        for reference in content_references:
+            
+            # Valido que la referencia del contenido cuente con links a temporadas.
+            if reference['SeasonsLinks']:
+
+                for link in reference['SeasonsLinks']:
+
+                    modified_link = link.replace('https://www.sundancetv.com', '')
+                    request = self.currentSession.get('https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/sundance/url{}?device=web'.format(modified_link))
+
+                    data = request.json()
+
+                    episodes_data = data['data']['children'][4]['children']
+
+                    for episode in episodes_data:
+
+                        info = episode['properties']['cardData']
+
+                        payload = {
+                            'PlatformCode':  self._platform_code,
+                            'Id':            str(info['meta']['nid']), 
+                            'ParentId':      reference['Id'],
+                            'ParentTitle':   reference['Title'],
+                            'Episode':       int(info['text']['seasonEpisodeNumber'].split(',')[1].replace('E', '')) if info['text'].get('seasonEpisodeNumber') else None, 
+                            'Season':        int(info['text']['seasonEpisodeNumber'].split(',')[0].replace('S', '')) if info['text'].get('seasonEpisodeNumber') else None, 
+                            'Title':         info['text']['title'],
+                            'CleanTitle':    _replace(info['text']['title']), 
+                            'OriginalTitle':  None,
+                            'Type':          "serie", 
+                            'Year':          None, 
+                            'Duration':      None,
+                            'ExternalIds':   None,
+                            'Deeplinks': {
+                                'Web':       'https://www.sundancetv.com{}'.format(info['meta']['permalink']),
+                                'Android':   None,
+                                'iOS':       None,
+                                },
+                            'Synopsis':      info['text']['description'],
+                            'Image':         None,
+                            'Rating':        None,
+                            'Provider':      None,
+                            'Genres':        None,
+                            'Cast':          None,
+                            'Directors':     None,
+                            'Availability':  None,
+                            'Download':      None,
+                            'IsOriginal':    None,
+                            'IsAdult':       None,
+                            'Packages':      [{'Type': 'tv-everywhere'}],
+                            'Country':       None,
+                            'Timestamp':     datetime.now().isoformat(),
+                            'CreatedAt':     self._created_at
+                            }
+
+                        if payload['Id'] not in ids_guardados:
+                            payloads.append(payload)
+                            ids_guardados.add(payload['Id'])
+                            print('Insertado titulo {}, Episodio {}, Temporada {}'.format(payload['ParentTitle'], payload['Episode'], payload['Season']))
+                        else:
+                            print('Id ya guardado {}'.format(payload['Id']))
+            
         if payloads:
             self.mongo.insertMany(self.titanScraping, payloads)
             print('Insertados {} en {}'.format(len(payloads), self.titanScraping))
