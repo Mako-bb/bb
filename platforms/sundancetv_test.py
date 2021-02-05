@@ -6,17 +6,18 @@ import pymongo
 import re
 import json
 import platform
-from handle.replace                   import _replace
-from common                           import config
-from datetime                         import datetime
-from handle.mongo                     import mongo
-from slugify                          import slugify
-from handle.datamanager               import Datamanager
-from updates.upload                   import Upload
-from selenium                         import webdriver
-from selenium.webdriver.support.wait  import WebDriverWait
-from selenium.webdriver.common.by     import By
-from selenium.webdriver.support       import expected_conditions as EC
+from handle.replace                     import _replace
+from common                             import config
+from datetime                           import datetime
+from handle.mongo                       import mongo
+from slugify                            import slugify
+from handle.datamanager                 import Datamanager
+from updates.upload                     import Upload
+from selenium                           import webdriver
+from selenium.webdriver.support.wait    import WebDriverWait
+from selenium.webdriver.common.by       import By
+from selenium.webdriver.support         import expected_conditions as EC
+from selenium.webdriver.firefox.options import Options
 
 class SundanceTvTest():
     def __init__(self, ott_site_uid, ott_site_country, type):
@@ -28,7 +29,10 @@ class SundanceTvTest():
         self.titanPreScraping       = config()['mongo']['collections']['prescraping']
         self.titanScraping          = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodes  = config()['mongo']['collections']['episode']
-
+        self.skippedTitles          = 0
+        self.skippedEpis            = 0
+        self.titanScrapingEpisodios = self.titanScrapingEpisodes
+        
         self.currentSession = requests.session()
         self.headers  = {"Accept":"application/json",
                          "Content-Type":"application/json; charset=utf-8"}
@@ -78,8 +82,10 @@ class SundanceTvTest():
     def _scraping(self, testing = False):
 
         payloads = []
+        payloads_episodes = []
 
-        ids_guardados = self.__query_field('titanScraping', 'Id')
+        scraped = Datamanager._getListDB(self, self.titanScraping)
+        scraped_episodes = Datamanager._getListDB(self, self.titanScrapingEpisodes)
 
         ###############
         ## PELICULAS ##
@@ -127,12 +133,7 @@ class SundanceTvTest():
                 'CreatedAt':     self._created_at
             }
 
-            if payload['Id'] not in ids_guardados:
-                payloads.append(payload)
-                ids_guardados.add(payload['Id'])
-                print('Insertado titulo {}'.format(payload['Title']))
-            else:
-                print('Id ya guardado {}'.format(payload['Id']))
+            Datamanager._checkDBandAppend(self, payload, scraped, payloads)
 
         ###############
         ### SERIES ####
@@ -144,8 +145,11 @@ class SundanceTvTest():
 
         titulos = data['data']['children'][5]['children']
 
+        opts = Options()
+        opts.add_argument('--headless')
+
         # Para obtener la API que contiene las temporadas es necesario obtener el link de los Episodios de una serie, es por eso que tengo que utilizar Selenium.
-        browser = webdriver.Firefox()
+        browser = webdriver.Firefox(options=opts)
 
         # Esta lista va a contener las referencias de cada contenido, para que luego sea facil de acceder en la parte de episodios.
         content_references = []
@@ -231,12 +235,7 @@ class SundanceTvTest():
                 'CreatedAt':     self._created_at
             }
 
-            if payload['Id'] not in ids_guardados:
-                payloads.append(payload)
-                ids_guardados.add(payload['Id'])
-                print('Insertado titulo {}'.format(payload['Title']))
-            else:
-                print('Id ya guardado {}'.format(payload['Id']))
+            Datamanager._checkDBandAppend(self, payload, scraped, payloads)
 
             # Este diccionario va a guardar los ids, titulos y links a temporadas de cada contenido.
             references = {
@@ -269,7 +268,7 @@ class SundanceTvTest():
 
                         info = episode['properties']['cardData']
 
-                        payload = {
+                        payload_episodes = {
                             'PlatformCode':  self._platform_code,
                             'Id':            str(info['meta']['nid']), 
                             'ParentId':      reference['Id'],
@@ -277,9 +276,7 @@ class SundanceTvTest():
                             'Episode':       int(info['text']['seasonEpisodeNumber'].split(',')[1].replace('E', '')) if info['text'].get('seasonEpisodeNumber') else None, 
                             'Season':        int(info['text']['seasonEpisodeNumber'].split(',')[0].replace('S', '')) if info['text'].get('seasonEpisodeNumber') else None, 
                             'Title':         info['text']['title'],
-                            'CleanTitle':    _replace(info['text']['title']), 
-                            'OriginalTitle':  None,
-                            'Type':          "serie", 
+                            'OriginalTitle':  None, 
                             'Year':          None, 
                             'Duration':      None,
                             'ExternalIds':   None,
@@ -305,16 +302,10 @@ class SundanceTvTest():
                             'CreatedAt':     self._created_at
                             }
 
-                        if payload['Id'] not in ids_guardados:
-                            payloads.append(payload)
-                            ids_guardados.add(payload['Id'])
-                            print('Insertado titulo {}, Episodio {}, Temporada {}'.format(payload['ParentTitle'], payload['Episode'], payload['Season']))
-                        else:
-                            print('Id ya guardado {}'.format(payload['Id']))
+                        Datamanager._checkDBandAppend(self, payload_episodes, scraped_episodes, payloads_episodes, isEpi=True)
             
-        if payloads:
-            self.mongo.insertMany(self.titanScraping, payloads)
-            print('Insertados {} en {}'.format(len(payloads), self.titanScraping))
+        Datamanager._insertIntoDB(self, payloads, self.titanScraping)
+        Datamanager._insertIntoDB(self, payloads_episodes, self.titanScrapingEpisodes)
 
         self.currentSession.close()
 
