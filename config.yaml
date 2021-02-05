@@ -110,4 +110,9 @@ ott_sites:
   OptimumTest:
     countries:
       US: us.optimum_test
-
+  AmazonLogin:
+    countries:
+      US: us.amazon_login
+  SundanceTvTest:
+    countries:
+      US: us.sundancetv_test

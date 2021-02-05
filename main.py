@@ -10,6 +10,7 @@ from platforms.flixfling            import FlixFling
 from platforms.trutv                import TruTV
 from platforms.quibi                import Quibi
 from platforms.optimum              import Optimum
+from platforms.amazon_login         import AmazonLogin
 # from platforms.acorntv_test         import AcornTV_Test
 from platforms.cwtv                 import CWtv
 from common                         import config
@@ -21,6 +22,7 @@ from platforms.cartoonnetwork       import CartoonNetwork
 from platforms.fandango             import FandangoNOW
 from platforms.boomerang            import Boomerang
 from platforms.optimum_test         import OptimumTest
+from platforms.sundancetv_test      import SundanceTvTest
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
