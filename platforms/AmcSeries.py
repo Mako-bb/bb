@@ -86,19 +86,59 @@ class AmcSeries():
         ids_guardados = Datamanager._getListDB(self, self.titanScraping)
         ids_guardados_series = Datamanager._getListDB(
             self, self.titanScrapingEpisodios)
+        url_movie = 'https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/movies?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web'
         url_episode = 'https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/episodes?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web'
         episode_data = Datamanager._getJSON(self, url_episode)
         i = 0
         url_serie = 'https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/shows?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web'
         serie_data = Datamanager._getJSON(self, url_serie)
+        movie_data = Datamanager._getJSON(self, url_movie)
         while True:
             try:
                 if i == (len(episode_data['data']['children'][2]['children'])-1):
                     break
             except:
                 break
+            movies = movie_data['data']['children'][4]['children']
             episodes = episode_data['data']['children'][2]['children']
             shows = serie_data['data']['children'][4]['children']
+            for movie in movies:
+                payload_peliculas = {
+                    "Title":         movie['properties']['cardData']['text']['title'],
+                    "CleanTitle":    _replace(movie['properties']['cardData']['text']['title']),
+                    "OriginalTitle": None,
+                    "Type":          "movie",
+                    "Year":          None,
+                    "Duration":      None,
+
+                    "Id":            movie['properties']['cardData']['meta']['nid'],
+                    "Deeplinks": {
+
+                        "Web":       'https://www.amc.com/tve?redirect={}'.format(movie['properties']['cardData']['meta']['permalink']),
+                        "Android":   None,
+                        "iOS":       None,
+                    },
+                    "Synopsis":      movie['properties']['cardData']['text']['description'],
+                    "Image":         None,
+                    "Rating":        None,  # Important!
+                    "Provider":      None,
+                    "Genres":        None,  # Important!
+                    "Cast":          None,
+                    "Directors":     None,  # Important!
+                    "Availability":  None,  # Important!
+                    "Download":      None,
+                    "IsOriginal":    None,  # Important!
+                    "IsAdult":       None,  # Important!
+                    "IsBranded":     None,  # Important!
+                    # Obligatorio
+                    "Packages":      [{'Type': 'tv-everywhere'}],
+                    "Country":       None,
+                    "Timestamp":     datetime.now().isoformat(),  # Obligatorio
+                    "CreatedAt":     self._created_at,  # Obligatorio
+                }
+                Datamanager._checkDBandAppend(
+                    self, payload_peliculas, ids_guardados, payloads_series
+                )
             for show in shows:
                 payload_series = {
                     "PlatformCode":  self._platform_code,
@@ -133,7 +173,7 @@ class AmcSeries():
                         'CreatedAt':     self._created_at
                 }
                 Datamanager._checkDBandAppend(
-                    self, payload_series, ids_guardados_series, payloads_series
+                    self, payload_series, ids_guardados, payloads_series
                 )
             for episode, show in zip(episodes, shows):
                 for episode_data in episode['children']:
@@ -181,11 +221,12 @@ class AmcSeries():
                         'CreatedAt':     self._created_at
                     }
                     Datamanager._checkDBandAppend(
-                        self, payload, ids_guardados, payloads, isEpi=True
+                        self, payload, ids_guardados_series, payloads, isEpi=True
                     )
 
-        Datamanager._insertIntoDB(self, payloads, self.titanScrapingEpisodios)
         Datamanager._insertIntoDB(self, payloads_series, self.titanScraping)
+        Datamanager._insertIntoDB(
+            self, payloads, self.titanScrapingEpisodios)
         self.sesion.close()
 
         if not testing:
