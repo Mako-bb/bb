@@ -50,6 +50,9 @@ ott_sites:
   AdultSwim:
     countries:
       US: us.adultswim
+  AmazonLogin:
+    countries:
+      US: us.amazon_login
   FlixFling:
     countries:
       US: us.flixfling
@@ -110,11 +113,30 @@ ott_sites:
   OptimumTest:
     countries:
       US: us.optimum_test
+
   FxnowTest:
     countries:
       US: us.fxnow
   TvLand:
     countries:
       US: us.tvland
+  DiscoveryLifeTest:
+    countries:
+      US: us.discoverylife_test
+  Cmt:
+    countries:
+      US: us.cmt
+  AmazonLogin:
+    countries:
+      US: us.amazon_login
+  SundanceTvTest:
+    countries:
+      US: us.sundancetv_test
+  AmcSeries:
+    countries:
+      US: us.amcseries
+  Oxygen:
+    countries:
+      US: us.oxygen
 
 
