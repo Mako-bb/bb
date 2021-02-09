@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import time
 import requests
-import hashlib   
-import pymongo 
+import hashlib
+import pymongo
 import re
 import json
 import platform
@@ -42,11 +42,13 @@ class Optimum():
             if lastItem.count() > 0:
                 for lastContent in lastItem:
                     self._created_at = lastContent['CreatedAt']
-                    
+
             self._scraping()
         
         if type == 'scraping':
             self._scraping()
+        if type == 'testing':
+            self._scraping(testing == True)
 
     def __query_field(self, collection, field, extra_filter=None):
         if not extra_filter:
@@ -80,7 +82,7 @@ class Optimum():
         payloads = []
         payloads_episodes = []
         series_guardadas = {}
-        
+
         scraped = self.__query_field(self.titanScraping, 'Id')
         scraped_episodes = self.__query_field(self.titanScrapingEpisodes, 'Id')
 
@@ -122,7 +124,7 @@ class Optimum():
                     directors = peli.get('directors')
                     if directors:
                         directors = directors.split(', ') if directors.split(', ') != [] else None
-                    
+
                     actors = peli.get('actors')
                     if actors:
                         actors = actors.split(', ') if actors.split(', ') != [] else None
@@ -130,7 +132,7 @@ class Optimum():
                     genres = peli.get('genres')
                     if genres:
                         genres = genres.split(', ') if genres.split(', ') != [] else None
-                    
+
                     rent_price = float(peli['price']) if float(peli['price']) != 0 else None
 
                     payload = {
@@ -181,7 +183,7 @@ class Optimum():
 
         browser = webdriver.Firefox()
 
-        browser.get('https://www.optimum.net/tv/on-demand/#/')      
+        browser.get('https://www.optimum.net/tv/on-demand/#/')
 
         action = webdriver.common.action_chains.ActionChains(browser)
         action.move_by_offset(5, 5).click().perform()
@@ -248,12 +250,12 @@ class Optimum():
                         continue
 
                     titulos = self.more_titles(sub_l, 0, total, has_seasons, div_menu, browser)
-                    
+
                     for t in titulos:
                         t = t[:-1].replace('getDetails(', '')
                         jsont = json.loads(t)
                         ids_.append(jsont['menu_id'])
-                    
+
                     back = div_menu.find_element_by_xpath(".//a[@class='dropdown-control prevList']")
                     while True:
                         try:
@@ -275,7 +277,7 @@ class Optimum():
 
         for i, id_ in enumerate(ids_):
 
-            if str(id_) in scraped: 
+            if str(id_) in scraped:
                 print("Ya existe {}".format(id_))
                 continue
 
@@ -419,13 +421,13 @@ class Optimum():
         Upload(self._platform_code, self._created_at, testing=True)
 
 
-        
+
     def more_titles(self, lista, count, total, has_seasons, div_menu, browser):
-        
+
         titulos = lista.find_elements_by_xpath(".//li[@class='items']")
 
         lista_ids = []
-        
+
         for t in titulos:
             a = t.find_element_by_tag_name('a')
 
@@ -466,7 +468,7 @@ class Optimum():
         else:
             return lista_ids
 
-    
+
     def getUrl(self, url):
         requestsTimeout = 5
         while True:

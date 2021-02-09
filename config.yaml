@@ -110,4 +110,11 @@ ott_sites:
   OptimumTest:
     countries:
       US: us.optimum_test
+  FxnowTest:
+    countries:
+      US: us.fxnow
+  TvLand:
+    countries:
+      US: us.tvland
+
 

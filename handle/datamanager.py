@@ -13,6 +13,8 @@ from datetime               import datetime
 from handle.mongo           import mongo
 from updates.upload         import Upload
 from selenium               import webdriver
+from selenium.webdriver import ActionChains
+
 
 class Datamanager():
     '''
@@ -216,11 +218,11 @@ class Datamanager():
             self.mongo.insertMany(DB, listPayload)
             if DB == self.titanScraping:
                 print("\x1b[1;33;40m INSERTADAS {} PELICULAS/SERIES \x1b[0m".format(len(listPayload)))
-                print("\x1b[1;33;40m SKIPPED {} PELICULAS/SERIES \x1b[0m".format(self.skippedTitles))
+                # print("\x1b[1;33;40m SKIPPED {} PELICULAS/SERIES \x1b[0m".format(self.skippedTitles))
                 listPayload.clear()
             elif DB == self.titanScrapingEpisodios:
                 print("\x1b[1;33;40m INSERTADOS {} EPISODIOS \x1b[0m".format(len(listPayload)))
-                print("\x1b[1;33;40m SKIPPED {} EPISODIOS \x1b[0m".format(self.skippedEpis))
+                # print("\x1b[1;33;40m SKIPPED {} EPISODIOS \x1b[0m".format(self.skippedEpis))
                 listPayload.clear()
             else:
                 print("\x1b[1;33;40m INSERTADAS {} ENTRADAS \x1b[0m".format(len(listPayload)))
@@ -234,7 +236,7 @@ class Datamanager():
             print("\x1b[1;33;40m INTENTANDO PAGINA ----> \x1b[0m"+URL)
         time.sleep(timeOut)
         content = self.sesion.get(URL,headers=headers)
-        soup = BeautifulSoup(content.text, features="html.parser")
+        soup = BeautifulSoup(content.text, features="lxml")
         return soup
 
     def _getJSON(self, URL, headers=None, data=None, json=None, showURL=True, usePOST=False, timeOut=0):
@@ -348,3 +350,32 @@ class Datamanager():
             del list_threads
         
         return list_responses
+
+    def _clickAndGetSoupSelenium(self,URL,botton,waitTime=0,showURL=True):
+        '''
+        Devuelve un beautifulsoup usando selenium
+        '''
+        os = platform.system()
+        if showURL == True:
+            print("\x1b[1;33;40m INTENTANDO PAGINA ----> \x1b[0m"+URL)
+        # if os == 'Linux':
+        #     display    = Display(visible=0, size=(1366, 768)).start()
+
+        # driver = webdriver.Firefox()
+        self.driver.get(URL)
+        time.sleep(waitTime)
+        try:
+            click = self.driver.find_element_by_class_name("page-overlay_close")
+            ActionChains(self.driver).move_to_element(click).click().perform()
+            time.sleep(waitTime) 
+        finally:
+            click = self.driver.find_elements_by_class_name(botton)[0]
+            ActionChains(self.driver).move_to_element(click)
+            time.sleep(waitTime)
+            click.click()
+            time.sleep(waitTime)
+
+            soup = BeautifulSoup(self.driver.page_source, features="html.parser")
+            # self.driver.close()
+            return soup
+

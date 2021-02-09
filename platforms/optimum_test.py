@@ -100,12 +100,16 @@ class OptimumTest():
 
                     title = titulo['title']
 
-                    year = 900
+                    year = titulo['release_year']
 
                     if titulo.get('actors'):
                         actors = titulo['actors'].split(', ')
                     else:
                         actors = None
+                    if titulo.get('directors'):
+                        directors = titulo['directors'].split(', ')
+                    else:
+                        directors = None
 
                     packages = [
                         {
@@ -118,6 +122,11 @@ class OptimumTest():
 
                     # id_ = hashlib.md5(title.encode('utf-8')).hexdigest()
 
+                    try:
+                        a = titulo['asset_id']
+                    except:
+                        a = titulo['sd_asset']
+
                     payload = {
                         'PlatformCode':  self._platform_code,
                         'Id':            id_,
@@ -126,20 +135,20 @@ class OptimumTest():
                         'CleanTitle':    _replace(title),
                         'Type':          'movie',
                         'Year':          year,
-                        'Duration':      None,
+                        'Duration':      titulo['stream_runtime'],
                         'Deeplinks': {
-                            'Web':       'https://www.optimum.net/tv/asset/#/movie/{}'.format(titulo['asset_id']),
+                            'Web':       'https://www.optimum.net/tv/asset/#/movie/{}'.format(a),
                             'Android':   None,
                             'iOS':       None,
                         },
                         'Playback':      None,
-                        'Synopsis':      None,
+                        'Synopsis':      titulo['long_desc'],
                         'Image':         None,
                         'Rating':        None,
                         'Provider':      None,
-                        'Genres':        None,
+                        'Genres':        titulo['genres'],
                         'Cast':          actors,
-                        'Directors':     None,
+                        'Directors':     directors,
                         'Availability':  None,
                         'Download':      None,
                         'IsOriginal':    None,
