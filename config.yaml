@@ -125,4 +125,10 @@ ott_sites:
   SundanceTvTest:
     countries:
       US: us.sundancetv_test
+  AmcSeries:
+    countries:
+      US: us.amcseries
+  Oxygen:
+    countries:
+      US: us.oxygen
 
