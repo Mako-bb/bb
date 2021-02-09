@@ -119,4 +119,10 @@ ott_sites:
   Cmt:
     countries:
       US: us.cmt
-      
+  AmazonLogin:
+    countries:
+      US: us.amazon_login
+  SundanceTvTest:
+    countries:
+      US: us.sundancetv_test
+

@@ -24,6 +24,8 @@ from platforms.boomerang            import Boomerang
 from platforms.optimum_test         import OptimumTest
 from platforms.discoverylife_test   import DiscoveryLifeTest
 from platforms.cmt                  import Cmt
+from platforms.sundancetv_test      import SundanceTvTest
+from platforms.amazon_login         import AmazonLogin
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
