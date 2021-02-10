@@ -57,19 +57,14 @@ class Cmt():
 
     def get_number(self, stringList, index):
         """ Obtiene el numero de temporada/episodio si es que tiene """
+        number = None
         try:
             if not stringList.text == '':
                 stringList = stringList.text.split(', ')
                 if len(stringList) > index:
                     number = int(stringList[index].split(' ')[1])
-                else:
-                    number = None
-            else:
-                number = None
-        except:
-            number = None
-
-        return number
+        finally:
+            return number
 
     def scroll_down_and_click(self, browser):
         browser.execute_script("window.scrollTo(0, document.body.scrollHeight)")
@@ -89,21 +84,27 @@ class Cmt():
     def load_payload(self, payloadEpisodes, ids_guardados, parentTitle, parentId, link_wrappers):
         for link in link_wrappers:
             potentialYear = link.contents[-1].text.replace('aired','').strip().split('/')[2].split(' · ')[0]
+            
             if len(link.contents[2].contents) > 1:
                 title = link.contents[2].contents[1]
             else:
                 title = link.contents[2].text
             duration = link.find('div',class_='s_layouts_lineListDurationBadge')
             if duration:
-                duration = duration.text.split(':')[0]
+                duration = int(duration.text.split(':')[0])
             else:
                 duration = None
             synopsis = link.contents[3].text
             deepLinkWeb = link.get('href')
 
             season = self.get_number(link.find('h4'),0)
+            if season:
+                if len(str(season)) > 2:
+                    season = None
+
             episodeNumber = self.get_number(link.find('h4'),1)
-            payload = Payload(platformCode=self._platform_code,id = hashlib.md5(title.encode('utf-8')+str(season).encode('utf-8')).hexdigest(),title=title,cleanTitle=_replace(title),duration=duration,synopsis=synopsis,episode=episodeNumber,season=season,parentId=parentId,parentTitle=parentTitle,deeplinksWeb=deepLinkWeb,packages=[{'Type' : 'tv-everywhere'}],timestamp=datetime.now().isoformat(),createdAt=self._created_at)
+
+            payload = Payload(platformCode=self._platform_code,id = hashlib.md5(title.encode('utf-8')+str(season).encode('utf-8')+str(potentialYear).encode('utf-8')).hexdigest(),title=title,cleanTitle=_replace(title),duration=duration,synopsis=synopsis,episode=episodeNumber,season=season,parentId=parentId,parentTitle=parentTitle,deeplinksWeb=deepLinkWeb,packages=[{'Type' : 'tv-everywhere'}],timestamp=datetime.now().isoformat(),createdAt=self._created_at)
             
             if potentialYear:
                 payload.year = '20' + potentialYear
@@ -118,15 +119,18 @@ class Cmt():
 
         soup = Datamanager._getSoup(self,show['url'] + '/episode-guide')
 
-        #Revisar las paginas que tienen mas de 1 temporada porque no esta cargando bien el load_more_display
         if soup.find('span',class_='s_episodeAirDate'):
             link_wrappers = soup.find_all('a',class_='link_wrapper')
 
+            ### Lo comentado aca es para hacer con soup sin selenium en el caso de que no tenga un boton de 'Load-More'
+            #------------------------------------------------------------------------------------------------#
             # load_more_display = soup.find('div',class_='L001_line_list_load-more custom_button_hover s_buttons_button').attrs['style']
             # print(load_more_display)
             # if 'none' in load_more_display:
             #     self.load_payload(payloadEpisodes, ids_guardados, parentTitle, parentId, link_wrappers)
             # else:
+            #------------------------------------------------------------------------------------------------#
+
             browser = webdriver.Firefox(executable_path=r'C:\Program Files (x86)\Geckodriver\geckodriver.exe')
             browser.get(show['url'] + '/episode-guide')
             time.sleep(3)
