@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import time
 import requests
 import hashlib   
@@ -10,10 +11,6 @@ from common                 import config
 from datetime               import datetime
 from handle.mongo           import mongo
 from slugify                import slugify
-from bs4                    import BeautifulSoup
-from selenium               import webdriver
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.keys import Keys
 from handle.datamanager     import Datamanager
 from updates.upload         import Upload
 
@@ -84,8 +81,6 @@ class OptimumTest():
             '48265008',
             '48266008',
             '48270008',
-            '48268008',
-            '48269008',
         ]
 
         for cat in categorias:
@@ -102,28 +97,35 @@ class OptimumTest():
                 titulos = data['data']['result']['titles']
 
                 for titulo in titulos:
-                    
+
                     title = titulo['title']
 
-                    try:
-                        titulo.get('actors')
-                        cast = titulo['actors'].split(', ')
-                    except:
-                        cast = None
+                    year = titulo['release_year']
+
+                    if titulo.get('actors'):
+                        actors = titulo['actors'].split(', ')
+                    else:
+                        actors = None
+                    if titulo.get('directors'):
+                        directors = titulo['directors'].split(', ')
+                    else:
+                        directors = None
+
+                    packages = [
+                        {
+                            'Type': 'transaction-vod',
+                            'RentPrice': titulo['price'],
+                        }
+                    ]
+
+                    id_ = str(titulo['title_id'])
+
+                    # id_ = hashlib.md5(title.encode('utf-8')).hexdigest()
 
                     try:
-                        titulo.get('directors')
-                        directors = titulo['directors'].split(', ')
+                        a = titulo['asset_id']
                     except:
-                        directors = None
-                                        
-                    try:
-                        titulo.get('asset_id')
-                        id_ = str(titulo['asset_id'])
-                    except:
-                        id_ = titulo['sd_asset']
-                    
-                    # id_ = hashlib.md5(title.encode('utf-8')).hexdigest()
+                        a = titulo['sd_asset']
 
                     payload = {
                         'PlatformCode':  self._platform_code,
@@ -132,27 +134,26 @@ class OptimumTest():
                         'OriginalTitle': None,
                         'CleanTitle':    _replace(title),
                         'Type':          'movie',
-                        'Year':          titulo['release_year'],
-                        'Duration':      titulo['stream_length'],
+                        'Year':          year,
+                        'Duration':      titulo['stream_runtime'],
                         'Deeplinks': {
-                            'Web':       'https://www.optimum.net/tv/asset/#/movie/{}'.format(id_),
+                            'Web':       'https://www.optimum.net/tv/asset/#/movie/{}'.format(a),
                             'Android':   None,
                             'iOS':       None,
                         },
                         'Playback':      None,
-                        'Synopsis':      titulo['short_desc'],
+                        'Synopsis':      titulo['long_desc'],
                         'Image':         None,
-                        'Rating':        titulo['rating_system'],
+                        'Rating':        None,
                         'Provider':      None,
-                        'Genres':        titulo['genres'].split(', '),
-                        'Cast':          cast,
+                        'Genres':        titulo['genres'],
+                        'Cast':          actors,
                         'Directors':     directors,
                         'Availability':  None,
                         'Download':      None,
                         'IsOriginal':    None,
                         'IsAdult':       None,
-                        'Packages':      [{'Type': 'transaction-vod','RentPrice': titulo['price'],}
-                    ],
+                        'Packages':      packages,
                         'Country':       None,
                         'Timestamp':     datetime.now().isoformat(),
                         'CreatedAt':     self._created_at
@@ -180,4 +181,3 @@ class OptimumTest():
 
         if not testing:
             Upload(self._platform_code, self._created_at, testing=True)
-

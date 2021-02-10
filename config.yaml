@@ -113,6 +113,13 @@ ott_sites:
   OptimumTest:
     countries:
       US: us.optimum_test
+
+  FxnowTest:
+    countries:
+      US: us.fxnow
+  TvLand:
+    countries:
+      US: us.tvland
   DiscoveryLifeTest:
     countries:
       US: us.discoverylife_test
@@ -125,4 +132,11 @@ ott_sites:
   SundanceTvTest:
     countries:
       US: us.sundancetv_test
+  AmcSeries:
+    countries:
+      US: us.amcseries
+  Oxygen:
+    countries:
+      US: us.oxygen
+
 
