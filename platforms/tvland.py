@@ -31,6 +31,7 @@ class TvLand():
         self.driver                 = webdriver.Firefox()
         self.sesion = requests.session()
         self.skippedTitles=0
+        self.skippedEpis = 0
         self.headers  = {"Accept":"application/json",
                          "Content-Type":"application/json; charset=utf-8"}
 

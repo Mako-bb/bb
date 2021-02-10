@@ -218,11 +218,11 @@ class Datamanager():
             self.mongo.insertMany(DB, listPayload)
             if DB == self.titanScraping:
                 print("\x1b[1;33;40m INSERTADAS {} PELICULAS/SERIES \x1b[0m".format(len(listPayload)))
-                # print("\x1b[1;33;40m SKIPPED {} PELICULAS/SERIES \x1b[0m".format(self.skippedTitles))
+                print("\x1b[1;33;40m SKIPPED {} PELICULAS/SERIES \x1b[0m".format(self.skippedTitles))
                 listPayload.clear()
             elif DB == self.titanScrapingEpisodios:
                 print("\x1b[1;33;40m INSERTADOS {} EPISODIOS \x1b[0m".format(len(listPayload)))
-                # print("\x1b[1;33;40m SKIPPED {} EPISODIOS \x1b[0m".format(self.skippedEpis))
+                print("\x1b[1;33;40m SKIPPED {} EPISODIOS \x1b[0m".format(self.skippedEpis))
                 listPayload.clear()
             else:
                 print("\x1b[1;33;40m INSERTADAS {} ENTRADAS \x1b[0m".format(len(listPayload)))
