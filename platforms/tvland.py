@@ -209,15 +209,22 @@ class TvLand():
             Datamanager._insertIntoDB(self,payloads,self.titanScraping)
 
         for i in range(0,len(episodesDate)):
-            for j in range(0,len(episodesDate[0])):
+            for j in range(0,len(episodesDate[i])):
                 title = episodesName[i][j]
-                _id = hashlib.md5(title.encode('utf-8')).hexdigest()
-                seasons = episodesSeason[i][j][0]
+                nameShow = nameShows[i]
+                parrentId = hashlib.md5(nameShow.encode('utf-8')).hexdigest()
+                _id = hashlib.md5(title.encode('utf-8')+nameShow.encode('utf-8')).hexdigest()
+                if i ==3:
+                    try:
+                        aux = episodesSeason[i][j].remove("Highlight")[0].split(" ")
+                    except:
+                        aux = 0
                 try:
-                    episode =  episodesSeason[i][j][1]
-                    if episode[0] !='E':
-                        episode = None
-
+                    seasons = int(episodesSeason[i][j][0][1::])
+                except:
+                    seasons = None
+                try:
+                    episode =  int(episodesSeason[i][j][1][2::])
                 except:
                     episode=None
                 URLContenido = episodesUrl[i][j]
@@ -226,8 +233,8 @@ class TvLand():
                 payload = {
                             "PlatformCode":  self._platform_code, #Obligatorio      
                             "Id":            _id, #Obligatorio
-                            "ParentId":      None, #Obligatorio #Unicamente en Episodios
-                            "ParentTitle":   None, #Unicamente en Episodios 
+                            "ParentId":      parrentId, #Obligatorio #Unicamente en Episodios
+                            "ParentTitle":   nameShow, #Unicamente en Episodios 
                             "Episode":       episode, #Obligatorio #Unicamente en Episodios  
                             "Season":        seasons, #Obligatorio #Unicamente en Episodios
                             "Title":         title, #Obligatorio      
@@ -259,8 +266,8 @@ class TvLand():
                             "Timestamp":     datetime.now().isoformat(), #Obligatorio      
                             "CreatedAt":     self._created_at, #Obli
                 }
-                Datamanager._checkDBandAppend(self, payload,scrapedEpisodes,payloadsEpisodios)
-                Datamanager._insertIntoDB(self,payloads,self.titanScrapingEpisodios)
+                Datamanager._checkDBandAppend(self, payload,scrapedEpisodes,payloadsEpisodios,isEpi=True)
+                Datamanager._insertIntoDB(self,payloadsEpisodios,self.titanScrapingEpisodios)
 
         self.sesion.close()
 
