@@ -143,5 +143,8 @@ ott_sites:
       US: us.abc
     urls:
       start_url: 'https://abc.com'
+  BetTest:
+    countries:
+      US: us.bet_test
 
 
