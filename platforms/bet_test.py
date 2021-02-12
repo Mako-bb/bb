@@ -61,7 +61,7 @@ class BetTest():
             self._scraping()
 
         if type == 'testing':
-            self._scraping(testing = True)
+            self._scraping(testing=True)
 
     def __query_field(self, collection, field, extra_filter=None):
         if not extra_filter:
@@ -87,7 +87,7 @@ class BetTest():
 
         return query
 
-    def _scraping(self, testing = False):
+    def _scraping(self, testing=False):
 
         payloads = []
         payloads_episodes = []
@@ -99,19 +99,18 @@ class BetTest():
         ### TITULOS ###
         ###############
         url = "https://www.bet.com/shows.html"
-
-        # opts = Options()
-        # opts.add_argument('--headless')
-        browser = webdriver.Firefox() #(options=opts)
+        browser = webdriver.Firefox()
         browser.maximize_window()
         browser.get(url)
 
         # Para cargar todos los contenidos hay que cliquear continuamente en el botón "SEE MORE" ubicado al final de la página.
         self.main_page_see_more_button(browser)
 
+        # Traigo el html actualizado luego de los clicks para pasarlo por un bsoup
         page_source = browser.page_source
         updated_soup = BeautifulSoup(page_source, 'lxml')
 
+        # Busco todos los links de los contenidos que aparecen en la pagina principal luego de cargar todos los "SEE MORE"
         titles_links = updated_soup.find_all('a', {"href" : re.compile("https://www.bet.com/shows")})
 
         for title in titles_links:
@@ -133,6 +132,7 @@ class BetTest():
                 season_selector = browser.find_element_by_class_name('filter__dropdown-container__optionsWrapper')
                 season_selector.click()
 
+                # Obtengo el html actualizado con el selector de temporadas "abierto"
                 title_page_source = browser.page_source
 
                 title_updated_soup = BeautifulSoup(title_page_source, 'lxml')
@@ -140,11 +140,12 @@ class BetTest():
                 
                 seasons_data = []
 
-                # Para cada temporada del contenido voy a obtener el link, con ese dato puedo armar el html soup y asi completar tanto el payload de la 
-                # temporada para agregar al contenido como los datos de los episodios de esa temporada. 
+                # Para cada temporada del contenido voy a obtener el link, con ese dato puedo armar el html soup y asi completar
+                # tanto el payload de la temporada para agregar al contenido como los datos de los episodios de la misma. 
                 for season in seasons:
                     season_link = season.get('href')
                     
+                    # Filtro el "Season ..." para quedarme con el numero de temporada
                     season_number = season.text.replace("Season", "")
 
                     season_payload = {
@@ -159,14 +160,27 @@ class BetTest():
                         "Cast":      None
                         }
                     
+                    # Agrego el payload a la lista con datos de las temporadas del contenido actual
                     seasons_data.append(season_payload)
 
-                    # TODO: Cargar todos los episodios de cada temporada despues de resolver el click en "SEE MORE".
-                    season_soup = Datamanager._getSoup(self, season_payload['Deeplink'])
-                    episodes_container = season_soup.find('section', {"class": "filter-video__container filtered"})
+                    season_url = season_payload['Deeplink']
+                    browser.get(season_url)
+
+                    # Luego de traer el link de la temporada, llamo a la funcion que cliquea todos los "SEE MORE" que haya
+                    # en el container de episodios
+                    self.content_page_see_more_button(browser)
+
+                    # Obtengo nuevamente el html actualizado
+                    updated_season_page = browser.page_source
+                    updated_season_soup = BeautifulSoup(updated_season_page, 'lxml')
+
+                    # Dentro del container de episodios traigo todos los links de los mismos, para iterarlos y sacar informacion
+                    episodes_container = updated_season_soup.find('section', {"class": re.compile("filter-video__container filtered")})
                     episodes = episodes_container.findAll('a')
 
                     for episode in episodes:
+                        # A veces el ultimo tag 'a' es un #, por eso valido que no lo sea para garantizar que estoy sobre un link
+                        # de episodio
                         if episode.get("href") != "#":
                             href_epi = episode.get("href")
 
@@ -180,11 +194,14 @@ class BetTest():
                             else:
                                 continue
 
-                            # Si el episodio tiene una especificacion de número se tiene en cuenta, sino se genera basandose en el orden en el que aparecen en la temp del contenido.
-                            epi_number = (epi_soup.find('h3', {"class": "hero__sidebar__episode"}).text.split("|")[0]).replace("S{} EP", "").format(season_number) if epi_soup.find(
-                                'h3', {"class": "hero__sidebar__episode"}) is not None else episodes.index(episode) + 1 
-                                # si no hay nro de episodio no tenerlo en cuenta o dejarlo como None.
+                            # Si se ubico el titulo es porque se está mostrando la pagina del episodio, por lo tanto puedo sacar el nro de episodio:
+                            epi_number = epi_soup.find('span', {"class": "hero__sidebar__episode"}).text if epi_soup.find(
+                                'span', {"class": "hero__sidebar__episode"}) is not None else None
 
+                            # Como el tag.text trae "S.. EP..." lo paso por un filtro
+                            clean_epi_number = epi_number.split("|")[0].replace("S{} EP".format(season_number.strip()), "") if epi_number is not None else None
+
+                            # Genero el id del episodio usando el id de la serie junto con la codificacion del titulo del episodio
                             epi_id = _id + hashlib.md5(epi_title.encode('utf-8')).hexdigest()
 
                             payload_episodes = {
@@ -192,7 +209,7 @@ class BetTest():
                                     'Id':            epi_id, 
                                     'ParentId':      _id,
                                     'ParentTitle':   content_title,
-                                    'Episode':       epi_number,
+                                    'Episode':       clean_epi_number,
                                     'Season':        int(season_number),
                                     'Title':         epi_title,
                                     'OriginalTitle': None, 
@@ -264,8 +281,7 @@ class BetTest():
         browser.close()
         self.sesion.close()
 
-        if not testing:
-            Upload(self._platform_code, self._created_at, testing=True)
+        Upload(self._platform_code, self._created_at, testing=testing)
 
     def main_page_see_more_button(self, browser):
         '''
@@ -275,10 +291,11 @@ class BetTest():
            de que carguen todos los contenidos. Una vez que carga todos y no aparecen mas botones finaliza la ejecución. 
         '''
         index = 1
-        time.sleep(5)
+        time.sleep(10)
 
         while True:
             see_more_xpath = '/html/body/div[3]/div[1]/div[5]/div/div[2]/section[3]/div/div[{}]/a'.format(index)
+                            #/html/body/div[2]/div[1]/div[5]/div/div[2]/section[3]/div/div[1]/a
             time.sleep(3)
             try:
                 browser.execute_script("arguments[0].click();", browser.find_element_by_xpath(see_more_xpath))
@@ -292,12 +309,14 @@ class BetTest():
 
            Va cliqueando los "See More" (en el caso de haber varios) que aparecen en la sección de los capitulos hasta que no aparecen mas botones.
         '''
+        index = 11
         time.sleep(5)
 
         while True:
-            see_more_xpath = '/html/body/div[3]/div[1]/div[3]/section/a'
-            time.sleep(3)
-            if browser.find_element_by_xpath(see_more_xpath):
-                browser.execute_script("arguments[0].click();", browser.find_element_by_xpath(see_more_xpath))
-            else:
+            see_more_xpath = 'a.js-loadMoreButton:nth-child({})'.format(index)
+            time.sleep(5)
+            try:
+                browser.execute_script("arguments[0].click();", browser.find_element_by_css_selector(see_more_xpath))
+                index += 10
+            except:
                 break    

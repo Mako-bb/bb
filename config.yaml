@@ -138,5 +138,8 @@ ott_sites:
   Oxygen:
     countries:
       US: us.oxygen
+  BetTest:
+    countries:
+      US: us.bet_test
 
 
