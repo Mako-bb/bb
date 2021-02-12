@@ -376,4 +376,3 @@ class Payload:
                     'Timestamp'      : self._timestamp,
                     'CreatedAt'      : self._createdAt
                 }
-

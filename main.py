@@ -44,7 +44,7 @@ from platforms.cmt                  import Cmt
 from platforms.fxnow                import FxnowTest
 from platforms.tvland               import TvLand
 from platforms.amazon_login         import AmazonLogin
-
+from platforms.abc                  import Abc
 
 
 logging.basicConfig(level=logging.INFO)

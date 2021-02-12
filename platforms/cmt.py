@@ -17,7 +17,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from handle.datamanager  import Datamanager
 from updates.upload         import Upload
-from platforms.payload_testing import Payload
+from handle.payload_testing import Payload
 
 class Cmt():
     def __init__(self, ott_site_uid, ott_site_country, type):
@@ -104,7 +104,11 @@ class Cmt():
 
             episodeNumber = self.get_number(link.find('h4'),1)
 
-            payload = Payload(platformCode=self._platform_code,id = hashlib.md5(title.encode('utf-8')+str(season).encode('utf-8')+str(potentialYear).encode('utf-8')).hexdigest(),title=title,cleanTitle=_replace(title),duration=duration,synopsis=synopsis,episode=episodeNumber,season=season,parentId=parentId,parentTitle=parentTitle,deeplinksWeb=deepLinkWeb,packages=[{'Type' : 'tv-everywhere'}],timestamp=datetime.now().isoformat(),createdAt=self._created_at)
+            payload = Payload(platformCode=self._platform_code,
+                            id = hashlib.md5(title.encode('utf-8')+str(season).encode('utf-8')+str(potentialYear).encode('utf-8')).hexdigest(),
+                            title=title,cleanTitle=_replace(title),duration=duration,synopsis=synopsis,episode=episodeNumber,season=season,
+                            parentId=parentId,parentTitle=parentTitle,deeplinksWeb=deepLinkWeb,packages=[{'Type' : 'tv-everywhere'}],
+                            timestamp=datetime.now().isoformat(),createdAt=self._created_at)
             
             if potentialYear:
                 payload.year = '20' + potentialYear
@@ -120,10 +124,9 @@ class Cmt():
         soup = Datamanager._getSoup(self,show['url'] + '/episode-guide')
 
         if soup.find('span',class_='s_episodeAirDate'):
-            link_wrappers = soup.find_all('a',class_='link_wrapper')
-
             ### Lo comentado aca es para hacer con soup sin selenium en el caso de que no tenga un boton de 'Load-More'
             #------------------------------------------------------------------------------------------------#
+            # link_wrappers = soup.find_all('a',class_='link_wrapper')
             # load_more_display = soup.find('div',class_='L001_line_list_load-more custom_button_hover s_buttons_button').attrs['style']
             # print(load_more_display)
             # if 'none' in load_more_display:
@@ -131,7 +134,7 @@ class Cmt():
             # else:
             #------------------------------------------------------------------------------------------------#
 
-            browser = webdriver.Firefox(executable_path=r'C:\Program Files (x86)\Geckodriver\geckodriver.exe')
+            browser = webdriver.Firefox()
             browser.get(show['url'] + '/episode-guide')
             time.sleep(3)
             
@@ -151,7 +154,7 @@ class Cmt():
             return airDate.split(' ')[1]
 
         else:  
-            browser = webdriver.Firefox(executable_path=r'C:\Program Files (x86)\Geckodriver\geckodriver.exe')
+            browser = webdriver.Firefox()
             browser.get(show['url'] + '/video-guide')
             time.sleep(3)
             
@@ -191,7 +194,10 @@ class Cmt():
                     synopsis = soup.find('meta',{"itemprop": "description", "content" : True})['content']
                     title=each['title']
 
-                    payload = Payload(id=each['itemId'],type='serie',cleanTitle=_replace(title),platformCode=self._platform_code,synopsis=synopsis,createdAt=self._created_at,timestamp=datetime.now().isoformat(),title=title,deeplinksWeb=each['url'],packages=[{'Type' : 'tv-everywhere'}])
+                    payload = Payload(id=each['itemId'],type='serie',cleanTitle=_replace(title),platformCode=self._platform_code,
+                                      synopsis=synopsis,createdAt=self._created_at,timestamp=datetime.now().isoformat(),
+                                      title=title,deeplinksWeb=each['url'],packages=[{'Type' : 'tv-everywhere'}])
+
                     print(payload.title)
 
                     #Episodes
