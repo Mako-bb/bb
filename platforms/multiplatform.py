@@ -173,6 +173,8 @@ class MultiplatformScraping():
                 # Esta lista va a almacenar los links de cada temporada para luego acceder al .json de cada una
                 # y obtener los episodios de la misma
                 seasons_links = []
+                # Esta otra lista almacena los payloads de cada temporada, para luego completar el campo "Seasons" del payload de la serie actual.
+                seasons_payload = []
 
                 for season in seasons_data:
                     season_properties = season['properties']
@@ -194,6 +196,7 @@ class MultiplatformScraping():
                             }
 
                     seasons_links.append(season_link)
+                    seasons_payload.append(season_payload)
 
                 #################
                 ### EPISODIOS ###
@@ -258,7 +261,7 @@ class MultiplatformScraping():
                 payload = {
                     'PlatformCode':  platform['PlatformCode'], # MODIFICAR POR LOS PLATFORM_CODE DEL CONFIG
                     'Id':            serie_id,
-                    'Seasons':       season_payload,
+                    'Seasons':       seasons_payload,
                     'Title':         serie_title,
                     'OriginalTitle': None,
                     'CleanTitle':    _replace(serie_title),
@@ -345,5 +348,9 @@ class MultiplatformScraping():
                     Datamanager._checkDBandAppend(self, payload, scraped, payloads)
 
             Datamanager._insertIntoDB(self, payloads, self.titanScraping)  
+
+            # Hago el Upload en cada iteración para que separe las 5 páginas.
+            Upload(platform['PlatformCode'], self._created_at, testing=testing)
                   
-        Upload(self._platform_code, self._created_at, testing=testing)
+        self.sesion.close()
+        
