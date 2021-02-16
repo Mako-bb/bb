@@ -17,7 +17,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from handle.datamanager  import Datamanager
 from updates.upload         import Upload
-from platforms.payload_testing import Payload
+from handle.payload_testing import Payload
 
 class DiscoveryLifeTest():
     def __init__(self, ott_site_uid, ott_site_country, type):
