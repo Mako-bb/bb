@@ -138,6 +138,18 @@ ott_sites:
   Oxygen:
     countries:
       US: us.oxygen
+  Abc:
+    countries:
+      US: us.abc
+    urls:
+      start_url: 'https://abc.com'
+  BetTest:
+    countries:
+      US: us.bet_test
+  MultiplatformScraping:
+    countries:
+      US: us.wetv # Completar con la lista de platform.code
+    start_url: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/{}/url{}?device=web
   Syfy:
     countries:
       US: us.syfy
@@ -176,3 +188,4 @@ ott_sites:
     episode_url: '/episode-guide'
     full_episodes_url: '/videos/full-episodes'
     cast_url: '/cast'
+

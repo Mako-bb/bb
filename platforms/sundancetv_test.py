@@ -20,6 +20,14 @@ from selenium.webdriver.support         import expected_conditions as EC
 from selenium.webdriver.firefox.options import Options
 
 class SundanceTvTest():
+    '''
+        Scraping de la plataforma SundanceTv, la misma se puede scrapear por API. Cuenta con un caso particular en el que se tiene que utilizar Selenium
+        para obtener el link "/shows/nombre-de-serie/episodes--XXXX" (mediante un apartado de "Episodios" cliqueable) que facilita el acceso al .json 
+        de esa serie especifica, en donde se encuentran todas las temporadas que tiene la serie y sus links. Dichos links van a servir para scrapear 
+        todos los episodios, temporada por temporada.
+
+        No se necesita VPN.
+    '''
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config                = config()['ott_sites'][ott_site_uid]
         self._platform_code         = self._config['countries'][ott_site_country]

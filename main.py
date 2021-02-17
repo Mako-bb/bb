@@ -44,8 +44,12 @@ from platforms.cmt                  import Cmt
 from platforms.fxnow                import FxnowTest
 from platforms.tvland               import TvLand
 from platforms.amazon_login         import AmazonLogin
+from platforms.abc                  import Abc
+from platforms.bet_test             import BetTest
+from platforms.multiplatform        import MultiplatformScraping
 from platforms.syfy import Syfy
 from platforms.logo import Logo
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
