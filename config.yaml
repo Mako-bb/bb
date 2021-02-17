@@ -143,6 +143,7 @@ ott_sites:
       US: us.abc
     urls:
       start_url: 'https://abc.com'
+      api_url: 'https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module/tilegroup/2134522?start={}&size={}&authlevel=0&brand=001&device=001'
   BetTest:
     countries:
       US: us.bet_test
@@ -150,6 +151,11 @@ ott_sites:
     countries:
       US: us.wetv # Completar con la lista de platform.code
     start_url: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/{}/url{}?device=web
+  WWENetwork:
+    countries:
+      US: us.wwenetwork
+    urls:
+      start_url: 'https://espanol.wwe.com'
     
       
 
