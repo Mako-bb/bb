@@ -67,11 +67,12 @@ class WWENetwork():
         soup = Datamanager._getSoup(self,self.start_url + '/shows/',parser='lxml')
 
         page_data = soup.find('div',id = 'page')
+        shows_name = []
+        shows_href = []
 
         # Tengo que hacer esto porque el soup contiene muchos '\n' en el medio
         # y solo necesito 3 cosas de este html.
         show_list_html = page_data.contents[slice(4 , 11 , 3)] 
-
         for each in show_list_html:
             contents = each.find_all('div',class_ = 'wwe-shows__section')
             shows = contents[0].contents[1::2]
@@ -85,4 +86,21 @@ class WWENetwork():
 
             for show in shows:
                 if show.name != 'h2':
-                    show.contents[1]
+                    show_data = show.contents[1]
+                    name = show_data.get('data-title')
+                    if not name:
+                        name = show_data.get('title')
+                    href =  show_data.get('href')
+                    shows_name.append(name)
+                    shows_href.append(href)
+
+        #Esta linea permite filtrar repetidos.
+        final_show_names = list(dict.fromkeys(shows_name))
+        final_show_href = list(dict.fromkeys(shows_href))
+
+        shows = []
+
+        for i in range(0,len(final_show_names)):
+            shows.append([final_show_names[i],final_show_href[i]])
+        
+        
