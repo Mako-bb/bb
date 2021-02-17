@@ -37,7 +37,6 @@ class Oxygen():
         )['mongo']['collections']['episode']
         self.skippedEpis = 0
         self.skippedTitles = 0
-
         self.sesion = requests.session()
         self.headers = {"Accept": "application/json",
                         "Content-Type": "application/json; charset=utf-8"}

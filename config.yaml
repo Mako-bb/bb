@@ -138,5 +138,41 @@ ott_sites:
   Oxygen:
     countries:
       US: us.oxygen
-
-
+  Syfy:
+    countries:
+      US: us.syfy
+    queries:
+      movies_div: 'grid-item grid--small contextual-links-region'
+      show_div: 'grid-item grid--small contextual-links-region'
+      episode_div: 'pane-title'
+      content_div: 'view-content'
+      full_episode_check_div: 'field field-name-node-link field-type-ds field-label-hidden clearfix'
+      episode_grid_div: 'views-row'
+      cast_div: 'field-content tile-marqee'
+      title_div: 'all-shows-show-title'
+    movie_url: https://www.syfy.com/movies
+    format_url: https://www.syfy.com
+    show_url: https://www.syfy.com/shows#full-episodes
+    episode_url: '/episodes'
+    full_episodes_url: '/videos/full-episodes'
+    cast_url: '/cast'
+  Logo:
+    countries:
+      US: us.logo
+    queries:
+      movies_a: linelist-link-wrapper
+      movie_title: sub-header
+      movie_desc: deck
+      show_div: 'grid-item grid--small contextual-links-region'##
+      episode_div: 'pane-title'##
+      content_div: 'view-content'##
+      full_episode_check_div: 'field field-name-node-link field-type-ds field-label-hidden clearfix'##
+      episode_grid_div: 'views-row'##
+      cast_div: 'field-content tile-marqee'##
+      title_div: 'all-shows-show-title'##
+    movie_url: http://www.logotv.com/movies
+    format_url: http://www.logotv.com
+    show_url: http://www.logotv.com/shows
+    episode_url: '/episode-guide'
+    full_episodes_url: '/videos/full-episodes'
+    cast_url: '/cast'
