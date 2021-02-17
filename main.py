@@ -21,6 +21,9 @@ from platforms.cartoonnetwork       import CartoonNetwork
 from platforms.fandango             import FandangoNOW
 from platforms.boomerang            import Boomerang
 from platforms.optimum_test         import OptimumTest
+from platforms.indieflix_test       import Indieflix_test
+from platforms.comedy_central_test  import Comedy_central_test
+from platforms.vh1_test             import Vh1_test
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
