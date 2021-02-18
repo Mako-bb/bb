@@ -50,6 +50,9 @@ ott_sites:
   AdultSwim:
     countries:
       US: us.adultswim
+  AmazonLogin:
+    countries:
+      US: us.amazon_login
   FlixFling:
     countries:
       US: us.flixfling
@@ -119,4 +122,42 @@ ott_sites:
   Vh1_test:
     countries:
       US: us.vh1_test
+  FxnowTest:
+    countries:
+      US: us.fxnow
+  TvLand:
+    countries:
+      US: us.tvland
+  DiscoveryLifeTest:
+    countries:
+      US: us.discoverylife_test
+  Cmt:
+    countries:
+      US: us.cmt
+  AmazonLogin:
+    countries:
+      US: us.amazon_login
+  SundanceTvTest:
+    countries:
+      US: us.sundancetv_test
+  AmcSeries:
+    countries:
+      US: us.amcseries
+  Oxygen:
+    countries:
+      US: us.oxygen
+  Abc:
+    countries:
+      US: us.abc
+    urls:
+      start_url: 'https://abc.com'
+  BetTest:
+    countries:
+      US: us.bet_test
+  MultiplatformScraping:
+    countries:
+      US: us.wetv # Completar con la lista de platform.code
+    start_url: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/{}/url{}?device=web
+    
+      
 
