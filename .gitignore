@@ -46,5 +46,6 @@ kaji.pub
 bb-private
 .DS_Store
 *.csv
+*.xlsx
 apuntes.txt
 .data_analysis

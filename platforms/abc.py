@@ -144,12 +144,21 @@ class Abc():
         if(len(payload.season) > 5):
         # Las temporadas y episodios sin numero se pueden sacar del URL del episodio, en lugar 
         # de asignar None pero tiene un costo ya que tengo que hacer aun mas requests.
-            payload.season = None
-            payload.episode = None
+            soup = Datamanager._getSoup(self,payload.deeplinksWeb)
+
+            video_data = soup.find('div',class_='Video__Head')
+
+            try:
+                payload.season = int(video_data.contents[0].text.replace('S',''))
+                payload.episode = int(video_data.contents[1].text.replace('E',''))
+            except: 
+                payload.season = None
+                payload.episode = None
+ 
         else:
             payload.season = int(payload.season)
 
-        if payload.episode:
+        if payload.episode and isinstance(payload.episode,str):
             if len(payload.episode) < 2:
                 payload.episode = int('0' + payload.episode)
             else:

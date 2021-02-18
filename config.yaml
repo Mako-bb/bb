@@ -156,6 +156,8 @@ ott_sites:
       US: us.wwenetwork
     urls:
       start_url: 'https://espanol.wwe.com'
+      api_url: 'https://cdn.watch.wwe.com/api/'
+      cdn_watch_url: 'https://cdn.watch.wwe.com'
     
       
 

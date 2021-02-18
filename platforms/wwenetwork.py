@@ -34,6 +34,8 @@ class WWENetwork():
         self.skippedTitles = 0
         self.skippedEpis = 0
         self.start_url = self._config['urls']['start_url']
+        self.api_url = self._config['urls']['api_url']
+        self.cdn_watch_url = self._config['urls']['cdn_watch_url']
         self.payloadsShows = []
         self.payloadsEpisodes = []
 
@@ -59,48 +61,118 @@ class WWENetwork():
         if type == 'testing':
             self._scraping(testing = True)
 
-
     def _scraping(self, testing = False):
         saved_show_ids = Datamanager._getListDB(self,self.titanScraping)
         saved_episode_ids = Datamanager._getListDB(self,self.titanScrapingEpisodios)
 
-        soup = Datamanager._getSoup(self,self.start_url + '/shows/',parser='lxml')
+        api_url_originals = self.api_url + 'lists/1837?page={}'
+        api_url_in_Ring = self.api_url + 'page?list_page_size=15&path=%2Fin-rings%2Fall-shows'
 
-        page_data = soup.find('div',id = 'page')
-        shows_name = []
-        shows_href = []
-
-        # Tengo que hacer esto porque el soup contiene muchos '\n' en el medio
-        # y solo necesito 3 cosas de este html.
-        show_list_html = page_data.contents[slice(4 , 11 , 3)] 
-        for each in show_list_html:
-            contents = each.find_all('div',class_ = 'wwe-shows__section')
-            shows = contents[0].contents[1::2]
-
-            #La pagina esta divida en Featured shows y Show plates
-            if len(shows) < 3:
-                show_plates = []
-                for content in contents:
-                    show_plates.append(content.contents[1::2][1].contents[1::2])
-                shows = list(itertools.chain(*show_plates))
-
-            for show in shows:
-                if show.name != 'h2':
-                    show_data = show.contents[1]
-                    name = show_data.get('data-title')
-                    if not name:
-                        name = show_data.get('title')
-                    href =  show_data.get('href')
-                    shows_name.append(name)
-                    shows_href.append(href)
-
-        #Esta linea permite filtrar repetidos.
-        final_show_names = list(dict.fromkeys(shows_name))
-        final_show_href = list(dict.fromkeys(shows_href))
-
-        shows = []
-
-        for i in range(0,len(final_show_names)):
-            shows.append([final_show_names[i],final_show_href[i]])
+        total_pages = Datamanager._getJSON(self,api_url_originals.format(1)).get('paging').get('total')
         
+        for i in range(1,total_pages):
+            data = Datamanager._getJSON(self,api_url_originals.format(i))
+
+            items = data['items']
+
+            self.save_all_shows(items, saved_show_ids,saved_episode_ids)
         
+        in_rings_data = Datamanager._getJSON(self,api_url_in_Ring)
+        in_rings_items = in_rings_data.get('entries')[0]['list']['items']
+
+        self.save_all_shows(in_rings_items, saved_show_ids,saved_episode_ids)
+
+        Datamanager._insertIntoDB(self,self.payloadsShows,self.titanScraping)
+        Datamanager._insertIntoDB(self,self.payloadsEpisodes,self.titanScrapingEpisodios)
+        
+        self.sesion.close()
+
+        Upload(self._platform_code, self._created_at, testing=testing)
+        
+    def save_all_shows(self, items, saved_show_ids, saved_episode_ids):
+        for item in items:
+            payload = self.get_show_payload(item)
+            
+            Datamanager._checkDBandAppend(self,payload.payloadJson(),saved_show_ids,self.payloadsShows)
+
+            self.extract_episodes(payload, saved_episode_ids)
+
+    def get_show_payload(self, item):
+        """ Funcion para obtener la payload completa de un show dado un diccionario.
+        
+            Returns Payload()
+        """
+        payload = Payload()
+
+        payload.platformCode = self._platform_code
+        payload.createdAt = self._created_at
+        payload.timestamp = datetime.now().isoformat()
+        try:
+            payload.year = item.get('releaseDate').split('-')[0]
+        except:
+            pass
+        payload.genres = item['genres']
+        if item['customFields']['Class'] == 'Original':
+            payload.isOriginal = True
+        payload.id = item['id']
+        payload.title = item['title']
+        print(payload.title)
+        payload.cleanTitle=_replace(payload.title)
+        payload.type = 'serie'
+        payload.deeplinksWeb = self.cdn_watch_url + item['path']
+        payload.packages=[{'Type' : 'subscription-vod'}]
+        try:
+            payload.rating = item.get('classification').get('name')
+        except:
+            pass
+        return payload
+
+    def extract_episodes(self,show_payload, saved_episode_ids):
+        episode_url = self.api_url + 'filter/episodes?page_size=100&showIds={}&page={}'
+
+        total_pages = Datamanager._getJSON(self,episode_url.format(show_payload.id,1)).get('paging').get('total')
+
+        if total_pages == 1:
+            episode_data = Datamanager._getJSON(self,episode_url.format(show_payload.id,1))
+            
+            for item in episode_data['items']:
+                payload = self.get_episode_payload(show_payload, episode_data, item)
+
+                Datamanager._checkDBandAppend(self,payload.payloadEpisodeJson(),saved_episode_ids,self.payloadsEpisodes,isEpi=True)
+        else:
+            for i in range(1,total_pages):
+                episode_data = Datamanager._getJSON(self,episode_url.format(show_payload.id,i))
+
+                for item in episode_data['items']:
+                    payload = self.get_episode_payload(show_payload, episode_data, item)
+
+                    Datamanager._checkDBandAppend(self,payload.payloadEpisodeJson(),saved_episode_ids,self.payloadsEpisodes,isEpi=True)
+
+    def get_episode_payload(self, show_payload, episode_data, item):
+        payload = Payload()
+        payload.id = item['id']
+        payload.parentId = show_payload.id
+        payload.parentTitle = show_payload.title
+        payload.title = item['episodeName']
+        payload.genres = item['genres']
+        try:
+            payload.year = item.get('releaseDate').split('-')[0]
+        except:
+            pass
+        try:
+            payload.rating = item.get('classification').get('name')
+        except:
+            pass
+        payload.duration = int(int(item.get('duration'))/60)
+        payload.season = int(item['customFields']['SeasonNumber'])
+        payload.episode = int(item['episodeNumber'])
+        payload.synopsis = item['shortDescription']
+        if payload.synopsis == '-1':
+            payload.synopsis = None
+        payload.packages= [{'Type' : 'subscription-vod'}]
+        payload.deeplinksWeb = self.cdn_watch_url + item['path']
+        payload.platformCode = self._platform_code
+        payload.createdAt = self._created_at
+        payload.timestamp = datetime.now().isoformat()
+
+        return payload

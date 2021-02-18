@@ -55,35 +55,24 @@ class DiscoveryLifeTest():
         if type == 'testing':
             self._scraping(testing = True)
 
-    def __query_field(self, collection, field, extra_filter=None):
-        if not extra_filter:
-            extra_filter = {}
-
-        find_filter = {
-            'PlatformCode': self._platform_code,
-            'CreatedAt': self._created_at,
-        }
-
-        find_filter.update(extra_filter)
-
-        query = self.mongo.db[collection].find(
-            filter=find_filter,
-            projection={
-                '_id': 0,
-                field: 1,
-            },
-            no_cursor_timeout=False
-        )
-
-        query = {item[field] for item in query}
-
-        return query
-
-
-    def extractToken(self, cookie):
-        tokenStr = str(cookie.get('eosAn')).split('%2552')[0]
-        pattern = re.search(r"ey.*\%",tokenStr).group(0).split('%')[0]
-        print(pattern)
+    def extractToken(self):
+        contador = 0
+        
+        while True:
+            cookie = self.sesion.get('https://www.discoverylife.com/tv-shows/').cookies.get_dict()
+            tokenStr = str(cookie.get('eosAn')).split('%2552')[0]
+            try:
+                pattern = re.search(r"ey.*\%",tokenStr).group(0).split('%')[0]
+                print(pattern)
+                break
+            except:
+                if(contador > 20):
+                    raise "No se pudo conseguir el token, re-intentar en unos minutos"
+                time.sleep(3)
+                self.sesion.close()
+                self.sesion = requests.session()
+                contador = contador + 1
+            
         return pattern
 
     def episode_scraping(self,episodeLinks,parentTitle,headers,ePayloads,ids_guardados_episodes):
@@ -99,7 +88,16 @@ class DiscoveryLifeTest():
             rating = episode['parental']['rating']
             #type = episode['type']
             genres = self.getGenres(episode)
-            duration = episode['duration']
+            duration = str(episode['duration'])
+            
+            if len(duration) > 4:
+                duration = int(duration[1:3]) + int(duration[0])*60
+            else:
+                if len(duration) <= 2:
+                    duration = 1
+                else:
+                    duration = int(duration[0:2])
+
             synopsis = episode['description']['standard']
             seasonNumber = episode['season']['number']
             episodeNumber = episode['episodeNumber']
@@ -128,6 +126,8 @@ class DiscoveryLifeTest():
         else:
             genres = None
         print(genreList) '''
+        if not genreList:
+            genreList = None
         return genreList
 
     def savePayloads(self, payloads, ids_guardados, payload):
@@ -147,9 +147,7 @@ class DiscoveryLifeTest():
         ids_guardados_shows = Datamanager._getListDB(self,self.titanScraping)
         ids_guardados_episodes = Datamanager._getListDB(self,self.titanScrapingEpisodios)
 
-
-        cookie = self.sesion.get('https://www.discoverylife.com/tv-shows/').cookies.get_dict()
-        authToken = self.extractToken(cookie)
+        authToken = self.extractToken()
         
         #No cambiar el limite, es el maximo permitido por la API
         limit = 24
