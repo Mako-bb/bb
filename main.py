@@ -50,6 +50,7 @@ from platforms.amazon_login         import AmazonLogin
 from platforms.abc                  import Abc
 from platforms.bet_test             import BetTest
 from platforms.multiplatform        import MultiplatformScraping
+from platforms.wwenetwork           import WWENetwork
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

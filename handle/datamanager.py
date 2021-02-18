@@ -228,7 +228,7 @@ class Datamanager():
                 print("\x1b[1;33;40m INSERTADAS {} ENTRADAS \x1b[0m".format(len(listPayload)))
                 listPayload.clear()
 
-    def _getSoup(self, URL, headers={}, showURL=True, timeOut=0):
+    def _getSoup(self, URL, headers={}, showURL=True, timeOut=0, parser = 'html.parser'):
         '''
         Devuelve el beautifulsoup del URL solicitado, si es necesario se le puede pasar headers.
         '''
@@ -236,7 +236,7 @@ class Datamanager():
             print("\x1b[1;33;40m INTENTANDO PAGINA ----> \x1b[0m"+URL)
         time.sleep(timeOut)
         content = self.sesion.get(URL,headers=headers)
-        soup = BeautifulSoup(content.text, features="lxml")
+        soup = BeautifulSoup(content.text, features=parser)
         return soup
 
     def _getJSON(self, URL, headers=None, data=None, json=None, showURL=True, usePOST=False, timeOut=0):

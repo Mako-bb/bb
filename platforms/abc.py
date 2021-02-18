@@ -34,6 +34,7 @@ class Abc():
         self.skippedTitles = 0
         self.skippedEpis = 0
         self.start_url = self._config['urls']['start_url']
+        self.api_url = self._config['urls']['api_url']
 
         self.sesion = requests.session()
         self.headers  = {"Accept":"application/json",
@@ -123,14 +124,26 @@ class Abc():
         if ':' in payload.title:
             payload.title.split(':')[1]
         
-        payload.duration = int(episode_details.text.split(':')[0].replace('NEW',''))
+        duration_str = episode_details.text.split(':')
+        if(len(duration_str) < 3):
+            payload.duration = int(duration_str[0].replace('NEW',''))
+
+            #Si la duracion es menor a 1 minuto le pongo 1 minuto.
+            if not payload.duration:
+                payload.duration = 1
+        else:
+            payload.duration = int(duration_str[1].replace('NEW','')) + int(duration_str[0].replace('NEW',''))*60
+        
         tile_data = all_tile_details.contents[1]
 
         payload.synopsis = tile_data.contents[1].text
         payload.season = tile_data.contents[0].text.split('-')[0].split(' ')[0].lower().replace('s','')
         payload.episode = tile_data.contents[0].text.split('-')[0].split(' ')[1].lower().replace('e','')
+        payload.deeplinksWeb = self.start_url + all_tile_details.get('href')
         
         if(len(payload.season) > 5):
+        # Las temporadas y episodios sin numero se pueden sacar del URL del episodio, en lugar 
+        # de asignar None pero tiene un costo ya que tengo que hacer aun mas requests.
             payload.season = None
             payload.episode = None
         else:
@@ -143,7 +156,6 @@ class Abc():
                 payload.episode = int(payload.episode)
 
         payload.year = re.search(r'\d\d\d\d',episode_details.get('data-track-video_air_date'))[0]
-        payload.deeplinksWeb = self.start_url + all_tile_details.get('href')
         payload.id = episode_details.get('data-track-video_id_code')
 
         payload.cleanTitle=_replace(payload.title)
@@ -188,17 +200,17 @@ class Abc():
         payloadsEpisodes = []
         ids_guardados_shows = Datamanager._getListDB(self,self.titanScraping)
         ids_guardados_episodes = Datamanager._getListDB(self,self.titanScrapingEpisodios)
-        api_url = 'https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module/tilegroup/2134522?start={}&size={}&authlevel=0&brand=001&device=001'
+        
         
         # Con esto se obtienen la cantidad completa de series y se almacena en size.
         #-------------------------------------------------------------------------#
         start = 0
         size = 24
-        url = api_url.format(start,size)
+        url = self.api_url.format(start,size)
         size = int(Datamanager._getJSON(self,url)['total'])
         #-------------------------------------------------------------------------#
 
-        url = api_url.format(start,size)
+        url = self.api_url.format(start,size)
         data = Datamanager._getJSON(self,url)
 
         for show in data['tiles']:
