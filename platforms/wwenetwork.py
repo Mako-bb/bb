@@ -90,6 +90,9 @@ class WWENetwork():
         Upload(self._platform_code, self._created_at, testing=testing)
         
     def save_all_shows(self, items, saved_show_ids, saved_episode_ids):
+        """ Funcion que almacena todos los shows con el Datamaganer
+            y extrae los episodios de cada show.
+        """
         for item in items:
             payload = self.get_show_payload(item)
             
@@ -136,7 +139,7 @@ class WWENetwork():
             episode_data = Datamanager._getJSON(self,episode_url.format(show_payload.id,1))
             
             for item in episode_data['items']:
-                payload = self.get_episode_payload(show_payload, episode_data, item)
+                payload = self.get_episode_payload(show_payload, item)
 
                 Datamanager._checkDBandAppend(self,payload.payloadEpisodeJson(),saved_episode_ids,self.payloadsEpisodes,isEpi=True)
         else:
@@ -144,11 +147,17 @@ class WWENetwork():
                 episode_data = Datamanager._getJSON(self,episode_url.format(show_payload.id,i))
 
                 for item in episode_data['items']:
-                    payload = self.get_episode_payload(show_payload, episode_data, item)
+                    payload = self.get_episode_payload(show_payload, item)
 
                     Datamanager._checkDBandAppend(self,payload.payloadEpisodeJson(),saved_episode_ids,self.payloadsEpisodes,isEpi=True)
 
-    def get_episode_payload(self, show_payload, episode_data, item):
+    def get_episode_payload(self, show_payload, item):
+        """ Funcion para obtener la payload completa de un episodio dado un diccionario
+            y la payload de su show.
+        
+            Returns Payload()
+        """
+        
         payload = Payload()
         payload.id = item['id']
         payload.parentId = show_payload.id

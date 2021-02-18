@@ -67,6 +67,9 @@ class Cmt():
             return number
 
     def scroll_down_and_click(self, browser):
+        """ Funcion que utiliza selenium para hacer un scroll down hasta llegar lo más
+            abajo posible de la pagina, esperar y clickear el boton de "Load More".
+        """
         browser.execute_script("window.scrollTo(0, document.body.scrollHeight)")
         time.sleep(2)
         more_buttons = browser.find_elements_by_class_name("L001_line_list_load-more")
@@ -116,7 +119,12 @@ class Cmt():
             Datamanager._checkDBandAppend(self,payload.payloadEpisodeJson(),ids_guardados,payloadEpisodes,isEpi=True)
 
     def extract_episodes(self, show, payloadEpisodes, ids_guardados):
-        """ Retorna el año del primer episodio, osea la fecha de estreno. """
+        """ Funcion que extrae todos los episodios y los almacena en
+            el Datamanager y retorna el año del primer episodio, osea 
+            la fecha de estreno del show. Si es que tiene.
+            
+            Returns Integer or None 
+        """
 
         parentTitle = show['title'] 
         parentId = show['itemId']

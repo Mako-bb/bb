@@ -56,14 +56,20 @@ class DiscoveryLifeTest():
             self._scraping(testing = True)
 
     def extractToken(self):
+        """ Funcion para extraer el token de autorizacion para utilizar 
+            la API, tiene una politica de reintento por si no puede 
+            recibirlo a la primera.
+
+            Returns String
+        """
         contador = 0
         
         while True:
             cookie = self.sesion.get('https://www.discoverylife.com/tv-shows/').cookies.get_dict()
             tokenStr = str(cookie.get('eosAn')).split('%2552')[0]
             try:
-                pattern = re.search(r"ey.*\%",tokenStr).group(0).split('%')[0]
-                print(pattern)
+                token = re.search(r"ey.*\%",tokenStr).group(0).split('%')[0]
+                print(token)
                 break
             except:
                 if(contador > 20):
@@ -73,20 +79,16 @@ class DiscoveryLifeTest():
                 self.sesion = requests.session()
                 contador = contador + 1
             
-        return pattern
+        return token
 
     def episode_scraping(self,episodeLinks,parentTitle,headers,ePayloads,ids_guardados_episodes):
-        #request = self.sesion.get(episodeLinks, headers = headers)
-        #episodes = request.json()
 
         episodes = Datamanager._getJSON(self,episodeLinks,headers=headers)
         for episode in episodes:
-            #Ver file: episode_response.json que tiene todos los episodes de una serie ejemplo y la info de cada cosa
             parentId = episode['show']['id']
             id = episode['id']
             title = episode['name']
             rating = episode['parental']['rating']
-            #type = episode['type']
             genres = self.getGenres(episode)
             duration = str(episode['duration'])
             
@@ -104,42 +106,29 @@ class DiscoveryLifeTest():
             deepLinkWeb = episode['socialUrl']
             year = episode['networks'][0]['airDate'].split(':')[0].split('-')[0]
 
-            payload = Payload(platformCode=self._platform_code,id = id,title=title,year=year,rating=rating,cleanTitle=_replace(title),genres=genres,duration=duration,synopsis=synopsis,episode=episodeNumber,season=seasonNumber,parentId=parentId,parentTitle=parentTitle,deeplinksWeb=deepLinkWeb,packages=[{'Type' : 'tv-everywhere'}],timestamp=datetime.now().isoformat(),createdAt=self._created_at)
-            payloadJson = payload.payloadEpisodeJson()
-            Datamanager._checkDBandAppend(self,payloadJson,ids_guardados_episodes,ePayloads,isEpi=True)
-            #payloads.append(payload.payloadEpisodeJson())
+            payload = Payload(platformCode=self._platform_code,id = id,title=title,year=year,
+                              rating=rating,cleanTitle=_replace(title),genres=genres,
+                              duration=duration,synopsis=synopsis,episode=episodeNumber,
+                              season=seasonNumber,parentId=parentId,parentTitle=parentTitle,
+                              deeplinksWeb=deepLinkWeb,packages=[{'Type' : 'tv-everywhere'}],
+                              timestamp=datetime.now().isoformat(),createdAt=self._created_at)
 
-        #return payloads
+            payloadJson = payload.payloadEpisodeJson()
+
+            Datamanager._checkDBandAppend(self,payloadJson,ids_guardados_episodes,ePayloads,isEpi=True)
 
     def getGenres(self, episode):
+        """ Funcion para obtener el genero de cada episodio
+
+            Returns List or None
+        """
         genreDict = episode['genres']
         genreList = []
         for genre in genreDict:
             genreList.append(genre['name'])
-        ''' genres = ""
-        if genreList:
-            for each in genreList:
-                if genres:
-                    genres =  genres + ', ' + each
-                else:
-                    genres = each
-        else:
-            genres = None
-        print(genreList) '''
         if not genreList:
             genreList = None
         return genreList
-
-    def savePayloads(self, payloads, ids_guardados, payload):
-
-        if payload['Id'] not in ids_guardados:
-            payloads.append(payload)
-            ids_guardados.add(payload['Id'])
-            print('Insertado titulo {}'.format(payload['Title']))
-        else:
-            print('Id ya guardado {}'.format(payload['Id']))
-        
-        return payloads
 
     def _scraping(self, testing = False):
         episodePayloads = []
@@ -189,6 +178,5 @@ class DiscoveryLifeTest():
         
         self.sesion.close()
 
-        if not testing:
-            Upload(self._platform_code, self._created_at, testing=True)
+        Upload(self._platform_code, self._created_at, testing=testing)
 
