@@ -117,7 +117,7 @@ class Payload:
         return self._year
 
     @year.setter
-    def cleanTitle(self,newYear):
+    def year(self,newYear):
         self._year = newYear
 
     @property
