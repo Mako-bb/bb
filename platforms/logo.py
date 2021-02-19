@@ -283,7 +283,7 @@ class Logo():
                     episode_number = None
                     season = None
                 description = episode.find('p').text if episode.find('p') else None
-                duration = episode.find('div',self._duration_div).text.replace(':','.') if episode.find('div',self._duration_div) else None
+                duration = float(episode.find('div',self._duration_div).text.replace(':','.')) if episode.find('div',self._duration_div) else None
                 data_info = episode.find('div',self._image_div).get('data-info').split('"')
                 image_src = data_info[9]
                 deep_link = episode.get('href')
@@ -297,7 +297,7 @@ class Logo():
                 'Title':         title,
                 'OriginalTitle': None,
                 'Year':          None,
-                'Duration':      float(duration),
+                'Duration':      duration,
                 'Deeplinks': {
                     'Web':       deep_link,
                     'Android':   None,
