@@ -123,6 +123,8 @@ class WWENetwork():
         payload.genres = item['genres']
         if item['customFields']['Class'] == 'Original':
             payload.isOriginal = True
+        else:
+            payload.isOriginal = False
         payload.id = item['id']
         payload.title = item['title']
         print(payload.title)
@@ -182,6 +184,8 @@ class WWENetwork():
         payload.duration = int(int(item.get('duration'))/60)
         payload.season = int(item['customFields']['SeasonNumber'])
         payload.episode = int(item['episodeNumber'])
+        if payload.episode == -1:
+            payload.episode = None
         payload.synopsis = item['shortDescription']
         if payload.synopsis == '-1':
             payload.synopsis = None
@@ -189,6 +193,7 @@ class WWENetwork():
         payload.deeplinksWeb = self.cdn_watch_url + item['path']
         payload.platformCode = self._platform_code
         payload.createdAt = self._created_at
+        payload.cleanTitle = _replace(payload.title)
         payload.timestamp = datetime.now().isoformat()
 
         return payload

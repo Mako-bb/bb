@@ -128,9 +128,9 @@ ott_sites:
   TvLand:
     countries:
       US: us.tvland
-  DiscoveryLifeTest:
+  DiscoveryLife:
     countries:
-      US: us.discoverylife_test
+      US: us.discoverylife
   Cmt:
     countries:
       US: us.cmt

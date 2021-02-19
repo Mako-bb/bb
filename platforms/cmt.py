@@ -86,8 +86,11 @@ class Cmt():
 
     def load_payload(self, payloadEpisodes, ids_guardados, parentTitle, parentId, link_wrappers):
         for link in link_wrappers:
-            potentialYear = link.contents[-1].text.replace('aired','').strip().split('/')[2].split(' · ')[0]
-            
+            try:
+                potentialYear = link.contents[-1].text.replace('aired','').strip().split('/')[2].split(' · ')[0]
+            except:
+                potentialYear = None
+                
             if len(link.contents[2].contents) > 1:
                 title = link.contents[2].contents[1]
             else:
