@@ -123,7 +123,8 @@ class Cmt():
             el Datamanager y retorna el año del primer episodio, osea 
             la fecha de estreno del show. Si es que tiene.
             
-            Returns Integer or None 
+            Returns:
+                Integer or None 
         """
 
         parentTitle = show['title'] 
@@ -183,6 +184,10 @@ class Cmt():
                 return None
         
     def _scraping(self, testing = False):
+        """ Datos importantes:
+                Necesita VPN: NO Al correr el script en Argentina o USA, trae el mismo contenido.
+                Tiempo de ejecucion: Depende del internet ya que se utiliza Selenium. Aprox: 10Mins.
+        """
         payloadsShows = []
         payloadsEpisodes = []
         ids_guardados_shows = Datamanager._getListDB(self,self.titanScraping)

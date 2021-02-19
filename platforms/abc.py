@@ -205,6 +205,10 @@ class Abc():
                         Datamanager._checkDBandAppend(self,payload.payloadEpisodeJson(),ids_guardados,payloadsEpisodes,isEpi=True)
 
     def _scraping(self, testing = False):
+        """ Datos importantes:
+                Necesita VPN: NO Al correr el script en Argentina o USA, trae el mismo contenido.
+                Tiempo de ejecucion: Depende del internet ya que son muchas requests. Aprox: 20Mins.
+        """
         payloadsShows = []
         payloadsEpisodes = []
         ids_guardados_shows = Datamanager._getListDB(self,self.titanScraping)

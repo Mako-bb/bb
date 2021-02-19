@@ -60,7 +60,8 @@ class DiscoveryLifeTest():
             la API, tiene una politica de reintento por si no puede 
             recibirlo a la primera.
 
-            Returns String
+            Returns:
+                String
         """
         contador = 0
         
@@ -120,7 +121,8 @@ class DiscoveryLifeTest():
     def getGenres(self, episode):
         """ Funcion para obtener el genero de cada episodio
 
-            Returns List or None
+            Returns:
+                List or None
         """
         genreDict = episode['genres']
         genreList = []
@@ -131,6 +133,11 @@ class DiscoveryLifeTest():
         return genreList
 
     def _scraping(self, testing = False):
+        """ Datos importantes:
+                Necesita VPN: NO Al correr el script en Argentina o USA, trae el mismo contenido.
+                Tiempo de ejecucion: Depende del internet ya que son muchas requests. Aprox: 2 Mins.
+                Excepciones: El script lanza una excepcion si el reintento del token supera el 20 .
+        """
         episodePayloads = []
         payloads = []
         ids_guardados_shows = Datamanager._getListDB(self,self.titanScraping)

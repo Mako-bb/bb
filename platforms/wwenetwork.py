@@ -62,6 +62,11 @@ class WWENetwork():
             self._scraping(testing = True)
 
     def _scraping(self, testing = False):
+        """ Datos importantes:
+                Necesita VPN: NO Al correr el script en Argentina o USA, trae el mismo contenido.
+                Tiempo de ejecucion: Depende del internet, es todo con API. Aprox: 5 Mins.
+        """
+
         saved_show_ids = Datamanager._getListDB(self,self.titanScraping)
         saved_episode_ids = Datamanager._getListDB(self,self.titanScrapingEpisodios)
 
@@ -103,7 +108,8 @@ class WWENetwork():
     def get_show_payload(self, item):
         """ Funcion para obtener la payload completa de un show dado un diccionario.
         
-            Returns Payload()
+            Returns:
+                Payload()
         """
         payload = Payload()
 
@@ -155,7 +161,8 @@ class WWENetwork():
         """ Funcion para obtener la payload completa de un episodio dado un diccionario
             y la payload de su show.
         
-            Returns Payload()
+            Returns:
+                Payload()
         """
         
         payload = Payload()
