@@ -95,21 +95,26 @@ class TvLand():
 
         shows = soup.findAll('span')#,{'class':'header'})
         links = soup.findAll('li',{'class':'item poster css-q2f74n-Wrapper e19yuxbf0'})
+        #images = links.findAll('source',{'media':'screen'})
         # .a['href']
     
         nameShows = []
         urlShows = []
         seasonsShow = []
         seasonsUrl = []   
-        descriptionsShow = []   
+        descriptionsShow = []
+        imgShow =[]
+        #estraigo los nomrbes de los shows
         for show in shows:
             nameShows.append(show.text)
-        del nameShows[11]
+        del nameShows[11] #aca aparece un año en el medio de los shows que no es una serie ni pelicula, lo saco
+        #busco la url de cada show, depaso me quedo con las temporadas y otra informacion util
         for link in links:
             season = []
             seasonUrl=[]
             urlShow = URL+'/'+link.a['href'].split('/')[2]
             urlShows.append(urlShow)
+            imgShow.append(link.find('div',{'class':'content'}).noscript.img['srcset'])
             soup = Datamanager._getSoup(self,urlShow)
             descriptionsShow.append(soup.find('div',{'class':"deck"}).text)
             try:
@@ -118,11 +123,15 @@ class TvLand():
             except:
                 season.append(soup.find('span',{'data-display-name':"Button"}).text if soup.find('span',{'data-display-name':"Button"}) else "Season 1")
             seasonUrl.append(urlShow)
+                
             seasonAux= soup.findAll('a',{'class':'css-1wkgy79-StyledTypography e1wje7qk0','tabindex':'-1'})
             for seasonaux in seasonAux:
                 season.append(seasonaux.text)
                 aux =seasonaux['href'].split('/')[3]+'/'+seasonaux['href'].split('/')[4]
                 seasonUrl.append(urlShow+'/'+aux)
+                
+                
+
             seasonsShow.append(season)
             seasonsUrl.append(seasonUrl)
 
@@ -133,6 +142,7 @@ class TvLand():
         episodesSeason=[]
         episodesDescription = []
         episodesUrl = []
+        imgEpisodes = []
         Url = 'www.tvland.com'
         for seasonUrl in seasonsUrl:
             episodeTitle=[]
@@ -140,37 +150,49 @@ class TvLand():
             episodeDate=[]
             episodeSeason=[]
             episodeDescription = []
+            imgEpisode =[]
+            #recorro cada url de la temporada para sacar info de las episodios
             for url in seasonUrl:
                 try:                                                                       
                     soup = Datamanager._clickAndGetSoupSelenium(self,url,"expand-wrap",waitTime=5,showURL=True)
                 except:
                     soup = Datamanager._getSoup(self,url,showURL=False)
-                sectionClass = soup.findAll('section',{'class':'module-container video-guide-container'})[0]
+                sectionClass = soup.findAll('section',{'class':'module-container video-guide-container'})[0] if soup.findAll('section',{'class':'module-container video-guide-container'})[0] else soup.findAll('section',{'class':'module-container video-guide-container has-load-more'})[0] 
+                #hay dos tipos de paginas de epìsodes con diferente busqueda, una es con un tipo de class y la otra es con otro por esto el siguiente if.
                 episodes =  sectionClass.findAll('div',{'class':'meta-wrap css-1u1rran-Wrapper e1u7s1dj0'}) if sectionClass.findAll('div',{'class':'meta-wrap css-1u1rran-Wrapper e1u7s1dj0'}) else sectionClass.findAll('div',{'class':'css-qc960f-Box-Flex-Meta e1oi4lqz1'})
+                #recorro los episodios y extraigo la informacion de los mismos.
                 for episode in episodes:
                     try: 
+                        imgEpisode.append(sectionClass.find('div',{'class':'content'}).noscript.img['srcset'])
                         episodeSeason.append(episode.find('div',{'class':'header'}).text.split('•'))
                         episodeTitle.append(episode.find('div',{'class':'sub-header'}).text)
                         episodeDescription.append(episode.find('div',{'class':'deck'}).text)
                         episodeDate.append(episode.find('div',{'class':'meta'}).text)
                         episodeUrl.append(Url+sectionClass.find('li',{'class':'item full-ep css-q2f74n-Wrapper e19yuxbf0'}).a['href'])
                     except:
+                        try:
+                            imgEpisode.append(sectionClass.find('div',{'class':'e1oi4lqz3 emhc85n0 e1fxnlj10 css-1qcdota-Box-Wrapper-StyledWrapper-StyledImage-Box-MediaContent e1s6v7hj0'}).img['src'])
+                        except:
+                            imgEpisode.append(None)
                         episodeSeason.append(episode.find('p',{'class':'ev0yupn0 e1r0v7z20 css-se0neo-StyledTypography-StyledElement-StyledSuperHeader e1wje7qk0'}).text.split('•'))
                         episodeTitle.append(episode.find('h3',{'class':'ev0yupn1 e15zpijj0 css-1mcwcud-StyledTypography-StyledTypography-StyledHeader e1wje7qk0'}).text)
                         episodeDescription.append(episode.find('p',{'class':'ev0yupn2 e1815zq20 css-9rag0y-StyledTypography-StyledTypography-StyledDeck e1wje7qk0'}).text)
                         episodeUrl.append(Url+sectionClass.find('li',{'class':'css-1yucgj6-Box-Flex-Layout-StyledWrapper ev0yupn4'}).a['href'])
+                        episodeDate.append(episode.find(None))
             episodesDate.append(episodeDate)
             episodesDescription.append(episodeDescription)
             episodesName.append(episodeTitle)
             episodesSeason.append(episodeSeason)
             episodesUrl.append(episodeUrl)
-
+            imgEpisodes.append(imgEpisode)
         for i in range(0,len(nameShows)):
             
             title = nameShows[i]
             _id = hashlib.md5(title.encode('utf-8')).hexdigest()
             _type = 'serie'
             seasons = len(seasonsShow[i])
+            img=[]
+            img.append(imgShow[i])
             URLContenido = urlShows[i]
             description = descriptionsShow[i]
             payload = {
@@ -190,7 +212,7 @@ class TvLand():
                 },
                 'Playback':      None,
                 'Synopsis':      description,
-                'Image':         None, # [str, str, str...] # []
+                'Image':         img, # [str, str, str...] # []
                 'Rating':        None,
                 'Provider':      None,
                 'Genres':        None, # [str, str, str...]
@@ -209,10 +231,12 @@ class TvLand():
             Datamanager._insertIntoDB(self,payloads,self.titanScraping)
 
         for i in range(0,len(episodesDate)):
+            nameShow = nameShows[i]
+            parrentId = hashlib.md5(nameShow.encode('utf-8')).hexdigest()
             for j in range(0,len(episodesDate[i])):
                 title = episodesName[i][j]
-                nameShow = nameShows[i]
-                parrentId = hashlib.md5(nameShow.encode('utf-8')).hexdigest()
+                img=imgEpisodes[i]
+                date = episodesDate[i][j]
                 _id = hashlib.md5(title.encode('utf-8')+nameShow.encode('utf-8')).hexdigest()
                 if i ==3:
                     try:
@@ -241,7 +265,7 @@ class TvLand():
                             "CleanTitle":    _replace(title), #Obligatorio      
                             "OriginalTitle": None,                          
                             "Type":          'serie',     #Obligatorio      
-                            "Year":          None,     #Important!     
+                            "Year":          date,     #Important!     
                             "Duration":      None,      
                             "ExternalIds":   None,      
                             "Deeplinks": {          
@@ -250,7 +274,7 @@ class TvLand():
                                 "iOS":       None,      
                             },      
                             "Synopsis":      description,      
-                            "Image":         None,      
+                            "Image":         img,      
                             "Rating":        None,     #Important!      
                             "Provider":      None,      
                             "Genres":        None,    #Important!      

@@ -171,6 +171,10 @@ ott_sites:
       start_url: 'https://espanol.wwe.com'
       api_url: 'https://cdn.watch.wwe.com/api/'
       cdn_watch_url: 'https://cdn.watch.wwe.com'
-    
-      
 
+  BravoTv:
+    countries:
+      US: us.bravotv
+  Telemundo:
+    countries:
+      US: us.telemundo

@@ -231,7 +231,7 @@ class Datamanager():
     def _getSoup(self, URL, headers={}, showURL=True, timeOut=0, parser = 'html.parser'):
         '''
         Devuelve el beautifulsoup del URL solicitado, si es necesario se le puede pasar headers.
-        '''
+        ''' 
         if showURL == True:
             print("\x1b[1;33;40m INTENTANDO PAGINA ----> \x1b[0m"+URL)
         time.sleep(timeOut)

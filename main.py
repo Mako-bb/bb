@@ -52,6 +52,8 @@ from platforms.bet_test             import BetTest
 from platforms.multiplatform        import MultiplatformScraping
 from platforms.roku_channel         import RokuChannel
 from platforms.wwenetwork           import WWENetwork
+from platforms.telemundo            import Telemundo
+from platforms.bravotv              import BravoTv
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
