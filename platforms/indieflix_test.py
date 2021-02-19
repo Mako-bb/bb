@@ -62,7 +62,8 @@ class Indieflix_test():
         
         if type == 'scraping': #or self.testing :
             self._scraping()
-
+        if type == 'testing': #or self.testing :
+            self._scraping(testing=True)
 
     def __query_field(self, collection, field, extra_filter=None):
         if not extra_filter:
@@ -88,7 +89,7 @@ class Indieflix_test():
 
         return query
 
-    def _scraping(self):
+    def _scraping(self, testing=False):
         #comenzamos haciendo request a una API que contiene
         #las categorias que hay en la pagina
         api_categories = "https://api.unreel.me/api/assets/5ee3f7a04d0e1b0999ec1511/discover?__site=indieflix&__source=web&onlyEnabledChannels=true"
@@ -454,7 +455,4 @@ class Indieflix_test():
         Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)
         Datamanager._insertIntoDB(self, self.payloads_epi, self.titanScrapingEpisodios)
 
-        if self.test:
-            Upload(self._platform_code, self._created_at,testing=True)
-        else:
-            Upload(self._platform_code, self._created_at,testing=True)
+        Upload(self._platform_code, self._created_at,testing=testing)

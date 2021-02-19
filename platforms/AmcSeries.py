@@ -21,6 +21,15 @@ import re
 
 
 class AmcSeries():
+    """ Plataforma: AMC
+        Pais: Estados Unidos(US)
+        Tiempo de Ejecución: 1>min
+        Requiere VPN: No
+        BS4/API/Selenium: API
+        Cantidad de Contenidos (Ultima revisión):
+            TitanScraping: 130
+            TitanScrapingEpisodes: 746
+    """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config = config()['ott_sites'][ott_site_uid]
         self._platform_code = self._config['countries'][ott_site_country]
@@ -33,6 +42,11 @@ class AmcSeries():
         )['mongo']['collections']['episode']
         self.skippedEpis = 0
         self.skippedTitles = 0
+        # Urls .YAML
+        self._movies_url = self._config['movie_url']
+        self._show_url = self._config['show_url']
+        self._format_url = self._config['format_url']
+        self._episode_url = self._config['episode_url']
 
         self.sesion = requests.session()
         self.headers = {"Accept": "application/json",
@@ -86,24 +100,32 @@ class AmcSeries():
         ids_guardados = Datamanager._getListDB(self, self.titanScraping)
         ids_guardados_series = Datamanager._getListDB(
             self, self.titanScrapingEpisodios)
-        url_movie = 'https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/movies?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web'
-        url_episode = 'https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/episodes?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web'
+        # Definimos los links de las apis y con el Datamanager usamos la función _getJson
+        url_movie = self._movies_url
+        url_episode = self._episode_url
         episode_data = Datamanager._getJSON(self, url_episode)
         i = 0
-        url_serie = 'https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/shows?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web'
+        url_serie = self._show_url
         serie_data = Datamanager._getJSON(self, url_serie)
         movie_data = Datamanager._getJSON(self, url_movie)
+
         while True:
+            # condición que rompe el bucle infinito
             try:
                 if i == (len(episode_data['data']['children'][2]['children'])-1):
                     break
             except:
                 break
+            # Ubicamos los valores dentro del Json
             movies = movie_data['data']['children'][4]['children']
             episodes = episode_data['data']['children'][2]['children']
             shows = serie_data['data']['children'][4]['children']
+            # Recorremos el Json de Peliculas y definimos los contendios del Payload
             for movie in movies:
+                print(movie)
+                deeplink = (self._format_url).format(movie['properties']['cardData']['meta']['permalink'])
                 payload_peliculas = {
+                    "PlatformCode":  self._platform_code,
                     "Title":         movie['properties']['cardData']['text']['title'],
                     "CleanTitle":    _replace(movie['properties']['cardData']['text']['title']),
                     "OriginalTitle": None,
@@ -111,18 +133,18 @@ class AmcSeries():
                     "Year":          None,
                     "Duration":      None,
 
-                    "Id":            movie['properties']['cardData']['meta']['nid'],
+                    "Id":            str(movie['properties']['cardData']['meta']['nid']),
                     "Deeplinks": {
 
-                        "Web":       'https://www.amc.com/tve?redirect={}'.format(movie['properties']['cardData']['meta']['permalink']),
+                        "Web":       deeplink.replace('/tve?',''),
                         "Android":   None,
                         "iOS":       None,
                     },
                     "Synopsis":      movie['properties']['cardData']['text']['description'],
-                    "Image":         None,
+                    "Image":         [movie['properties']['cardData']['images']],
                     "Rating":        None,  # Important!
                     "Provider":      None,
-                    "Genres":        None,  # Important!
+                    "Genres":        [movie['properties']['cardData']['meta']['genre']],  # Important!
                     "Cast":          None,
                     "Directors":     None,  # Important!
                     "Availability":  None,  # Important!
@@ -139,7 +161,9 @@ class AmcSeries():
                 Datamanager._checkDBandAppend(
                     self, payload_peliculas, ids_guardados, payloads_series
                 )
+            # Recorremos el Json de las series y definimos los valores del diccionario 
             for show in shows:
+                deeplink = (self._format_url).format(show['properties']['cardData']['meta']['permalink'])
                 payload_series = {
                     "PlatformCode":  self._platform_code,
                     "Id":            str(show['properties']['cardData']['meta']['nid']),
@@ -149,14 +173,14 @@ class AmcSeries():
                     'Year':          None,
                     'Duration':      None,
                     'Deeplinks': {
-                        'Web':       'https://www.amc.com/tve?redirect={}'.format(show['properties']['cardData']['meta']['permalink']),
+                        'Web':       deeplink.replace('/tve?',''),
                         'Android':   None,
                         'iOS':       None,
                     },
                     'Playback':      None,
                     "CleanTitle":    _replace(show['properties']['cardData']['text']['title']),
                     'Synopsis':      show['properties']['cardData']['text']['description'],
-                    'Image':         None,
+                    'Image':         [show['properties']['cardData']['images']],
                     'Rating':        None,
                     'Provider':      None,
                     'Genres':        None,
@@ -175,14 +199,16 @@ class AmcSeries():
                 Datamanager._checkDBandAppend(
                     self, payload_series, ids_guardados, payloads_series
                 )
+            # recorremos el json de series y de episodios para poder definir las variables dentro de cada episodio.
             for episode, show in zip(episodes, shows):
                 for episode_data in episode['children']:
+                    # un filtro para limpiar la información concatenada del json.
                     filtro = str(
                         episode_data['properties']['cardData']['text']['seasonEpisodeNumber'])
                     season_ = re.sub(
                         '[A-Z] ', "", filtro)
                     episode__ = season_.split(', ')
-
+                    deeplink = (self._format_url).format(episode_data['properties']['cardData']['meta']['permalink'])
                     payload = {
                         "PlatformCode":  self._platform_code,
                         "Id":            str(episode_data['properties']['cardData']['meta']['nid']),
@@ -197,14 +223,14 @@ class AmcSeries():
                         'Year':          None,
                         'Duration':      None,
                         'Deeplinks': {
-                            'Web':       'https://www.amc.com/tve?redirect={}'.format(episode_data['properties']['cardData']['meta']['permalink']),
+                            'Web':       deeplink.replace('/tve?',""),
                             'Android':   None,
                             'iOS':       None,
                         },
                         'Playback':      None,
                         "CleanTitle":    _replace(show['properties']['cardData']['text']['title']),
                         'Synopsis':      episode_data['properties']['cardData']['text']['description'],
-                        'Image':         None,
+                        'Image':         [episode_data['properties']['cardData']['images']],
                         'Rating':        None,
                         'Provider':      None,
                         'Genres':        None,
@@ -229,5 +255,4 @@ class AmcSeries():
             self, payloads, self.titanScrapingEpisodios)
         self.sesion.close()
 
-        if not testing:
-            Upload(self._platform_code, self._created_at, testing=True)
+        Upload(self._platform_code, self._created_at, testing=testing)

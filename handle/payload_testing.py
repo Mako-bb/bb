@@ -68,7 +68,7 @@ class Payload:
     def platformCode(self):
         return self._platformCode
 
-    @platformCode.setter    
+    @platformCode.setter
     def platformCode(self,newPlatform):
         self._platformCode = newPlatform
 
@@ -76,7 +76,7 @@ class Payload:
     def id(self):
         return self._id
 
-    @id.setter    
+    @id.setter
     def id(self,newId):
         self._id = newId
 
@@ -84,7 +84,7 @@ class Payload:
     def title(self):
         return self._title
 
-    @title.setter    
+    @title.setter
     def title(self,newTitle):
         self._title = newTitle
 
@@ -92,34 +92,34 @@ class Payload:
     def type(self):
         return self._type
 
-    @type.setter    
+    @type.setter
     def type(self,newType):
         self._type = newType
-    
+
     @property
     def originalTitle(self):
         return self._originalTitle
 
-    @originalTitle.setter    
-    def originalTitle(self, newTitle):
+    @originalTitle.setter
+    def originalTitle(self,newTitle):
         self._originalTitle = newTitle
-    
+
     @property
     def cleanTitle(self):
         return self._cleanTitle
 
-    @cleanTitle.setter    
-    def cleanTitle(self, newTitle):
+    @cleanTitle.setter
+    def cleanTitle(self,newTitle):
         self._cleanTitle = newTitle
 
     @property
     def year(self):
         return self._year
 
-    @year.setter    
-    def year(self, newYear):
+    @year.setter
+    def year(self,newYear):
         self._year = newYear
-    
+
     @property
     def duration(self):
         return self._duration
@@ -135,7 +135,7 @@ class Payload:
     @deeplinksWeb.setter
     def deeplinksWeb(self,newDeeplinksweb):
         self._deeplinksWeb = newDeeplinksweb
-    
+
     @property
     def deeplinksAndroid(self):
         return self._deeplinksAndroid
@@ -151,7 +151,7 @@ class Payload:
     @deeplinksIos.setter
     def deeplinksIos(self,newDeeplinksios):
         self._deeplinksIos = newDeeplinksios
-    
+
     @property
     def playback(self):
         return self._playback
@@ -159,7 +159,7 @@ class Payload:
     @playback.setter
     def playback(self,newPlayback):
         self._playback = newPlayback
-     
+
     @property
     def synopsis(self):
         return self._synopsis
@@ -175,7 +175,7 @@ class Payload:
     @image.setter
     def image(self, newImage):
         self._image = newImage
-    
+
     @property
     def rating(self):
         return self._rating
@@ -215,7 +215,7 @@ class Payload:
     @directors.setter
     def directors(self, newDirectors):
         self._directors = newDirectors
-    
+
     @property
     def availability(self):
         return self._availability
@@ -287,7 +287,7 @@ class Payload:
     @parentId.setter
     def parentId(self, newParentId):
         self._parentId = newParentId
-    
+
     @property
     def parentTitle(self):
         return self._parentTitle
@@ -311,7 +311,7 @@ class Payload:
     @season.setter
     def season(self, newSeason):
         self._season = newSeason
-    
+
     def payloadJson(self):
         return {
                     'PlatformCode':  self._platformCode,
@@ -344,7 +344,7 @@ class Payload:
                     'Timestamp':     self._timestamp,
                     'CreatedAt':     self._createdAt
                 }
-    
+
     def payloadEpisodeJson(self):
         return {
                     'PlatformCode'   : self._platformCode,
@@ -362,6 +362,7 @@ class Payload:
                                         'iOS'     : self._deeplinksIos
                     },
                     'Synopsis'       : self._synopsis,
+                    'Image'          : self._image,
                     'Rating'         : self._rating,
                     'Provider'       : self._provider,
                     'Genres'         : self._genres,

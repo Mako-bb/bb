@@ -113,6 +113,11 @@ class Abc():
         """
         payload = Payload()
 
+        # No se puede extraer la imagen ya que carga con javascript.
+        # Ninguno de los 4 links esta fijo en el html.
+        #
+        # payload.image = all_tile_details.find_all('img',{"data-mptype" : "image", "title" : False})[0].get('src')
+        
         payload.genres = [episode_details.get('data-track-video_genre')]
         payload.title = episode_details.get('data-track-link_name_custom').split(':')[-1].strip()
         if len(payload.title) > 30:
@@ -144,12 +149,21 @@ class Abc():
         if(len(payload.season) > 5):
         # Las temporadas y episodios sin numero se pueden sacar del URL del episodio, en lugar 
         # de asignar None pero tiene un costo ya que tengo que hacer aun mas requests.
-            payload.season = None
-            payload.episode = None
+            soup = Datamanager._getSoup(self,payload.deeplinksWeb)
+
+            video_data = soup.find('div',class_='Video__Head')
+
+            try:
+                payload.season = int(video_data.contents[0].text.replace('S',''))
+                payload.episode = int(video_data.contents[1].text.replace('E',''))
+            except: 
+                payload.season = None
+                payload.episode = None
+ 
         else:
             payload.season = int(payload.season)
 
-        if payload.episode:
+        if payload.episode and isinstance(payload.episode,str):
             if len(payload.episode) < 2:
                 payload.episode = int('0' + payload.episode)
             else:
@@ -196,6 +210,10 @@ class Abc():
                         Datamanager._checkDBandAppend(self,payload.payloadEpisodeJson(),ids_guardados,payloadsEpisodes,isEpi=True)
 
     def _scraping(self, testing = False):
+        """ Datos importantes:
+                Necesita VPN: NO Al correr el script en Argentina o USA, trae el mismo contenido.
+                Tiempo de ejecucion: Depende del internet ya que son muchas requests. Aprox: 20Mins.
+        """
         payloadsShows = []
         payloadsEpisodes = []
         ids_guardados_shows = Datamanager._getListDB(self,self.titanScraping)
