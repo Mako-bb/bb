@@ -113,6 +113,11 @@ class Abc():
         """
         payload = Payload()
 
+        # No se puede extraer la imagen ya que carga con javascript.
+        # Ninguno de los 4 links esta fijo en el html.
+        #
+        # payload.image = all_tile_details.find_all('img',{"data-mptype" : "image", "title" : False})[0].get('src')
+        
         payload.genres = [episode_details.get('data-track-video_genre')]
         payload.title = episode_details.get('data-track-link_name_custom').split(':')[-1].strip()
         if len(payload.title) > 30:
