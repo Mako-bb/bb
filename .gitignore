@@ -45,6 +45,8 @@ kaji
 kaji.pub
 bb-private
 .DS_Store
+handle/notepad.py
 *.csv
+*.xlsx
 apuntes.txt
 .data_analysis
