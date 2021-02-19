@@ -19,7 +19,7 @@ from handle.datamanager  import Datamanager
 from updates.upload         import Upload
 from handle.payload_testing import Payload
 
-class DiscoveryLifeTest():
+class DiscoveryLife():
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config                = config()['ott_sites'][ott_site_uid]
         self._platform_code         = self._config['countries'][ott_site_country]
@@ -163,7 +163,7 @@ class DiscoveryLifeTest():
                 #type = show['type'] 
                 # --No se usa este campo ya que hay 'specials' y no se toman en cuenta
                 type = 'serie'
-                deeplinkWeb = show['socialUrl']
+                deeplinkWeb = 'https://www.discoverylife.com' + '/tv-shows/' + show['socialUrl'].split('/')[3] + '/'
                 synopsis = show['description']
                 genres = self.getGenres(show)
                 

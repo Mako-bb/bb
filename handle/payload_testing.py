@@ -362,6 +362,7 @@ class Payload:
                                         'iOS'     : self._deeplinksIos
                     },
                     'Synopsis'       : self._synopsis,
+                    'Image'          : self._image,
                     'Rating'         : self._rating,
                     'Provider'       : self._provider,
                     'Genres'         : self._genres,
