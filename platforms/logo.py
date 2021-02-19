@@ -133,6 +133,8 @@ class Logo():
             href = link.get('href')
             title = soup_s.find('div', self._movie_title).text
             desc = soup_s.find('div', self._movie_desc).text
+            image = soup_s.find('div',self._image_div).get('data-info').split('"')
+            image = image[9]
             # Definimos los valores del payload con las variables
             payload = {
                 "PlatformCode":  self._platform_code,
@@ -199,7 +201,7 @@ class Logo():
                 'Playback':      None,
                 "CleanTitle":    _replace(title),
                 'Synopsis':      desc,
-                'Image':         list(image_src),
+                'Image':         [image_src],
                 'Rating':        None,
                 'Provider':      None,
                 'Genres':        None,
@@ -305,7 +307,7 @@ class Logo():
                 },
                 'Playback':      None,
                 'Synopsis':      description,
-                'Image':         list(image_src),
+                'Image':         [image_src],
                 'Rating':        None,
                 'Provider':      None,
                 'Genres':        None,
@@ -327,5 +329,4 @@ class Logo():
         Datamanager._insertIntoDB(
             self,payloads_series , self.titanScrapingEpisodios)
         Datamanager._insertIntoDB(self, payloads, self.titanScraping)
-        if not testing:
-            Upload(self._platform_code, self._created_at, testing=True)
+        Upload(self._platform_code, self._created_at, testing=testing)

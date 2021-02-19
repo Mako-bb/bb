@@ -122,6 +122,7 @@ class AmcSeries():
             shows = serie_data['data']['children'][4]['children']
             # Recorremos el Json de Peliculas y definimos los contendios del Payload
             for movie in movies:
+                print(movie)
                 deeplink = (self._format_url).format(movie['properties']['cardData']['meta']['permalink'])
                 payload_peliculas = {
                     "PlatformCode":  self._platform_code,
@@ -254,5 +255,4 @@ class AmcSeries():
             self, payloads, self.titanScrapingEpisodios)
         self.sesion.close()
 
-        if not testing:
-            Upload(self._platform_code, self._created_at, testing=True)
+        Upload(self._platform_code, self._created_at, testing=testing)

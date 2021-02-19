@@ -26,6 +26,15 @@ from selenium.webdriver.common.by import By
 
 
 class Syfy():
+    """ Plataforma: Syfy
+        Pais: Estados Unidos(US)
+        Tiempo de Ejecución: 15min
+        Requiere VPN: No
+        BS4/API/Selenium: BS4/Selenium
+        Cantidad de Contenidos (Ultima revisión):
+            TitanScraping: 159
+            TitanScrapingEpisodes: 940
+    """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config = config()['ott_sites'][ott_site_uid]
         self._platform_code = self._config['countries'][ott_site_country]
@@ -56,7 +65,6 @@ class Syfy():
         self._episode_grid_div = self._config['queries']['episode_grid_div']
         self._cast_div = self._config['queries']['cast_div']
         self._title_div = self._config['queries']['title_div']
-        self._desc_div =  self._config['queries']['desc_div']
 
 
         self.sesion = requests.session()
@@ -139,6 +147,7 @@ class Syfy():
             titulo = movie.find('div',class_='title').text
             sinopsis = movie.find('div',class_='synopsis').text
             href = movie.find('a').get('href')
+            image = movie.find('img').get('src')
             payload = {
                 "PlatformCode":  self._platform_code,
                 "Id":            hashlib.md5(titulo.encode('utf-8')).hexdigest(),
@@ -155,7 +164,7 @@ class Syfy():
                 'Playback':      None,
                 "CleanTitle":    _replace(titulo),
                 'Synopsis':      sinopsis,
-                'Image':         None,
+                'Image':         [image],
                 'Rating':        None,
                 'Provider':      None,
                 'Genres':        None,
@@ -195,6 +204,7 @@ class Syfy():
                     cast_list.append(actor.text)
             else:
                 cast_list = None
+            image = show.find('img').get('src')
             payload_series = {
                 "PlatformCode":  self._platform_code,
                 "Id":            hashlib.md5(title.encode('utf-8')).hexdigest(),
@@ -211,7 +221,7 @@ class Syfy():
                 'Playback':      None,
                 "CleanTitle":    _replace(title),
                 'Synopsis':      None,
-                'Image':         None,
+                'Image':         [image],
                 'Rating':        None,
                 'Provider':      None,
                 'Genres':        None,
@@ -253,6 +263,7 @@ class Syfy():
                         parent_title = parent_title.split(',')
                         parent_title = parent_title[0]
                         sinopsis = episode.find('p').text
+                        image = episode.find('img').get('src')
                         payload_episodes = {
                             "PlatformCode":  self._platform_code,
                             "Id": hashlib.md5(title.encode('utf-8')+season_number.encode('utf-8')+episode_number.encode('utf-8')).hexdigest(),
@@ -271,7 +282,7 @@ class Syfy():
                             },
                             'Playback':      None,
                             'Synopsis':      sinopsis,
-                            'Image':         None,
+                            'Image':         [image],
                             'Rating':        None,
                             'Provider':      None,
                             'Genres':        None,
@@ -297,6 +308,4 @@ class Syfy():
         Datamanager._insertIntoDB(
             self, payloads_series, self.titanScrapingEpisodios)
         Datamanager._insertIntoDB(self, payloads, self.titanScraping)
-        if not testing:
-            Upload(self._platform_code, self._created_at, testing=True)
-
+        Upload(self._platform_code, self._created_at, testing=testing)

@@ -268,5 +268,4 @@ class Oxygen():
         Datamanager._insertIntoDB(
             self, payloads, self.titanScrapingEpisodios)
         Datamanager._insertIntoDB(self, payloads_series, self.titanScraping)
-        if not testing:
-            Upload(self._platform_code, self._created_at, testing=True)
+        Upload(self._platform_code, self._created_at, testing=testing)
