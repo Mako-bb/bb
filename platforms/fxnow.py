@@ -87,15 +87,24 @@ class FxnowTest():
             print(offset)
             print(request.status_code, request.url)
             data = request.json()
-            try: 
-                genre=list(titulo['show']['genre']) 
-            except: 
-                genre=["None"]
+            
             try:
                 titulos = data['tiles']
             except:
                 break 
             for titulo in titulos:
+                genre=[]
+                img=[]
+                try:
+                    images = titulo['images']
+                    for image in images:
+                        img.append(image['value'])
+                except:
+                    img=None
+                try: 
+                    genre.append(titulo['show']['genre']) 
+                except: 
+                    genre=None
 
                 title = titulo['title']
                 #year = titulo['release_year']
@@ -120,7 +129,7 @@ class FxnowTest():
                     },
                     'Playback':      None,
                     'Synopsis':      titulo['show']['aboutTheShowSummary'],
-                    'Image':         None,
+                    'Image':         img,
                     'Rating':        None,
                     'Provider':      None,
                     'Genres':        genre,
@@ -171,15 +180,24 @@ class FxnowTest():
             print(offset)
             print(request.status_code, request.url)
             data = request.json()
-            try: 
-                genre=list(titulo['show']['genre']) 
-            except: 
-                genre=["None"]
             try:
                 titulos = data['tiles']
             except:
                 break 
             for titulo in titulos:
+
+                genre=[]
+                img=[]
+                try:
+                    images = titulo['images']
+                    for image in images:
+                        img.append(image['value'])
+                except:
+                    img=None
+                try: 
+                    genre.append(titulo['show']['genre']) 
+                except: 
+                    genre=None
 
                 title = titulo['title']
                 #year = titulo['release_year']

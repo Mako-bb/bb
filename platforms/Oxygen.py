@@ -37,10 +37,33 @@ class Oxygen():
         )['mongo']['collections']['episode']
         self.skippedEpis = 0
         self.skippedTitles = 0
-
         self.sesion = requests.session()
         self.headers = {"Accept": "application/json",
                         "Content-Type": "application/json; charset=utf-8"}
+
+        # Urls .YAML
+        self._movies_url = self._config['movie_url']
+        self._show_url = self._config['show_url']
+        self._format_url = self._config['format_url']
+        self._episode_url = self._config['episode_url']
+        self._full_episode_url = self._config['full_episodes_url']
+        self._cast_url = self._config['cast_url']
+
+        # Queries .YAML
+        self._movie_div = self._config['queries']['movies_div']
+        self._show_div = self._config['queries']['show_div']
+        self._episode_div = self._config['queries']['episode_div']
+        self._content_div = self._config['queries']['content_div']
+        self._full_episode_checker_div = self._config['queries']['full_episode_check_div']
+        self._episode_grid_div = self._config['queries']['episode_grid_div']
+        self._cast_div = self._config['queries']['cast_div']
+        self._title_div = self._config['queries']['title_div']
+        self._desc_div =  self._config['queries']['desc_div']
+        self._form_select = self._config['queries']['form_div']
+        self._article_div = self._config['queries']['article_div']
+        self._episode_label = self._config['queries']['episode_label']
+        self._sinopsis_div = self._config['queries']['sinopsis_div']
+        self._parent_div = self._config['queries']['parent_div']
 
         if type == 'return':
             '''
@@ -91,15 +114,14 @@ class Oxygen():
         payloads = []
         options = Options()
         options.preferences.update({"javascript.enabled": False})
-        url = "https://www.oxygen.com/full-episodes"
-        soup_a = Datamanager._getSoup(self, url)
+        soup_a = Datamanager._getSoup(self, self._show_url)
         hrefs = []
         payloads_series = []
         # Buscamos los links que contienen las referencias de las series para ponerlas en una lista
-        for show in soup_a.find_all('a', class_='teaser__wrapper-link'):
+        for show in soup_a.find_all('a', self._show_div):
             hrefs.append(show.get('href'))
         # Buscamos los titulos y recorremos la lista anterior para colocar los deeplinks de forma correcta.
-        for titulos, referencia in zip(soup_a.find_all('h2', class_='headline'), hrefs):
+        for titulos, referencia in zip(soup_a.find_all('h2', self._title_div), hrefs):
             titulo = (titulos.text).strip()
             # Definimos el Payload de las series
             payload_series = {
@@ -111,7 +133,7 @@ class Oxygen():
                 'Year':          None,
                 'Duration':      None,
                 'Deeplinks': {
-                    'Web':       'https://www.oxygen.com' + referencia.replace('videos', 'episode-guide'),
+                    'Web':       self._format_url + referencia.replace('videos', 'episode-guide'),
                     'Android':   None,
                     'iOS':       None,
                 },
@@ -142,68 +164,66 @@ class Oxygen():
 
         # Recorremos la lista de referencias de la pagina, reemplazando "videos" por "episode-guide" para llegar a la lista de los capitulos
         for href in hrefs:
-            soup_b = Datamanager._getSoup(self, 'https://www.oxygen.com' +
-                                          href.replace('videos', 'episode-guide'))
+            soup_b = Datamanager._getSoup(self, self._format_url
+                                            + href.replace('videos', 'episode-guide'))
             # Condicional si la serie tiene 2 o más temporadas
             if soup_b.find('select'):
                 # Buscamos las opciones dentro del selector
                 opciones = soup_b.find(
-                    'select', class_='form-select').find_all('option')
+                    'select', self._form_select).find_all('option')
                 # por cada valor de las opciones, scrappeamos todos los valores de la pagina.
                 for valor in opciones:
                     print(valor.get('value'))
-                    soup_c = Datamanager._getSoup(self, 'https://www.oxygen.com' + href.replace('videos', 'episode-guide') +
-                                                  '?field_tv_shows_season=' + valor.get('value'))
+                    soup_c = Datamanager._getSoup(self, self._format_url
+                                                + href.replace('videos', 'episode-guide')
+                                                + self._episode_url + valor.get('value'))
                     # Recorremos una lista de los links de cada uno de los episodios de la temporada.
                     for linkepisodio in soup_c.find_all(
-                            'article', class_='teaser teaser--episode-guide-teaser'):
+                            'article', self._article_div):
                         episode_hrefs.append(
                             linkepisodio.find('a').get('href'))
                         print('added ' + linkepisodio.find('a').get('href'))
             else:
                 # Recorremos una lista de los links de cada uno de los episodios.
                 for linkepisodios in soup_b.find_all(
-                        'article', class_='teaser teaser--episode-guide-teaser'):
+                        'article', self._article_div):
                     episode_hrefs.append(linkepisodios.find('a').get('href'))
                     print('added' + linkepisodios.find('a').get('href'))
-        # Definimos variables de soporte para episodios que no están catalogados en orden.
-        sneak = 0
-        specialcount = 0
         # Recorremos todos los links de las referencias de los episodios de cada temporada
         for link in episode_hrefs:
             soup_e = Datamanager._getSoup(
-                self, 'https://www.oxygen.com' + link)
+                self, self._format_url + link)
             epi = soup_e.find(
-                'div', class_='video__label').text.rstrip().split('-')
-            # Filtro de información para el payload
-            if epi[1] == " Sneak Peek":
-                epi[1] = 50 + sneak
-
-            if epi[1] == " Special":
-                epi[1] = 60 + specialcount
-                specialcount += 1
+                'div', self._episode_label).text.rstrip().split('-')
             temporada = re.sub('\D', '', str(epi[0]))
             episodio = re.sub('\D', '', str(epi[1]))
-
+            try:
+                temporada = int(temporada)
+                episodio = int(episodio)
+            except:
+                temporada = None
+                episodio = None
             sinopsis = (soup_e.find('div', class_='video__description').text).strip() if soup_e.find(
-                'div', class_='video__description') is not None else None
+                'div', self._sinopsis_div) is not None else None
             titulo = re.sub('\n', '', soup_e.find('h1', class_='headline').text).strip() if soup_e.find(
-                'h1', class_='headline') is not None else None
-            parentTitle = (soup_e.find('div', 'nav__title').text).strip()
+                'h1', self._title_div) is not None else None
+            parentTitle = (soup_e.find('div',self._parent_div).text).strip()
             # Definimos el payload de los capitulos de cada serie
             payload = {
                 "PlatformCode":  self._platform_code,
-                "Id": hashlib.md5(titulo.encode('utf-8')+str(episodio).encode('utf-8')+str(temporada).encode('utf-8')).hexdigest(),
+                "Id": hashlib.md5(titulo.encode('utf-8')
+                    + parentTitle.encode('utf-8')
+                    + str(link).encode('utf-8')).hexdigest(),
                 "ParentId":      hashlib.md5(parentTitle.encode('utf-8')).hexdigest(),
                 "ParentTitle":   parentTitle,
-                "Episode":     int(episodio),
-                "Season":        int(temporada),
+                "Episode":     episodio,
+                "Season":       temporada,
                 'Title':         titulo,
                 'OriginalTitle': None,
                 'Year':          None,
                 'Duration':      None,
                 'Deeplinks': {
-                    'Web':       'https://www.oxygen.com' + link,
+                    'Web':       self._format_url + link,
                     'Android':   None,
                     'iOS':       None,
                 },

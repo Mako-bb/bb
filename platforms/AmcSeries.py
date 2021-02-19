@@ -33,6 +33,11 @@ class AmcSeries():
         )['mongo']['collections']['episode']
         self.skippedEpis = 0
         self.skippedTitles = 0
+        # Urls .YAML
+        self._movies_url = self._config['movie_url']
+        self._show_url = self._config['show_url']
+        self._format_url = self._config['format_url']
+        self._episode_url = self._config['episode_url']
 
         self.sesion = requests.session()
         self.headers = {"Accept": "application/json",
@@ -86,22 +91,27 @@ class AmcSeries():
         ids_guardados = Datamanager._getListDB(self, self.titanScraping)
         ids_guardados_series = Datamanager._getListDB(
             self, self.titanScrapingEpisodios)
-        url_movie = 'https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/movies?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web'
-        url_episode = 'https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/episodes?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web'
+        # Definimos los links de las apis y con el Datamanager usamos la función _getJson
+        url_movie = self._movies_url
+        url_episode = self._episode_url
         episode_data = Datamanager._getJSON(self, url_episode)
         i = 0
-        url_serie = 'https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/shows?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web'
+        url_serie = self._show_url
         serie_data = Datamanager._getJSON(self, url_serie)
         movie_data = Datamanager._getJSON(self, url_movie)
+
         while True:
+            # condición que rompe el bucle infinito
             try:
                 if i == (len(episode_data['data']['children'][2]['children'])-1):
                     break
             except:
                 break
+            # Ubicamos los valores dentro del Json
             movies = movie_data['data']['children'][4]['children']
             episodes = episode_data['data']['children'][2]['children']
             shows = serie_data['data']['children'][4]['children']
+            # Recorremos el Json de Peliculas y definimos los contendios del Payload
             for movie in movies:
                 payload_peliculas = {
                     "Title":         movie['properties']['cardData']['text']['title'],
@@ -114,7 +124,7 @@ class AmcSeries():
                     "Id":            movie['properties']['cardData']['meta']['nid'],
                     "Deeplinks": {
 
-                        "Web":       'https://www.amc.com/tve?redirect={}'.format(movie['properties']['cardData']['meta']['permalink']),
+                        "Web":       (self._format_url).format(movie['properties']['cardData']['meta']['permalink']),
                         "Android":   None,
                         "iOS":       None,
                     },
@@ -139,6 +149,7 @@ class AmcSeries():
                 Datamanager._checkDBandAppend(
                     self, payload_peliculas, ids_guardados, payloads_series
                 )
+            # Recorremos el Json de las series y definimos los valores del diccionario 
             for show in shows:
                 payload_series = {
                     "PlatformCode":  self._platform_code,
@@ -149,7 +160,7 @@ class AmcSeries():
                     'Year':          None,
                     'Duration':      None,
                     'Deeplinks': {
-                        'Web':       'https://www.amc.com/tve?redirect={}'.format(show['properties']['cardData']['meta']['permalink']),
+                        'Web':       (self._format_url).format(show['properties']['cardData']['meta']['permalink']),
                         'Android':   None,
                         'iOS':       None,
                     },
@@ -175,8 +186,10 @@ class AmcSeries():
                 Datamanager._checkDBandAppend(
                     self, payload_series, ids_guardados, payloads_series
                 )
+            # recorremos el json de series y de episodios para poder definir las variables dentro de cada episodio.
             for episode, show in zip(episodes, shows):
                 for episode_data in episode['children']:
+                    # un filtro para limpiar la información concatenada del json.
                     filtro = str(
                         episode_data['properties']['cardData']['text']['seasonEpisodeNumber'])
                     season_ = re.sub(
@@ -197,7 +210,7 @@ class AmcSeries():
                         'Year':          None,
                         'Duration':      None,
                         'Deeplinks': {
-                            'Web':       'https://www.amc.com/tve?redirect={}'.format(episode_data['properties']['cardData']['meta']['permalink']),
+                            'Web':       (self._format_url).format(episode_data['properties']['cardData']['meta']['permalink']),
                             'Android':   None,
                             'iOS':       None,
                         },
