@@ -56,6 +56,7 @@ class Syfy():
         self._episode_grid_div = self._config['queries']['episode_grid_div']
         self._cast_div = self._config['queries']['cast_div']
         self._title_div = self._config['queries']['title_div']
+        self._desc_div =  self._config['queries']['desc_div']
 
 
         self.sesion = requests.session()
@@ -246,7 +247,7 @@ class Syfy():
                             season_number = "1"
                         title = title.replace(str(episode_number)+" ",'')
                         episode_number = episode_number.replace('.','')
-                        parent_title = (show.text).strip()
+                        parent_title = (show.find('div',self._title_div).text).strip()
                         raw_paren_title = r'{}'.format(parent_title)
                         parent_title = raw_paren_title.replace('\n', ",")
                         parent_title = parent_title.split(',')
@@ -294,8 +295,8 @@ class Syfy():
                 continue
 
         Datamanager._insertIntoDB(
-            self, payloads, self.titanScrapingEpisodios)
-        Datamanager._insertIntoDB(self, payloads_series, self.titanScraping)
+            self, payloads_series, self.titanScrapingEpisodios)
+        Datamanager._insertIntoDB(self, payloads, self.titanScraping)
         if not testing:
             Upload(self._platform_code, self._created_at, testing=True)
 
