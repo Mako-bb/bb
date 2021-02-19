@@ -25,6 +25,15 @@ from selenium.webdriver.common.by import By
 
 
 class Oxygen():
+    """ Plataforma: Oxygen
+        País: Estados Unidos (US)
+        Tiempo de Ejecución: 40-50min.
+        Requiere VPN: No
+        BS4/API/Selenium: BS4
+        Cantidad de contenidos (última revisión):
+            TitanScraping: 166
+            TitanScrapingEpisodes: 1522
+    """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config = config()['ott_sites'][ott_site_uid]
         self._platform_code = self._config['countries'][ott_site_country]
@@ -58,7 +67,6 @@ class Oxygen():
         self._episode_grid_div = self._config['queries']['episode_grid_div']
         self._cast_div = self._config['queries']['cast_div']
         self._title_div = self._config['queries']['title_div']
-        self._desc_div =  self._config['queries']['desc_div']
         self._form_select = self._config['queries']['form_div']
         self._article_div = self._config['queries']['article_div']
         self._episode_label = self._config['queries']['episode_label']
@@ -121,8 +129,9 @@ class Oxygen():
         for show in soup_a.find_all('a', self._show_div):
             hrefs.append(show.get('href'))
         # Buscamos los titulos y recorremos la lista anterior para colocar los deeplinks de forma correcta.
-        for titulos, referencia in zip(soup_a.find_all('h2', self._title_div), hrefs):
-            titulo = (titulos.text).strip()
+        for titulos, referencia in zip(soup_a.find_all('a', "teaser__wrapper-link"), hrefs):
+            titulo = (titulos.find('h2').text).strip()
+            image = titulos.find('img').get('src')
             # Definimos el Payload de las series
             payload_series = {
                 "PlatformCode":  self._platform_code,
@@ -140,7 +149,7 @@ class Oxygen():
                 'Playback':      None,
                 "CleanTitle":    _replace(titulo),
                 'Synopsis':      None,
-                'Image':         None,
+                'Image':         [image],
                 'Rating':        None,
                 'Provider':      None,
                 'Genres':        None,
@@ -203,11 +212,19 @@ class Oxygen():
             except:
                 temporada = None
                 episodio = None
-            sinopsis = (soup_e.find('div', class_='video__description').text).strip() if soup_e.find(
+            sinopsis = (soup_e.find('div', self._sinopsis_div).text).strip() if soup_e.find(
                 'div', self._sinopsis_div) is not None else None
-            titulo = re.sub('\n', '', soup_e.find('h1', class_='headline').text).strip() if soup_e.find(
+            titulo = re.sub('\n', '', soup_e.find('h1', self._title_div).text).strip() if soup_e.find(
                 'h1', self._title_div) is not None else None
             parentTitle = (soup_e.find('div',self._parent_div).text).strip()
+            try:
+                image = soup_e.find('div','tv-episode__image-container').find('img').get('src')
+            except:
+                try:
+                    image = soup_e.find('div','video__mpx-player').find('img').get('src')
+                except:
+                    image = None
+            rating = soup_e.find('span','video__rating').text
             # Definimos el payload de los capitulos de cada serie
             payload = {
                 "PlatformCode":  self._platform_code,
@@ -229,8 +246,8 @@ class Oxygen():
                 },
                 'Playback':      None,
                 'Synopsis':      sinopsis,
-                'Image':         None,
-                'Rating':        None,
+                'Image':         [image],
+                'Rating':        rating,
                 'Provider':      None,
                 'Genres':        None,
                 'Cast':          None,

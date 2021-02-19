@@ -21,6 +21,15 @@ import re
 
 
 class AmcSeries():
+    """ Plataforma: AMC
+        Pais: Estados Unidos(US)
+        Tiempo de Ejecución: 1>min
+        Requiere VPN: No
+        BS4/API/Selenium: API
+        Cantidad de Contenidos (Ultima revisión):
+            TitanScraping: 130
+            TitanScrapingEpisodes: 746
+    """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config = config()['ott_sites'][ott_site_uid]
         self._platform_code = self._config['countries'][ott_site_country]
