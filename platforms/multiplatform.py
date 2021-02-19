@@ -145,6 +145,7 @@ class MultiplatformScraping():
             ### SERIES ###
             ##############
 
+            # Le paso a la start_url el nombre de la plataforma y "/shows" para que traiga el .json de las series de dicha plataforma
             data = Datamanager._getJSON(self, self._start_url.format(platform['Name'], '/shows'))
 
             # Cargo la lista de series del .json, teniendo en cuenta el indice que referencia el listado de titulos en la plataforma 
@@ -152,11 +153,14 @@ class MultiplatformScraping():
 
             for serie in series:
 
-                info = serie['properties']['cardData']
+                info_serie = serie['properties']['cardData']
 
-                serie_link = info['meta']['permalink']
-                serie_id = str(info['meta']['nid'])
-                serie_title = info['text']['title']
+                serie_title = info_serie['text']['title']
+                serie_link = info_serie['meta']['permalink']
+                # 18/2/2021 15:44 En la API hay algunos contenidos que redireccionan a una tienda online de The Walking Dead, de momento se saltean, ELIMINAR SI SE ARREGLA
+                if 'twdu' in serie_link:
+                    continue
+                serie_id = str(info_serie['meta']['nid'])
                 
 
                 # Traigo el .json de la serie para obtener las temporadas y luego scrapear los episodios
@@ -218,27 +222,27 @@ class MultiplatformScraping():
 
                     for episode in episodes:
 
-                        info = episode['properties']['cardData']
+                        info_epi = episode['properties']['cardData']
 
                         payload_episodes = {
                             'PlatformCode':  platform['PlatformCode'],
-                            'Id':            str(info['meta']['nid']), 
+                            'Id':            str(info_epi['meta']['nid']), 
                             'ParentId':      serie_id,
                             'ParentTitle':   serie_title,
-                            'Episode':       int(info['text']['seasonEpisodeNumber'].split(',')[1].replace('E', '')) if info['text'].get('seasonEpisodeNumber') else None, 
-                            'Season':        int(info['text']['seasonEpisodeNumber'].split(',')[0].replace('S', '')) if info['text'].get('seasonEpisodeNumber') else None, 
-                            'Title':         info['text']['title'],
-                            'OriginalTitle':  None, 
+                            'Episode':       int(info_epi['text']['seasonEpisodeNumber'].split(',')[1].replace('E', '')) if info_epi['text'].get('seasonEpisodeNumber') else None, 
+                            'Season':        int(info_epi['text']['seasonEpisodeNumber'].split(',')[0].replace('S', '')) if info_epi['text'].get('seasonEpisodeNumber') else None, 
+                            'Title':         info_epi['text']['title'],
+                            'OriginalTitle': None, 
                             'Year':          None, 
                             'Duration':      None,
                             'ExternalIds':   None,
                             'Deeplinks': {
-                                'Web':       platform['Link'] + info['meta']['permalink'],
+                                'Web':       platform['Link'] + info_epi['meta']['permalink'],
                                 'Android':   None,
                                 'iOS':       None,
                                 },
-                            'Synopsis':      info['text']['description'] if info['text'].get('description') else None,
-                            'Image':         [info['images']] if info.get('images') else None,
+                            'Synopsis':      info_epi['text']['description'] if info_epi['text'].get('description') else None,
+                            'Image':         [info_epi['images']] if info_epi.get('images') else None,
                             'Rating':        None,
                             'Provider':      None,
                             'Genres':        None,
@@ -274,8 +278,8 @@ class MultiplatformScraping():
                         'iOS':       None,
                     },
                     'Playback':      None,
-                    'Synopsis':      info['text']['description'] if info['text'].get('description') else None,
-                    'Image':         [info['images']] if info.get('images') else None,
+                    'Synopsis':      info_serie['text']['description'] if info_serie['text'].get('description') else None,
+                    'Image':         [info_serie['images']] if info_serie.get('images') else None,
                     'Rating':        None,
                     'Provider':      None,
                     'Genres':        None,
@@ -294,7 +298,7 @@ class MultiplatformScraping():
                 Datamanager._checkDBandAppend(self, payload, scraped, payloads)
 
             Datamanager._insertIntoDB(self, payloads_episodes, self.titanScrapingEpisodios)
-            Datamanager._insertIntoDB(self, payloads, self.titanScraping) 
+            Datamanager._insertIntoDB(self, payloads, self.titanScraping)
 
             ###############
             ## PELICULAS ##
@@ -304,6 +308,7 @@ class MultiplatformScraping():
             if platform['Name'] == 'wetv':
                 continue
             else:
+                # Le paso a la start_url el nombre de la plataforma y "/movies" para que traiga el .json de las peliculas de dicha plataforma
                 data = Datamanager._getJSON(self, self._start_url.format(platform['Name'], '/movies'))
 
                 # Cargo la lista de peliculas del .json, teniendo en cuenta el indice que referencia el listado de titulos en la plataforma 
@@ -353,4 +358,3 @@ class MultiplatformScraping():
             Upload(platform['PlatformCode'], self._created_at, testing=testing)
                   
         self.sesion.close()
-        

@@ -209,7 +209,7 @@ class BetTest():
                                     'Id':            epi_id, 
                                     'ParentId':      _id,
                                     'ParentTitle':   content_title,
-                                    'Episode':       clean_epi_number,
+                                    'Episode':       int(clean_epi_number),
                                     'Season':        int(season_number),
                                     'Title':         epi_title,
                                     'OriginalTitle': None, 
