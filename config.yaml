@@ -165,7 +165,7 @@ ott_sites:
       sinopsis_div: 'video__description'
       parent_div: 'nav__title'
     movie_url: https://www.oxygen.com/full-episodes
-    format_url: https://www.oxygen.com/
+    format_url: https://www.oxygen.com
     show_url: https://www.oxygen.com/full-episodes
     episode_url: "?field_tv_shows_season="
     full_episodes_url: '/videos/full-episodes'

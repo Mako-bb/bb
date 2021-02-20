@@ -21,6 +21,15 @@ import re
 
 
 class AmcSeries():
+    """ Plataforma: AMC
+        Pais: Estados Unidos(US)
+        Tiempo de Ejecución: 1>min
+        Requiere VPN: No
+        BS4/API/Selenium: API
+        Cantidad de Contenidos (Ultima revisión):
+            TitanScraping: 130
+            TitanScrapingEpisodes: 746
+    """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config = config()['ott_sites'][ott_site_uid]
         self._platform_code = self._config['countries'][ott_site_country]
@@ -113,7 +122,10 @@ class AmcSeries():
             shows = serie_data['data']['children'][4]['children']
             # Recorremos el Json de Peliculas y definimos los contendios del Payload
             for movie in movies:
+                print(movie)
+                deeplink = (self._format_url).format(movie['properties']['cardData']['meta']['permalink'])
                 payload_peliculas = {
+                    "PlatformCode":  self._platform_code,
                     "Title":         movie['properties']['cardData']['text']['title'],
                     "CleanTitle":    _replace(movie['properties']['cardData']['text']['title']),
                     "OriginalTitle": None,
@@ -121,18 +133,18 @@ class AmcSeries():
                     "Year":          None,
                     "Duration":      None,
 
-                    "Id":            movie['properties']['cardData']['meta']['nid'],
+                    "Id":            str(movie['properties']['cardData']['meta']['nid']),
                     "Deeplinks": {
 
-                        "Web":       (self._format_url).format(movie['properties']['cardData']['meta']['permalink']),
+                        "Web":       deeplink.replace('/tve?',''),
                         "Android":   None,
                         "iOS":       None,
                     },
                     "Synopsis":      movie['properties']['cardData']['text']['description'],
-                    "Image":         None,
+                    "Image":         [movie['properties']['cardData']['images']],
                     "Rating":        None,  # Important!
                     "Provider":      None,
-                    "Genres":        None,  # Important!
+                    "Genres":        [movie['properties']['cardData']['meta']['genre']],  # Important!
                     "Cast":          None,
                     "Directors":     None,  # Important!
                     "Availability":  None,  # Important!
@@ -151,6 +163,7 @@ class AmcSeries():
                 )
             # Recorremos el Json de las series y definimos los valores del diccionario 
             for show in shows:
+                deeplink = (self._format_url).format(show['properties']['cardData']['meta']['permalink'])
                 payload_series = {
                     "PlatformCode":  self._platform_code,
                     "Id":            str(show['properties']['cardData']['meta']['nid']),
@@ -160,14 +173,14 @@ class AmcSeries():
                     'Year':          None,
                     'Duration':      None,
                     'Deeplinks': {
-                        'Web':       (self._format_url).format(show['properties']['cardData']['meta']['permalink']),
+                        'Web':       deeplink.replace('/tve?',''),
                         'Android':   None,
                         'iOS':       None,
                     },
                     'Playback':      None,
                     "CleanTitle":    _replace(show['properties']['cardData']['text']['title']),
                     'Synopsis':      show['properties']['cardData']['text']['description'],
-                    'Image':         None,
+                    'Image':         [show['properties']['cardData']['images']],
                     'Rating':        None,
                     'Provider':      None,
                     'Genres':        None,
@@ -195,7 +208,7 @@ class AmcSeries():
                     season_ = re.sub(
                         '[A-Z] ', "", filtro)
                     episode__ = season_.split(', ')
-
+                    deeplink = (self._format_url).format(episode_data['properties']['cardData']['meta']['permalink'])
                     payload = {
                         "PlatformCode":  self._platform_code,
                         "Id":            str(episode_data['properties']['cardData']['meta']['nid']),
@@ -210,14 +223,14 @@ class AmcSeries():
                         'Year':          None,
                         'Duration':      None,
                         'Deeplinks': {
-                            'Web':       (self._format_url).format(episode_data['properties']['cardData']['meta']['permalink']),
+                            'Web':       deeplink.replace('/tve?',""),
                             'Android':   None,
                             'iOS':       None,
                         },
                         'Playback':      None,
                         "CleanTitle":    _replace(show['properties']['cardData']['text']['title']),
                         'Synopsis':      episode_data['properties']['cardData']['text']['description'],
-                        'Image':         None,
+                        'Image':         [episode_data['properties']['cardData']['images']],
                         'Rating':        None,
                         'Provider':      None,
                         'Genres':        None,
@@ -242,5 +255,4 @@ class AmcSeries():
             self, payloads, self.titanScrapingEpisodios)
         self.sesion.close()
 
-        if not testing:
-            Upload(self._platform_code, self._created_at, testing=True)
+        Upload(self._platform_code, self._created_at, testing=testing)
