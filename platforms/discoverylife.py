@@ -80,7 +80,7 @@ class DiscoveryLife():
                 break
             except:
                 if(contador > 20):
-                    raise "No se pudo conseguir el token, re-intentar en unos minutos"
+                    raise Exception("No se pudo conseguir el token, re-intentar en unos minutos")
                 time.sleep(3)
                 self.sesion.close()
                 self.sesion = requests.session()
@@ -95,6 +95,14 @@ class DiscoveryLife():
             parentId = episode['show']['id']
             id = episode['id']
             title = episode['name']
+            
+            imgList = []
+            for image in episode['image'].get('links'):
+                if 'height' in image.get('href'):
+                    continue
+                imgList.append(image.get('href').format(width = 500))
+            image = imgList
+            
             rating = episode['parental']['rating']
             genres = self.getGenres(episode)
             duration = str(episode['duration'])
@@ -114,7 +122,7 @@ class DiscoveryLife():
             year = episode['networks'][0]['airDate'].split(':')[0].split('-')[0]
 
             payload = Payload(platformCode=self._platform_code,id = id,title=title,year=year,
-                              rating=rating,cleanTitle=_replace(title),genres=genres,
+                              rating=rating,cleanTitle=_replace(title),genres=genres,image=image,
                               duration=duration,synopsis=synopsis,episode=episodeNumber,
                               season=seasonNumber,parentId=parentId,parentTitle=parentTitle,
                               deeplinksWeb=deepLinkWeb,packages=[{'Type' : 'tv-everywhere'}],
