@@ -21,6 +21,11 @@ from updates.upload         import Upload
 from handle.payload_testing import Payload
 
 class Abc():
+    """ Datos importantes:
+                Necesita VPN: NO Al correr el script en Argentina o USA, trae el mismo contenido.
+                Metodo de extraccion: Soup.
+                Tiempo de ejecucion: Depende del internet ya que son muchas requests. Aprox: 20Mins.
+    """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config                = config()['ott_sites'][ott_site_uid]
         self._platform_code         = self._config['countries'][ott_site_country]
@@ -96,6 +101,8 @@ class Abc():
         else:
             for season in seasons:
                 splitMonth = season.split(' ')
+                if splitMonth == 'WATCH':
+                    continue
                 month = str(self.monthToNum(splitMonth[0].upper()))
                 if len(month) < 2:
                     month = '0' + month
@@ -193,6 +200,7 @@ class Abc():
         seasons = list(filter(lambda a: bool(
             re.search(r'season|January|February|March|April|May|June|July|August|September|October|November|December',a)),seasons))
 
+        seasons = list(filter(lambda a: not bool(re.search(r'WATCH|Watch',a)),seasons))
         splitSeasons = self.get_all_seasons(seasons)
 
         #Por cada "temporada", encuentro los datos de los episodios y si no tiene temporadas retorna.
@@ -204,16 +212,13 @@ class Abc():
                 if all_episodes:
 
                     for episode_details in all_episodes.contents:
-
-                        payload = self.get_episode_payload(episode_details,episode_details.find('div',class_='fitt-tracker'),parentId,parentTitle)
+                        
+                        if(episode_details.find('div',class_='fitt-tracker').get('data-track-link_name_custom')):
+                            payload = self.get_episode_payload(episode_details,episode_details.find('div',class_='fitt-tracker'),parentId,parentTitle)
 
                         Datamanager._checkDBandAppend(self,payload.payloadEpisodeJson(),ids_guardados,payloadsEpisodes,isEpi=True)
 
     def _scraping(self, testing = False):
-        """ Datos importantes:
-                Necesita VPN: NO Al correr el script en Argentina o USA, trae el mismo contenido.
-                Tiempo de ejecucion: Depende del internet ya que son muchas requests. Aprox: 20Mins.
-        """
         payloadsShows = []
         payloadsEpisodes = []
         ids_guardados_shows = Datamanager._getListDB(self,self.titanScraping)

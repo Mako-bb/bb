@@ -26,7 +26,11 @@ class SundanceTvTest():
         de esa serie especifica, en donde se encuentran todas las temporadas que tiene la serie y sus links. Dichos links van a servir para scrapear 
         todos los episodios, temporada por temporada.
 
-        No se necesita VPN.
+        DATOS IMPORTANTES: 
+            - ¿Necesita VPN? -> NO.
+            - ¿HTML, API, SELENIUM? -> SELENIUM y API
+            - Cantidad de contenidos (ultima revisión): TODO
+            - Tiempo de ejecucion: TODO
     '''
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config                = config()['ott_sites'][ott_site_uid]

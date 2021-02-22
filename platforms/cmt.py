@@ -20,6 +20,11 @@ from updates.upload         import Upload
 from handle.payload_testing import Payload
 
 class Cmt():
+    """ Datos importantes:
+                Necesita VPN: NO Al correr el script en Argentina o USA, trae el mismo contenido.
+                Metodo de extraccion: Selenium.
+                Tiempo de ejecucion: Depende del internet ya que se utiliza Selenium. Aprox: 10Mins.
+    """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config                = config()['ott_sites'][ott_site_uid]
         self._platform_code         = self._config['countries'][ott_site_country]
@@ -75,6 +80,7 @@ class Cmt():
         more_buttons = browser.find_elements_by_class_name("L001_line_list_load-more")
         if more_buttons and not more_buttons[0].value_of_css_property('display') == 'none':
             while True:
+                browser.execute_script("window.scrollTo(0, document.body.scrollHeight)")
                 more_buttons[0].click()
                 more_buttons = []
                 time.sleep(2)
@@ -90,7 +96,6 @@ class Cmt():
                 potentialYear = link.contents[-1].text.replace('aired','').strip().split('/')[2].split(' · ')[0]
             except:
                 potentialYear = None
-                
             if len(link.contents[2].contents) > 1:
                 title = link.contents[2].contents[1]
             else:
@@ -109,12 +114,15 @@ class Cmt():
                     season = None
 
             episodeNumber = self.get_number(link.find('h4'),1)
-
+            try:
+                image = [link.find('img',class_='image').get('src')]
+            except:
+                image = None
             payload = Payload(platformCode=self._platform_code,
                             id = hashlib.md5(title.encode('utf-8')+str(season).encode('utf-8')+str(potentialYear).encode('utf-8')).hexdigest(),
                             title=title,cleanTitle=_replace(title),duration=duration,synopsis=synopsis,episode=episodeNumber,season=season,
                             parentId=parentId,parentTitle=parentTitle,deeplinksWeb=deepLinkWeb,packages=[{'Type' : 'tv-everywhere'}],
-                            timestamp=datetime.now().isoformat(),createdAt=self._created_at)
+                            image=image,timestamp=datetime.now().isoformat(),createdAt=self._created_at)
             
             if potentialYear:
                 payload.year = '20' + potentialYear
@@ -187,10 +195,6 @@ class Cmt():
                 return None
         
     def _scraping(self, testing = False):
-        """ Datos importantes:
-                Necesita VPN: NO Al correr el script en Argentina o USA, trae el mismo contenido.
-                Tiempo de ejecucion: Depende del internet ya que se utiliza Selenium. Aprox: 10Mins.
-        """
         payloadsShows = []
         payloadsEpisodes = []
         ids_guardados_shows = Datamanager._getListDB(self,self.titanScraping)
@@ -207,7 +211,7 @@ class Cmt():
             if shows:
                 for each in shows:
                     soup = Datamanager._getSoup(self,each['url'])
-                    synopsis = soup.find('meta',{"itemprop": "description", "content" : True})['content']
+                    synopsis = soup.find('meta',{"itemprop": "description", "content" : True})['content'].replace('<br /><br />','')
                     title=each['title']
 
                     payload = Payload(id=each['itemId'],type='serie',cleanTitle=_replace(title),platformCode=self._platform_code,
