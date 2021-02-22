@@ -44,12 +44,12 @@ from platforms.vh1_test             import Vh1_test
 from platforms.discoverylife        import DiscoveryLife
 from platforms.sundancetv_test      import SundanceTvTest
 from platforms.cmt                  import Cmt
-from platforms.fxnow                import FxnowTest
+from platforms.fxnow                import Fxnow
 from platforms.tvland               import TvLand
 from platforms.amazon_login         import AmazonLogin
 from platforms.abc                  import Abc
 from platforms.bet_test             import BetTest
-from platforms.multiplatform        import MultiplatformScraping
+from platforms.amc_networks        import AMCNetworks
 from platforms.syfy import Syfy
 from platforms.logo import Logo
 from platforms.roku_channel         import RokuChannel

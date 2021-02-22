@@ -119,6 +119,8 @@ class Comedy_central_test():
             id_serie = hashlib.md5(serie["id"].encode('utf-8')).hexdigest()
             title_serie = serie["meta"]["header"]["title"]
 
+            #agregamos el titulo y id de la serie a una lista para mas tarde
+            #poder asignar a los capitulos el parentId si hace match con el nombre
             parent_title_id_list.append({"Title":title_serie,"Id":id_serie}) #solo esto cambie
 
             clean_title_serie = _replace(title_serie)
@@ -154,7 +156,8 @@ class Comedy_central_test():
             "Id":            id_serie, #Obligatorio    
             "Seasons":       None,
             "Title":         title_serie, #Obligatorio      
-            "CleanTitle":    clean_title_serie, #Obligatorio                               
+            "CleanTitle":    clean_title_serie, #Obligatorio  
+            "OriginalTitle": None,                              
             "Type":          type_serie,     #Obligatorio      
             "Year":          year_serie,     #Important!     
             "Duration":      duration_serie,      
@@ -193,9 +196,9 @@ class Comedy_central_test():
 
             else:
                 continue
-            #acá accedemos al payload de las series y buscamos uno por uno buscando que el titulo de la serie
-            #coincida con el parentTitle que figura en el item episodio, para de esta manera poder asignarle el
-            #parentId al payload de episodios
+            #acá accedemos a lista que contiene contiene el id y el titulo de las series
+            #si coincide el parentTitle que figura en el item episodio con el de la lista
+            #entonces se asigna ese parentId al episodio
             for payload in parent_title_id_list: 
                 if payload["Title"] == parent_title:
                     parent_Id = payload["Id"]
@@ -313,8 +316,3 @@ class Comedy_central_test():
             Upload(self._platform_code, self._created_at,testing=True)
         else:
             Upload(self._platform_code, self._created_at,testing=True)
-
-            
-
-
-
