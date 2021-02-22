@@ -14,7 +14,7 @@ from slugify                import slugify
 from handle.datamanager     import Datamanager
 from updates.upload         import Upload
 import sys
-class FxnowTest():
+class Fxnow():
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config                = config()['ott_sites'][ott_site_uid]
         self._platform_code         = self._config['countries'][ott_site_country]
@@ -71,7 +71,34 @@ class FxnowTest():
 
         return query
 
+    def _scraping(self, testing = False):
+        """
+        ¿VPN? SI
+        ¿API,HTML o SELENIUM? API
+
+        -FxNow es una plataforma de estados unidos que se necesita un vpn para conectar. La pagina presenta una API para poder sacar los dartos
+        navegando en la pagina podes encontrar dos APIS para sacar las peliculas y las series. Todo el contenido es original. 
+        Cada APi presenta el listado del contenido, y cada uno es por series y peliculas.
+
+        -Las API son diccionarios con todos los datos que buscamos, tanto para la peliculas como para las series. La API va tomando 24 contenidos
+        y corta cuando no encuentra la siguiente pagina.
+
+        """
+       
+        print("Peliculas")
+        self.getMovies(testing)
+        print("series")
+        self.getSeries(testing)
+
+        
+        Upload(self._platform_code, self._created_at, testing=testing)
+
     def getMovies(self,testing):
+        """
+        -Este metodo me trae los datos de las peliculas, la peliculas se encuentran en una api que va cargando de a 24 contenidos, por lo que voy
+        variando una variable para tomar 24 contenidos hasta el final.
+        -Cuando llega al final, y pregunta si hay peliculas devuelve un error y si ocurre corto el ciclo while true.
+        """
         payloads=[]
         packages = [
                         {
@@ -80,7 +107,7 @@ class FxnowTest():
                     ]
 
         ids_guardados = self.__query_field('titanScraping', 'Id')
-        offset=0
+        offset=0 #variable para cambiar la API para poder tomar todos los contonidos.
         while True:
             
             request = self.currentSession.get('https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module/tilegroup/2430495?start={}&size=24&authlevel=0&brand=025&device=001'.format(offset))
@@ -88,10 +115,14 @@ class FxnowTest():
             print(request.status_code, request.url)
             data = request.json()
             
+            # A partir de aca preguntos por los datos, el primer try sirve para romper el while True, porque si no encuentra un  titulo
+            # significa que no hay mas contenido.
             try:
                 titulos = data['tiles']
             except:
                 break 
+
+            # Recorro los titulos para poder sacar los datos.
             for titulo in titulos:
                 genre=[]
                 img=[]
@@ -113,6 +144,7 @@ class FxnowTest():
 
                 # id_ = hashlib.md5(title.encode('utf-8')).hexdigest()
 
+                # Lo guardo en el payload.
                 payload = {
                     'PlatformCode':  self._platform_code,
                     'Id':            id_,
@@ -165,6 +197,11 @@ class FxnowTest():
         self.currentSession.close()
 
     def getSeries(self,testing):
+        """
+        Este dato saco las series, es parecido al metodo getMovies para obtener, sigue casi los mismos pasos.
+        """
+
+
         payloads=[]
         packages = [
                         {
@@ -259,12 +296,3 @@ class FxnowTest():
 
 
 
-    def _scraping(self, testing = False):
-       
-        print("Peliculas")
-        self.getMovies(testing)
-        print("series")
-        self.getSeries(testing)
-
-        if not testing:
-            Upload(self._platform_code, self._created_at, testing=True)
