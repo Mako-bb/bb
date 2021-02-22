@@ -20,6 +20,11 @@ from updates.upload         import Upload
 from handle.payload_testing import Payload
 
 class Cmt():
+    """ Datos importantes:
+                Necesita VPN: NO Al correr el script en Argentina o USA, trae el mismo contenido.
+                Metodo de extraccion: Selenium.
+                Tiempo de ejecucion: Depende del internet ya que se utiliza Selenium. Aprox: 10Mins.
+    """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config                = config()['ott_sites'][ott_site_uid]
         self._platform_code         = self._config['countries'][ott_site_country]
@@ -86,8 +91,11 @@ class Cmt():
 
     def load_payload(self, payloadEpisodes, ids_guardados, parentTitle, parentId, link_wrappers):
         for link in link_wrappers:
-            potentialYear = link.contents[-1].text.replace('aired','').strip().split('/')[2].split(' · ')[0]
-            
+            try:
+                potentialYear = link.contents[-1].text.replace('aired','').strip().split('/')[2].split(' · ')[0]
+            except:
+                potentialYear = None
+                
             if len(link.contents[2].contents) > 1:
                 title = link.contents[2].contents[1]
             else:
@@ -184,10 +192,6 @@ class Cmt():
                 return None
         
     def _scraping(self, testing = False):
-        """ Datos importantes:
-                Necesita VPN: NO Al correr el script en Argentina o USA, trae el mismo contenido.
-                Tiempo de ejecucion: Depende del internet ya que se utiliza Selenium. Aprox: 10Mins.
-        """
         payloadsShows = []
         payloadsEpisodes = []
         ids_guardados_shows = Datamanager._getListDB(self,self.titanScraping)

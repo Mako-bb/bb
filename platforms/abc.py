@@ -21,6 +21,11 @@ from updates.upload         import Upload
 from handle.payload_testing import Payload
 
 class Abc():
+    """ Datos importantes:
+                Necesita VPN: NO Al correr el script en Argentina o USA, trae el mismo contenido.
+                Metodo de extraccion: Soup.
+                Tiempo de ejecucion: Depende del internet ya que son muchas requests. Aprox: 20Mins.
+    """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config                = config()['ott_sites'][ott_site_uid]
         self._platform_code         = self._config['countries'][ott_site_country]
@@ -113,6 +118,11 @@ class Abc():
         """
         payload = Payload()
 
+        # No se puede extraer la imagen ya que carga con javascript.
+        # Ninguno de los 4 links esta fijo en el html.
+        #
+        # payload.image = all_tile_details.find_all('img',{"data-mptype" : "image", "title" : False})[0].get('src')
+        
         payload.genres = [episode_details.get('data-track-video_genre')]
         payload.title = episode_details.get('data-track-link_name_custom').split(':')[-1].strip()
         if len(payload.title) > 30:
@@ -205,10 +215,6 @@ class Abc():
                         Datamanager._checkDBandAppend(self,payload.payloadEpisodeJson(),ids_guardados,payloadsEpisodes,isEpi=True)
 
     def _scraping(self, testing = False):
-        """ Datos importantes:
-                Necesita VPN: NO Al correr el script en Argentina o USA, trae el mismo contenido.
-                Tiempo de ejecucion: Depende del internet ya que son muchas requests. Aprox: 20Mins.
-        """
         payloadsShows = []
         payloadsEpisodes = []
         ids_guardados_shows = Datamanager._getListDB(self,self.titanScraping)

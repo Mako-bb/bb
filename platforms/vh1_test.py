@@ -19,6 +19,15 @@ from handle.datamanager  import Datamanager
 from updates.upload         import Upload
 
 class Vh1_test():
+
+    """  
+    DATOS IMPORTANTES:
+    ¿Necesita VPN? -> NO
+    ¿HTML, API, SELENIUM? -> API
+    Cantidad de contenidos (ultima revisión): Series y peliculas = 98, Episodios = 2748
+    Tiempo de ejecucíon de Script = 14 Minutos
+    """
+
     def __init__(self, ott_site_uid, ott_site_country, type):
         self.test = True if type == "testing" else False
         self._config                = config()['ott_sites'][ott_site_uid]
@@ -129,7 +138,7 @@ class Vh1_test():
                     else:
                         cast_serie = None
                 
-                package_serie = [{"tv-everywhere"}]
+                package_serie = [{"Type": "tv-everywhere"}]
 
                 payload = {
                     "PlatformCode":  self._platform_code, #Obligatorio 
@@ -165,69 +174,128 @@ class Vh1_test():
                 }
                 Datamanager._checkDBandAppend(self, payload, self.payloads_db, self.payloads)
 
-                check_episode = []
-                contador_season = 1
+                pagina = 1 #contador de pagina para la url de la api_episodes
                 while True:   
-                    api_episodes = "http://www.vh1.com/feeds/ent_m112/3daea531-6a5c-4e72-83af-85c9c88b4ffe/{}?season={}&allEpisodes=1".format(id_serie,contador_season)
+                    api_episodes = "http://www.vh1.com/feeds/ent_m112/3daea531-6a5c-4e72-83af-85c9c88b4ffe/{}?allSeasonsSelected=1&allEpisodes=1&pageNumber={}".format(id_serie,pagina)
                     request_epi = self.currentSession.get(api_episodes)
                     json_episodes = request_epi.json()
-                    #contador que incrementa para pasar a la siguiente temporada luego de hacer request
-                    contador_season = contador_season + 1
-
+                    
                     #Aqui validamos que el item en la api tenga capitulos
-                    if json_episodes["result"]["data"].get("items"):
-                        for item in json_episodes["result"]["data"]["items"]:
-                            #Aqui validamos que el item sea un capitulo y no un ad y extraemos los datos
-                            if item.get("id"):
-                                id_episode = item["id"]
+                    if not json_episodes["result"]["data"]["items"]:
+                        pagina = 1
+                        break
+                    
+                    #contador que incrementa para pasar a la siguiente temporada luego de hacer request
+                    pagina = pagina + 1
 
-                                #confirmamos que no este repetido el capitulo y saltamos de season
-                                if id_episode in check_episode:
-                                    break
-                                else:
-                                    check_episode.append(id_episode)
-                                
-                                title_episode = item["title"]
-                                parent_id = id_serie
-                                parent_title = title_serie
+                    #hacemos un bucle para extraer los capitulos
+                    for item in json_episodes["result"]["data"]["items"]:
+                        #Aqui validamos que el item sea un capitulo y no un ad y extraemos los datos
+                        if item.get("id"):
+                            id_episode = item["id"]
+                            
+                            #aqui confirmamos que el capitulo * no se incluya (leer analisis)
+                            if item["title"] == "*":
+                                continue
+                            title_episode = item["title"]
+                            cleantitle_epi = _replace(title_episode)
+                            parent_id = id_serie
+                            parent_title = title_serie
+                            deeplink_epi = item["url"]
+                            #acá validamos que tenga temporada ya que 
+                            #de forma contraria es un especial
+                            if item.get("season"):
                                 episode_num = item["season"]["episodeAiringOrder"]
-                                season_num = item["season"]["seasonNumber"]
-                                type_epi = item["type"]
-                                year_epi = item["airDateNY"]["year"]
-
-                                #validamos que tenga duration
-                                if item.get("duration"):
-                                    #si la duracion es 0 le ponemos None
-                                    if item["duration"] == 0:
-                                        duration_epi = None
-                                    else: 
-                                        #si tiene duracion la asignamos
-                                        duration_epi = item["duration"]
-                                else:
-                                    #si la api no trae duracion es igual a None
-                                    duration_epi = None
-
-                                deeplink_epi = item["url"]
-                                synopsis_epi = item["description"]
-
-                                #validamos que tenga imagen
-                                if item.get("images"):
-                                    image_epi = item["images"]["url"]
-                                else:
-                                    image_epi = None
-                                
-
-
-                                print(api_episodes)
-                                print(season_num," x ",episode_num," ",title_episode)
-            
                             else:
-                                continue       
-                    else:
-                        contador_season = 1
-                        break
-                    if id_episode in check_episode:  #Modificar esta forma de breaker el while
-                        break
+                                episode_num = 0
+                            #acá validamos igual que los capitulos para ver si es un especial
+                            if item.get("season"):
+                                season_num = item["season"]["seasonNumber"]
+                            else:
+                                season_num = 0
+
+                            type_epi = item["type"]
+                            #validamos que tenga fecha ya que sino esta no tiene año
+                            if item.get("airDateNY"):
+                                year_epi = item["airDateNY"]["year"]
+                            else:
+                                year_epi = None
+
+                            #validamos que tenga duration
+                            if item.get("duration"):
+                                #si la duracion es 0 le ponemos None
+                                if item["duration"] == 0:
+                                    duration_epi = None
+                                else: 
+                                    #si tiene duracion la asignamos
+                                    duration_epi = item["duration"]
+                            else:
+                                #si la api no trae duracion es igual a None
+                                duration_epi = None
+
+                            
+                            synopsis_epi = item["description"]
+
+                            #validamos que tenga imagen
+                            image_epi = []
+                            if item.get("images"):
+                                #aqui usamos un try ya que en algunos casos la imagen
+                                #viene en una lista y en otros como diccionario
+                                try:
+                                    image_epi = [item["images"]["url"]]
+                                except TypeError :
+                                    for imagen in item["images"]:
+                                        image_epi.append(imagen["url"])       
+                            else:
+                                image_epi = None
+                            
+                            packages_epi = [{"Type": "tv-everywhere"}]
+
+                            payload_epi = {
+                                "PlatformCode":  self._platform_code, #Obligatorio      
+                                "Id":            id_episode, #Obligatorio listo               
+                                "ParentId":      parent_id, #Obligatorio #Unicamente en Episodios
+                                "ParentTitle":   parent_title, #Unicamente en Episodios 
+                                "Episode":       episode_num, #Obligatorio #Unicamente en Episodios  
+                                "Season":        season_num, #Obligatorio #Unicamente en Episodios
+                                "Title":         title_episode, #Obligatorio,      
+                                "CleanTitle":    cleantitle_epi, #Obligatorio      
+                                "OriginalTitle": None,                          
+                                "Type":          type_epi,     #Obligatorio      
+                                "Year":          year_epi,     #Important!     
+                                "Duration":      duration_epi,      
+                                "ExternalIds":   None,      
+                                "Deeplinks": {          
+                                    "Web":       deeplink_epi,       #Obligatorio          
+                                    "Android":   None,          
+                                    "iOS":       None,      
+                                },      
+                                "Synopsis":      synopsis_epi,      
+                                "Image":         image_epi,      
+                                "Rating":        None,     #Important!      
+                                "Provider":      None,      
+                                "Genres":        None,    #Important!      
+                                "Cast":          None,      
+                                "Directors":     None,    #Important!      
+                                "Availability":  None,     #Important!      
+                                "Download":      None,      
+                                "IsOriginal":    None,    #Important!      
+                                "IsAdult":       None,    #Important!   
+                                "IsBranded":     None,    #Important!   
+                                "Packages":      packages_epi,    #Obligatorio      
+                                "Country":       None,      
+                                "Timestamp":     datetime.now().isoformat(), #Obligatorio
+                                "CreatedAt":     self._created_at, #Obligatorio
+                            }
+
+                            Datamanager._checkDBandAppend(self, payload_epi, self.payloads_epi_db, self.payloads_epi, isEpi=True)
+
+        Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)   
+        Datamanager._insertIntoDB(self, self.payloads_epi, self.titanScrapingEpisodios)
+        if self.test:
+            Upload(self._platform_code, self._created_at,testing=True)
+        else:
+            Upload(self._platform_code, self._created_at,testing=True)           
 
                 
                 

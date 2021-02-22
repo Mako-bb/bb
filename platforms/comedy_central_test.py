@@ -20,6 +20,15 @@ from handle.datamanager  import Datamanager
 from updates.upload         import Upload
 
 class Comedy_central_test():
+
+    """  
+    DATOS IMPORTANTES:
+    ¿Necesita VPN? -> NO
+    ¿HTML, API, SELENIUM? -> API
+    Cantidad de contenidos (ultima revisión): Series = 185, Episodios = 4093
+    Tiempo de ejecucíon de Script = 15 Minutos
+    """
+
     def __init__(self, ott_site_uid, ott_site_country, type):
         self.test = True if type == "testing" else False
         self._config                = config()['ott_sites'][ott_site_uid]

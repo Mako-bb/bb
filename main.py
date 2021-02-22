@@ -4,7 +4,7 @@ from platforms.AmcSeries import AmcSeries
 from platforms.amazon_login import AmazonLogin
 from platforms.sundancetv_test import SundanceTvTest
 from platforms.cmt import Cmt
-from platforms.discoverylife_test import DiscoveryLifeTest
+from platforms.discoverylife import DiscoveryLife
 from platforms.optimum_test import OptimumTest
 from platforms.boomerang import Boomerang
 from platforms.fandango import FandangoNOW
@@ -41,7 +41,7 @@ from platforms.optimum_test         import OptimumTest
 from platforms.indieflix_test       import Indieflix_test
 from platforms.comedy_central_test  import Comedy_central_test
 from platforms.vh1_test             import Vh1_test
-from platforms.discoverylife_test   import DiscoveryLifeTest
+from platforms.discoverylife        import DiscoveryLife
 from platforms.sundancetv_test      import SundanceTvTest
 from platforms.cmt                  import Cmt
 from platforms.fxnow                import FxnowTest
@@ -50,10 +50,13 @@ from platforms.amazon_login         import AmazonLogin
 from platforms.abc                  import Abc
 from platforms.bet_test             import BetTest
 from platforms.multiplatform        import MultiplatformScraping
+from platforms.syfy import Syfy
+from platforms.logo import Logo
 from platforms.roku_channel         import RokuChannel
 from platforms.wwenetwork           import WWENetwork
 from platforms.telemundo            import Telemundo
 from platforms.bravotv              import BravoTv
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

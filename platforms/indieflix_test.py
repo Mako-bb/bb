@@ -19,6 +19,15 @@ from handle.datamanager  import Datamanager
 from updates.upload         import Upload
 
 class Indieflix_test():
+
+    """  
+    DATOS IMPORTANTES:
+    ¿Necesita VPN? -> NO
+    ¿HTML, API, SELENIUM? -> API
+    Cantidad de contenidos (ultima revisión): Series y peliculas = 1934, Episodios = 1072
+    Tiempo de ejecucíon de Script = 2 Minutos
+    """
+    
     def __init__(self, ott_site_uid, ott_site_country, type):
         self.test = True if type == "testing" else False
         self._config                = config()['ott_sites'][ott_site_uid]
@@ -53,7 +62,8 @@ class Indieflix_test():
         
         if type == 'scraping': #or self.testing :
             self._scraping()
-
+        if type == 'testing': #or self.testing :
+            self._scraping(testing=True)
 
     def __query_field(self, collection, field, extra_filter=None):
         if not extra_filter:
@@ -79,7 +89,7 @@ class Indieflix_test():
 
         return query
 
-    def _scraping(self):
+    def _scraping(self, testing=False):
         #comenzamos haciendo request a una API que contiene
         #las categorias que hay en la pagina
         api_categories = "https://api.unreel.me/api/assets/5ee3f7a04d0e1b0999ec1511/discover?__site=indieflix&__source=web&onlyEnabledChannels=true"
@@ -122,7 +132,13 @@ class Indieflix_test():
                             year = None
 
                         deeplink = "https://watch.indieflix.com/"+id_link["type"]+"/"+item["uid"]
+
                         synopsis = item["description"]
+                        if "\r\n" in synopsis:
+                            synopsis = synopsis.replace("\r\n"," ").strip()
+                        elif "\n" in synopsis:
+                            synopsis = synopsis.replace("\n"," ").strip()
+
                         image = item["poster"]
 
                         if item.get("genres"):
@@ -249,8 +265,13 @@ class Indieflix_test():
 
                                     cleantitle_epi = _replace(title_epi)
                                     duration_epi = epi["contentDetails"]["duration"]//60
+                                    
                                     deeplink_epi = "https://watch.indieflix.com/watch/channel/{}/series/{}/episode/{}?t=0".format(id_link["id"],id_,Id_epi)
                                     synopsis_epi = epi["description"]
+                                    if "\r\n" in synopsis_epi:
+                                        synopsis_epi = synopsis_epi.replace("\r\n"," ").strip()
+                                    elif "\n" in synopsis_epi:
+                                        synopsis_epi = synopsis_epi.replace("\n"," ").strip()
 
                                     payload_epi = {
 
@@ -278,8 +299,8 @@ class Indieflix_test():
                                     "Cast":          None,      
                                     "Directors":     None,    #Important!    directores si  
                                     "Availability":  None,     #Important!      
-                                    "Download":      False,      
-                                    "IsOriginal":    False,    #Important!      
+                                    "Download":      None,      
+                                    "IsOriginal":    None,    #Important!      
                                     "IsAdult":       None,    #Important!   
                                     "IsBranded":     None,    #Important!   
                                     "Packages":      packages,    #Obligatorio      
@@ -292,8 +313,41 @@ class Indieflix_test():
                     #armamos payload de las peliculas
                     for item in items:
                         id_ = item["_id"]["uid"]
-                        title = item["title"] 
-                        cleantitle = _replace(item["title"])
+
+                        title = item["title"]
+
+                        #fix especifico para serie donde se debe eliminar
+                        # lo que hay entre parentesis
+                        if id_ == "30880":
+                            #separamos el titulo a partir del (
+                            split_title = title.split(" (")
+                            title = split_title[0]
+                            originaltitle = None
+
+                        #fix especifico para los titulos con formato "title(orinaltitle)"
+                        #ej: Snowman in July (Der Schneemann)
+                        if id_ == "31691" or id_ == "48910":
+                            #separamos el titulo a partir del (
+                            split_title = title.split("(")
+                            title = split_title[0]
+                            originaltitle = split_title[-1].replace(")","")
+                        #hay ocasiones en las que el titulo viene en formato "orginaltitle (title)"
+                        #por lo que hay que validarlo y separarlo
+                        #el and != se coloca ya que hay una serie a exceptuar "(beau)strosity"
+                        elif "(" in title and id_ != "31385" :
+                            #separamos el titulo a partir del (
+                            split_title = title.split("(")
+                            #validamos si a partir del ) tiene mas de 3 letras
+                            #para confirmar que sea un titulo original y no parte del titulo
+                            if len(split_title[-1].split(")")[0]) > 3:
+                                #en ese caso la primera parte seria el titulo original
+                                originaltitle = split_title[0]
+                                #y la segunda parte seria el titulo traducido
+                                title = split_title[-1].replace(")","")
+                        else:
+                            originaltitle = None
+
+                        cleantitle = _replace(title)
                         type_ = "movie"
                     
                         if item.get("releaseYear"):
@@ -303,7 +357,13 @@ class Indieflix_test():
                         
                         duration = item["contentDetails"]["duration"]//60
                         deeplink = "https://watch.indieflix.com/"+type_+"/"+item["uid"]
+
                         synopsis = item["description"]
+                        if "\r\n" in synopsis:
+                            synopsis = synopsis.replace("\r\n"," ").strip()
+                        elif "\n" in synopsis:
+                            synopsis = synopsis.replace("\n"," ").strip()
+
 
                         if item["movieData"].get("poster"):
                             image = item["movieData"]["poster"]
@@ -347,7 +407,7 @@ class Indieflix_test():
                         else:
                             cast = None
 
-                        if item["movieData"].get("directors"):
+                        if item["movieData"].get("directors") and not "Unknown" in item["movieData"]["directors"]:
                             directors = item["movieData"]["directors"]
 
                             if "O&#39;" in directors:
@@ -363,7 +423,7 @@ class Indieflix_test():
                             "Id":            id_,
                             "Title":         title, 
                             "CleanTitle":    cleantitle,      
-                            "OriginalTitle": None,                      
+                            "OriginalTitle": originaltitle,                      
                             "Type":          type_,     
                             "Year":          year,     
                             "Duration":      duration,   
@@ -395,7 +455,4 @@ class Indieflix_test():
         Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)
         Datamanager._insertIntoDB(self, self.payloads_epi, self.titanScrapingEpisodios)
 
-        if self.test:
-            Upload(self._platform_code, self._created_at,testing=True)
-        else:
-            Upload(self._platform_code, self._created_at,testing=True)
+        Upload(self._platform_code, self._created_at,testing=testing)

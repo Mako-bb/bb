@@ -128,9 +128,9 @@ ott_sites:
   TvLand:
     countries:
       US: us.tvland
-  DiscoveryLifeTest:
+  DiscoveryLife:
     countries:
-      US: us.discoverylife_test
+      US: us.discoverylife
   Cmt:
     countries:
       US: us.cmt
@@ -143,9 +143,33 @@ ott_sites:
   AmcSeries:
     countries:
       US: us.amcseries
+    movie_url: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/movies?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web
+    episode_url: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/episodes?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web
+    show_url: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/shows?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web
+    format_url: https://www.amc.com/tve?{}
   Oxygen:
     countries:
       US: us.oxygen
+    queries:
+      movies_div: 'grid-item grid--small contextual-links-region'
+      show_div: 'teaser__wrapper-link'
+      episode_div: 'pane-title'
+      content_div: 'view-content'
+      full_episode_check_div: 'field field-name-node-link field-type-ds field-label-hidden clearfix'
+      episode_grid_div: 'views-row'
+      cast_div: 'field-content tile-marqee'
+      title_div: 'headline'
+      form_div: 'form-select'
+      article_div: 'teaser teaser--episode-guide-teaser'
+      episode_label: 'video__label'
+      sinopsis_div: 'video__description'
+      parent_div: 'nav__title'
+    movie_url: https://www.oxygen.com/full-episodes
+    format_url: https://www.oxygen.com
+    show_url: https://www.oxygen.com/full-episodes
+    episode_url: "?field_tv_shows_season="
+    full_episodes_url: '/videos/full-episodes'
+    cast_url: '/cast'
   Abc:
     countries:
       US: us.abc
@@ -159,6 +183,51 @@ ott_sites:
     countries:
       US: us.wetv # Completar con la lista de platform.code
     start_url: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/{}/url{}?device=web
+  Logo:
+    countries:
+      US: us.logo
+    queries:
+      movies_a: linelist-link-wrapper
+      movie_title: sub-header
+      movie_desc: deck
+      show_div: show-item
+      content_filter: 'http://www.logotv.com/rupauls-drag-race'
+      content_result: 'http://www.logotv.com/shows/rupauls-drag-race'
+      title_div: 'headline headline__title section-header-lg'
+      desc_div: 'info'
+      season_selector_css: "#t4_lc_promo1 > div > div.S002_line_list_header.s_fonts_moduleHeader > div"
+      all_season_selector_xpath: '//*[@id="t4_lc_promo1"]/div/div[3]/div/div[2]/ul/li[1]'
+      available_checkbox: 'available_episodes'
+      available_id: "sub-filter"
+      load_more_xpath: '//*[@id="t4_lc_promo1"]/div/div[4]/div'
+      image_div: 'image_holder'
+      episode_div: "link_wrapper"
+      show_title_h1: "title"
+      duration_div: 's_layouts_lineListDurationBadge'
+    movie_url: http://www.logotv.com/movies
+    format_url: http://www.logotv.com
+    show_url: http://www.logotv.com/shows
+    episode_url: '/episode-guide'
+    full_episodes_url: '/videos/full-episodes'
+    cast_url: '/cast'
+  Syfy:
+    countries:
+      US: us.syfy
+    queries:
+      movies_div: 'grid-item grid--small contextual-links-region'
+      show_div: 'grid-item grid--small contextual-links-region'
+      episode_div: 'pane-title'
+      content_div: 'view-content'
+      full_episode_check_div: 'field field-name-node-link field-type-ds field-label-hidden clearfix'
+      episode_grid_div: 'views-row'
+      cast_div: 'field-content tile-marqee'
+      title_div: 'all-shows-show-title'
+    movie_url: https://www.syfy.com/movies
+    format_url: https://www.syfy.com
+    show_url: https://www.syfy.com/shows#full-episodes
+    episode_url: '/episodes'
+    full_episodes_url: '/videos/full-episodes'
+    cast_url: '/cast'
   RokuChannel:
     countries:
       US: us.roku_channel
@@ -172,7 +241,6 @@ ott_sites:
       start_url: 'https://espanol.wwe.com'
       api_url: 'https://cdn.watch.wwe.com/api/'
       cdn_watch_url: 'https://cdn.watch.wwe.com'
-
   BravoTv:
     countries:
       US: us.bravotv

@@ -21,6 +21,11 @@ from updates.upload         import Upload
 from handle.payload_testing import Payload
 
 class WWENetwork():
+    """ Datos importantes:
+                Necesita VPN: NO Al correr el script en Argentina o USA, trae el mismo contenido.
+                Metodo de extraccion: Api.
+                Tiempo de ejecucion: Depende del internet, es todo con API. Aprox: 5 Mins.
+    """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config                = config()['ott_sites'][ott_site_uid]
         self._platform_code         = self._config['countries'][ott_site_country]
@@ -62,11 +67,6 @@ class WWENetwork():
             self._scraping(testing = True)
 
     def _scraping(self, testing = False):
-        """ Datos importantes:
-                Necesita VPN: NO Al correr el script en Argentina o USA, trae el mismo contenido.
-                Tiempo de ejecucion: Depende del internet, es todo con API. Aprox: 5 Mins.
-        """
-
         saved_show_ids = Datamanager._getListDB(self,self.titanScraping)
         saved_episode_ids = Datamanager._getListDB(self,self.titanScrapingEpisodios)
 
@@ -123,6 +123,8 @@ class WWENetwork():
         payload.genres = item['genres']
         if item['customFields']['Class'] == 'Original':
             payload.isOriginal = True
+        else:
+            payload.isOriginal = False
         payload.id = item['id']
         payload.title = item['title']
         print(payload.title)
@@ -182,6 +184,8 @@ class WWENetwork():
         payload.duration = int(int(item.get('duration'))/60)
         payload.season = int(item['customFields']['SeasonNumber'])
         payload.episode = int(item['episodeNumber'])
+        if payload.episode == -1:
+            payload.episode = None
         payload.synopsis = item['shortDescription']
         if payload.synopsis == '-1':
             payload.synopsis = None
@@ -189,6 +193,7 @@ class WWENetwork():
         payload.deeplinksWeb = self.cdn_watch_url + item['path']
         payload.platformCode = self._platform_code
         payload.createdAt = self._created_at
+        payload.cleanTitle = _replace(payload.title)
         payload.timestamp = datetime.now().isoformat()
 
         return payload
