@@ -19,9 +19,11 @@ class MultiplatformScraping():
         Scraping de las plataformas SundanceTv, Ifc, Amc, WeTV y BBC America. Las 5 comparten estructura tanto gráfica como interna en las APIS, por lo tanto se unifica el scraping
         para evitar repeticiones y redundancia de código. 
 
-        METODOLOGIA API, HTML, SELENIUM --> API
-
-        NECESITA VPN --> NO
+        DATOS IMPORTANTES: 
+            - ¿Necesita VPN? -> NO.
+            - ¿HTML, API, SELENIUM? -> API
+            - Cantidad de contenidos (ultima revisión 19/2/2021): 356 contenidos | 3994 episodios
+            - Tiempo de ejecucion: TODO
     """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config = config()['ott_sites'][ott_site_uid]
