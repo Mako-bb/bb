@@ -49,7 +49,7 @@ from platforms.tvland               import TvLand
 from platforms.amazon_login         import AmazonLogin
 from platforms.abc                  import Abc
 from platforms.bet_test             import BetTest
-from platforms.multiplatform        import MultiplatformScraping
+from platforms.amc_networks        import AMCNetworks
 from platforms.syfy import Syfy
 from platforms.logo import Logo
 from platforms.roku_channel         import RokuChannel

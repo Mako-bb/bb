@@ -179,7 +179,7 @@ ott_sites:
   BetTest:
     countries:
       US: us.bet_test
-  MultiplatformScraping:
+  AMCNetworks:
     countries:
       US: us.wetv # Completar con la lista de platform.code
     start_url: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/{}/url{}?device=web
