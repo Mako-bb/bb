@@ -200,6 +200,7 @@ class Abc():
         seasons = list(filter(lambda a: bool(
             re.search(r'season|January|February|March|April|May|June|July|August|September|October|November|December',a)),seasons))
 
+        seasons = list(filter(lambda a: not bool(re.search(r'WATCH|Watch',a)),seasons))
         splitSeasons = self.get_all_seasons(seasons)
 
         #Por cada "temporada", encuentro los datos de los episodios y si no tiene temporadas retorna.
