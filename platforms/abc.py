@@ -101,6 +101,8 @@ class Abc():
         else:
             for season in seasons:
                 splitMonth = season.split(' ')
+                if splitMonth == 'WATCH':
+                    continue
                 month = str(self.monthToNum(splitMonth[0].upper()))
                 if len(month) < 2:
                     month = '0' + month
@@ -209,8 +211,9 @@ class Abc():
                 if all_episodes:
 
                     for episode_details in all_episodes.contents:
-
-                        payload = self.get_episode_payload(episode_details,episode_details.find('div',class_='fitt-tracker'),parentId,parentTitle)
+                        
+                        if(episode_details.find('div',class_='fitt-tracker').get('data-track-link_name_custom')):
+                            payload = self.get_episode_payload(episode_details,episode_details.find('div',class_='fitt-tracker'),parentId,parentTitle)
 
                         Datamanager._checkDBandAppend(self,payload.payloadEpisodeJson(),ids_guardados,payloadsEpisodes,isEpi=True)
 
