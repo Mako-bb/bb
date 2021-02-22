@@ -32,6 +32,7 @@ class Payload:
         episode = None,
         season = None):
 
+        #self.checkType(self._platformCode,platformCode,type(platformCode),'Str',str)
         self._platformCode = platformCode
         self._id = id
         self._title = title
@@ -64,6 +65,13 @@ class Payload:
         self._episode = episode
         self._season = season
 
+    def checkType(self,instance_variable,variable,tipoActual,tipoEsperadoStr,tipoEsperado):
+        if variable.type is None.type or tipoActual is tipoEsperado:
+            instance_variable = variable
+        else:
+            raise Exception("Tipo [platformcode] : {tipoEsperado}, obtenido : {tipoActual}".format(tipoEsperado = tipoEsperadoStr,
+                            tipoActual = tipoActual))
+    
     @property
     def platformCode(self):
         return self._platformCode
