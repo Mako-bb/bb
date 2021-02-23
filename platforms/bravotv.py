@@ -279,8 +279,9 @@ class BravoTv():
             parrentId = hashlib.md5(nameShow.encode('utf-8')).hexdigest()
             
             for j in range(0,len(titles_episodes[i])):
+                img = []
                 title = titles_episodes[i][j]
-                img = imgEpisodes[i]
+                img = img.append(imgEpisodes[i][j])
                 _id = hashlib.md5(title.encode('utf-8')+nameShow.encode('utf-8')).hexdigest()
                 # seasons = int(episodesSeason[i][j][0][1::])
                 # episode =  int(episodesSeason[i][j][1][2::])

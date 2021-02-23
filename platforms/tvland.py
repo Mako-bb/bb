@@ -301,8 +301,9 @@ class TvLand():
             nameShow = nameShows[i]
             parrentId = hashlib.md5(nameShow.encode('utf-8')).hexdigest()
             for j in range(0,len(episodesDescription[i])):
+                img = []
                 title = episodesName[i][j]
-                img=imgEpisodes[i]
+                img.apppend(imgEpisodes[i][j])
                 try: #algunos episodios no tienen el año, por lo que lo puse en None, por ende este try es para evitar el error de hacer none object tiene split.
                     date = int(episodesDate[i][j].split('/')[-1]) 
                 except:
