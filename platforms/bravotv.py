@@ -281,7 +281,10 @@ class BravoTv():
             for j in range(0,len(titles_episodes[i])):
                 img = []
                 title = titles_episodes[i][j]
-                img = img.append(imgEpisodes[i][j])
+                try:
+                    img.append(imgEpisodes[i][j])
+                except:
+                    img.append(None)
                 _id = hashlib.md5(title.encode('utf-8')+nameShow.encode('utf-8')).hexdigest()
                 # seasons = int(episodesSeason[i][j][0][1::])
                 # episode =  int(episodesSeason[i][j][1][2::])
