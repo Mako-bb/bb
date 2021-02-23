@@ -81,7 +81,12 @@ class Telemundo():
 
     def _scraping(self, testing = False):
         """
-        
+        ¿VPN? SI
+        ¿API,HTML o SELENIUM? API
+
+        Telemundo por si sola no tiene api pero cuandop queres ver un contenido de telemundo la misma pagina te manda
+        a NBC que presenta una api con todo el contenido de telemundo, por lo que hacer un scraping de telemundo o 
+        hacerlo a NBC filtrando el contenindo a telemundo es casi lo mismo. Por lo que realizo con la api de NBC.
         """
 
         scraped = Datamanager._getListDB(self,self.titanScraping)
@@ -96,7 +101,11 @@ class Telemundo():
         
         urlNbc = 'https://www.nbc.com/'  # la pagina de telemundo te rederige a esta pagina para poder ver los capitulos
         """
-        Aprovechando que la pagina de nbc tiene una api con toda la informacion voy a usar esa api para extraer lo que quiero
+        Aprovechando que la pagina de nbc tiene una api con toda la informacion 
+        voy a usar esa api para extraer lo que quiero. Aparte la API esta organizada por dicionarios y lista,
+        por lo que voy tomando los diccionarios para quedarme con las listas que presenta los datos,
+        a veces me quedo con una componente de la lista en particular porque presenta todos los datos que 
+        necesito. Luego, las listas adentro presentan diccionarios para acceder a los datos.
         """
         api = 'https://friendship.nbc.co/v2/graphql?variables=%7B%22name%22:%22paginatedAllShows%22,%22type%22:%22PAGE%22,%22userId%22:%223681070535274955148%22,%22platform%22:%22web%22,%22device%22:%22web%22,%22timeZone%22:%22America%2FNew_York%22,%22ld%22:true,%22profile%22:[%2200000%22],%22oneApp%22:true,%22app%22:%22nbc%22,%22language%22:%22en%22,%22authorized%22:false,%22brand%22:%22telemundo%22,%22appVersion%22:1180009%7D&extensions=%7B%22persistedQuery%22:%7B%22version%22:1,%22sha256Hash%22:%22778d8ab0f222484583c39a3bcbe74b85c9e74847a3d58579f714b6eca13ac6d9%22%7D%7D'
         json=Datamanager._getJSON(self,api,showURL=False)
@@ -120,6 +129,8 @@ class Telemundo():
                 _type = "serie"
             else:
                 _type = "movie"
+
+
 
             jsonSerie=Datamanager._getJSON(self, apiSerie,showURL=False)
 
@@ -162,6 +173,8 @@ class Telemundo():
                         datoEpisodios = jsonSerie['data']['videosSection']['data']['items']
                         # continue
 
+                #Aca recoro la apiu de cada episodio por lo que voy a conseguir la informacion de los
+                #episodios
                 for datoEpisodio in datoEpisodios:                       
                     genreEps = []
                     imgEps = []
@@ -180,13 +193,13 @@ class Telemundo():
                     except:
                         rating = None
                     _id = datoEpisodio['data']['instanceID']
-                    img.append(datoEpisodio['data']['image'])
+                    imgEps.append(datoEpisodio['data']['image'])
                     genreEps.append(datoEpisodio['analytics']['genre'])
                     description = datoEpisodio['data']['description']
                     urlEps = urlShow + datoEpisodio['data']['permalink']
 
                     payload = Payload(packages=packages,genres=genreEps, id=_id,image=imgEps, cleanTitle=_replace(title), parentId=parrentId, parentTitle=nameShow, title=title,
-                                    platformCode=_platform_code, deeplinksWeb=urlEps, synopsis=description, timestamp=datetime.now().isoformat(), createdAt=self._created_at)
+                                    platformCode=_platform_code, season=season,episode=episode, deeplinksWeb=urlEps, synopsis=description, timestamp=datetime.now().isoformat(), createdAt=self._created_at)
                     Datamanager._checkDBandAppend(self, payload.payloadEpisodeJson(), scrapedEpisodes, payloadsEpisodios, isEpi=True)
                     Datamanager._insertIntoDB(self, payloadsEpisodios, self.titanScrapingEpisodios)
 
