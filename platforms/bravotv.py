@@ -174,7 +174,11 @@ class BravoTv():
                     episodesSoup = soup.findAll('article',class_=re.compile("teaser teaser--playlist-teaser video"))
                 for episodeSoup in episodesSoup:
                     urlEpisode.append(urlWithoutShow+episodeSoup.a['href'])
-                    imgEpisode.append(urlWithoutShow+episodeSoup.find('div',{"class":"teaser__image-wrapper"}).figure.picture.img['src'])
+                    # algunos episodios no tienen imagen
+                    try:
+                        imgEpisode.append(urlWithoutShow+episodeSoup.find('div',{"class":"teaser__image-wrapper"}).figure.picture.img['src'])
+                    except:
+                        imgEpisode.append(None)
             else:
                 seasons =soup.find('select',{"id":"edit-field-tv-shows-season","class":"form-select"})
                 seasons = seasons.findAll('option')
