@@ -275,7 +275,7 @@ class Logo():
             time.sleep(2)
             # tomamos un soup de la pagina del driver
             episode_soup_ = BeautifulSoup(driver.page_source, 'lxml')
-            # Recorremos con un bucle todos los 
+            # Recorremos con un bucle todos los contenidos
             for episode in episode_soup_.find_all('a',self._episode_div):
                 # Definimos las variables del Payload
                 parent_title = episode_soup_.find('h1',self._show_title_h1).text
