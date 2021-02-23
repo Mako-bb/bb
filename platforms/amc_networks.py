@@ -14,14 +14,17 @@ from slugify import slugify
 from handle.datamanager import Datamanager
 from updates.upload import Upload
 
-class MultiplatformScraping():
+class AMCNetworks():
     """
-        Scraping de las plataformas SundanceTv, Ifc, Amc, WeTV y BBC America. Las 5 comparten estructura tanto gráfica como interna en las APIS, por lo tanto se unifica el scraping
-        para evitar repeticiones y redundancia de código. 
+        Scraping de las plataformas SundanceTv, Ifc, Amc, WeTV y BBC America. Las 5 pertenecen 
+        al mismo dueño (AMC Networks) y comparten estructura tanto gráfica como interna en las APIS,
+        por lo tanto se unifica el scraping para evitar repeticiones y redundancia de código. 
 
-        METODOLOGIA API, HTML, SELENIUM --> API
-
-        NECESITA VPN --> NO
+        DATOS IMPORTANTES: 
+            - ¿Necesita VPN? -> NO.
+            - ¿HTML, API, SELENIUM? -> API
+            - Cantidad de contenidos (ultima revisión 22/2/2021): 302 contenidos | 3994 episodios
+            - Tiempo de ejecucion: depende de la señal de intenet, aproximadamente 1 minuto
     """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config = config()['ott_sites'][ott_site_uid]
@@ -132,6 +135,9 @@ class MultiplatformScraping():
             'SerieIndex': 4,
             'Link': 'www.bbcamerica.com'
         }]
+
+        # Para registrar cuando demora en ejecutar todo el script
+        start_time = time.time()
 
         for platform in platforms:
 
@@ -358,3 +364,4 @@ class MultiplatformScraping():
             Upload(platform['PlatformCode'], self._created_at, testing=testing)
                   
         self.sesion.close()
+        print("--- {} seconds ---".format(time.time() - start_time))

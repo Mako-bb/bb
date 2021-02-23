@@ -87,7 +87,7 @@ class BravoTv():
         payloadsEpisodios = []
         packages = [
                         {
-                            'Type': 'tv-everywhere'
+                            'Type': 'subscription-vod'
                         }
                     ]
         url = 'https://www.bravotv.com/shows'
@@ -278,8 +278,8 @@ class BravoTv():
         self.sesion.close()
 
 
-        if not testing:
-            Upload(self._platform_code, self._created_at, testing=True)
+        
+        Upload(self._platform_code, self._created_at, testing=testing)
 
 
     

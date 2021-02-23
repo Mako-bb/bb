@@ -24,8 +24,8 @@ class Indieflix_test():
     DATOS IMPORTANTES:
     ¿Necesita VPN? -> NO
     ¿HTML, API, SELENIUM? -> API
-    Cantidad de contenidos (ultima revisión): Series y peliculas = 1934, Episodios = 1072
-    Tiempo de ejecucíon de Script = 2 Minutos
+    Cantidad de contenidos (ultima revisión): Series y peliculas = 1932, Episodios = 1072
+    Tiempo de ejecucíon de Script = 2-5 Minutos
     """
     
     def __init__(self, ott_site_uid, ott_site_country, type):
@@ -313,15 +313,34 @@ class Indieflix_test():
                     #armamos payload de las peliculas
                     for item in items:
                         id_ = item["_id"]["uid"]
+                        
+
+                        #fix para no duplicar la pelicula con ids distitno
+                        # 31275 == "The Andalusian Dog"
+                        # 48766 == "M"
+                        if id_ == "31275" or id_ == "48766":
+                            continue
 
                         title = item["title"]
 
-                        #fix especifico para serie donde se debe eliminar
-                        # lo que hay entre parentesis
+                        #fix para "Ten Fingers of Death (Master With Cracked Fingers)"
+                        if id_ == "30966":
+                            title = title.replace(" (",": ")
+                            title= title.replace(")",(""))
+
+                        #fix especifico para pelicula donde se debe eliminar
+                        # del titulo lo que hay entre parentesis
                         if id_ == "30880":
                             #separamos el titulo a partir del (
                             split_title = title.split(" (")
                             title = split_title[0]
+                            originaltitle = None
+
+                        #fix especifico para pelicula donde del titulo
+                        # solo se debe eliminar parentesis
+                        if id_ == "39955":
+                            title = title.replace("(","")
+                            title = title.replace(")","")
                             originaltitle = None
 
                         #fix especifico para los titulos con formato "title(orinaltitle)"
@@ -331,10 +350,13 @@ class Indieflix_test():
                             split_title = title.split("(")
                             title = split_title[0]
                             originaltitle = split_title[-1].replace(")","")
+
                         #hay ocasiones en las que el titulo viene en formato "orginaltitle (title)"
                         #por lo que hay que validarlo y separarlo
-                        #el and != se coloca ya que hay una serie a exceptuar "(beau)strosity"
-                        elif "(" in title and id_ != "31385" :
+                        #las excepciones son:
+                        #31385 == (beau)strosity / debe quedar asi
+                        #49402 == Salad Days: A Decade of Punk in Washington, DC (1980-90) / debe quedar asi
+                        elif ("(" in title and id_ != "31385") or ("(" in title and id_ != "49402"):
                             #separamos el titulo a partir del (
                             split_title = title.split("(")
                             #validamos si a partir del ) tiene mas de 3 letras
@@ -407,6 +429,8 @@ class Indieflix_test():
                         else:
                             cast = None
 
+                        #acá validamos que el nombre del director no se Unknown
+                        #y reemplazamos O&#39 por su valor ASCII que es '
                         if item["movieData"].get("directors") and not "Unknown" in item["movieData"]["directors"]:
                             directors = item["movieData"]["directors"]
 
@@ -415,8 +439,7 @@ class Indieflix_test():
                         else:
                             directors = None
 
-                        packages = [{"Type":"subscription-vod"}]
-                        
+                        packages = [{"Type":"subscription-vod"}] 
 
                         payload = {
                             "PlatformCode":  self._platform_code,

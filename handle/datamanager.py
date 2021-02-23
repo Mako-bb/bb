@@ -353,7 +353,8 @@ class Datamanager():
 
     def _clickAndGetSoupSelenium(self,URL,botton,waitTime=0,showURL=True):
         '''
-        Devuelve un beautifulsoup usando selenium
+        Primero hace un click y despues devuelve un BeatufilSoup de la pagina cargada por el click. El botton
+        tiene que ser el nombre de la clase de la pagina html (<XXX class="Este seria el botton parametro">)
         '''
         os = platform.system()
         if showURL == True:
