@@ -139,7 +139,7 @@ class Oxygen():
         # Buscamos los titulos y recorremos la lista anterior para colocar los deeplinks de forma correcta.
         for titulos, referencia in zip(soup_a.find_all('a', "teaser__wrapper-link"), hrefs):
             titulo = (titulos.find('h2').text).strip()
-            image = titulos.find('img').get('src')
+            image = titulos.find('img').get('data-src')
             # Definimos el Payload de las series
             payload_series = {
                 "PlatformCode":  self._platform_code,
