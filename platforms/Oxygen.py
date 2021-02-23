@@ -122,7 +122,15 @@ class Oxygen():
         payloads = []
         options = Options()
         options.preferences.update({"javascript.enabled": False})
-        soup_a = Datamanager._getSoup(self, self._show_url)
+        while True:
+            try:
+                soup_a = Datamanager._getSoup(self, self._show_url)
+                break
+            except:
+                print('error de conexión, intentando nuevamente')
+                time.sleep(10)
+                print('intentando reconectar')
+
         hrefs = []
         payloads_series = []
         # Buscamos los links que contienen las referencias de las series para ponerlas en una lista
@@ -173,8 +181,15 @@ class Oxygen():
 
         # Recorremos la lista de referencias de la pagina, reemplazando "videos" por "episode-guide" para llegar a la lista de los capitulos
         for href in hrefs:
-            soup_b = Datamanager._getSoup(self, self._format_url
-                                            + href.replace('videos', 'episode-guide'))
+            while True:
+                try:
+                    soup_b = Datamanager._getSoup(self, self._format_url
+                                                    + href.replace('videos', 'episode-guide'))
+                    break
+                except:
+                    print('Error de conexión, intentando reconectar')
+                    time.sleep(10)
+                    print('intentando reconectar')
             # Condicional si la serie tiene 2 o más temporadas
             if soup_b.find('select'):
                 # Buscamos las opciones dentro del selector
@@ -183,9 +198,16 @@ class Oxygen():
                 # por cada valor de las opciones, scrappeamos todos los valores de la pagina.
                 for valor in opciones:
                     print(valor.get('value'))
-                    soup_c = Datamanager._getSoup(self, self._format_url
-                                                + href.replace('videos', 'episode-guide')
-                                                + self._episode_url + valor.get('value'))
+                    while True:
+                        try:
+                            soup_c = Datamanager._getSoup(self, self._format_url
+                                                        + href.replace('videos', 'episode-guide')
+                                                        + self._episode_url + valor.get('value'))
+                            break
+                        except:
+                            print('error de conexion, intentando nuevamente')
+                            time.sleep(10)
+                            print('reintentando conexion')
                     # Recorremos una lista de los links de cada uno de los episodios de la temporada.
                     for linkepisodio in soup_c.find_all(
                             'article', self._article_div):
@@ -200,8 +222,15 @@ class Oxygen():
                     print('added' + linkepisodios.find('a').get('href'))
         # Recorremos todos los links de las referencias de los episodios de cada temporada
         for link in episode_hrefs:
-            soup_e = Datamanager._getSoup(
-                self, self._format_url + link)
+            while True:
+                try:
+                    soup_e = Datamanager._getSoup(
+                        self, self._format_url + link)
+                    break
+                except:
+                    print('error de conexion, intentando nuevamente')
+                    time.sleep(10)
+                    print('reintentando conexión')
             epi = soup_e.find(
                 'div', self._episode_label).text.rstrip().split('-')
             temporada = re.sub('\D', '', str(epi[0]))

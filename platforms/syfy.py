@@ -160,12 +160,18 @@ class Syfy():
                 ('"', '&quot;'),
                 ('>', '&gt;'),
                 ('<', '&lt;'),
-                ('&', '&amp;')
+                ('&', '&amp;'),
+                ("'", '\\u2019'),
+                ('"', '\\u201')
             )
         for code in htmlCodes:
             s = s.replace(code[1], code[0])
             s = s.replace('<\/p>','')
             s = s.replace('<p>','')
+            s = s.replace('<em>','')
+            s = s.replace('<\/em>','')
+            s = s.replace(r'<\\/em>','')
+            s = s.replace(r'\n','')
         return s
 
     def _scraping(self, testing=False):
@@ -235,9 +241,12 @@ class Syfy():
             soup_about = Datamanager._getSoup(self, self._format_url
                                         + show.find('a').get('href')
                                         + self._about_url)
-            if soup_about.find('script',type='application/ld+json'):
-                about = str(soup_about.find_all('script',type='application/ld+json')[0]).split('"')[-20]
-                about = self.html_decode(about)
+            if soup_about.find('div','field field-name-body field-type-text-with-summary field-label-hidden'):
+                about = str(soup_about.find('div','field field-name-body field-type-text-with-summary field-label-hidden').text)
+                try:
+                    about = self.html_decode(about.strip())
+                except:
+                    about = None
             else:
                 about = None
                 print(about)
