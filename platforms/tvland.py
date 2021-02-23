@@ -92,8 +92,8 @@ class TvLand():
     def _scraping(self, testing = False):
        
         """
-        ¿Necesita VPN? NO
-        ¿Usa Selenium? Si
+        ¿VPN? NO
+        ¿API,HTML o SELENIUM? Selenium
         
         TvLand es una plataforma de estados unidos con solo series, algunas presentan todas las temporadas mientras que otras
         presente algunas. Algunos episodios no tienen año, 
@@ -180,30 +180,35 @@ class TvLand():
                     episodes =sectionClass.findAll('div',{'class':'meta-wrap css-1b0z283-Wrapper e1u7s1dj0'})
                     #recorro los episodios y extraigo la informacion de los mismos.
                     for episode in episodes:
-                        try: 
-                            imgEpisode.append(sectionClass.find('div',{'class':'content'}).noscript.img['srcset'])
-                            #Hay una serie que el codigo de html le cambian el header donde esta la season y lo llaman spr-header
-                            if episode.find('div',{'class':'header'}).text.split('•'):
-                                episodeSeason.append(episode.find('div',{'class':'header'}).text.split('•'))
-                            else:
-                                episodeSeason.append(episode.find('div',{'class':'spr-header'}).text.split('•'))
-                            episodeTitle.append(episode.find('div',{'class':'sub-header'}).text)
-                            episodeDescription.append(episode.find('div',{'class':'deck'}).text)
-                            episodeDate.append(episode.find('div',{'class':'meta'}).text)
-                            if sectionClass.find('li',{'class':'item full-ep css-q2f74n-Wrapper e19yuxbf0'}):
-                                episodeUrl.append(Url+sectionClass.find('li',{'class':'item full-ep css-q2f74n-Wrapper e19yuxbf0'}).a['href'])
-                            else: 
-                                episodeUrl.append(Url+sectionClass.find('li',{'class':'item video css-q2f74n-Wrapper e19yuxbf0'}).a['href'])
+                        # Url:
+                        episodeUrl.append(Url+validacionDatos(sectionClass.find('li',{'class':'item full-ep css-q2f74n-Wrapper e19yuxbf0'}),
+                                                sectionClass.find('li',{'class':'item video css-q2f74n-Wrapper e19yuxbf0'})).a['href'])
+                        # Season:
+                        episodeSeason.append(validacionDatos(episode.find('div',{'class':'spr-header'}),
+                                             episode.find('div',{'class':'header'})).text.split('•'))
+                        # Title:
+                        episodeTitle.append(validacionDatos(episode.find('div',{'class':'sub-header'}),
+                                            episode.find('div',{'class':'header'})).text)
+                        #Los siguientes try son para controlor que validacionDatos si devuelve None, no haga el .text
+                        # Description:
+                        try:
+                            episodeDescription.append(validacionDatos(episode.find('div',{'class':'deck'}),
+                                                                      None).text)
+                        except:
+                            episodeDescription.append(None)
+                        # Date:
+                        try:
+                            episodeDate.append(validacionDatos(episode.find('div',{'class':'meta'}),
+                                                   None).text)
+                        except:
+                            episodeDate.append(None)
+                        # Imagen
+                        try:
+                            imgEpisode.append(validacionDatos(sectionClass.find('div',{'class':'content'}),
+                                                                None).noscript.img['srcset'])
                         except:
                             imgEpisode.append(None)
-                            if episode.find('div',{'class':'header'}).text.split('•'):
-                                episodeSeason.append(episode.find('div',{'class':'header'}).text.split('•'))
-                            else:
-                                episodeSeason.append(episode.find('div',{'class':'spr-header'}).text.split('•'))
-                            episodeTitle.append(episode.find('div',{'class':'header'}).text)
-                            episodeDescription.append(episode.find('div',{'class':'deck'}).text)
-                            episodeUrl.append(Url+sectionClass.find('li',{'class':'item video css-q2f74n-Wrapper e19yuxbf0'}).a['href'])
-                            episodeDate.append(None)
+                      
                 else:                                                                      
                     soup = Datamanager._clickAndGetSoupSelenium(self,url,"expand-wrap",waitTime=5,showURL=False)
                     sectionClass = soup.find('section',{'class':'module-container video-guide-container'})
@@ -211,21 +216,36 @@ class TvLand():
                     episodes =sectionClass.findAll('div',{'class':'meta-wrap css-1b0z283-Wrapper e1u7s1dj0'})
                     #recorro los episodios y extraigo la informacion de los mismos.
                     for episode in episodes:
-                        try: 
-                            imgEpisode.append(sectionClass.find('div',{'class':'content'}).picture.img['srcset'])
-                            episodeSeason.append(episode.find('div',{'class':'header'}).text.split('•'))
-                            episodeTitle.append(episode.find('div',{'class':'sub-header'}).text)
-                            episodeDescription.append(episode.find('div',{'class':'deck'}).text)
-                            episodeDate.append(episode.find('div',{'class':'meta'}).text)
-                            episodeUrl.append(Url+sectionClass.find('li',{'class':'item full-ep css-q2f74n-Wrapper e19yuxbf0'}).a['href'])
+                        # Url:
+                        episodeUrl.append(Url+validacionDatos(sectionClass.find('li',{'class':'item full-ep css-q2f74n-Wrapper e19yuxbf0'}),
+                                                sectionClass.find('li',{'class':'css-1yucgj6-Box-Flex-Layout-StyledWrapper ev0yupn4'})).a['href'])
+         
+                        # Season:
+                        episodeSeason.append(validacionDatos(episode.find('div',{'class':'spr-header'}),
+                                             episode.find('div',{'class':'header'})).text.split('•'))
+                        # Title:
+                        episodeTitle.append(validacionDatos(episode.find('div',{'class':'sub-header'}),
+                                            episode.find('div',{'class':'header'})).text)
+                        #Los siguientes try son para controlor que validacionDatos si devuelve None, no haga el .text
+                        # Description:
+                        try:
+                            episodeDescription.append(validacionDatos(episode.find('div',{'class':'deck'}),
+                                                                      None).text)
+                        except:
+                            episodeDescription.append(None)
+                        # Date:
+                        try:
+                            episodeDate.append(validacionDatos(episode.find('div',{'class':'meta'}),
+                                                   None).text)
+                        except:
+                            episodeDate.append(None)
+                                                # Imagen:
+                        try:
+                            imgEpisode.append(validacionDatos(sectionClass.find('div',{'class':'content'}),
+                                                                None).noscript.img['srcset'])
                         except:
                             imgEpisode.append(None)
-                            episodeSeason.append(episode.find('div',{'class':'header'}).text.split('•'))
-                            episodeTitle.append(episode.find('div',{'class':'sub-header'}).text)
-                            episodeDescription.append(episode.find('div',{'class':'deck'}).text)
-                            episodeUrl.append(Url+sectionClass.find('li',{'class':'css-1yucgj6-Box-Flex-Layout-StyledWrapper ev0yupn4'}).a['href'])
-                            episodeDate.append(episode.find(None))
-                        
+               
             episodesDate.append(episodeDate)
             episodesDescription.append(episodeDescription)
             episodesName.append(episodeTitle)
@@ -281,8 +301,9 @@ class TvLand():
             nameShow = nameShows[i]
             parrentId = hashlib.md5(nameShow.encode('utf-8')).hexdigest()
             for j in range(0,len(episodesDescription[i])):
+                img = []
                 title = episodesName[i][j]
-                img=imgEpisodes[i]
+                img.apppend(imgEpisodes[i][j])
                 try: #algunos episodios no tienen el año, por lo que lo puse en None, por ende este try es para evitar el error de hacer none object tiene split.
                     date = int(episodesDate[i][j].split('/')[-1]) 
                 except:
