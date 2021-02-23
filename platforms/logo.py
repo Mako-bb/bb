@@ -175,7 +175,7 @@ class Logo():
                 'Playback':      None,
                 "CleanTitle":    _replace(title),
                 'Synopsis':      desc,
-                'Image':         image,
+                'Image':         [image],
                 'Rating':        None,
                 'Provider':      None,
                 'Genres':        None,
@@ -208,6 +208,8 @@ class Logo():
             desc = soup_show.find('div',id='t5_lc_promo1').find('div',self._desc_div).text if soup_show.find('div',id='t5_lc_promo1') else None
             data_info = soup_show.find('div',self._image_div).get('data-info').split('"')
             image_src = data_info[9]
+            if desc == None:
+                desc = soup_show.find('div','tier_2_col').find('div',self._desc_div).text
             payload_show = {
                 "PlatformCode":  self._platform_code,
                 "Id":            hashlib.md5(title.lower().encode('utf-8')).hexdigest(),
