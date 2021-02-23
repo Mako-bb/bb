@@ -124,7 +124,7 @@ class RokuChannel():
         Datamanager._insertIntoDB(self, payloads, self.titanScraping)
         Datamanager._insertIntoDB(self, payloads_episodes, self.titanScrapingEpisodios)
 
-        # TODO: Update
+        Upload(self._platform_code, self._created_at, testing=testing)
 
         print("--- {} seconds ---".format(time.time() - start_time))
         self.sesion.close()
@@ -140,7 +140,7 @@ class RokuChannel():
             Una vez que obtengo los ids de los géneros, accedo con ellos a sus respectivas
             APIs que contienen los títulos asociados a dicho género. Luego hace lo mismo que 
             en el paso anterior, acumula los ids de los títulos en un Set para que no haya 
-            duplicados, con esto se obtiene un total de 6600 títulos aproximadamente.
+            duplicados, con esto se obtiene un total de 7000 títulos aproximadamente.
 
             RETURN: Set de ids de contenidos/títulos.
         '''
@@ -168,9 +168,9 @@ class RokuChannel():
 
                 content_data = content['content']
 
-                # Busco el tipo de contenido,
-                #  si no tiene un atributo 'type' probablemente esté parado sobre alguna categoria (la página principal mezcla contenidos
-                # y categorias en la misma fila de contenidos) por lo que salteo al próximo contenido que sí sea scrapeable
+                # Busco el tipo de contenido, si no tiene un atributo 'type' probablemente esté parado 
+                # sobre alguna categoria (la página principal mezcla contenidos y categorias en la misma
+                # fila de contenidos) por lo que salteo al próximo contenido que sí sea scrapeable
                 if not content_data.get('type'):
                     continue
 
@@ -186,8 +186,7 @@ class RokuChannel():
 
         for genre in genres_id:
 
-            genre_contents = Datamanager._getJSON(self,
-             self.genre_api.format(genre))
+            genre_contents = Datamanager._getJSON(self, self.genre_api.format(genre))
 
             # Valido que el género tenga una colección con contenidos,
             #  de no tenerla se saltea
@@ -255,6 +254,11 @@ class RokuChannel():
         descriptions = content_data['descriptions']
         descriptions_text = []
         for key in descriptions:
+            # Algunas descripciones vienen algo sucias con caracteres como "(..." o "#"
+            # por eso, si tiene alguno de esos caracteres, se la saltea como descripcion no valida
+            text = descriptions[key]['text']
+            if "(..." in text or "#" in text:
+                continue
             descriptions_text.append(descriptions[key]['text'])
         content_description = descriptions_text[-1] if descriptions_text else None
         
@@ -301,7 +305,7 @@ class RokuChannel():
         # PROVIDER
         # Aclaración: Si el contenido es gratis ("Free to watch") generalmente el provider es TheRokuChannel. Los que son
         # contenidos pagos bajo suscripción tienen otros providers.
-        content_provider = content_view_options['providerDetails']['title']
+        content_provider = [content_view_options['providerDetails']['title']]
 
         payload = {
                 'PlatformCode': self._platform_code,
@@ -395,19 +399,27 @@ class RokuChannel():
             # Agrego el campo "Seasons" al payload con toda la información recopilada de las temporadas
             payload['Seasons'] = seasons_payload if seasons_payload else None
 
-            self.episodes_scraping(content_id, content_title, seasons_data, payloads_episodes, scraped_episodes)
+            # Este diccionario sirve para pasarle información importante a los episodios de cada serie
+            parent_data = {
+                'Id': content_id,
+                'Title': content_title,
+                'Provider': payload['Provider'],
+                'Packages': payload['Packages'] 
+            }
+
+            self.episodes_scraping(parent_data, seasons_data, payloads_episodes, scraped_episodes)
 
         Datamanager._checkDBandAppend(self, payload, scraped, payloads)
 
-    def episodes_scraping(self, content_id, content_title, seasons_data, payloads_episodes, scraped_episodes):
+    def episodes_scraping(self, parent_data, seasons_data, payloads_episodes, scraped_episodes):
         '''
             Este método se encarga de analizar una fracción del .json de las series 
             (el apartado de las temporadas). Scrapea los datos de los episodios
             y luego los carga en la BD mediante las funciones del DataManager.
 
             - PARÁMETROS:
-                - content_id: el ID de la serie padre
-                - content_title: el titulo de la serie padre
+                - parent_data: dict con datos de la serie padre que pueden requerirse en el caso de
+                               que no los tenga la API 
                 - seasons_data: fragmento del .json de la serie padre
                 - payloads_episodes: la lista de payloads en la que se van acumulando los episodios
                 - scraped_episodes: la BD con los episodios ya scrapeados
@@ -421,8 +433,8 @@ class RokuChannel():
                     # EPISODE ID, TITULO, NUMERO, NUMERO SEASON, LINK
                     episode_id = episode['meta']['id']
                     episode_title = episode['title']
-                    episode_number = episode['episodeNumber']
-                    season_number = episode['seasonNumber']
+                    episode_number = int(episode['episodeNumber'])
+                    season_number = int(episode['seasonNumber'])
                     episode_link = self.content_link.format(episode_id)
 
                     # AÑO DE ESTRENO (EPISODE)
@@ -452,8 +464,10 @@ class RokuChannel():
                     # Estas variables se declaran nulas antes de validar que se puedan obtener 
                     episode_view_options = None
                     episode_availability = None
-                    episode_package = None
-                    # TODO: providers para los episodios
+                    episode_provider = parent_data['Provider']
+                    # En el caso de que no se pueda obtener informacion sobre el package del episodio
+                    # se cuenta con el package de la serie padre como para completar
+                    episode_package = parent_data['Packages']
                     
                     if episode.get('viewOptions'):
                         # Para obtener datos como disponibilidad del episodio y package accedo a los viewOptions del mismo:
@@ -463,9 +477,6 @@ class RokuChannel():
                         episode_availability = episode_view_options['validityEndTime']
 
                         # PACKAGES (EPISODE)
-                        # TODO: considerar traer el package de la serie en el caso de no encontrarlo
-                        # (consultar si está bien asumir que si una serie figura como gratis o por suscripcion
-                        # todos sus episodios van a tener el mismo modelo de negocios)
                         if episode_view_options['license'] == "Subscription":
                             episode_package = [{'Type': 'subscription-vod'}]
                         elif episode_view_options['license'] == "Free":
@@ -474,8 +485,8 @@ class RokuChannel():
                     payload_episode = {
                                 'PlatformCode': self._platform_code,
                                 'Id': episode_id, 
-                                'ParentId': content_id,
-                                'ParentTitle': content_title,
+                                'ParentId': parent_data['Id'],
+                                'ParentTitle': parent_data['Title'],
                                 'Episode': episode_number, 
                                 'Season': season_number, 
                                 'Title': episode_title,
@@ -491,7 +502,7 @@ class RokuChannel():
                                 'Synopsis': episode_description,
                                 'Image': episode_images if episode_images else None,
                                 'Rating': None,
-                                'Provider': None,
+                                'Provider': episode_provider,
                                 'Genres':None,
                                 'Cast': None,
                                 'Directors': None,
