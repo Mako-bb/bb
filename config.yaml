@@ -218,20 +218,30 @@ ott_sites:
     countries:
       US: us.syfy
     queries:
-      movies_div: 'grid-item grid--small contextual-links-region'
-      show_div: 'grid-item grid--small contextual-links-region'
+      movies_div: 'grid-item grid--small contextual-links-region tracking-promo-processed tracking-promo'
+      show_div: 'grid-item grid--small contextual-links-region tracking-promo-processed tracking-promo'
       episode_div: 'pane-title'
       content_div: 'view-content'
       full_episode_check_div: 'field field-name-node-link field-type-ds field-label-hidden clearfix'
       episode_grid_div: 'views-row'
       cast_div: 'field-content tile-marqee'
       title_div: 'all-shows-show-title'
+      about_div: 'Parsely metadata'
+      full_epi_href: field field-name-node-link field-type-ds field-label-hidden clearfix
+      full_epi_div: ds-2col-stacked node node-tv-episode node-id-210849 full-episode view-mode-tile_medium tile tile--medium tracking-promo-processed tracking-promo
+      full_epi_title: field field-name-title field-type-ds field-label-hidden clearfix
+      full_epi_season: field field-name-field-numeric-season-num field-type-number-integer field-label-hidden
+      full_epi_epi: field field-name-field-numeric-episode-num field-type-number-integer field-label-hidden
+      full_epi_desc: field field-name-field-summary field-type-text-long field-label-hidden
+      full_epi_parent: 'pane-title js-mouse-focus'
+      full_epi_image: image-orientation-processed image-orientation-load-processed orientation--landscape ls-is-cached lazyloaded
     movie_url: https://www.syfy.com/movies
     format_url: https://www.syfy.com
     show_url: https://www.syfy.com/shows#full-episodes
     episode_url: '/episodes'
     full_episodes_url: '/videos/full-episodes'
     cast_url: '/cast'
+    about_url: '/about'
   RokuChannel:
     countries:
       US: us.roku_channel

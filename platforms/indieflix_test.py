@@ -121,7 +121,8 @@ class Indieflix_test():
                 #comenzamos a armar el payload de las series
                 if id_link["type"] == "series":
                     for item in items:
-                        id_ = item["uid"]
+                        id_ = hashlib.md5(item["uid"].encode('utf-8')).hexdigest()
+                    
                         title = item["title"] 
                         cleantitle = _replace(title)
                         type_ = "serie"
@@ -234,8 +235,8 @@ class Indieflix_test():
                                 if not epi:
                                     continue
                                 else:
-                                    Id_epi = epi["uid"]
-                                    
+                                    Id_epi = hashlib.md5(epi["uid"].encode('utf-8')).hexdigest()
+
                                     if not epi.get("episode"):
                                         episode = epi["series"]["episode"]
                                         season = epi["series"]["season"] 
@@ -312,13 +313,13 @@ class Indieflix_test():
                 else:
                     #armamos payload de las peliculas
                     for item in items:
-                        id_ = item["_id"]["uid"]
+                        id_ = hashlib.md5(item["_id"]["uid"].encode('utf-8')).hexdigest()
                         
 
                         #fix para no duplicar la pelicula con ids distitno
                         # 31275 == "The Andalusian Dog"
                         # 48766 == "M"
-                        if id_ == "31275" or id_ == "48766":
+                        if (id_ == "31275") or (id_ == "48766") or (id_ == "36360") :
                             continue
 
                         title = item["title"]

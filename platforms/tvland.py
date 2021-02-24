@@ -209,7 +209,7 @@ class TvLand():
                         except:
                             imgEpisode.append(None)
                       
-                else:                                                                      
+                else:  
                     soup = Datamanager._clickAndGetSoupSelenium(self,url,"expand-wrap",waitTime=5,showURL=False)
                     sectionClass = soup.find('section',{'class':'module-container video-guide-container'})
                     #hay dos tipos de paginas de epìsodes con diferente busqueda, una es con un tipo de class y la otra es con otro por esto el siguiente if.
@@ -303,7 +303,7 @@ class TvLand():
             for j in range(0,len(episodesDescription[i])):
                 img = []
                 title = episodesName[i][j]
-                img.apppend(imgEpisodes[i][j])
+                img.append(imgEpisodes[i][j])
                 try: #algunos episodios no tienen el año, por lo que lo puse en None, por ende este try es para evitar el error de hacer none object tiene split.
                     date = int(episodesDate[i][j].split('/')[-1]) 
                 except:

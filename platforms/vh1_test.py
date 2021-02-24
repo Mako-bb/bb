@@ -134,7 +134,21 @@ class Vh1_test():
                     if cast_bs.find_all("ul",{"class":"L001_line_list"}):
                         cast_list = cast_bs.find("ul",{"class":"L001_line_list"}).find_all("span",{"class":"headline"})
                         for actor in cast_list:
-                            cast_serie.append(actor.text)
+                            
+                            #revisar si funciona
+                            if " and " in actor.text:
+                                cast_serie.append(actor.text.split(" and ")[0])
+                                cast_serie.append(actor.text.split(" and ")[1])
+                            elif "/" in actor.text:
+                                cast_serie.append(actor.text.split("/")[1])
+                            elif "(" in actor.text:
+                                fixed_name = []
+                                fixed_name.append(actor.text.split("(")[0])
+                                fixed_name.append(actor.text.split(")")[1])
+                                cast_serie.append(" ".join(fixed_name))
+                            else:
+                                cast_serie.append(actor.text)
+
                     else:
                         cast_serie = None
                 
@@ -202,6 +216,7 @@ class Vh1_test():
                             parent_id = id_serie
                             parent_title = title_serie
                             deeplink_epi = item["url"]
+
                             #acá validamos que tenga temporada ya que 
                             #de forma contraria es un especial
                             if item.get("season"):
@@ -248,6 +263,11 @@ class Vh1_test():
                                         image_epi.append(imagen["url"])       
                             else:
                                 image_epi = None
+
+                            #Validamos que la URL no contenga "clip-show" y la duracion sea None
+                            # ya que eso seria un clip de la serie y no un capitulo
+                            if ("clip-show" in deeplink_epi) and (duration_epi == None):
+                                continue
                             
                             packages_epi = [{"Type": "tv-everywhere"}]
 

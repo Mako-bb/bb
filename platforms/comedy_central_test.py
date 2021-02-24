@@ -88,7 +88,10 @@ class Comedy_central_test():
         return query
 
     def _scraping(self):
-
+        test_list = []
+        list_corchete = []
+        list_dif_statuscode200 = []
+        #-----------listas prueba--------------
         ids_series_guardados = Datamanager._getListDB(self,self.titanScraping)
         ids_epi_guardados = Datamanager._getListDB(self,self.titanScrapingEpisodios)
         parent_title_id_list = []
@@ -190,11 +193,13 @@ class Comedy_central_test():
             parent_title = epi["meta"]["label"]
             #acá checkeamos que el episodio tenga id, ya que en caso de no tenerlo tampoco tiene URL y es inutil
             if epi.get("id") == "[]":
+                list_corchete.append(epi)
                 continue
             elif epi.get("id"): 
                 id_epi = hashlib.md5(epi["id"].encode('utf-8')).hexdigest()
 
             else:
+                test_list.append(epi)
                 continue
             #acá accedemos a lista que contiene contiene el id y el titulo de las series
             #si coincide el parentTitle que figura en el item episodio con el de la lista
@@ -206,11 +211,24 @@ class Comedy_central_test():
                     break
                 else:
                     print("NO COINCIDE")
+                    parent_Id = hashlib.md5(parent_title.encode('utf-8')).hexdigest()
 
-            #Acá chequeamos que si el episodio es de trevor noah le saquemos la fecha al titulo
-            if parent_title == "The Daily Show with Trevor Noah":
-                title_unsplit = epi["meta"]["subHeader"]           #Preguntar
-                title_epi = title_unsplit.split(" - ")[-1]
+            title_epi = epi["meta"]["subHeader"]
+
+            if "- Uncensored" in title_epi:
+                title_epi = title_epi.split(" - Uncensored")[0]
+
+            if " - Up Next" in title_epi:
+                title_epi = title_epi.split(" - Up Next")[0]
+
+            if "Extended -" in title_epi:
+                title_epi = title_epi.split("Extended - ")[-1]
+            
+            if ("-" in title_epi) and ("," in title_epi) and ("2" in title_epi) and (parent_title != "This Week at the Comedy Cellar") and (parent_title != "@midnight with Chris Hardwick"):
+                title_epi = title_epi.split(" - ")[-1]
+            
+            if title_epi == "Kate Berlant Teaches":
+                title_epi = title_epi.split("Kate Berlant Teaches - ")[-1]
 
             clean_title_epi = _replace(title_epi)
             original_title = None
@@ -232,11 +250,6 @@ class Comedy_central_test():
                 duration_epi = int(epi["media"]["duration"].split(":")[0])
 
             deeplink_epi = epi["url"]   
-
-            # if id_epi == "935c165721c944eab4d8a45976399030":
-            #     print("ERROR")
-            #     print(deeplink_epi)  #REVISION METADATA EPISODE NUMBER NULL  PREGUNTAR QUE HACER
-            #     raise KeyError
             
             synopsis_epi = epi["meta"]["description"]
             
@@ -254,10 +267,11 @@ class Comedy_central_test():
             packages_epi =  [{"Type": "tv-everywhere"}]
             #acá asignamos el numero de episodio y temporada. Si el Deeplink indica que es un episodio especial
             #se le asigna el numero 0 a la tempo y el episodio es igual a None
-            if "ep-special" in deeplink_epi:
+            if ("ep-special" in deeplink_epi) or ("not-special" in deeplink_epi) :
                 season_num = 0
                 episode_num = None
             else:
+                #deeplink_epi = self.currentSession.get(deeplink_epi).url             <-----redireccion url
                 #acá spliteamos la url para quedarnos solo con la ultima parte 
                 # que contiene el nro de season y episodio (ejemplo: 1-ep-110)
                 sea_epi_num = deeplink_epi.split("season-")[-1]
@@ -266,9 +280,9 @@ class Comedy_central_test():
                 #de la lista que nos devuelve el numero de season
                 season_num = int(sea_epi_num.split("-ep-")[0])
                 
-            #acá agarramos el split con la season y numero de tempodada 
-            # y nos quedamos solo con los ultimos 2 digitos que siempre son el numero de episodio  
-            episode_num = int(sea_epi_num[-2:])
+                #acá agarramos el split con la season y numero de tempodada 
+                # y nos quedamos solo con los ultimos 2 digitos que siempre son el numero de episodio  
+                episode_num = int(sea_epi_num[-2:])
             
             #armamos el payload
             payload_epi = {
@@ -312,7 +326,16 @@ class Comedy_central_test():
 
         Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)   
         Datamanager._insertIntoDB(self, self.payloads_epi, self.titanScrapingEpisodios)
-        if self.test:
-            Upload(self._platform_code, self._created_at,testing=True)
-        else:
-            Upload(self._platform_code, self._created_at,testing=True)
+        #if self.test:
+            #Upload(self._platform_code, self._created_at,testing=True)
+        #else:
+            #Upload(self._platform_code, self._created_at,testing=True)
+        
+        print("-------items en variable episodios---------")
+        print(len(episodios))
+        print("-------items salteados por contener Corchete de ID---------")
+        print(len(list_corchete))
+        print("-------items salteados por else---------")
+        print(len(test_list))
+        print("-------len payloads episodes---------")
+        print(len(self.payloads_epi))
