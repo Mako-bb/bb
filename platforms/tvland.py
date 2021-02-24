@@ -209,7 +209,7 @@ class TvLand():
                         except:
                             imgEpisode.append(None)
                       
-                else:                                                                      
+                else:  
                     soup = Datamanager._clickAndGetSoupSelenium(self,url,"expand-wrap",waitTime=5,showURL=False)
                     sectionClass = soup.find('section',{'class':'module-container video-guide-container'})
                     #hay dos tipos de paginas de epìsodes con diferente busqueda, una es con un tipo de class y la otra es con otro por esto el siguiente if.
