@@ -122,7 +122,21 @@ class Logo():
         query = {item[field] for item in query}
 
         return query
-
+    def timer_to_int(self,time_string):
+        """ Esta funcion sirve para transformar la duración a int
+            formato: 00:00:00 o 00:00 o None
+            Return: Duración en minutos o None
+        """
+        if time_string == None:
+            return None
+        timer = time_string.split(':')
+        if len(timer) == 3:
+            result = 60 + int(timer[1])
+            return result
+        else:
+            result = int(timer[0])
+            return result
+        
     def _scraping(self, testing=False):
         """ Plataforma: http://www.logotv.com
             el Metodo _scrapping se encarga de conseguir todos los contenidos de la plataforma.
@@ -161,7 +175,7 @@ class Logo():
                 'Playback':      None,
                 "CleanTitle":    _replace(title),
                 'Synopsis':      desc,
-                'Image':         None,
+                'Image':         image,
                 'Rating':        None,
                 'Provider':      None,
                 'Genres':        None,
@@ -191,12 +205,12 @@ class Logo():
         for ref in lista:
             soup_show = Datamanager._getSoup(self, ref)
             title = soup_show.find('h2',self._title_div).text if soup_show.find('h2',self._title_div) else None
-            desc = soup_show.find('div',self._desc_div).text if soup_show.find('div',self._desc_div) else None
+            desc = soup_show.find('div',id='t5_lc_promo1').find('div',self._desc_div).text if soup_show.find('div',id='t5_lc_promo1') else None
             data_info = soup_show.find('div',self._image_div).get('data-info').split('"')
             image_src = data_info[9]
             payload_show = {
                 "PlatformCode":  self._platform_code,
-                "Id":            hashlib.md5(title.encode('utf-8')).hexdigest(),
+                "Id":            hashlib.md5(title.lower().encode('utf-8')).hexdigest(),
                 'Title':         title,
                 "Type":          "serie",
                 'OriginalTitle': None,
@@ -275,7 +289,7 @@ class Logo():
             time.sleep(2)
             # tomamos un soup de la pagina del driver
             episode_soup_ = BeautifulSoup(driver.page_source, 'lxml')
-            # Recorremos con un bucle todos los 
+            # Recorremos con un bucle todos los contenidos
             for episode in episode_soup_.find_all('a',self._episode_div):
                 # Definimos las variables del Payload
                 parent_title = episode_soup_.find('h1',self._show_title_h1).text
@@ -294,14 +308,14 @@ class Logo():
                     episode_number = None
                     season = None
                 description = episode.find('p').text if episode.find('p') else None
-                duration = int(episode.find('div',self._duration_div).text.replace(':','')) if episode.find('div',self._duration_div) else None
+                duration = self.timer_to_int(episode.find('div',self._duration_div).text) if episode.find('div',self._duration_div) else None
                 data_info = episode.find('div',self._image_div).get('data-info').split('"')
                 image_src = data_info[9]
                 deep_link = episode.get('href')
                 payload_episodes = {
                 "PlatformCode":  self._platform_code,
                 "Id": hashlib.md5(title.encode('utf-8')+str(parent_title).encode('utf-8')+str(deep_link).encode('utf-8')).hexdigest(),
-                "ParentId":      hashlib.md5(parent_title.encode('utf-8')).hexdigest(),
+                "ParentId":      hashlib.md5(parent_title.lower().encode('utf-8')).hexdigest(),
                 "ParentTitle":   parent_title,
                 "Episode":       episode_number,
                 "Season":        season,

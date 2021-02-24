@@ -29,8 +29,8 @@ class SundanceTvTest():
         DATOS IMPORTANTES: 
             - ¿Necesita VPN? -> NO.
             - ¿HTML, API, SELENIUM? -> SELENIUM y API
-            - Cantidad de contenidos (ultima revisión): TODO
-            - Tiempo de ejecucion: TODO
+            - Cantidad de contenidos (ultima revisión 22/02/2021): 53 contenidos | 420 episodios
+            - Tiempo de ejecucion: 5 minutos aproximadamente
     '''
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config                = config()['ott_sites'][ott_site_uid]
@@ -99,6 +99,8 @@ class SundanceTvTest():
         scraped = Datamanager._getListDB(self, self.titanScraping)
         scraped_episodes = Datamanager._getListDB(self, self.titanScrapingEpisodes)
 
+        start_time = time.time()
+
         ###############
         ## PELICULAS ##
         ###############
@@ -129,7 +131,7 @@ class SundanceTvTest():
                 },
                 'Playback':      None,
                 'Synopsis':      info['text']['description'],
-                'Image':         None,
+                'Image':         [info['images']],
                 'Rating':        None,
                 'Provider':      None,
                 'Genres':        [info['meta']['genre']],
@@ -174,6 +176,8 @@ class SundanceTvTest():
 
             # Creo una lista para almacenar los links de las temporadas de cada serie, para luego acceder a las APIs que tienen data de los episodios.
             seasons_links = []
+            # Esta lista guarda los payloads de cada temporada
+            seasons_payload = []
 
             try:
                 browser.get(content_link)
@@ -210,6 +214,7 @@ class SundanceTvTest():
                                 }
                         
                         seasons_links.append(season_payload['Deeplink'])
+                        seasons_payload.append(season_payload)
             
             except:
                 print("Este contenido no cuenta con un apartado de Episodios")
@@ -217,7 +222,7 @@ class SundanceTvTest():
             payload = {
                 'PlatformCode':  self._platform_code,
                 'Id':            str(info['meta']['nid']),
-                "Seasons":       season_payload,
+                "Seasons":       seasons_payload if seasons_payload else None,
                 'Title':         info['text']['title'],
                 'OriginalTitle': None,
                 'CleanTitle':    _replace(info['text']['title']),
@@ -231,7 +236,7 @@ class SundanceTvTest():
                 },
                 'Playback':      None,
                 'Synopsis':      info['text']['description'],
-                'Image':         None,
+                'Image':         [info['images']] if info.get('images') else None,
                 'Rating':        None,
                 'Provider':      None,
                 'Genres':        None,
@@ -298,7 +303,7 @@ class SundanceTvTest():
                                 'iOS':       None,
                                 },
                             'Synopsis':      info['text']['description'],
-                            'Image':         None,
+                            'Image':         [info['images']] if info.get('images') else None,
                             'Rating':        None,
                             'Provider':      None,
                             'Genres':        None,
@@ -321,5 +326,6 @@ class SundanceTvTest():
 
         self.currentSession.close()
 
-        if not testing:
-            Upload(self._platform_code, self._created_at, testing=True)
+
+        Upload(self._platform_code, self._created_at, testing=testing)
+        print("--- {} seconds ---".format(time.time() - start_time))

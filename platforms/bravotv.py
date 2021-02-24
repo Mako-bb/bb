@@ -80,6 +80,21 @@ class BravoTv():
         return query
 
     def _scraping(self, testing = False):
+
+        """
+        IMPORTANTE -----------------> TARDA DEMASIADO EN EJECUTAR (como unas 2 o 3 horas)
+        ¿VPN? NO
+        ¿API,HTML o SELENIUM? HTML con bs4
+
+        BravoTv es una plataforma de estados unidos que presenta una pagina con todo el contenido. Para hacer el scraping, saco
+        primero toda la informacion de los shows que tiene (principalmente el nombre y la url del show).
+
+        IMPORTANTE:
+        -Los episodios de las series estan en la url que es el urlPagina/NombreSerie/"episode-guide". Pero
+        hoy dos tipos de series, lo que tienen episode-guide y los que no, lo que no tienen los episodios estan
+        en la url de la serie
+        -Las descripciones de los episodios se encuentran en la url de la forma urlPagina/NombreSerie/"about".
+        """
        
         scraped = Datamanager._getListDB(self,self.titanScraping)
         scrapedEpisodes = Datamanager._getListDB(self,self.titanScrapingEpisodios)
@@ -87,7 +102,7 @@ class BravoTv():
         payloadsEpisodios = []
         packages = [
                         {
-                            'Type': 'tv-everywhere'
+                            'Type': 'subscription-vod'
                         }
                     ]
         url = 'https://www.bravotv.com/shows'
@@ -159,7 +174,11 @@ class BravoTv():
                     episodesSoup = soup.findAll('article',class_=re.compile("teaser teaser--playlist-teaser video"))
                 for episodeSoup in episodesSoup:
                     urlEpisode.append(urlWithoutShow+episodeSoup.a['href'])
-                    imgEpisode.append(urlWithoutShow+episodeSoup.find('div',{"class":"teaser__image-wrapper"}).figure.picture.img['src'])
+                    # algunos episodios no tienen imagen
+                    try:
+                        imgEpisode.append(urlWithoutShow+episodeSoup.find('div',{"class":"teaser__image-wrapper"}).figure.picture.img['src'])
+                    except:
+                        imgEpisode.append(None)
             else:
                 seasons =soup.find('select',{"id":"edit-field-tv-shows-season","class":"form-select"})
                 seasons = seasons.findAll('option')
@@ -242,12 +261,12 @@ class BravoTv():
         _platform_code = self._platform_code
         for i in range(0,len(nameShows)):
             img=[]
-            title = nameShows[i]
+            title = nameShows[i].strip()
             _id = hashlib.md5(title.encode('utf-8')).hexdigest()
             _type = 'serie'
             URLContenido = urlShows[i]
             img.append(imgShows[i])
-            description = descriptionsShows[i]
+            description = descriptionsShows[i].strip()
             cast = castShows[i]
             payload = Payload(packages=packages,id=_id,title=title,image = img,cleanTitle= _replace(title),platformCode=_platform_code,type=_type,deeplinksWeb = URLContenido,synopsis = description,cast = cast,timestamp=datetime.now().isoformat(),createdAt=self._created_at)
             Datamanager._checkDBandAppend(self, payload.payloadJson(),scraped,payloads)
@@ -256,17 +275,21 @@ class BravoTv():
         for i in range(0,len(titles_episodes)):
             
             #Saco la informacion de las series que necesito
-            nameShow = nameShows[i]
+            nameShow = nameShows[i].strip()
             parrentId = hashlib.md5(nameShow.encode('utf-8')).hexdigest()
             
             for j in range(0,len(titles_episodes[i])):
-                title = titles_episodes[i][j]
-                img = imgEpisodes[i]
+                img = []
+                title = titles_episodes[i][j].strip()
+                try:
+                    img.append(imgEpisodes[i][j])
+                except:
+                    img.append(None)
                 _id = hashlib.md5(title.encode('utf-8')+nameShow.encode('utf-8')).hexdigest()
                 # seasons = int(episodesSeason[i][j][0][1::])
                 # episode =  int(episodesSeason[i][j][1][2::])
                 URLContenido = urlEpisodes[i][j]
-                description = description_episodes[i][j]
+                description = description_episodes[i][j].strip()
                 payload = Payload(packages=packages,id=_id,cleanTitle= _replace(title),image = img,parentId = parrentId,parentTitle=nameShow,title=title,platformCode=_platform_code,deeplinksWeb = URLContenido,synopsis = description,timestamp=datetime.now().isoformat(),createdAt=self._created_at)
                 Datamanager._checkDBandAppend(self, payload.payloadEpisodeJson(),scrapedEpisodes,payloadsEpisodios,isEpi=True)
                 Datamanager._insertIntoDB(self,payloadsEpisodios,self.titanScrapingEpisodios)
@@ -278,8 +301,8 @@ class BravoTv():
         self.sesion.close()
 
 
-        if not testing:
-            Upload(self._platform_code, self._created_at, testing=True)
+        
+        Upload(self._platform_code, self._created_at, testing=testing)
 
 
     
