@@ -179,6 +179,10 @@ ott_sites:
   BetTest:
     countries:
       US: us.bet_test
+    start_url: https://www.bet.com/shows.html
+    queries:
+      main_page_see_more_xpath: '/html/body/div[3]/div[1]/div[5]/div/div[2]/section[3]/div/div[{}]/a'
+      episodes_see_more_css_selector: 'a.js-loadMoreButton:nth-child({})' 
   AMCNetworks:
     countries:
       US: us.wetv # Completar con la lista de platform.code
