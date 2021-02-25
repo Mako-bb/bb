@@ -190,12 +190,14 @@ class BravoTv():
                 for episodeSoup in episodesSoup:
                     urlEpisode.append(urlWithoutShow+episodeSoup.a['href'])
                 # algunos episodios no tienen imagen
-                try:
-                    imgEpisode.append(urlWithoutShow+episodeSoup.find('div',{"class":self._config['queries']['img_episodes_div_class']}).figure.picture.img['src'])
-                except:
-                    imgEpisode.append(None)
+                imagenes = episodeSoup.findAll('div',{'class':self._config['queries']['img_episodes_div_class']})
+                for imagene in imagenes:
+                    try:
+                        imgEpisode.append(urlWithoutShow+imagene.figure.picture.img['src'])
+                    except:
+                        imgEpisode.append(None)
             else:
-                seasons =soup.find('select',{"id":self._config['queries']['season_soup_select_id'],"class":self._config['queries']['season_soup_select_class']})
+                seasons =soup.find('select',{"id":"edit-field-tv-shows-season","class":"form-select"})
                 seasons = seasons.findAll('option')
                 """
                 Si estoy aca, significa que tengo temporadas y recoro cada una de ellas para sacar la informacion necesaria de los
@@ -213,13 +215,24 @@ class BravoTv():
                         episodesSoup = soup.findAll('article',class_=re.compile(self._config['queries']['episodes_soup_season_article_class']))
                         for episodeSoup in episodesSoup:
                             urlEpisode.append(urlWithoutShow+episodeSoup.a['href'])
+                        imagenes = episodeSoup.findAll('div',{'class':self._config['queries']['img_episodes_div_class']})
+                        for imagene in imagenes:
+                            try:
+                                imgEpisode.append(urlWithoutShow+imagene.figure.picture.img['src'])
+                            except:
+                                imgEpisode.append(None)
                     else:
                         pages = soup.find('li',class_=self._config['queries']['botton_load_more_li_class']).a['href'].split('&')[-1]
                         url = url+'&'+pages
                         episodesSoup = soup.findAll('article',class_=re.compile(self._config['queries']['episodes_soup_season_article_class']))
                         for episodeSoup in episodesSoup:
                             urlEpisode.append(urlWithoutShow+episodeSoup.a['href'])
-
+                        imagenes = episodeSoup.findAll('div',{'class':self._config['queries']['img_episodes_div_class']})
+                        for imagene in imagenes:
+                            try:
+                                imgEpisode.append(urlWithoutShow+imagene.figure.picture.img['src'])
+                            except:
+                                imgEpisode.append(None)
             urlEpisodes.append(urlEpisode)
             imgEpisodes.append(imgEpisode)
 
@@ -245,13 +258,18 @@ class BravoTv():
                 
                 infoEpisode = soup.find('details',{"class":self._config['queries']['info_episode_details_class']})
 
-                summary = infoEpisode.find(self._config['queries']['summary'])
+                summary = infoEpisode.find(self._config['queries']['summary_episode'])
                 episodeAndSeason = summary.div.text
                 title = summary.h1.text.split(':')[-1]
+                if '\n' in title:
+                    title = title[1:-1]
                 try:
                     description = infoEpisode.find('div',class_=self._config['queries']['description_episode_div_class']).text
+                    if '\n' in description:
+                        description = description[1:-1]
                 except:
                     description = None
+
                 try:
                     airDate = infoEpisode.find('div',class_=self._config['queries']['air_date_episode_div_class']).text
                 except:

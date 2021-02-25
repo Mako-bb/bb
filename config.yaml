@@ -279,7 +279,7 @@ ott_sites:
       botton_load_more_li_class: pager__item
       episodes_soup_season_article_class: teaser teaser--episode-guide-teaser
       info_episode_details_class: video__meta
-      summary_episode: 
+      summary_episode: summary
       description_episode_div_class: video__description
       air_date_episode_div_class: video__air-date
       rating_episode_div_class: video__rating_expiration
