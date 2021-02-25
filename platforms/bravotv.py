@@ -95,7 +95,7 @@ class BravoTv():
         en la url de la serie
         -Las descripciones de los episodios se encuentran en la url de la forma urlPagina/NombreSerie/"about".
         """
-       
+        start_time = time.time()
         scraped = Datamanager._getListDB(self,self.titanScraping)
         scrapedEpisodes = Datamanager._getListDB(self,self.titanScrapingEpisodios)
         payloads = []
@@ -105,16 +105,17 @@ class BravoTv():
                             'Type': 'subscription-vod'
                         }
                     ]
-        url = 'https://www.bravotv.com/shows'
-        urlWithoutShow = 'https://www.bravotv.com'
+        
+        urlWithoutShow = self._config['urls']['url_principal']
+        url = urlWithoutShow + '/shows'
         episode_guide = '/episode-guide'
         about = '/about'
 
 
         soup = Datamanager._getSoup(self,url)
 
-        allShows = soup.find('div',{"class":"container view-shows container"})
-        allShows = allShows.findAll('a',{"class":"teaser__wrapper-link"})
+        allShows = soup.find('div',{"class":self._config['queries']['shows_div_class']})
+        allShows = allShows.findAll('a',{"class":self._config['queries']['shows_a_class']})
 
 
         """
@@ -128,11 +129,11 @@ class BravoTv():
         urlAboutShows = []
         imgShows=[]
         for allShow in allShows:
-            nameShows.append(allShow.find('div',{"class":"teaser__meta-wrapper"}).text.split('\n')[4][12::])
+            nameShows.append(allShow.find('div',{"class":self._config['queries']['name_show_div_class']}).text.split('\n')[4][12::])
             urlShows.append(urlWithoutShow+allShow['href'])
             urlEpisodeShows.append(urlWithoutShow+allShow['href']+episode_guide)
             urlAboutShows.append(urlWithoutShow+allShow['href']+about)
-            imgShows.append(allShow.find('div',{"class":"teaser__image-wrapper"}).figure.img['src'])
+            imgShows.append(allShow.find('div',{"class":self._config['queries']['img_show_div_class']}).figure.img['src'])
 
 
         """
@@ -143,10 +144,24 @@ class BravoTv():
         for urlAboutShow in urlAboutShows:
             cast = []
             soup = Datamanager._getSoup(self,urlAboutShow)
-            descriptionsShows.append(soup.find('div',class_="show-about__body").text)
-            castSoups = soup.findAll('div',class_="teaser__meta")
+            description = soup.find('div',class_=self._config['queries']['description_show_div_class']).text
+            if '\n' in description:
+                description=description[:-1]
+            descriptionsShows.append(description)
+            castSoups = soup.findAll('div',class_=self._config['queries']['cast_show_div_class'])
             for castSoup in castSoups:
-                cast.append(castSoup.text.split('\n')[2])
+                actor = castSoup.text.split('\n')[2]
+                actor = actor.split('"')
+                if len(actor)==1:
+                    actor=actor[0]
+                else:
+                    actor=actor[0]+actor[-1]
+                actor = actor.split('\'')
+                if len(actor)==1:
+                    actor=actor[0]
+                else:
+                    actor=actor[0]+actor[-1]                
+                cast.append(actor)
             castShows.append(cast)
        
         """
@@ -163,24 +178,24 @@ class BravoTv():
             El siguiente if es para revisar si tienen boton de temporadas, si lo tiene las temporadas se ponen en un link especial
             que es ocultado por javascript por lo que si lo quieres ver tenes que desabilitar el javascript del navegador usado.
             """
-            if not soup.find('select',{"id":"edit-field-tv-shows-season","class":"form-select"}):
-                episodesSoup = soup.findAll('article',class_=re.compile("teaser teaser--episode-guide-teaser"))
+            if not soup.find('select',{"id":self._config['queries']['botton_season_selec_id'],"class":self._config['queries']['botton_season_select_class']}):
+                episodesSoup = soup.findAll('article',class_=re.compile(self._config['queries']['episodes_soup_article_class']))
                 """
                 Como algunos shows no tenian el link de episode-guide, sino que los episodios estan en la pagina principal del
                 show, realizo un if para ver si encuentra el id y sino realizo un request a la url del nombre del show
                 """
                 if not episodesSoup:
                     soup = Datamanager._getSoup(self,urlShows[i],showURL=False)
-                    episodesSoup = soup.findAll('article',class_=re.compile("teaser teaser--playlist-teaser video"))
+                    episodesSoup = soup.findAll('article',class_=re.compile(self._config['queries']['episodes_soup_video_article_class']))
                 for episodeSoup in episodesSoup:
                     urlEpisode.append(urlWithoutShow+episodeSoup.a['href'])
-                    # algunos episodios no tienen imagen
-                    try:
-                        imgEpisode.append(urlWithoutShow+episodeSoup.find('div',{"class":"teaser__image-wrapper"}).figure.picture.img['src'])
-                    except:
-                        imgEpisode.append(None)
+                # algunos episodios no tienen imagen
+                try:
+                    imgEpisode.append(urlWithoutShow+episodeSoup.find('div',{"class":self._config['queries']['img_episodes_div_class']}).figure.picture.img['src'])
+                except:
+                    imgEpisode.append(None)
             else:
-                seasons =soup.find('select',{"id":"edit-field-tv-shows-season","class":"form-select"})
+                seasons =soup.find('select',{"id":self._config['queries']['season_soup_select_id'],"class":self._config['queries']['season_soup_select_class']})
                 seasons = seasons.findAll('option')
                 """
                 Si estoy aca, significa que tengo temporadas y recoro cada una de ellas para sacar la informacion necesaria de los
@@ -194,14 +209,14 @@ class BravoTv():
                     Por ultimo, hay series con un boton de "Load More" pero al igual que las temporadas, se puede cargar a travez de
                     un link que oculta javascript, por lo que navego a ese link para acceder a todo el contenido de episodios.
                     """
-                    if not soup.find('li',class_="pager__item"):
-                        episodesSoup = soup.findAll('article',class_=re.compile("teaser teaser--episode-guide-teaser"))
+                    if not soup.find('li',class_=self._config['queries']['botton_load_more_li_class']):
+                        episodesSoup = soup.findAll('article',class_=re.compile(self._config['queries']['episodes_soup_season_article_class']))
                         for episodeSoup in episodesSoup:
                             urlEpisode.append(urlWithoutShow+episodeSoup.a['href'])
                     else:
-                        pages = soup.find('li',class_="pager__item").a['href'].split('&')[-1]
+                        pages = soup.find('li',class_=self._config['queries']['botton_load_more_li_class']).a['href'].split('&')[-1]
                         url = url+'&'+pages
-                        episodesSoup = soup.findAll('article',class_=re.compile("teaser teaser--episode-guide-teaser"))
+                        episodesSoup = soup.findAll('article',class_=re.compile(self._config['queries']['episodes_soup_season_article_class']))
                         for episodeSoup in episodesSoup:
                             urlEpisode.append(urlWithoutShow+episodeSoup.a['href'])
 
@@ -228,21 +243,21 @@ class BravoTv():
                 
                 soup = Datamanager._getSoup(self,url)
                 
-                infoEpisode = soup.find('details',{"class":"video__meta"})
+                infoEpisode = soup.find('details',{"class":self._config['queries']['info_episode_details_class']})
 
-                summary = infoEpisode.find('summary')
+                summary = infoEpisode.find(self._config['queries']['summary'])
                 episodeAndSeason = summary.div.text
                 title = summary.h1.text.split(':')[-1]
                 try:
-                    description = infoEpisode.find('div',class_="video__description").text
+                    description = infoEpisode.find('div',class_=self._config['queries']['description_episode_div_class']).text
                 except:
                     description = None
                 try:
-                    airDate = infoEpisode.find('div',class_="video__air-date").text
+                    airDate = infoEpisode.find('div',class_=self._config['queries']['air_date_episode_div_class']).text
                 except:
                     airDate = None
                 try:
-                    rating = infoEpisode.find('div',class_="video__rating_expiration").text
+                    rating = infoEpisode.find('div',class_=self._config['queries']['rating_episode_div_class']).text
                 except:
                     rating = None
 
@@ -261,12 +276,12 @@ class BravoTv():
         _platform_code = self._platform_code
         for i in range(0,len(nameShows)):
             img=[]
-            title = nameShows[i].strip()
+            title = nameShows[i][1:-1].strip()
             _id = hashlib.md5(title.encode('utf-8')).hexdigest()
             _type = 'serie'
             URLContenido = urlShows[i]
             img.append(imgShows[i])
-            description = descriptionsShows[i].strip()
+            description = descriptionsShows[i][1:-1].strip()
             cast = castShows[i]
             payload = Payload(packages=packages,id=_id,title=title,image = img,cleanTitle= _replace(title),platformCode=_platform_code,type=_type,deeplinksWeb = URLContenido,synopsis = description,cast = cast,timestamp=datetime.now().isoformat(),createdAt=self._created_at)
             Datamanager._checkDBandAppend(self, payload.payloadJson(),scraped,payloads)
@@ -275,12 +290,15 @@ class BravoTv():
         for i in range(0,len(titles_episodes)):
             
             #Saco la informacion de las series que necesito
-            nameShow = nameShows[i].strip()
+            nameShow = nameShows[i][1:-1].strip()
             parrentId = hashlib.md5(nameShow.encode('utf-8')).hexdigest()
             
             for j in range(0,len(titles_episodes[i])):
                 img = []
-                title = titles_episodes[i][j].strip()
+                try:
+                    title = titles_episodes[i][j].strip()
+                except:
+                    title = None
                 try:
                     img.append(imgEpisodes[i][j])
                 except:
@@ -289,8 +307,11 @@ class BravoTv():
                 # seasons = int(episodesSeason[i][j][0][1::])
                 # episode =  int(episodesSeason[i][j][1][2::])
                 URLContenido = urlEpisodes[i][j]
-                description = description_episodes[i][j].strip()
-                payload = Payload(packages=packages,id=_id,cleanTitle= _replace(title),image = img,parentId = parrentId,parentTitle=nameShow,title=title,platformCode=_platform_code,deeplinksWeb = URLContenido,synopsis = description,timestamp=datetime.now().isoformat(),createdAt=self._created_at)
+                try:
+                    description = description_episodes[i][j].strip()
+                except:
+                    description = None
+                payload = Payload(packages=packages,id=_id,image = img,parentId = parrentId,parentTitle=nameShow,title=title,platformCode=_platform_code,deeplinksWeb = URLContenido,synopsis = description,timestamp=datetime.now().isoformat(),createdAt=self._created_at)
                 Datamanager._checkDBandAppend(self, payload.payloadEpisodeJson(),scrapedEpisodes,payloadsEpisodios,isEpi=True)
                 Datamanager._insertIntoDB(self,payloadsEpisodios,self.titanScrapingEpisodios)
 
@@ -303,6 +324,8 @@ class BravoTv():
 
         
         Upload(self._platform_code, self._created_at, testing=testing)
+        finish_time = time.time()
+        print("Tiempo de ejecucion: "+str((finish_time-start_time)/60)+" min")
 
 
     

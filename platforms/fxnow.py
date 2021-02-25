@@ -84,7 +84,7 @@ class Fxnow():
         y corta cuando no encuentra la siguiente pagina.
 
         """
-       
+        start_time = time.time()
         print("Peliculas")
         self.getMovies(testing)
         print("series")
@@ -92,6 +92,8 @@ class Fxnow():
 
         
         Upload(self._platform_code, self._created_at, testing=testing)
+        finish_time = time.time()
+        print("Tiempo de ejecucion: "+str((finish_time-start_time)/60)+" min")
 
     def getMovies(self,testing):
         """
@@ -110,7 +112,7 @@ class Fxnow():
         offset=0 #variable para cambiar la API para poder tomar todos los contonidos.
         while True:
             
-            request = self.currentSession.get('https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module/tilegroup/2430495?start={}&size=24&authlevel=0&brand=025&device=001'.format(offset))
+            request = self.currentSession.get(self._config['movie_api'].format(offset))
             print(offset)
             print(request.status_code, request.url)
             data = request.json()
@@ -213,7 +215,7 @@ class Fxnow():
         offset=0
         while True:
             
-            request = self.currentSession.get('https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module/tilegroup/2430493?start={}&size=24&authlevel=0&brand=025&device=001'.format(offset))
+            request = self.currentSession.get(self._config['serie_api'].format(offset))
             print(offset)
             print(request.status_code, request.url)
             data = request.json()

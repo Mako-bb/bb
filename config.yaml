@@ -122,12 +122,13 @@ ott_sites:
   Vh1_test:
     countries:
       US: us.vh1_test
-  FxnowTest:
+  Fxnow:
     countries:
       US: us.fxnow
-  TvLand:
-    countries:
-      US: us.tvland
+    movie_api: https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module/tilegroup/2430495?start={}&size=24&authlevel=0&brand=025&device=001
+    serie_api: https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module/tilegroup/2430493?start={}&size=24&authlevel=0&brand=025&device=001
+
+
   DiscoveryLife:
     countries:
       US: us.discoverylife
@@ -255,6 +256,62 @@ ott_sites:
   BravoTv:
     countries:
       US: us.bravotv
+    urls:
+      url_principal: https://www.bravotv.com
+    queries:
+      shows_div_class: container view-shows container
+      shows_a_class: teaser__wrapper-link
+      name_show_div_class: teaser__meta-wrapper
+      img_show_div_class: teaser__image-wrapper
+      description_show_div_class: show-about__body
+      cast_show_div_class: teaser__meta
+      botton_season_selec_id: edit-field-tv-shows-season
+      botton_season_select_class: form-select
+      episodes_soup_article_class: teaser teaser--episode-guide-teaser
+      episodes_soup_video_article_class: teaser teaser--playlist-teaser video
+      img_episodes_div_class: teaser__image-wrapper
+      season_soup_select_id: edit-field-tv-shows-season
+      season_soup_select_class: from-select
+      botton_load_more_li_class: pager__item
+      episodes_soup_season_article_class: teaser teaser--episode-guide-teaser
+      info_episode_details_class: video__meta
+      summary_episode: 
+      description_episode_div_class: video__description
+      air_date_episode_div_class: video__air-date
+      rating_episode_div_class: video__rating_expiration
+  TvLand:
+    countries:
+      US: us.tvland
+    urls:
+      url_principal: https://www.tvland.com
+    queries:
+      span_shows: span
+      links_shows_li_class: item poster css-q2f74n-Wrapper e19yuxbf0
+      img_show_div_class: content
+      description_show_div_class: deck
+      season_show_button_data_display_name: Button
+      season_show_a_class: css-1wkgy79-StyledTypography e1wje7qk0
+      season_show_a_tabindex: -1
+      episodes_soup_section_class_type_1: module-container video-guide-container
+      episodes_div_class: meta-wrap css-1b0z283-Wrapper e1u7s1dj0
+      url_episodes_li_class_type1: item full-ep css-q2f74n-Wrapper e19yuxbf0
+      url_episodes_li_class_type2: item video css-q2f74n-Wrapper e19yuxbf0
+      season_episode_div_class_type1: spr-header
+      season_episode_div_class_type2: header
+      title_episode_div_class_type1: sub-header
+      title_episode_div_class_type2: header
+      description_episode_div_class: deck
+      date_episode_div_class: meta
+      img_episode_dic_class: content
+      botton_episode_load_more: expand-wrap
+
   Telemundo:
     countries:
       US: us.telemundo
+    urls:
+      nbc_url: https://www.nbc.com/
+    apis:
+      nbc_api: https://friendship.nbc.co/v2/graphql?variables=%7B%22name%22:%22paginatedAllShows%22,%22type%22:%22PAGE%22,%22userId%22:%223681070535274955148%22,%22platform%22:%22web%22,%22device%22:%22web%22,%22timeZone%22:%22America%2FNew_York%22,%22ld%22:true,%22profile%22:[%2200000%22],%22oneApp%22:true,%22app%22:%22nbc%22,%22language%22:%22en%22,%22authorized%22:false,%22brand%22:%22telemundo%22,%22appVersion%22:1180009%7D&extensions=%7B%22persistedQuery%22:%7B%22version%22:1,%22sha256Hash%22:%22778d8ab0f222484583c39a3bcbe74b85c9e74847a3d58579f714b6eca13ac6d9%22%7D%7D
+      series_api: https://friendship.nbc.co/v2/graphql?variables=%7B%22app%22:%22nbc%22,%22userId%22:%223681070535274955148%22,%22device%22:%22web%22,%22platform%22:%22web%22,%22language%22:%22en%22,%22oneApp%22:true,%22name%22:%22{}%22,%22type%22:%22TITLE%22,%22timeZone%22:%22America%2FNew_York%22,%22authorized%22:false,%22ld%22:true,%22profile%22:[%2200000%22]%7D&extensions=%7B%22persistedQuery%22:%7B%22version%22:1,%22sha256Hash%22:%22e323415cb0b53d1e95d743d9d79abdad22dbcb7129e35f92b96ffc5e3708d7cc%22%7D%7D
+      season_api_format_one: https://friendship.nbc.co/v2/graphql?variables=%7B%22name%22:%22{}%22,%22type%22:%22TITLE%22,%22userId%22:%223681070535274955148%22,%22platform%22:%22web%22,%22device%22:%22web%22,%22timeZone%22:%22America%2FNew_York%22,%22ld%22:true,%22profile%22:[%2200000%22],%22oneApp%22:true,%22app%22:%22nbc%22,%22language%22:%22en%22,%22authorized%22:false,%22seriesName%22:%22{}%22,%22seasonNumber%22:{},%22appVersion%22:1180009%7D&extensions=%7B%22persistedQuery%22:%7B%22version%22:1,%22sha256Hash%22:%22eb56c6b78480558f9d125fa31f5b364f32a174749e6b96a7213438a0c52b0a10%22%7D%7D
+      season_api_format_two: https://friendship.nbc.co/v2/graphql?variables=%7B%22name%22:%22{}%22,%22type%22:%22TITLE%22,%22userId%22:%223681070535274955148%22,%22platform%22:%22web%22,%22device%22:%22web%22,%22timeZone%22:%22America%2FNew_York%22,%22ld%22:true,%22profile%22:[%2200000%22],%22oneApp%22:true,%22app%22:%22nbc%22,%22language%22:%22en%22,%22authorized%22:false,%22seriesName%22:%22{}%22,%22programmingType%22:%22{}%22,%22appVersion%22:1180009%7D&extensions=%7B%22persistedQuery%22:%7B%22version%22:1,%22sha256Hash%22:%22eb56c6b78480558f9d125fa31f5b364f32a174749e6b96a7213438a0c52b0a10%22%7D%7D
