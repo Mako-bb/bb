@@ -18,13 +18,13 @@ from selenium.webdriver.common.keys import Keys
 from handle.datamanager  import Datamanager
 from updates.upload         import Upload
 
-class Vh1_test():
+class Vh1():
 
     """  
     DATOS IMPORTANTES:
     ¿Necesita VPN? -> NO
     ¿HTML, API, SELENIUM? -> API
-    Cantidad de contenidos (ultima revisión): Series y peliculas = 98, Episodios = 2748
+    Cantidad de contenidos (ultima revisión): Series y peliculas = 98, Episodios = 2769
     Tiempo de ejecucíon de Script = 14 Minutos
     """
 
@@ -141,10 +141,10 @@ class Vh1_test():
                                 cast_serie.append(actor.text.split(" and ")[1])
                             elif "/" in actor.text:
                                 cast_serie.append(actor.text.split("/")[1])
-                            elif "(" in actor.text:
+                            elif " (" in actor.text:
                                 fixed_name = []
-                                fixed_name.append(actor.text.split("(")[0])
-                                fixed_name.append(actor.text.split(")")[1])
+                                fixed_name.append(actor.text.split(" (")[0])
+                                fixed_name.append(actor.text.split(") ")[1])
                                 cast_serie.append(" ".join(fixed_name))
                             else:
                                 cast_serie.append(actor.text)
@@ -212,6 +212,18 @@ class Vh1_test():
                             if item["title"] == "*":
                                 continue
                             title_episode = item["title"]
+
+                            #limpiamos el titulo de los episodios que contienen "Untucked"
+                            if "Untucked - " in title_episode:
+                                 title_episode = title_episode.split("Untucked - ")[-1].strip()
+
+                            #limpiamos el titulo de los epísodiso de Behind the Music
+                            if "Behind the Music" in title_episode:
+                                title_episode = title_episode.split("Behind the Music")[0].strip()
+                                if ":" in title_episode:
+                                    title_episode = title_episode.replace(":","").strip()
+                            
+
                             cleantitle_epi = _replace(title_episode)
                             parent_id = id_serie
                             parent_title = title_serie
@@ -250,6 +262,33 @@ class Vh1_test():
 
                             
                             synopsis_epi = item["description"]
+
+                            if "<p>" in synopsis_epi:
+                                synopsis_epi = synopsis_epi.replace("<p>","")
+                            
+                            if "<i>" in synopsis_epi:
+                                synopsis_epi = synopsis_epi.replace("<i>","")
+
+                            if "</i>" in synopsis_epi:
+                                synopsis_epi = synopsis_epi.replace("</i>","")
+
+                            if "<u>" in synopsis_epi:
+                                synopsis_epi = synopsis_epi.replace("<u>","")
+
+                            if "</u>" in synopsis_epi:
+                                synopsis_epi = synopsis_epi.replace("</u>","")
+                            
+                            if "<b>" in synopsis_epi:
+                                synopsis_epi = synopsis_epi.replace("<b>","")
+
+                            if "</b>" in synopsis_epi:
+                                synopsis_epi = synopsis_epi.replace("</b>","")
+
+                            if "\n" in synopsis_epi:
+                                synopsis_epi = synopsis_epi.replace("\n","")
+
+                            if "<br>" in synopsis_epi:
+                                synopsis_epi = synopsis_epi.replace("<br>"," ")
 
                             #validamos que tenga imagen
                             image_epi = []
@@ -315,7 +354,7 @@ class Vh1_test():
         if self.test:
             Upload(self._platform_code, self._created_at,testing=True)
         else:
-            Upload(self._platform_code, self._created_at,testing=True)           
+            Upload(self._platform_code, self._created_at,testing=True)    
 
                 
                 

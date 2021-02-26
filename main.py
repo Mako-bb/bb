@@ -38,9 +38,9 @@ from platforms.cartoonnetwork       import CartoonNetwork
 from platforms.fandango             import FandangoNOW
 from platforms.boomerang            import Boomerang
 from platforms.optimum_test         import OptimumTest
-from platforms.indieflix_test       import Indieflix_test
-from platforms.comedy_central_test  import Comedy_central_test
-from platforms.vh1_test             import Vh1_test
+from platforms.indieflix            import Indieflix
+from platforms.comedy_central       import Comedy_central
+from platforms.vh1                  import Vh1
 from platforms.discoverylife        import DiscoveryLife
 from platforms.sundancetv_test      import SundanceTvTest
 from platforms.cmt                  import Cmt

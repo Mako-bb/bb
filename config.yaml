@@ -113,15 +113,15 @@ ott_sites:
   OptimumTest:
     countries:
       US: us.optimum_test
-  Indieflix_test:
+  Indieflix:
     countries:
-      US: us.indieflix_test
-  Comedy_central_test:
+      US: us.indieflix
+  Comedy_central:
     countries:
-      US: us.comedy_central_test
-  Vh1_test:
+      US: us.comedy_central
+  Vh1:
     countries:
-      US: us.vh1_test
+      US: us.vh1
   FxnowTest:
     countries:
       US: us.fxnow
