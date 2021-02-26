@@ -180,9 +180,9 @@ ott_sites:
     urls:
       start_url: 'https://abc.com'
       api_url: 'https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module/tilegroup/2134522?start={}&size={}&authlevel=0&brand=001&device=001'
-  BetTest:
+  Bet:
     countries:
-      US: us.bet_test
+      US: us.bet
     start_url: https://www.bet.com/shows.html
     queries:
       main_page_see_more_xpath: '/html/body/div[3]/div[1]/div[5]/div/div[2]/section[3]/div/div[{}]/a'
