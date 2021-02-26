@@ -41,6 +41,7 @@ from platforms.optimum_test         import OptimumTest
 from platforms.indieflix            import Indieflix
 from platforms.comedy_central       import Comedy_central
 from platforms.vh1                  import Vh1
+from platforms.shoutfactorytv       import Shoutfactorytv
 from platforms.discoverylife        import DiscoveryLife
 from platforms.sundancetv_test      import SundanceTvTest
 from platforms.cmt                  import Cmt

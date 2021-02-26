@@ -88,7 +88,7 @@ class Telemundo():
         a NBC que presenta una api con todo el contenido de telemundo, por lo que hacer un scraping de telemundo o 
         hacerlo a NBC filtrando el contenindo a telemundo es casi lo mismo. Por lo que realizo con la api de NBC.
         """
-
+        start_time = time.time()
         scraped = Datamanager._getListDB(self,self.titanScraping)
         scrapedEpisodes = Datamanager._getListDB(self,self.titanScrapingEpisodios)
         payloads = []
@@ -99,7 +99,7 @@ class Telemundo():
                         }
                     ]
         
-        urlNbc = 'https://www.nbc.com/'  # la pagina de telemundo te rederige a esta pagina para poder ver los capitulos
+        urlNbc = self._config['urls']['nbc_url']  # la pagina de telemundo te rederige a esta pagina para poder ver los capitulos
         """
         Aprovechando que la pagina de nbc tiene una api con toda la informacion 
         voy a usar esa api para extraer lo que quiero. Aparte la API esta organizada por dicionarios y lista,
@@ -107,7 +107,7 @@ class Telemundo():
         a veces me quedo con una componente de la lista en particular porque presenta todos los datos que 
         necesito. Luego, las listas adentro presentan diccionarios para acceder a los datos.
         """
-        api = 'https://friendship.nbc.co/v2/graphql?variables=%7B%22name%22:%22paginatedAllShows%22,%22type%22:%22PAGE%22,%22userId%22:%223681070535274955148%22,%22platform%22:%22web%22,%22device%22:%22web%22,%22timeZone%22:%22America%2FNew_York%22,%22ld%22:true,%22profile%22:[%2200000%22],%22oneApp%22:true,%22app%22:%22nbc%22,%22language%22:%22en%22,%22authorized%22:false,%22brand%22:%22telemundo%22,%22appVersion%22:1180009%7D&extensions=%7B%22persistedQuery%22:%7B%22version%22:1,%22sha256Hash%22:%22778d8ab0f222484583c39a3bcbe74b85c9e74847a3d58579f714b6eca13ac6d9%22%7D%7D'
+        api = self._config['apis']['nbc_api']
         json=Datamanager._getJSON(self,api,showURL=False)
         
 
@@ -122,7 +122,7 @@ class Telemundo():
         
             _id = hashlib.md5((urlNbc + item['data']['urlAlias']).encode('utf-8')).hexdigest()
             img.append(item['data']['image'])
-            apiSerie = 'https://friendship.nbc.co/v2/graphql?variables=%7B%22app%22:%22nbc%22,%22userId%22:%223681070535274955148%22,%22device%22:%22web%22,%22platform%22:%22web%22,%22language%22:%22en%22,%22oneApp%22:true,%22name%22:%22{}%22,%22type%22:%22TITLE%22,%22timeZone%22:%22America%2FNew_York%22,%22authorized%22:false,%22ld%22:true,%22profile%22:[%2200000%22]%7D&extensions=%7B%22persistedQuery%22:%7B%22version%22:1,%22sha256Hash%22:%22e323415cb0b53d1e95d743d9d79abdad22dbcb7129e35f92b96ffc5e3708d7cc%22%7D%7D'.format(item['data']['urlAlias'])
+            apiSerie = self._config['apis']['series_api'].format(item['data']['urlAlias'])
             urlShow = urlNbc + item['data']['urlAlias']
             genre.append(item['analytics']['genre'])
             if item['component'] == 'SeriesTile':
@@ -163,12 +163,12 @@ class Telemundo():
                 if not dataEpisodio:
                     try:
                         seasonNumber = datoSeason['meta']['seasonNumber']
-                        apiSeason = 'https://friendship.nbc.co/v2/graphql?variables=%7B%22name%22:%22{}%22,%22type%22:%22TITLE%22,%22userId%22:%223681070535274955148%22,%22platform%22:%22web%22,%22device%22:%22web%22,%22timeZone%22:%22America%2FNew_York%22,%22ld%22:true,%22profile%22:[%2200000%22],%22oneApp%22:true,%22app%22:%22nbc%22,%22language%22:%22en%22,%22authorized%22:false,%22seriesName%22:%22{}%22,%22seasonNumber%22:{},%22appVersion%22:1180009%7D&extensions=%7B%22persistedQuery%22:%7B%22version%22:1,%22sha256Hash%22:%22eb56c6b78480558f9d125fa31f5b364f32a174749e6b96a7213438a0c52b0a10%22%7D%7D'.format(item['data']['urlAlias'],item['data']['urlAlias'],seasonNumber)
+                        apiSeason = self._config['apis']['season_api_format_one'].format(item['data']['urlAlias'],item['data']['urlAlias'],seasonNumber)
                         jsonSerie=Datamanager._getJSON(self, apiSeason,showURL=False)
                         datoEpisodios = jsonSerie['data']['videosSection']['data']['items']
                     except:
                         programmingType = datoSeason['meta']['programmingType']
-                        apiSeason = 'https://friendship.nbc.co/v2/graphql?variables=%7B%22name%22:%22{}%22,%22type%22:%22TITLE%22,%22userId%22:%223681070535274955148%22,%22platform%22:%22web%22,%22device%22:%22web%22,%22timeZone%22:%22America%2FNew_York%22,%22ld%22:true,%22profile%22:[%2200000%22],%22oneApp%22:true,%22app%22:%22nbc%22,%22language%22:%22en%22,%22authorized%22:false,%22seriesName%22:%22{}%22,%22programmingType%22:%22{}%22,%22appVersion%22:1180009%7D&extensions=%7B%22persistedQuery%22:%7B%22version%22:1,%22sha256Hash%22:%22eb56c6b78480558f9d125fa31f5b364f32a174749e6b96a7213438a0c52b0a10%22%7D%7D'.format(item['data']['urlAlias'],item['data']['urlAlias'],programmingType)
+                        apiSeason = self._config['apis']['season_api_format_two'].format(item['data']['urlAlias'],item['data']['urlAlias'],programmingType)
                         jsonSerie=Datamanager._getJSON(self, apiSeason,showURL=False)
                         datoEpisodios = jsonSerie['data']['videosSection']['data']['items']
                         # continue
@@ -198,7 +198,7 @@ class Telemundo():
                     description = datoEpisodio['data']['description']
                     urlEps = urlShow + datoEpisodio['data']['permalink']
 
-                    payload = Payload(packages=packages,genres=genreEps, id=_id,image=imgEps, cleanTitle=_replace(title), parentId=parrentId, parentTitle=nameShow, title=title,
+                    payload = Payload(packages=packages,genres=genreEps, id=_id,image=imgEps, cleanTitle=_replace(title), parentId=parrentId, parentTitle=nameShow, title=title, duration=int(duration/60),
                                     platformCode=_platform_code, season=season,episode=episode, deeplinksWeb=urlEps, synopsis=description, timestamp=datetime.now().isoformat(), createdAt=self._created_at)
                     Datamanager._checkDBandAppend(self, payload.payloadEpisodeJson(), scrapedEpisodes, payloadsEpisodios, isEpi=True)
                     Datamanager._insertIntoDB(self, payloadsEpisodios, self.titanScrapingEpisodios)
@@ -210,4 +210,6 @@ class Telemundo():
 
         Upload(self._platform_code, self._created_at, testing=testing)
 
+        finish_time = time.time()
+        print("Tiempo de ejecucion: "+str((finish_time-start_time)/60)+" min")
     

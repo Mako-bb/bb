@@ -23,15 +23,20 @@ from selenium.webdriver.common.action_chains import ActionChains
 
 class BetTest():
     '''
-        Scraping de la plataforma Bet, la misma cuenta únicamente con series como contenido scrapeable (además tiene videos musicales o notas con artistas). El scraping comienza en 
-        la sección de shows (apartado All shows A - Z) y hay que filtrar los contenidos validando que sean shows con episodios de los que se puedan obtener datos.
+        Scraping de la plataforma Bet, la misma cuenta únicamente con series como contenido scrapeable 
+        (además tiene videos musicales o notas con artistas). El scraping comienza en la sección de shows 
+        (apartado All shows A - Z) y hay que filtrar los contenidos validando que sean shows con episodios
+        de los que se puedan obtener datos.
 
-        IMPORTANTE: Se necesita VPN.
+        DATOS IMPORTANTES: 
+            - ¿Necesita VPN? -> SI
+            - ¿HTML, API, SELENIUM? -> SELENIUM y BS4
+            - Cantidad de contenidos (ultima revisión 24/02/2021): 44 series | 510 episodios
+            - Tiempo de ejecucion: 37 minutos aproximadamente (depende de conexión a internet)
     '''
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config                = config()['ott_sites'][ott_site_uid]
         self._platform_code         = self._config['countries'][ott_site_country]
-        #self._start_url             = self._config['start_url']
         self._created_at            = time.strftime("%Y-%m-%d")
         self.mongo                  = mongo()
         self.titanPreScraping       = config()['mongo']['collections']['prescraping']
@@ -44,6 +49,11 @@ class BetTest():
         self.sesion = requests.session()
         self.headers  = {"Accept":"application/json",
                          "Content-Type":"application/json; charset=utf-8"}
+
+        self.driver = webdriver.Firefox()
+        self._start_url = self._config['start_url']
+        self.main_page_see_more_xpath = self._config['queries']['main_page_see_more_xpath']
+        self.episodes_see_more_css_selector = self._config['queries']['episodes_see_more_css_selector']
 
         if type == 'return':
             '''
@@ -95,19 +105,19 @@ class BetTest():
         scraped = Datamanager._getListDB(self, self.titanScraping)
         scraped_episodes = Datamanager._getListDB(self, self.titanScrapingEpisodes)
 
+        start_time = time.time()
+
         ###############
         ### TITULOS ###
         ###############
-        url = "https://www.bet.com/shows.html"
-        browser = webdriver.Firefox()
-        browser.maximize_window()
-        browser.get(url)
+        self.driver.maximize_window()
+        self.driver.get(self._start_url)
 
         # Para cargar todos los contenidos hay que cliquear continuamente en el botón "SEE MORE" ubicado al final de la página.
-        self.main_page_see_more_button(browser)
+        self.main_page_see_more_button(self.driver)
 
         # Traigo el html actualizado luego de los clicks para pasarlo por un bsoup
-        page_source = browser.page_source
+        page_source = self.driver.page_source
         updated_soup = BeautifulSoup(page_source, 'lxml')
 
         # Busco todos los links de los contenidos que aparecen en la pagina principal luego de cargar todos los "SEE MORE"
@@ -126,33 +136,25 @@ class BetTest():
 
                 _id = hashlib.md5(content_title.encode('utf-8')).hexdigest()
 
-                # Scrolleo 500 pixels para que se pueda cliquear sobre el selector de temporadas y se pueda usar bsoup para sacar los links.
-                browser.get(href)
-                browser.execute_script("scrollTo(0, 500);")
-                season_selector = browser.find_element_by_class_name('filter__dropdown-container__optionsWrapper')
-                season_selector.click()
-
-                # Obtengo el html actualizado con el selector de temporadas "abierto"
-                title_page_source = browser.page_source
-
-                title_updated_soup = BeautifulSoup(title_page_source, 'lxml')
-                seasons = title_updated_soup.findAll('a', {"class": "filter__dropdown-container__option default open"})
+                content_updated_soup = Datamanager._clickAndGetSoupSelenium(
+                    self, href, 'filter__dropdown-container__optionsWrapper', 5, showURL=False)
+                seasons = content_updated_soup.findAll('a', {"class": "filter__dropdown-container__option default open"})
                 
                 seasons_data = []
 
                 # Para cada temporada del contenido voy a obtener el link, con ese dato puedo armar el html soup y asi completar
                 # tanto el payload de la temporada para agregar al contenido como los datos de los episodios de la misma. 
                 for season in seasons:
-                    season_link = season.get('href')
+                    season_link = "https://www.bet.com" + season.get('href')
                     
                     # Filtro el "Season ..." para quedarme con el numero de temporada
-                    season_number = season.text.replace("Season", "")
+                    season_number = season.text.replace("Season", "").strip()
 
                     season_payload = {
-                        "Id":        _id + season_number.strip(), 
+                        "Id":        _id + season_number, 
                         "Synopsis":  None, 
                         "Title":     None,
-                        "Deeplink":  "https://www.bet.com" + season_link,
+                        "Deeplink":  season_link,
                         "Number":    int(season_number),
                         "Year":      None,
                         "Image":     None,
@@ -163,82 +165,86 @@ class BetTest():
                     # Agrego el payload a la lista con datos de las temporadas del contenido actual
                     seasons_data.append(season_payload)
 
-                    season_url = season_payload['Deeplink']
-                    browser.get(season_url)
+                    # Si el navegador se cuelga por x motivo en esta instancia no se obtienen los 
+                    # episodios de la temporada actual. TODO: AVISAR EL ERROR 
+                    try:    
+                        self.driver.get(season_link)
+                    except:
+                        print("No se pudo cargar la página")
+                        continue
 
-                    # Luego de traer el link de la temporada, llamo a la funcion que cliquea todos los "SEE MORE" que haya
-                    # en el container de episodios
-                    self.content_page_see_more_button(browser)
-
-                    # Obtengo nuevamente el html actualizado
-                    updated_season_page = browser.page_source
-                    updated_season_soup = BeautifulSoup(updated_season_page, 'lxml')
+                    # Luego de traer el link de la temporada, me fijo si tiene un boton "See More" que carga mas episodios.
+                    # Si lo tiene llamo a la función que los cliquea y devuelve un soup actualizado. Caso contrario
+                    # obtengo el soup sin modificaciones.
+                    try:
+                        if self.driver.find_element_by_css_selector(self.episodes_see_more_css_selector.format(11)) is not None:
+                            season_page = self.content_soup_after_see_more_button(self.driver)
+                    except:
+                        season_page = Datamanager._getSoup(self, season_link)
 
                     # Dentro del container de episodios traigo todos los links de los mismos, para iterarlos y sacar informacion
-                    episodes_container = updated_season_soup.find('section', {"class": re.compile("filter-video__container filtered")})
-                    episodes = episodes_container.findAll('a')
+                    episodes_container = season_page.find(
+                        'section', {"class": re.compile("filter-video__container filtered")})
+                    episodes = episodes_container.findAll(
+                        'div', {"class": re.compile("js-item filter-video__item")})
 
                     for episode in episodes:
-                        # A veces el ultimo tag 'a' es un #, por eso valido que no lo sea para garantizar que estoy sobre un link
-                        # de episodio
-                        if episode.get("href") != "#":
-                            href_epi = episode.get("href")
 
-                            epi_soup = Datamanager._getSoup(self, href_epi)
+                        epi_title = episode.find('h3').text
+                        # Para el id tomo el id del padre y le concateno el hash del titulo del episodio y el nro de season 
+                        # (hay algunos episodios de la misma serie que tienen el mismo nombre en distintas temporadas)
+                        epi_id = _id + hashlib.md5(epi_title.encode('utf-8')).hexdigest() + season_number
+                        epi_image = episode.find('img').get("srcset")
+                        epi_info = episode.findAll('p')
+                        epi_link = episode.find('a').get("href")
 
-                            # Valido que el episodio tenga un titulo localizable, de no ser así se lo saltea. 
-                            if epi_soup.find('h2', {"class": "hero__sidebar__title"}) is not None:
-                                epi_title = epi_soup.find('h2', {"class": "hero__sidebar__title"}).text
-                            elif epi_soup.find('h1', {"class": "hero__title"}) is not None:
-                                epi_title = epi_soup.find('h1', {"class": "hero__title"}).text
-                            else:
-                                continue
+                        epi_number = epi_info[0].text
 
-                            # Si se ubico el titulo es porque se está mostrando la pagina del episodio, por lo tanto puedo sacar el nro de episodio:
-                            epi_number = epi_soup.find('span', {"class": "hero__sidebar__episode"}).text if epi_soup.find(
-                                'span', {"class": "hero__sidebar__episode"}) is not None else None
+                        # Debido al formato que tiene la página, algunas series cuentan con temporadas 
+                        # correspondientes al año en el que se estrenaron (mas que series son especiales)
+                        # En ese caso tampoco tienen nro de episodios por lo que quedan en 0.
+                        epi_number_filtered = epi_number.replace("S{} EP".format(int(season_number)), "") if "EP" in epi_number else None
+                        # Luego del filtro anterior me quedo con "{nro_episodio}...." por lo que si hay otra cadena con caracteres o números
+                        # despues de lo filtrado lo paso por un ultimo filtro que obtiene el primer numero entero positivo
+                        clean_epi_number = int(re.findall(r'\d+', epi_number_filtered)[0]) if epi_number_filtered is not None else None
 
-                            # Como el tag.text trae "S.. EP..." lo paso por un filtro
-                            clean_epi_number = epi_number.split("|")[0].replace("S{} EP".format(season_number.strip()), "") if epi_number is not None else None
+                        epi_synopsis = epi_info[1].text if len(epi_info) > 1 else None
 
-                            # Genero el id del episodio usando el id de la serie junto con la codificacion del titulo del episodio
-                            epi_id = _id + hashlib.md5(epi_title.encode('utf-8')).hexdigest()
-
-                            payload_episodes = {
-                                    'PlatformCode':  self._platform_code,
-                                    'Id':            epi_id, 
-                                    'ParentId':      _id,
-                                    'ParentTitle':   content_title,
-                                    'Episode':       int(clean_epi_number),
-                                    'Season':        int(season_number),
-                                    'Title':         epi_title,
-                                    'OriginalTitle': None, 
-                                    'Year':          None, 
-                                    'Duration':      None,
-                                    'ExternalIds':   None,
-                                    'Deeplinks': {
-                                        'Web':       href_epi,
-                                        'Android':   None,
-                                        'iOS':       None,
-                                        },
-                                    'Synopsis':      None,
-                                    'Image':         None,
-                                    'Rating':        None,
-                                    'Provider':      None,
-                                    'Genres':        None,
-                                    'Cast':          None,
-                                    'Directors':     None,
-                                    'Availability':  None,
-                                    'Download':      None,
-                                    'IsOriginal':    None,
-                                    'IsAdult':       None,
-                                    'Packages':      [{'Type': 'tv-everywhere'}],
-                                    'Country':       None,
-                                    'Timestamp':     datetime.now().isoformat(),
-                                    'CreatedAt':     self._created_at
-                                    }
-                            
-                            Datamanager._checkDBandAppend(self, payload_episodes, scraped_episodes, payloads_episodes, isEpi=True)
+                        payload_episodes = {
+                                'PlatformCode':  self._platform_code,
+                                'Id':            epi_id, 
+                                'ParentId':      _id,
+                                'ParentTitle':   content_title,
+                                'Episode':       clean_epi_number,
+                                'Season':        int(season_number) if int(season_number) < 100 else 0,
+                                'Title':         epi_title,
+                                'OriginalTitle': None, 
+                                'Year':          None, 
+                                'Duration':      None,
+                                'ExternalIds':   None,
+                                'Deeplinks': {
+                                    'Web':       epi_link,
+                                    'Android':   None,
+                                    'iOS':       None,
+                                    },
+                                'Synopsis':      epi_synopsis,
+                                'Image':         ['www.bet.com' + epi_image],
+                                'Rating':        None,
+                                'Provider':      None,
+                                'Genres':        None,
+                                'Cast':          None,
+                                'Directors':     None,
+                                'Availability':  None,
+                                'Download':      None,
+                                'IsOriginal':    None,
+                                'IsAdult':       None,
+                                'Packages':      [{'Type': 'tv-everywhere'}],
+                                'Country':       None,
+                                'Timestamp':     datetime.now().isoformat(),
+                                'CreatedAt':     self._created_at
+                                }
+                        
+                        Datamanager._checkDBandAppend(self, payload_episodes, scraped_episodes, payloads_episodes, isEpi=True)
 
             payload = {
                 'PlatformCode':  self._platform_code,
@@ -278,10 +284,11 @@ class BetTest():
         Datamanager._insertIntoDB(self, payloads, self.titanScraping)
         Datamanager._insertIntoDB(self, payloads_episodes, self.titanScrapingEpisodes)
 
-        browser.close()
+        self.driver.close()
         self.sesion.close()
 
         Upload(self._platform_code, self._created_at, testing=testing)
+        print("--- {} seconds ---".format(time.time() - start_time))
 
     def main_page_see_more_button(self, browser):
         '''
@@ -294,8 +301,7 @@ class BetTest():
         time.sleep(10)
 
         while True:
-            see_more_xpath = '/html/body/div[3]/div[1]/div[5]/div/div[2]/section[3]/div/div[{}]/a'.format(index)
-                            #/html/body/div[2]/div[1]/div[5]/div/div[2]/section[3]/div/div[1]/a
+            see_more_xpath = self.main_page_see_more_xpath.format(index)
             time.sleep(3)
             try:
                 browser.execute_script("arguments[0].click();", browser.find_element_by_xpath(see_more_xpath))
@@ -303,20 +309,30 @@ class BetTest():
             except:
                 break
 
-    def content_page_see_more_button(self, browser):
+    def content_soup_after_see_more_button(self, browser):
         '''
-           Precondición: Solo se puede llamar si el browser tiene algun contenido (de tipo show, es indistinto en que temporada) cargado.
+            PRECONDICIÓN: Solo se puede llamar si el browser tiene algun contenido 
+                          (de tipo show, es indistinto en que temporada) cargado.
 
-           Va cliqueando los "See More" (en el caso de haber varios) que aparecen en la sección de los capitulos hasta que no aparecen mas botones.
+            Va cliqueando los "See More" (en el caso de haber varios) que aparecen en 
+            la sección de los capitulos hasta que no aparecen mas botones.
+
+            RETURN: Un BSoup actualizado con todos los episodios cargados.
         '''
         index = 11
-        time.sleep(5)
+        time.sleep(10)
 
         while True:
-            see_more_xpath = 'a.js-loadMoreButton:nth-child({})'.format(index)
-            time.sleep(5)
+            see_more_css_selector = self.episodes_see_more_css_selector.format(index)
+            time.sleep(3)
             try:
-                browser.execute_script("arguments[0].click();", browser.find_element_by_css_selector(see_more_xpath))
+                browser.execute_script("arguments[0].click();", browser.find_element_by_css_selector(see_more_css_selector))
                 index += 10
             except:
-                break    
+                break
+
+        # Obtengo nuevamente el html actualizado
+        updated_season_page = browser.page_source
+        updated_season_soup = BeautifulSoup(updated_season_page, 'lxml')
+
+        return updated_season_soup

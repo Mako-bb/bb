@@ -11,7 +11,7 @@ from common                 import config
 from datetime               import datetime
 from handle.mongo           import mongo
 from slugify                import slugify
-from bs4                    import BeautifulSoup
+from bs4                    import BeautifulSoup as BS
 from selenium               import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
@@ -89,7 +89,19 @@ class Shoutfactorytv():
         return query
 
     def _scraping(self, testing=False):
-        print("Hola")
+        #hacemos un request para conseguir las categorias
+        main_url = "https://www.shoutfactorytv.com"
+        main_request = self.currentSession.get(main_url)
+        soup = BS(main_request.text, features="lxml")
+
+        category_container = soup.find_all("div",{"class":"drop-holder"})
+        category_movies = category_container[0].find_all("a")
+        category_series = category_container[1].find_all("a")
+
+        for category in category_movies:
+            request_category = self.currentSession.get(main_url+category["href"])
+        
+
     #Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)
     #Datamanager._insertIntoDB(self, self.payloads_epi, self.titanScrapingEpisodios)
 

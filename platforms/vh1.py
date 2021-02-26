@@ -101,11 +101,13 @@ class Vh1():
                 id_serie = serie["itemId"]
                 title_serie = serie["title"]
                 cleantitle_serie = _replace(serie["title"])
+                
                 deeplink_serie = serie["url"]
-                type_serie = "serie"
-                 #hacemos una request para encontrar la descripcion dentro de la pagina
+
+                #hacemos una request para encontrar la descripcion dentro de la pagina
                 request_serie = self.currentSession.get(deeplink_serie)
                 html_serie = BS(request_serie.text,features="lxml")
+
                 
                 #la sinopsis puede estar en 2 ubicaciones, aqui validamos ambas opciones
                 if html_serie.find("div",{"id":"t5_lc_promo1"}) and html_serie.find("div",{"id":"t5_lc_promo1"}).find("div",{"class":"info"}):
@@ -117,6 +119,15 @@ class Vh1():
                 
                 else:
                     synopsis_serie = None
+
+                type_serie = "serie"
+
+                if html_serie.find("div",class_="new_eps_info"):
+                    if "Movie" in html_serie.find("div",class_="new_eps_info").text:
+                        type_serie = "movie"
+                elif html_serie.find("span",class_="headline"):
+                    if "Movie" in html_serie.find("span",class_="headline").text:
+                        type_serie = "movie"
 
                 contenedor_image = html_serie.find("div",{"class":"image_holder"})
                 image_serie = [contenedor_image["data-info"].split(",")[2].split(": ")[-1].replace('"',"")]
@@ -151,9 +162,15 @@ class Vh1():
 
                     else:
                         cast_serie = None
-                
-                package_serie = [{"Type": "tv-everywhere"}]
 
+                if type_serie == "movie":
+                    url_movie = "http://www.vh1.com/feeds/ent_m112/3daea531-6a5c-4e72-83af-85c9c88b4ffe/{}?allSeasonsSelected=1&allEpisodes=1&pageNumber=1".format(id_serie)
+                    request_movie = self.currentSession.get(url_movie).json()
+                    deeplink_serie = request_movie["result"]["data"]["items"][0]["url"]
+
+
+                package_serie = [{"Type": "tv-everywhere"}]
+                    
                 payload = {
                     "PlatformCode":  self._platform_code, #Obligatorio 
                     "Id":            id_serie,
@@ -198,6 +215,9 @@ class Vh1():
                     if not json_episodes["result"]["data"]["items"]:
                         pagina = 1
                         break
+
+                    if type_serie == "movie":
+                        break
                     
                     #contador que incrementa para pasar a la siguiente temporada luego de hacer request
                     pagina = pagina + 1
@@ -211,6 +231,7 @@ class Vh1():
                             #aqui confirmamos que el capitulo * no se incluya (leer analisis)
                             if item["title"] == "*":
                                 continue
+
                             title_episode = item["title"]
 
                             #limpiamos el titulo de los episodios que contienen "Untucked"
@@ -242,6 +263,7 @@ class Vh1():
                                 season_num = 0
 
                             type_epi = item["type"]
+
                             #validamos que tenga fecha ya que sino esta no tiene año
                             if item.get("airDateNY"):
                                 year_epi = item["airDateNY"]["year"]

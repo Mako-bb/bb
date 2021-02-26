@@ -98,7 +98,7 @@ class TvLand():
         TvLand es una plataforma de estados unidos con solo series, algunas presentan todas las temporadas mientras que otras
         presente algunas. Algunos episodios no tienen año, 
         """
-
+        start_time = time.time()
         scraped = Datamanager._getListDB(self,self.titanScraping)
         scrapedEpisodes = Datamanager._getListDB(self,self.titanScrapingEpisodios)
         payloads = []
@@ -108,12 +108,12 @@ class TvLand():
                             'Type': 'subscription-vod'
                         }
                     ]
-        URL = 'https://www.tvland.com/shows'
+        URL = self._config['urls']['url_principal'] +'/shows'
 
         soup = Datamanager._getSoup(self,URL)
 
-        shows = soup.findAll('span')#,{'class':'header'})
-        links = soup.findAll('li',{'class':'item poster css-q2f74n-Wrapper e19yuxbf0'})
+        shows = soup.findAll(self._config['queries']['span_shows'])#,{'class':'header'})
+        links = soup.findAll('li',{'class':self._config['queries']['links_shows_li_class']})
         #images = links.findAll('source',{'media':'screen'})
         # .a['href']
     
@@ -126,24 +126,23 @@ class TvLand():
         #estraigo los nomrbes de los shows
         for show in shows:
             nameShows.append(show.text)
-        del nameShows[11] #aca aparece un año en el medio de los shows que no es una serie ni pelicula, lo saco
         #busco la url de cada show, depaso me quedo con las temporadas y otra informacion util
         for link in links:
             season = []
             seasonUrl=[]
             urlShow = URL+'/'+link.a['href'].split('/')[2]
             urlShows.append(urlShow)
-            imgShow.append(link.find('div',{'class':'content'}).noscript.img['srcset'])
+            imgShow.append(link.find('div',{'class':self._config['queries']['img_show_div_class']}).noscript.img['srcset'])
             soup = Datamanager._getSoup(self,urlShow)
-            descriptionsShow.append(soup.find('div',{'class':"deck"}).text)
+            descriptionsShow.append(soup.find('div',{'class':self._config['queries']['description_show_div_class']}).text)
             try:
-                aux=soup.find('button',{'data-display-name':"Button"})
+                aux=soup.find('button',{'data-display-name':self._config['queries']['season_show_button_data_display_name']})
                 season.append(aux.text.split('.')[0])
             except:
-                season.append(soup.find('span',{'data-display-name':"Button"}).text if soup.find('span',{'data-display-name':"Button"}) else "Season 1")
+                season.append(soup.find('span',{'data-display-name':self._config['queries']['season_show_button_data_display_name']}).text if soup.find('span',{'data-display-name':"Button"}) else "Season 1")
             seasonUrl.append(urlShow)
                 
-            seasonAux= soup.findAll('a',{'class':'css-1wkgy79-StyledTypography e1wje7qk0','tabindex':'-1'})
+            seasonAux= soup.findAll('a',{'class':self._config['queries']['season_show_a_class'],'tabindex':self._config['queries']['season_show_a_tabindex']})
             for seasonaux in seasonAux:
                 season.append(seasonaux.text)
                 aux =seasonaux['href'].split('/')[3]+'/'+seasonaux['href'].split('/')[4]
@@ -162,7 +161,7 @@ class TvLand():
         episodesDescription = []
         episodesUrl = []
         imgEpisodes = []
-        Url = 'www.tvland.com'
+        Url = self._config['urls']['url_principal']
         for seasonUrl in seasonsUrl:
             episodeTitle=[]
             episodeUrl = []
@@ -175,74 +174,76 @@ class TvLand():
                 soup = Datamanager._getSoup(self,url,showURL=True)
                 #El siguiente if busca todos los episodios, ahora si lo encuentra significa que no tiene un boton de load more
                 #Pero si no lo encuentra entonces tiene un boton de load more y para eso uso selenium
-                if soup.findAll('section',{'class':'module-container video-guide-container'}):
-                    sectionClass = soup.find('section',{'class':'module-container video-guide-container'})
-                    episodes =sectionClass.findAll('div',{'class':'meta-wrap css-1b0z283-Wrapper e1u7s1dj0'})
+                if soup.findAll('section',{'class':self._config['queries']['episodes_soup_section_class_type_1']}):
+                    sectionClass = soup.find('section',{'class':self._config['queries']['episodes_soup_section_class_type_1']})
+                    episodes =sectionClass.findAll('div',{'class':self._config['queries']['episodes_div_class']})
                     #recorro los episodios y extraigo la informacion de los mismos.
                     for episode in episodes:
                         # Url:
-                        episodeUrl.append(Url+validacionDatos(sectionClass.find('li',{'class':'item full-ep css-q2f74n-Wrapper e19yuxbf0'}),
-                                                sectionClass.find('li',{'class':'item video css-q2f74n-Wrapper e19yuxbf0'})).a['href'])
+                        episodeUrl.append(Url+validacionDatos(sectionClass.find('li',{'class':self._config['queries']['url_episodes_li_class_type1']}),
+                                                sectionClass.find('li',{'class':self._config['queries']['url_episodes_li_class_type2']})).a['href'])
                         # Season:
-                        episodeSeason.append(validacionDatos(episode.find('div',{'class':'spr-header'}),
-                                             episode.find('div',{'class':'header'})).text.split('•'))
+                        episodeSeason.append(validacionDatos(episode.find('div',{'class':self._config['queries']['season_episode_div_class_type1']}),
+                                             episode.find('div',{'class':self._config['queries']['season_episode_div_class_type2']})).text.split('•'))
                         # Title:
-                        episodeTitle.append(validacionDatos(episode.find('div',{'class':'sub-header'}),
-                                            episode.find('div',{'class':'header'})).text)
+                        episodeTitle.append(validacionDatos(episode.find('div',{'class':self._config['queries']['title_episode_div_class_type1']}),
+                                            episode.find('div',{'class':self._config['queries']['title_episode_div_class_type2']})).text)
                         #Los siguientes try son para controlor que validacionDatos si devuelve None, no haga el .text
                         # Description:
                         try:
-                            episodeDescription.append(validacionDatos(episode.find('div',{'class':'deck'}),
+                            episodeDescription.append(validacionDatos(episode.find('div',{'class':self._config['queries']['description_episode_div_class']}),
                                                                       None).text)
                         except:
                             episodeDescription.append(None)
                         # Date:
                         try:
-                            episodeDate.append(validacionDatos(episode.find('div',{'class':'meta'}),
+                            episodeDate.append(validacionDatos(episode.find('div',{'class':self._config['queries']['date_episode_div_class']}),
                                                    None).text)
                         except:
                             episodeDate.append(None)
-                        # Imagen
+                            
+                    # Imagen
+                    imagenes = sectionClass.findAll('div',{'class':self._config['queries']['img_episode_dic_class']})
+                    for imagene in imagenes:
                         try:
-                            imgEpisode.append(validacionDatos(sectionClass.find('div',{'class':'content'}),
-                                                                None).noscript.img['srcset'])
+                            imgEpisode.append(imagene.noscript.img['srcset'])
                         except:
                             imgEpisode.append(None)
                       
                 else:  
-                    soup = Datamanager._clickAndGetSoupSelenium(self,url,"expand-wrap",waitTime=5,showURL=False)
-                    sectionClass = soup.find('section',{'class':'module-container video-guide-container'})
+                    soup = Datamanager._clickAndGetSoupSelenium(self,url,self._config['queries']['botton_episode_load_more'],waitTime=5,showURL=False)
+                    sectionClass = soup.find('section',{'class':self._config['queries']['episodes_soup_section_class_type_1']})
                     #hay dos tipos de paginas de epìsodes con diferente busqueda, una es con un tipo de class y la otra es con otro por esto el siguiente if.
-                    episodes =sectionClass.findAll('div',{'class':'meta-wrap css-1b0z283-Wrapper e1u7s1dj0'})
+                    episodes =sectionClass.findAll('div',{'class':self._config['queries']['episodes_div_class']})
                     #recorro los episodios y extraigo la informacion de los mismos.
                     for episode in episodes:
                         # Url:
-                        episodeUrl.append(Url+validacionDatos(sectionClass.find('li',{'class':'item full-ep css-q2f74n-Wrapper e19yuxbf0'}),
-                                                sectionClass.find('li',{'class':'css-1yucgj6-Box-Flex-Layout-StyledWrapper ev0yupn4'})).a['href'])
-         
+                        episodeUrl.append(Url+validacionDatos(sectionClass.find('li',{'class':self._config['queries']['url_episodes_li_class_type1']}),
+                                                sectionClass.find('li',{'class':self._config['queries']['url_episodes_li_class_type2']})).a['href'])
                         # Season:
-                        episodeSeason.append(validacionDatos(episode.find('div',{'class':'spr-header'}),
-                                             episode.find('div',{'class':'header'})).text.split('•'))
+                        episodeSeason.append(validacionDatos(episode.find('div',{'class':self._config['queries']['season_episode_div_class_type1']}),
+                                             episode.find('div',{'class':self._config['queries']['season_episode_div_class_type2']})).text.split('•'))
                         # Title:
-                        episodeTitle.append(validacionDatos(episode.find('div',{'class':'sub-header'}),
-                                            episode.find('div',{'class':'header'})).text)
+                        episodeTitle.append(validacionDatos(episode.find('div',{'class':self._config['queries']['title_episode_div_class_type1']}),
+                                            episode.find('div',{'class':self._config['queries']['title_episode_div_class_type2']})).text)
                         #Los siguientes try son para controlor que validacionDatos si devuelve None, no haga el .text
                         # Description:
                         try:
-                            episodeDescription.append(validacionDatos(episode.find('div',{'class':'deck'}),
+                            episodeDescription.append(validacionDatos(episode.find('div',{'class':self._config['queries']['description_episode_div_class']}),
                                                                       None).text)
                         except:
                             episodeDescription.append(None)
                         # Date:
                         try:
-                            episodeDate.append(validacionDatos(episode.find('div',{'class':'meta'}),
+                            episodeDate.append(validacionDatos(episode.find('div',{'class':self._config['queries']['date_episode_div_class']}),
                                                    None).text)
                         except:
                             episodeDate.append(None)
-                                                # Imagen:
+                    # Imagen
+                    imagenes = sectionClass.findAll('div',{'class':self._config['queries']['img_episode_dic_class']})
+                    for imagene in imagenes:
                         try:
-                            imgEpisode.append(validacionDatos(sectionClass.find('div',{'class':'content'}),
-                                                                None).noscript.img['srcset'])
+                            imgEpisode.append(imagene.noscript.img['srcset'])
                         except:
                             imgEpisode.append(None)
                
@@ -257,11 +258,11 @@ class TvLand():
             title = nameShows[i]
             _id = hashlib.md5(title.encode('utf-8')).hexdigest()
             _type = 'serie'
-            seasons = len(seasonsShow[i])
-            img=[]
-            img.append(imgShow[i])
+            img=[imgShow[i]]
             URLContenido = urlShows[i]
             description = descriptionsShow[i]
+            if description[-1]=='\n':
+                description=description[:-1]
             payload = {
                 'PlatformCode':  self._platform_code,
                 'Id':            _id,
@@ -269,7 +270,7 @@ class TvLand():
                 'CleanTitle':    _replace(title),
                 'OriginalTitle': None,
                 'Type':          _type, # 'movie' o 'serie'
-                'Seasons':       seasons,
+                'Seasons':       None,
                 'Year':          None,
                 'Duration':      None, # duracion en minutos
                 'Deeplinks': {
@@ -301,9 +302,12 @@ class TvLand():
             nameShow = nameShows[i]
             parrentId = hashlib.md5(nameShow.encode('utf-8')).hexdigest()
             for j in range(0,len(episodesDescription[i])):
-                img = []
+                
                 title = episodesName[i][j]
-                img.append(imgEpisodes[i][j])
+                if imgEpisodes[i][j]==None:
+                    img=None
+                else:
+                    img=[imgEpisodes[i][j]]
                 try: #algunos episodios no tienen el año, por lo que lo puse en None, por ende este try es para evitar el error de hacer none object tiene split.
                     date = int(episodesDate[i][j].split('/')[-1]) 
                 except:
@@ -323,6 +327,8 @@ class TvLand():
                     episode=None
                 URLContenido = episodesUrl[i][j]
                 description = episodesDescription[i][j]
+                if description[-1]=='\n':
+                    description=description[::-1]
                 # year =
                 payload = {
                             "PlatformCode":  self._platform_code, #Obligatorio      
@@ -331,13 +337,10 @@ class TvLand():
                             "ParentTitle":   nameShow, #Unicamente en Episodios 
                             "Episode":       episode, #Obligatorio #Unicamente en Episodios  
                             "Season":        seasons, #Obligatorio #Unicamente en Episodios
-                            "Title":         title, #Obligatorio      
-                            "CleanTitle":    _replace(title), #Obligatorio      
-                            "OriginalTitle": None,                          
-                            "Type":          'serie',     #Obligatorio      
+                            "Title":         title, #Obligatorio           
+                            "OriginalTitle": None,                              
                             "Year":          date,     #Important!     
-                            "Duration":      None,      
-                            "ExternalIds":   None,      
+                            "Duration":      None,           
                             "Deeplinks": {          
                                 "Web":       URLContenido,       #Obligatorio          
                                 "Android":   None,          
@@ -365,3 +368,5 @@ class TvLand():
 
         self.sesion.close()
         Upload(self._platform_code, self._created_at, testing=testing)
+        finish_time = time.time()
+        print("Tiempo de ejecucion: "+str((finish_time-start_time)/60)+" min")

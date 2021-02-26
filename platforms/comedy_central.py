@@ -285,18 +285,18 @@ class Comedy_central():
 
                     #si al dividirlo por un espacio viene asi (['Season', '9', '']) hacemos esto:
                     if len(split.split(" ")) == 3:
-                        season_num = split.split(" ")[1]
+                        season_num = int(split.split(" ")[1])
                         episode_num = None
 
                     #si al dividirlo por un espacio viene asi (['', 'E', '1', '']) hacemos esto: 
                     elif len(split.split(" ")) == 4:
                         season_num = None
-                        episode_num = split.split(" ")[2]
+                        episode_num = int(split.split(" ")[2])
 
                     #si al dividirlo por un espacio viene asi (['Season', '25', 'E', '69', '']) hacemos esto: 
                     elif len(split.split(" ")) == 5:
-                        season_num = split.split(" ")[1]
-                        episode_num = split.split(" ")[3]
+                        season_num = int(split.split(" ")[1])
+                        episode_num = int(split.split(" ")[3])
                         
                 else:
                     continue
