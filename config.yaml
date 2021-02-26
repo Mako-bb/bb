@@ -113,15 +113,18 @@ ott_sites:
   OptimumTest:
     countries:
       US: us.optimum_test
-  Indieflix_test:
+  Indieflix:
     countries:
-      US: us.indieflix_test
-  Comedy_central_test:
+      US: us.indieflix
+  Comedy_central:
     countries:
-      US: us.comedy_central_test
-  Vh1_test:
+      US: us.comedy_central
+  Vh1:
     countries:
-      US: us.vh1_test
+      US: us.vh1
+  Shoutfactorytv:
+    countries:
+      US: us.shoutfactorytv
   Fxnow:
     countries:
       US: us.fxnow
@@ -177,9 +180,9 @@ ott_sites:
     urls:
       start_url: 'https://abc.com'
       api_url: 'https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module/tilegroup/2134522?start={}&size={}&authlevel=0&brand=001&device=001'
-  BetTest:
+  Bet:
     countries:
-      US: us.bet_test
+      US: us.bet
     start_url: https://www.bet.com/shows.html
     queries:
       main_page_see_more_xpath: '/html/body/div[3]/div[1]/div[5]/div/div[2]/section[3]/div/div[{}]/a'

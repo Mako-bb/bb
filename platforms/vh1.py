@@ -18,13 +18,13 @@ from selenium.webdriver.common.keys import Keys
 from handle.datamanager  import Datamanager
 from updates.upload         import Upload
 
-class Vh1_test():
+class Vh1():
 
     """  
     DATOS IMPORTANTES:
     ¿Necesita VPN? -> NO
     ¿HTML, API, SELENIUM? -> API
-    Cantidad de contenidos (ultima revisión): Series y peliculas = 98, Episodios = 2748
+    Cantidad de contenidos (ultima revisión): Series y peliculas = 98, Episodios = 2769
     Tiempo de ejecucíon de Script = 14 Minutos
     """
 
@@ -101,11 +101,13 @@ class Vh1_test():
                 id_serie = serie["itemId"]
                 title_serie = serie["title"]
                 cleantitle_serie = _replace(serie["title"])
+                
                 deeplink_serie = serie["url"]
-                type_serie = "serie"
-                 #hacemos una request para encontrar la descripcion dentro de la pagina
+
+                #hacemos una request para encontrar la descripcion dentro de la pagina
                 request_serie = self.currentSession.get(deeplink_serie)
                 html_serie = BS(request_serie.text,features="lxml")
+
                 
                 #la sinopsis puede estar en 2 ubicaciones, aqui validamos ambas opciones
                 if html_serie.find("div",{"id":"t5_lc_promo1"}) and html_serie.find("div",{"id":"t5_lc_promo1"}).find("div",{"class":"info"}):
@@ -117,6 +119,15 @@ class Vh1_test():
                 
                 else:
                     synopsis_serie = None
+
+                type_serie = "serie"
+
+                if html_serie.find("div",class_="new_eps_info"):
+                    if "Movie" in html_serie.find("div",class_="new_eps_info").text:
+                        type_serie = "movie"
+                elif html_serie.find("span",class_="headline"):
+                    if "Movie" in html_serie.find("span",class_="headline").text:
+                        type_serie = "movie"
 
                 contenedor_image = html_serie.find("div",{"class":"image_holder"})
                 image_serie = [contenedor_image["data-info"].split(",")[2].split(": ")[-1].replace('"',"")]
@@ -141,19 +152,25 @@ class Vh1_test():
                                 cast_serie.append(actor.text.split(" and ")[1])
                             elif "/" in actor.text:
                                 cast_serie.append(actor.text.split("/")[1])
-                            elif "(" in actor.text:
+                            elif " (" in actor.text:
                                 fixed_name = []
-                                fixed_name.append(actor.text.split("(")[0])
-                                fixed_name.append(actor.text.split(")")[1])
+                                fixed_name.append(actor.text.split(" (")[0])
+                                fixed_name.append(actor.text.split(") ")[1])
                                 cast_serie.append(" ".join(fixed_name))
                             else:
                                 cast_serie.append(actor.text)
 
                     else:
                         cast_serie = None
-                
-                package_serie = [{"Type": "tv-everywhere"}]
 
+                if type_serie == "movie":
+                    url_movie = "http://www.vh1.com/feeds/ent_m112/3daea531-6a5c-4e72-83af-85c9c88b4ffe/{}?allSeasonsSelected=1&allEpisodes=1&pageNumber=1".format(id_serie)
+                    request_movie = self.currentSession.get(url_movie).json()
+                    deeplink_serie = request_movie["result"]["data"]["items"][0]["url"]
+
+
+                package_serie = [{"Type": "tv-everywhere"}]
+                    
                 payload = {
                     "PlatformCode":  self._platform_code, #Obligatorio 
                     "Id":            id_serie,
@@ -198,6 +215,9 @@ class Vh1_test():
                     if not json_episodes["result"]["data"]["items"]:
                         pagina = 1
                         break
+
+                    if type_serie == "movie":
+                        break
                     
                     #contador que incrementa para pasar a la siguiente temporada luego de hacer request
                     pagina = pagina + 1
@@ -211,7 +231,20 @@ class Vh1_test():
                             #aqui confirmamos que el capitulo * no se incluya (leer analisis)
                             if item["title"] == "*":
                                 continue
+
                             title_episode = item["title"]
+
+                            #limpiamos el titulo de los episodios que contienen "Untucked"
+                            if "Untucked - " in title_episode:
+                                 title_episode = title_episode.split("Untucked - ")[-1].strip()
+
+                            #limpiamos el titulo de los epísodiso de Behind the Music
+                            if "Behind the Music" in title_episode:
+                                title_episode = title_episode.split("Behind the Music")[0].strip()
+                                if ":" in title_episode:
+                                    title_episode = title_episode.replace(":","").strip()
+                            
+
                             cleantitle_epi = _replace(title_episode)
                             parent_id = id_serie
                             parent_title = title_serie
@@ -230,6 +263,7 @@ class Vh1_test():
                                 season_num = 0
 
                             type_epi = item["type"]
+
                             #validamos que tenga fecha ya que sino esta no tiene año
                             if item.get("airDateNY"):
                                 year_epi = item["airDateNY"]["year"]
@@ -250,6 +284,33 @@ class Vh1_test():
 
                             
                             synopsis_epi = item["description"]
+
+                            if "<p>" in synopsis_epi:
+                                synopsis_epi = synopsis_epi.replace("<p>","")
+                            
+                            if "<i>" in synopsis_epi:
+                                synopsis_epi = synopsis_epi.replace("<i>","")
+
+                            if "</i>" in synopsis_epi:
+                                synopsis_epi = synopsis_epi.replace("</i>","")
+
+                            if "<u>" in synopsis_epi:
+                                synopsis_epi = synopsis_epi.replace("<u>","")
+
+                            if "</u>" in synopsis_epi:
+                                synopsis_epi = synopsis_epi.replace("</u>","")
+                            
+                            if "<b>" in synopsis_epi:
+                                synopsis_epi = synopsis_epi.replace("<b>","")
+
+                            if "</b>" in synopsis_epi:
+                                synopsis_epi = synopsis_epi.replace("</b>","")
+
+                            if "\n" in synopsis_epi:
+                                synopsis_epi = synopsis_epi.replace("\n","")
+
+                            if "<br>" in synopsis_epi:
+                                synopsis_epi = synopsis_epi.replace("<br>"," ")
 
                             #validamos que tenga imagen
                             image_epi = []
@@ -315,7 +376,7 @@ class Vh1_test():
         if self.test:
             Upload(self._platform_code, self._created_at,testing=True)
         else:
-            Upload(self._platform_code, self._created_at,testing=True)           
+            Upload(self._platform_code, self._created_at,testing=True)    
 
                 
                 

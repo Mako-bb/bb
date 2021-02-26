@@ -18,18 +18,17 @@ from selenium.webdriver.common.keys import Keys
 from handle.datamanager  import Datamanager
 from updates.upload         import Upload
 
-class Indieflix_test():
+class Indieflix():
 
     """  
     DATOS IMPORTANTES:
     ¿Necesita VPN? -> NO
     ¿HTML, API, SELENIUM? -> API
-    Cantidad de contenidos (ultima revisión): Series y peliculas = 1932, Episodios = 1072
+    Cantidad de contenidos (ultima revisión): Series y peliculas = 1934, Episodios = 1072
     Tiempo de ejecucíon de Script = 2-5 Minutos
     """
     
     def __init__(self, ott_site_uid, ott_site_country, type):
-        self.test = True if type == "testing" else False
         self._config                = config()['ott_sites'][ott_site_uid]
         self._platform_code         = self._config['countries'][ott_site_country]
         #self._start_url             = self._config['start_url']
@@ -60,9 +59,9 @@ class Indieflix_test():
                     
             self._scraping()
         
-        if type == 'scraping': #or self.testing :
+        if type == 'scraping':
             self._scraping()
-        if type == 'testing': #or self.testing :
+        if type == 'testing':
             self._scraping(testing=True)
 
     def __query_field(self, collection, field, extra_filter=None):
@@ -317,21 +316,23 @@ class Indieflix_test():
                         
 
                         #fix para no duplicar la pelicula con ids distitno
-                        # 31275 == "The Andalusian Dog"
-                        # 48766 == "M"
-                        if (id_ == "31275") or (id_ == "48766") or (id_ == "36360") :
+                        # 9c88225457856ad8f19a6952c950ab32 == "The Andalusian Dog"
+                        # 0a1e1d8da51f5dd7077a7f2748b10d58 == "M"
+                        # 4fbdc7de3e31de33862586c8db456f53 == "Dawn"
+                        if (id_ == "9c88225457856ad8f19a6952c950ab32") or (id_ == "0a1e1d8da51f5dd7077a7f2748b10d58") or (id_ == "4fbdc7de3e31de33862586c8db456f53") :
                             continue
 
                         title = item["title"]
 
                         #fix para "Ten Fingers of Death (Master With Cracked Fingers)"
-                        if id_ == "30966":
+                        if id_ == "7b6f112e7e54968fd8c34d5727e4996d":
                             title = title.replace(" (",": ")
-                            title= title.replace(")",(""))
+                            title = title.replace(")",(""))
 
                         #fix especifico para pelicula donde se debe eliminar
-                        # del titulo lo que hay entre parentesis
-                        if id_ == "30880":
+                        #del titulo lo que hay entre parentesis
+                        #f27900bdac7a82614a4931f309704d69 == Brooks McBeth: This Ain't Shakespeare
+                        if id_ == "f27900bdac7a82614a4931f309704d69": 
                             #separamos el titulo a partir del (
                             split_title = title.split(" (")
                             title = split_title[0]
@@ -339,25 +340,30 @@ class Indieflix_test():
 
                         #fix especifico para pelicula donde del titulo
                         # solo se debe eliminar parentesis
-                        if id_ == "39955":
+                        #bc4d9b0e9bdbd3186592452785c479cc == The Amateur: or Revenge of the Quadricorn
+                        if id_ == "bc4d9b0e9bdbd3186592452785c479cc":
                             title = title.replace("(","")
                             title = title.replace(")","")
                             originaltitle = None
 
                         #fix especifico para los titulos con formato "title(orinaltitle)"
-                        #ej: Snowman in July (Der Schneemann)
-                        if id_ == "31691" or id_ == "48910":
+                        #5f3de53fbab794234589dff4e8ebf060 == Snowman in July (Der Schneemann)
+                        #3218b56a27cc5d3acdac4a6b99195f75 == Strength Is Not Enough (la forza non basta)
+                        if id_ == "3218b56a27cc5d3acdac4a6b99195f75" or id_ == "5f3de53fbab794234589dff4e8ebf060":
                             #separamos el titulo a partir del (
                             split_title = title.split("(")
                             title = split_title[0]
                             originaltitle = split_title[-1].replace(")","")
 
+                        
+                        #ef5fa3e7b0c6b2383740f768ed209602 == (beau)strosity / debe quedar asi
+                        #9e57be5389ed6ba4e95ec7bdd5ff9f2f == Salad Days: A Decade of Punk in Washington, DC (1980-90) / debe quedar asi
+                        elif id_ == "ef5fa3e7b0c6b2383740f768ed209602" or id_ == "9e57be5389ed6ba4e95ec7bdd5ff9f2f":
+                            originaltitle = None
+
                         #hay ocasiones en las que el titulo viene en formato "orginaltitle (title)"
                         #por lo que hay que validarlo y separarlo
-                        #las excepciones son:
-                        #31385 == (beau)strosity / debe quedar asi
-                        #49402 == Salad Days: A Decade of Punk in Washington, DC (1980-90) / debe quedar asi
-                        elif ("(" in title and id_ != "31385") or ("(" in title and id_ != "49402"):
+                        elif "(" in title:
                             #separamos el titulo a partir del (
                             split_title = title.split("(")
                             #validamos si a partir del ) tiene mas de 3 letras

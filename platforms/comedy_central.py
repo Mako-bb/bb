@@ -19,7 +19,7 @@ from selenium.webdriver.common.keys import Keys
 from handle.datamanager  import Datamanager
 from updates.upload         import Upload
 
-class Comedy_central_test():
+class Comedy_central():
 
     """  
     DATOS IMPORTANTES:
@@ -30,7 +30,6 @@ class Comedy_central_test():
     """
 
     def __init__(self, ott_site_uid, ott_site_country, type):
-        self.test = True if type == "testing" else False
         self._config                = config()['ott_sites'][ott_site_uid]
         self._platform_code         = self._config['countries'][ott_site_country]
         #self._start_url             = self._config['start_url']
@@ -59,8 +58,10 @@ class Comedy_central_test():
                     
             self._scraping()
         
-        if type == 'scraping': #or self.testing :
+        if type == 'scraping':
             self._scraping()
+        if type == 'testing':
+            self._scraping(testing=True)
 
 
     def __query_field(self, collection, field, extra_filter=None):
@@ -87,11 +88,8 @@ class Comedy_central_test():
 
         return query
 
-    def _scraping(self):
-        test_list = []
-        list_corchete = []
-        list_dif_statuscode200 = []
-        #-----------listas prueba--------------
+    def _scraping(self, testing=False):
+
         ids_series_guardados = Datamanager._getListDB(self,self.titanScraping)
         ids_epi_guardados = Datamanager._getListDB(self,self.titanScrapingEpisodios)
         parent_title_id_list = []
@@ -193,13 +191,11 @@ class Comedy_central_test():
             parent_title = epi["meta"]["label"]
             #acá checkeamos que el episodio tenga id, ya que en caso de no tenerlo tampoco tiene URL y es inutil
             if epi.get("id") == "[]":
-                list_corchete.append(epi)
                 continue
             elif epi.get("id"): 
                 id_epi = hashlib.md5(epi["id"].encode('utf-8')).hexdigest()
 
             else:
-                test_list.append(epi)
                 continue
             #acá accedemos a lista que contiene contiene el id y el titulo de las series
             #si coincide el parentTitle que figura en el item episodio con el de la lista
@@ -265,25 +261,46 @@ class Comedy_central_test():
                 image_epi = None
             
             packages_epi =  [{"Type": "tv-everywhere"}]
+
+            #Acá nos saltamos los "episodios" que realmente son un preview de la temporada
+            if "preview" in deeplink_epi:
+                continue
+
             #acá asignamos el numero de episodio y temporada. Si el Deeplink indica que es un episodio especial
             #se le asigna el numero 0 a la tempo y el episodio es igual a None
             if ("ep-special" in deeplink_epi) or ("not-special" in deeplink_epi) :
                 season_num = 0
                 episode_num = None
-            else:
-                #deeplink_epi = self.currentSession.get(deeplink_epi).url             <-----redireccion url
-                #acá spliteamos la url para quedarnos solo con la ultima parte 
-                # que contiene el nro de season y episodio (ejemplo: 1-ep-110)
-                sea_epi_num = deeplink_epi.split("season-")[-1]
 
-                #acá agarramos el split anterior y al splitearlo por -ep- nos quedamos con la primera parte
-                #de la lista que nos devuelve el numero de season
-                season_num = int(sea_epi_num.split("-ep-")[0])
-                
-                #acá agarramos el split con la season y numero de tempodada 
-                # y nos quedamos solo con los ultimos 2 digitos que siempre son el numero de episodio  
-                episode_num = int(sea_epi_num[-2:])
-            
+            else:
+                #si no es especial, tenemos que sacar el numero de episodio y temporada haciendo request :(
+                request = self.currentSession.get(deeplink_epi)
+
+                #accedemos solo a lo episodios que se pueden ver:
+                if request.status_code == 200:
+                    soup = BS(request.text, features="lxml")
+                    contenedor_epi_sea = soup.find("div",{"class":"sub-header"})
+                    sea_epi_num = contenedor_epi_sea.span.text # == Season 25 E 69 • 03/03/2020
+                    split = sea_epi_num.split("•")[0] # ==  "Season 25 E 69 " o  "Season 4 " o " E 2 "
+
+                    #si al dividirlo por un espacio viene asi (['Season', '9', '']) hacemos esto:
+                    if len(split.split(" ")) == 3:
+                        season_num = int(split.split(" ")[1])
+                        episode_num = None
+
+                    #si al dividirlo por un espacio viene asi (['', 'E', '1', '']) hacemos esto: 
+                    elif len(split.split(" ")) == 4:
+                        season_num = None
+                        episode_num = int(split.split(" ")[2])
+
+                    #si al dividirlo por un espacio viene asi (['Season', '25', 'E', '69', '']) hacemos esto: 
+                    elif len(split.split(" ")) == 5:
+                        season_num = int(split.split(" ")[1])
+                        episode_num = int(split.split(" ")[3])
+                        
+                else:
+                    continue
+
             #armamos el payload
             payload_epi = {
                 "PlatformCode":  self._platform_code, #Obligatorio      
@@ -326,16 +343,5 @@ class Comedy_central_test():
 
         Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)   
         Datamanager._insertIntoDB(self, self.payloads_epi, self.titanScrapingEpisodios)
-        #if self.test:
-            #Upload(self._platform_code, self._created_at,testing=True)
-        #else:
-            #Upload(self._platform_code, self._created_at,testing=True)
-        
-        print("-------items en variable episodios---------")
-        print(len(episodios))
-        print("-------items salteados por contener Corchete de ID---------")
-        print(len(list_corchete))
-        print("-------items salteados por else---------")
-        print(len(test_list))
-        print("-------len payloads episodes---------")
-        print(len(self.payloads_epi))
+
+        Upload(self._platform_code, self._created_at,testing=testing)

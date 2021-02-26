@@ -21,7 +21,7 @@ from selenium.webdriver.firefox.options import Options
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.action_chains import ActionChains
 
-class BetTest():
+class Bet():
     '''
         Scraping de la plataforma Bet, la misma cuenta únicamente con series como contenido scrapeable 
         (además tiene videos musicales o notas con artistas). El scraping comienza en la sección de shows 
@@ -29,7 +29,7 @@ class BetTest():
         de los que se puedan obtener datos.
 
         DATOS IMPORTANTES: 
-            - ¿Necesita VPN? -> SI
+            - ¿Necesita VPN? -> SI (PureVPN USA)
             - ¿HTML, API, SELENIUM? -> SELENIUM y BS4
             - Cantidad de contenidos (ultima revisión 24/02/2021): 44 series | 510 episodios
             - Tiempo de ejecucion: 37 minutos aproximadamente (depende de conexión a internet)
