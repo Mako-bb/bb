@@ -88,12 +88,11 @@ class NBC():
 
     def _scraping(self, testing = False):
         """
-        ¿VPN? SI
+        ¿VPN? NO
         ¿API,HTML o SELENIUM? API
 
-        Telemundo por si sola no tiene api pero cuandop queres ver un contenido de telemundo la misma pagina te manda
-        a NBC que presenta una api con todo el contenido de telemundo, por lo que hacer un scraping de telemundo o 
-        hacerlo a NBC filtrando el contenindo a telemundo es casi lo mismo. Por lo que realizo con la api de NBC.
+        Es una multiplataforma que busco la informacion en 4 plataformas. Este codigo realiza la busqueda del contenido
+        en esta multiplataforma.
         """
         OxygenNBC(ott_site_uid='OxygenNBC',ott_site_country='US',type=self.type2)._scraping()
         SyfyNBC(ott_site_uid='SyfyNBC',ott_site_country='US',type=self.type2)._scraping()

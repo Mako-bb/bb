@@ -81,7 +81,7 @@ class Telemundo():
 
     def _scraping(self, testing = False):
         """
-        ¿VPN? SI
+        ¿VPN? NO
         ¿API,HTML o SELENIUM? API
 
         Telemundo por si sola no tiene api pero cuandop queres ver un contenido de telemundo la misma pagina te manda
