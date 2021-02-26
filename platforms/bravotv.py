@@ -129,7 +129,7 @@ class BravoTv():
         urlAboutShows = []
         imgShows=[]
         for allShow in allShows:
-            nameShows.append(allShow.find('div',{"class":self._config['queries']['name_show_div_class']}).text.split('\n')[4][12::])
+            nameShows.append(allShow.find('div',{"class":self._config['queries']['name_show_div_class']}).text.replace('\n','').strip())
             urlShows.append(urlWithoutShow+allShow['href'])
             urlEpisodeShows.append(urlWithoutShow+allShow['href']+episode_guide)
             urlAboutShows.append(urlWithoutShow+allShow['href']+about)
@@ -146,11 +146,11 @@ class BravoTv():
             soup = Datamanager._getSoup(self,urlAboutShow)
             description = soup.find('div',class_=self._config['queries']['description_show_div_class']).text
             if '\n' in description:
-                description=description[:-1]
+                description=description.replace('\n','')
             descriptionsShows.append(description)
             castSoups = soup.findAll('div',class_=self._config['queries']['cast_show_div_class'])
             for castSoup in castSoups:
-                actor = castSoup.text.split('\n')[2]
+                actor = castSoup.text.replace('\n','').strip()
                 actor = actor.split('"')
                 if len(actor)==1:
                     actor=actor[0]
@@ -260,13 +260,13 @@ class BravoTv():
 
                 summary = infoEpisode.find(self._config['queries']['summary_episode'])
                 episodeAndSeason = summary.div.text
-                title = summary.h1.text.split(':')[-1]
+                title = summary.h1.text.split(':')[-1].replace('\n',' ').strip()
                 if '\n' in title:
-                    title = title[1:-1]
+                    title = title.replace('\n','')
                 try:
                     description = infoEpisode.find('div',class_=self._config['queries']['description_episode_div_class']).text
                     if '\n' in description:
-                        description = description[1:-1]
+                        description=description.replace('\n','').strip()
                 except:
                     description = None
 
@@ -308,13 +308,13 @@ class BravoTv():
         for i in range(0,len(titles_episodes)):
             
             #Saco la informacion de las series que necesito
-            nameShow = nameShows[i][1:-1].strip()
+            nameShow = nameShows[i][1:-1]
             parrentId = hashlib.md5(nameShow.encode('utf-8')).hexdigest()
             
             for j in range(0,len(titles_episodes[i])):
                 img = []
                 try:
-                    title = titles_episodes[i][j].strip()
+                    title = titles_episodes[i][j]
                 except:
                     title = None
                 try:
@@ -326,7 +326,7 @@ class BravoTv():
                 # episode =  int(episodesSeason[i][j][1][2::])
                 URLContenido = urlEpisodes[i][j]
                 try:
-                    description = description_episodes[i][j].strip()
+                    description = description_episodes[i][j]
                 except:
                     description = None
                 payload = Payload(packages=packages,id=_id,image = img,parentId = parrentId,parentTitle=nameShow,title=title,platformCode=_platform_code,deeplinksWeb = URLContenido,synopsis = description,timestamp=datetime.now().isoformat(),createdAt=self._created_at)

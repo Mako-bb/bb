@@ -20,7 +20,7 @@ from selenium.webdriver     import ActionChains
 from handle.payload_testing import Payload
 import sys
 
-class Telemundo():
+class OxygenNBC():
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config                = config()['ott_sites'][ott_site_uid]
         self._platform_code         = self._config['countries'][ott_site_country]
@@ -111,9 +111,10 @@ class Telemundo():
         json=Datamanager._getJSON(self,api,showURL=False)
         
 
-        listItems = json['data']['brandTitleCategories']['data']['items'] #el 1 viene porque necesito la segunda componente de la lista, ahi estan todos los datos 
+        listItems = json['data']['brandTitleCategories']['data']['items']
 
         _platform_code = self._platform_code
+        
         for listItem in listItems:
             items = listItem['data']['items']
             for item in items:
@@ -140,7 +141,11 @@ class Telemundo():
                 description = dataShow['description']
                 img.append(dataShow['image'])
 
-                dataSeasons = dataEpisodio[2]['data']['items'] #tercero, es un diccionario y me quedo con la lista de items
+                #Hay series que no tinen nada, ni episodios ni nada por eso rompe el codigo y va el try except para evitarlo
+                try:
+                    dataSeasons = dataEpisodio[2]['data']['items'] #tercero, es un diccionario y me quedo con la lista de items
+                except:
+                    break
 
                 #### SERIE NOMBRE PAYLOADS####
                 payload=Payload(packages = packages, type = _type, image = img, id = _id, synopsis = description, cleanTitle = _replace(title), genres = genre, title = title, platformCode = _platform_code,
@@ -155,6 +160,7 @@ class Telemundo():
                 parrentId=_id
                 for datoSeason in dataSeasons:
                     datoEpisodios=[]
+
                     try:
                         #si todo sale bien, en la api se encuentra la informacion de los capitulos y lo extraigo normalmente
                         datoEpisodios = datoSeason['data']['items']
@@ -193,7 +199,6 @@ class Telemundo():
                             rating = datoEpisodio['data']['rating']
                         except:
                             rating = None
-                        
                         _id = hashlib.md5((urlShow + datoEpisodio['data']['permalink']).encode('utf-8')).hexdigest()
                         imgEps.append(datoEpisodio['data']['image'])
                         genreEps.append(datoEpisodio['analytics']['genre'])
