@@ -29,7 +29,7 @@ class RokuChannel():
         7000 títulos.
 
         DATOS IMPORTANTES: 
-            - ¿Necesita VPN? -> SI.
+            - ¿Necesita VPN? -> SI (PureVPN USA).
             - ¿HTML, API, SELENIUM? -> API
             - Cantidad de contenidos (ultima revisión 23/02/2021): 7023 titulos | 59627 episodios
             - Tiempo de ejecucion: 175 minutos aproximadamente
