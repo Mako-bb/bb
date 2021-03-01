@@ -129,7 +129,9 @@ class BravoTv():
         urlAboutShows = []
         imgShows=[]
         for allShow in allShows:
-            nameShows.append(allShow.find('div',{"class":self._config['queries']['name_show_div_class']}).text.replace('\n','').strip())
+            name = allShow.find('div',{"class":self._config['queries']['name_show_div_class']}).text.replace('\n','').strip()
+
+            nameShows.append(name)
             urlShows.append(urlWithoutShow+allShow['href'])
             urlEpisodeShows.append(urlWithoutShow+allShow['href']+episode_guide)
             urlAboutShows.append(urlWithoutShow+allShow['href']+about)
@@ -261,8 +263,6 @@ class BravoTv():
                 summary = infoEpisode.find(self._config['queries']['summary_episode'])
                 episodeAndSeason = summary.div.text
                 title = summary.h1.text.split(':')[-1].replace('\n',' ').strip()
-                if '\n' in title:
-                    title = title.replace('\n','')
                 try:
                     description = infoEpisode.find('div',class_=self._config['queries']['description_episode_div_class']).text
                     if '\n' in description:
@@ -294,12 +294,12 @@ class BravoTv():
         _platform_code = self._platform_code
         for i in range(0,len(nameShows)):
             img=[]
-            title = nameShows[i][1:-1].strip()
+            title = nameShows[i]
             _id = hashlib.md5(title.encode('utf-8')).hexdigest()
             _type = 'serie'
             URLContenido = urlShows[i]
             img.append(imgShows[i])
-            description = descriptionsShows[i][1:-1].strip()
+            description = descriptionsShows[i]
             cast = castShows[i]
             payload = Payload(packages=packages,id=_id,title=title,image = img,cleanTitle= _replace(title),platformCode=_platform_code,type=_type,deeplinksWeb = URLContenido,synopsis = description,cast = cast,timestamp=datetime.now().isoformat(),createdAt=self._created_at)
             Datamanager._checkDBandAppend(self, payload.payloadJson(),scraped,payloads)
@@ -308,7 +308,7 @@ class BravoTv():
         for i in range(0,len(titles_episodes)):
             
             #Saco la informacion de las series que necesito
-            nameShow = nameShows[i][1:-1]
+            nameShow = nameShows[i]
             parrentId = hashlib.md5(nameShow.encode('utf-8')).hexdigest()
             
             for j in range(0,len(titles_episodes[i])):
