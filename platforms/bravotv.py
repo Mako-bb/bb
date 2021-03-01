@@ -301,7 +301,8 @@ class BravoTv():
             img.append(imgShows[i])
             description = descriptionsShows[i]
             cast = castShows[i]
-            payload = Payload(packages=packages,id=_id,title=title,image = img,cleanTitle= _replace(title),platformCode=_platform_code,type=_type,deeplinksWeb = URLContenido,synopsis = description,cast = cast,timestamp=datetime.now().isoformat(),createdAt=self._created_at)
+            payload = Payload(packages=packages,id=_id,title=title,image = img,cleanTitle= _replace(title),
+                            platformCode=_platform_code,type=_type,deeplinksWeb = URLContenido,synopsis = description,cast = cast,timestamp=datetime.now().isoformat(),createdAt=self._created_at)
             Datamanager._checkDBandAppend(self, payload.payloadJson(),scraped,payloads)
             Datamanager._insertIntoDB(self,payloads,self.titanScraping)
 
@@ -329,7 +330,8 @@ class BravoTv():
                     description = description_episodes[i][j]
                 except:
                     description = None
-                payload = Payload(packages=packages,id=_id,image = img,parentId = parrentId,parentTitle=nameShow,title=title,platformCode=_platform_code,deeplinksWeb = URLContenido,synopsis = description,timestamp=datetime.now().isoformat(),createdAt=self._created_at)
+                payload = Payload(packages=packages,id=_id,image = img,parentId = parrentId,parentTitle=nameShow,title=title,
+                                platformCode=_platform_code,deeplinksWeb = URLContenido,synopsis = description,timestamp=datetime.now().isoformat(),createdAt=self._created_at)
                 Datamanager._checkDBandAppend(self, payload.payloadEpisodeJson(),scrapedEpisodes,payloadsEpisodios,isEpi=True)
                 Datamanager._insertIntoDB(self,payloadsEpisodios,self.titanScrapingEpisodios)
 
