@@ -233,8 +233,9 @@ class NBC():
 
 
         self.sesion.close()
-
-        Upload(self._platform_code, self._created_at, testing=testing)
+        for plataform in list_plataform:
+            _platform_code = self._platform_code.format(plataform)+'nbc'
+            Upload(_platform_code, self._created_at, testing=testing)
 
         finish_time = time.time()
         print("Tiempo de ejecucion: "+str((finish_time-start_time)/60)+" min")
