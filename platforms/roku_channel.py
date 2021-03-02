@@ -100,7 +100,8 @@ class RokuChannel():
  
     def _scraping(self, testing=False):
 
-        payloads = []
+        payloads_movies = []
+        payloads_series = []
         payloads_episodes = []
 
         scraped = Datamanager._getListDB(self, self.titanScraping)
@@ -111,17 +112,21 @@ class RokuChannel():
 
         for content_id in titles_ids:
             
-            content_data = Datamanager._getJSON(self, self.content_api.format(content_id))
+            content_data = Datamanager._getJSON(self, self.content_api.format(content_id), showURL=False)
 
-            # Creo una lista con las 4 opciones válidas que puede tener un tipo de contenido para validarlo luego
-            possible_types = ['series', 'shortformvideo', 'movie', 'tvspecial']
+            # Creo una lista con las 3 opciones válidas que puede tener un tipo de contenido para validarlo luego
+            possible_types = ['series', 'movie', 'tvspecial']
 
             if content_data['type'] not in possible_types:
                 continue
+            elif content_data['type'] == 'series':
+                self.series_scraping(content_id, content_data, payloads_series, scraped, payloads_episodes, scraped_episodes)
             else:
-                self.general_scraping(content_id, content_data, payloads, payloads_episodes, scraped, scraped_episodes)
+                self.movies_scraping(content_id, content_data, payloads_movies, scraped)
 
-        Datamanager._insertIntoDB(self, payloads, self.titanScraping)
+        # Hago los insert a la base de datos para cada uno de los 3 casos (peliculas, series y episodios)
+        Datamanager._insertIntoDB(self, payloads_movies, self.titanScraping)
+        Datamanager._insertIntoDB(self, payloads_series, self.titanScraping)
         Datamanager._insertIntoDB(self, payloads_episodes, self.titanScrapingEpisodios)
 
         Upload(self._platform_code, self._created_at, testing=testing)
@@ -142,7 +147,7 @@ class RokuChannel():
             en el paso anterior, acumula los ids de los títulos en un Set para que no haya 
             duplicados, con esto se obtiene un total de 7000 títulos aproximadamente.
 
-            RETURN: Set de ids de contenidos/títulos.
+            - RETURN: Set de ids de contenidos/títulos.
         '''
         main_page_data = Datamanager._getJSON(self, self._start_url)
 
@@ -205,21 +210,17 @@ class RokuChannel():
                 contents_id.add(content_id)
         return contents_id
 
-    def general_scraping(self, content_id, content_data, payloads, payloads_episodes, scraped, scraped_episodes):
+    def movies_scraping(self, content_id, content_data, payloads, scraped):
         '''
-            Este método se encarga de scrapear el .json que se le pasa por parámetro, 
-            si se trata de una serie además scrapea los episodios.
-            Para todos los casos se utilizan las funciones checkDBAndAppend e insertIntoDB
-            del DataManager (se consulta con la base de datos y se sube a la misma)
+            Este método se encarga de scrapear el .json que se le pasa por parámetro.
+            Se utilizan las funciones checkDBAndAppend y merge_movies
+            (se consulta con la base de datos y se homogeniza en caso de haber duplicados)
 
             - PARÁMETROS:
                 - content_id: el ID del contenido
-                - content_data: el.json del contenido
+                - content_data: el .json del contenido
                 - payloads: la lista de payloads en la que se van acumulando los contenidos
-                - payloads_episodes: la lista de payloads en la que se van acumulando los episodios
                 - scraped: la BD con los contenidos ya scrapeados
-                - scraped_episodes: la BD con los episodios ya scrapeados
-            
         '''
         # TITULO
         content_title = content_data['title']
@@ -228,10 +229,7 @@ class RokuChannel():
         content_link = self.content_link.format(content_id)
 
         # TIPO DE CONTENIDO
-        if content_data['type'] == 'series':
-            content_type = 'serie'
-        else:
-            content_type = 'movie'
+        content_type = 'movie'
 
         # AÑO DE ESTRENO
         # Hago una validación para obtener el releaseYear:
@@ -341,75 +339,196 @@ class RokuChannel():
                 'CreatedAt': self._created_at
         }
 
-        # Si el contenido es de tipo serie, debo agregarle el campo "Seasons" al payload general
-        # También hay que llamar a la función que scrapea los episodios
-        if content_type == 'serie':
-            # Esta lista va a ir acumulando los dict con los datos de cada temporada, para luego agregarla
-            # al payload de la serie
-            seasons_payload = []
+        self.merge_movies_payload(payload, scraped, payloads) 
+ 
+    def series_scraping(self, content_id, content_data, payloads, scraped, payloads_episodes, scraped_episodes):
+        '''
+            Este método se encarga de scrapear el .json que se le pasa por parámetro, 
+            como se trata de una serie además scrapea los episodios.
+            Se utilizan las funciones checkDBAndAppend y merge_series
+            (se consulta con la base de datos y se homogeniza en caso de haber duplicados)
 
-            seasons_data = content_data['seasons']
+            - PARÁMETROS:
+                - content_id: el ID del contenido
+                - content_data: el .json del contenido
+                - payloads: la lista de payloads en la que se van acumulando los contenidos
+                - scraped: la BD con los contenidos ya scrapeados
+                - payloads_episodes: la lista de payloads en la que se van acumulando los episodios
+                - scraped_episodes: la BD con los episodios ya scrapeados
+        '''
+        # TITULO
+        content_title = content_data['title']
 
-            for season in seasons_data:
+        # LINK DEL CONTENIDO
+        content_link = self.content_link.format(content_id)
 
-                    # Implemento un try/except porque no todas las temporadas de una serie tienen
-                    # información pertinente. Si algún dato no se puede traer se saltea la temporada
-                    # y pasa a la siguiente (no queda registrado en el campo Seasons del payload de 
-                    # la serie). Pero toda la seasons_data se analiza aparte para el payload de los 
-                    # episodios.
-                    try:
-                        # SEASON ID, TITULO, LINK, NÚMERO Y AÑO DE ESTRENO
-                        season_id = season['meta']['id']
-                        season_title = season['title'] if season.get('title') else None
-                        season_link = self.content_link.format(season_id) 
-                        season_number = int(season['seasonNumber'])
-                        season_release_year = season['releaseNumber'] if season.get('releaseNumber') else None
+        # TIPO DE CONTENIDO
+        content_type = 'serie'
 
-                        # IMÁGENES (SEASONS)
-                        season_images = []
-                        for image in season['images']:
-                            image_path = image['path']
-                            season_images.append(image_path)
+        # AÑO DE ESTRENO
+        # Hago una validación para obtener el releaseYear:
+        if content_data.get('releaseYear'):
+            content_year = content_data['releaseYear']
+        elif content_data.get('releaseDate'):
+            content_year = int(content_data['releaseDate'].split("-")[0])
+        else:
+            content_year = None
 
-                        # CAST & DIRECTORS (SEASONS)
-                        season_cast = []
-                        season_directors = []
-                        for person in season['credits']:
-                            if person['role'] == 'ACTOR':
-                                season_cast.append(person['name'])
-                            if person['role'] == 'DIRECTOR':
-                                season_directors.append(person['name'])
+        # DURACIÓN
+        if content_data.get('runTimeSeconds'):
+            content_duration = content_data['runTimeSeconds'] // 60 if content_data['runTimeSeconds'] > 0 else None
+        else:
+            content_duration = None
+        
+        # DESCRIPCION
+        # Como los contenidos tienen varias descripciones (cortas y largas, en ese orden) traigo todas y luego
+        # obtengo la mas larga (ubicada en el ultimo lugar de la lista)
+        descriptions = content_data['descriptions']
+        descriptions_text = []
+        for key in descriptions:
+            # Algunas descripciones vienen algo sucias con caracteres como "(..." o "#"
+            # por eso, si tiene alguno de esos caracteres, se la saltea como descripcion no valida
+            text = descriptions[key]['text']
+            if "(..." in text or "#" in text:
+                continue
+            descriptions_text.append(descriptions[key]['text'])
+        content_description = descriptions_text[-1] if descriptions_text else None
+        
+        # IMÁGENES
+        content_images = []
+        for image in content_data['images']:
+            image_path = image['path']
+            content_images.append(image_path)
 
-                        season_payload = {
-                                'Id': season_id,
-                                'Synopsis': None,
-                                'Title': season_title,
-                                'Deeplink': season_link,
-                                'Number': season_number,
-                                'Year': season_release_year,
-                                'Image': season_images if season_images else None,
-                                'Directors': season_directors if season_directors else None,
-                                'Cast': season_cast if season_cast else None
-                                }
+        # RATING
+        if content_data.get('parentalRatings'):
+            content_rating = ""
+            for rating in content_data['parentalRatings']:
+                if rating['code'] != 'UNRATED':
+                    rating_code = rating['code']
+                    content_rating += rating_code + ", "
+        else:
+            content_rating = None
+        
+        # GÉNEROS
+        content_genres = content_data['genres'] if content_data.get('genres') else None
 
-                        seasons_payload.append(season_payload)
-                    except:
-                        continue
-            
-            # Agrego el campo "Seasons" al payload con toda la información recopilada de las temporadas
-            payload['Seasons'] = seasons_payload if seasons_payload else None
+        # CAST & DIRECTORS
+        content_cast = []
+        content_directors = []
+        for person in content_data['credits']:
+            if person['role'] == 'ACTOR':
+                content_cast.append(person['name'])
+            if person['role'] == 'DIRECTOR':
+                content_directors.append(person['name'])
 
-            # Este diccionario sirve para pasarle información importante a los episodios de cada serie
-            parent_data = {
+        # Para obtener datos como disponibilidad de contenido, package y provider accedo a los viewOptions del mismo:
+        content_view_options = content_data['viewOptions'][0]
+
+        # AVAILABILITY
+        content_availability = content_view_options['validityEndTime']
+
+        # PACKAGES
+        if content_view_options['license'] == "Subscription":
+            content_package = [{'Type': 'subscription-vod'}]
+        elif content_view_options['license'] == "Free":
+            content_package = [{'Type': 'free-vod'}]
+
+        # PROVIDER
+        # Aclaración: Si el contenido es gratis ("Free to watch") generalmente el provider es TheRokuChannel. Los que son
+        # contenidos pagos bajo suscripción tienen otros providers.
+        content_provider = [content_view_options['providerDetails']['title']]
+
+        payload = {
+                'PlatformCode': self._platform_code,
                 'Id': content_id,
                 'Title': content_title,
-                'Provider': payload['Provider'],
-                'Packages': payload['Packages'] 
-            }
+                'OriginalTitle': None,
+                'CleanTitle': _replace(content_title),
+                'Type': content_type,
+                'Year': content_year,
+                'Duration': content_duration,
+                'ExternalIds': None,
+                'Deeplinks': {
+                    'Web': content_link,
+                    'Android': None,
+                    'iOS': None,
+                },
+                'Playback': None,
+                'Synopsis': content_description,
+                'Image': content_images if content_images else None,
+                'Rating': content_rating[:-2] if content_rating else None, # elimina la ultima coma del String
+                'Provider': content_provider,
+                'Genres': content_genres,
+                'Cast': content_cast if content_cast else None, 
+                'Directors': content_directors if content_directors else None,
+                'Availability': content_availability,
+                'Download': None,
+                'IsOriginal': None,
+                'IsAdult': None,
+                'IsBranded': None,
+                'Packages': content_package,
+                'Country': None,
+                'Timestamp': datetime.now().isoformat(),
+                'CreatedAt': self._created_at
+        }
 
-            self.episodes_scraping(parent_data, seasons_data, payloads_episodes, scraped_episodes)
+        # Esta lista va a ir acumulando los dict con los datos de cada temporada, para luego agregarla
+        # al payload de la serie
+        seasons_payload = []
 
-        Datamanager._checkDBandAppend(self, payload, scraped, payloads)
+        seasons_data = content_data['seasons']
+
+        for season in seasons_data:
+
+                # Implemento un try/except porque no todas las temporadas de una serie tienen
+                # información pertinente. Si algún dato no se puede traer se saltea la temporada
+                # y pasa a la siguiente (no queda registrado en el campo Seasons del payload de 
+                # la serie). Pero toda la seasons_data se analiza aparte para el payload de los 
+                # episodios.
+                try:
+                    # SEASON ID, TITULO, LINK, NÚMERO Y AÑO DE ESTRENO
+                    season_id = season['meta']['id']
+                    season_title = season['title'] if season.get('title') else None
+                    season_link = self.content_link.format(season_id) 
+                    season_number = int(season['seasonNumber'])
+                    season_release_year = season['releaseNumber'] if season.get('releaseNumber') else None
+
+                    # IMÁGENES (SEASONS)
+                    season_images = []
+                    for image in season['images']:
+                        image_path = image['path']
+                        season_images.append(image_path)
+
+                    # CAST & DIRECTORS (SEASONS)
+                    season_cast = []
+                    season_directors = []
+                    for person in season['credits']:
+                        if person['role'] == 'ACTOR':
+                            season_cast.append(person['name'])
+                        if person['role'] == 'DIRECTOR':
+                            season_directors.append(person['name'])
+
+                    season_payload = {
+                            'Id': season_id,
+                            'Synopsis': None,
+                            'Title': season_title,
+                            'Deeplink': season_link,
+                            'Number': season_number,
+                            'Year': season_release_year,
+                            'Image': season_images if season_images else None,
+                            'Directors': season_directors if season_directors else None,
+                            'Cast': season_cast if season_cast else None
+                            }
+
+                    seasons_payload.append(season_payload)
+                except:
+                    continue
+            
+        # Agrego el campo "Seasons" al payload con toda la información recopilada de las temporadas
+        payload['Seasons'] = seasons_payload if seasons_payload else None
+
+        self.merge_series_payload(payload, seasons_data, scraped, payloads, payloads_episodes, scraped_episodes)
 
     def episodes_scraping(self, parent_data, seasons_data, payloads_episodes, scraped_episodes):
         '''
@@ -418,8 +537,7 @@ class RokuChannel():
             y luego los carga en la BD mediante las funciones del DataManager.
 
             - PARÁMETROS:
-                - parent_data: dict con datos de la serie padre que pueden requerirse en el caso de
-                               que no los tenga la API 
+                - parent_data: dict con datos de la serie padre que pueden requerirse en el caso de que no los tenga la API 
                 - seasons_data: fragmento del .json de la serie padre
                 - payloads_episodes: la lista de payloads en la que se van acumulando los episodios
                 - scraped_episodes: la BD con los episodios ya scrapeados
@@ -516,3 +634,165 @@ class RokuChannel():
                                 'CreatedAt': self._created_at
                                 }
                     Datamanager._checkDBandAppend(self, payload_episode, scraped_episodes, payloads_episodes, isEpi=True)
+
+    def merge_series_payload(self, payload, seasons_data, scraped, payloads_list, payloads_episodes, scraped_episodes):
+        '''
+            Este método homogeniza series duplicadas en
+            base a posibles criterios de duplicación.
+            El caso principal se da cuando hay series
+            separadas en temporadas que tienen distinto ID
+            en la plataforma.
+
+            En ese caso el payload dado solo va a actualizar datos
+            del payload que corresponda a la serie duplicada, para 
+            evitar que se suba dos veces.
+
+            Si no hay ningun payload ingresado anteriormente 
+            que coincida con el titulo de la serie (dentro de payloads_list),
+            se ingresa el payload actual con el checkDBAndAppend del Datamanager.
+
+            - PARÁMETROS:
+                - payload: el payload actual, que actualizará otro payload ya
+                           existente en el caso de duplicación o será ingresado
+                           en el caso contrario.
+                - seasons_data: extracto del .json que contiene informacion de 
+                           las temporadas, en caso de ser necesario se utiliza
+                           para sacar los episodios también unificados.
+                - scraped: no tiene mucha importancia en esta instancia, solo sirve
+                           para pasarle al checkDBAndAppend en caso de ser necesario.
+                - payloads_list: la lista que contiene los payloads de series ya obtenidos.
+                - payloads_episodes: la lista de payloads en la que se van acumulando los episodios.
+                - scraped_episodes: la BD con los episodios ya scrapeados.
+        '''
+        # Encontró algun contenido duplicado?
+        duplicate_value = False
+
+        # Extraigo esta información para completar scrapear los episodios.
+        # Si se trata de una serie sin duplicado por el momento, trae 
+        # todas las temporadas y sus episodios. Si es el caso de un duplicado
+        # solo scrapea los episodios de la temporada que no esté duplicada
+        # y se haya mergeado.
+        parent_data = {
+                'Id': payload['Id'],
+                'Title': payload['Title'],
+                'Provider': payload['Provider'],
+                'Packages': payload['Packages'] 
+            }
+
+        for serie_payload in payloads_list:
+            if (payload['CleanTitle'] == serie_payload['CleanTitle'] and 
+                payload['Synopsis'] == serie_payload['Synopsis']): # TODO: se puede mejorar el filtro? para homogenizar mejor con otro criterio
+                # Si lo encontró, procedo a actualizar el payload ingresado antes
+                if payload['Provider'][0] != serie_payload['Provider'][0]:
+                    serie_payload['Provider'].append(payload['Provider'][0])
+
+                if payload['Packages'][0]['Type'] != serie_payload['Packages'][0]['Type']:
+                    serie_payload['Packages'].append(payload['Packages'][0])
+
+                if serie_payload['Cast'] is None:
+                    serie_payload.update({'Cast': payload['Cast']})
+
+                if serie_payload['Directors'] is None:
+                    serie_payload.update({'Directors': payload['Directors']})
+
+                for season in payload['Seasons']:
+                    if season['Number'] not in self.seasons_numbers(serie_payload['Seasons']):
+                        serie_payload['Seasons'].append(season)
+
+                        # Modifico el dict con los datos del padre para que 
+                        # tenga el de la serie unificada y se vea reflejado en 
+                        # los episodios
+                        parent_data['Id'] = serie_payload['Id']
+                        parent_data['Title'] = serie_payload['Title']
+                        parent_data['Provider'] = serie_payload['Provider']
+                        parent_data['Packages'] = serie_payload['Packages']
+
+                        merged_season_data = self.find_season_data_by_number(season['Number'], seasons_data)
+
+                        self.episodes_scraping(parent_data, merged_season_data, payloads_episodes, scraped_episodes)
+
+                duplicate_value = True
+                break
+
+        # Si no se encontró un duplicado para este contenido, se carga en la BD   
+        if not duplicate_value:
+            Datamanager._checkDBandAppend(self, payload, scraped, payloads_list)
+            self.episodes_scraping(parent_data, seasons_data, payloads_episodes, scraped_episodes)
+
+    def merge_movies_payload(self, payload, scraped, payloads_list):
+        '''
+            Este método homogeniza peliculas duplicadas en
+            base a posibles criterios de duplicación.
+            El caso principal se da cuando hay duplicadas
+            que tienen el mismo releaseYear pero distinto provider
+            y por lo tanto distinto ID en la plataforma.
+
+            En ese caso el payload dado solo va a actualizar datos
+            del payload que corresponda a la pelicula duplicada, para 
+            evitar que se suba dos veces.
+
+            Si no hay ningun payload ingresado anteriormente 
+            que coincida con el titulo de la pelicula (dentro de payloads_list),
+            se ingresa el payload actual con el checkDBAndAppend del Datamanager.
+
+            - PARÁMETROS:
+                - payload: el payload actual, que actualizará otro payload ya
+                           existente en el caso de duplicación o será ingresado
+                           en el caso contrario.
+                - scraped: no tiene mucha importancia en esta instancia, solo sirve
+                           para pasarle al checkDBAndAppend en caso de ser necesario.
+                - payloads_list: la lista que contiene los payloads de peliculas ya obtenidos. 
+        '''
+        # Encontró algun contenido duplicado?
+        duplicate_value = False
+
+        for movie_payload in payloads_list:
+            if payload['CleanTitle'] == movie_payload['CleanTitle'] and payload['Year'] == movie_payload['Year']:
+                # Si lo encontró, procedo a actualizar el payload ingresado antes
+                if payload['Provider'][0] != movie_payload['Provider'][0]:
+                    movie_payload['Provider'].append(payload['Provider'][0])
+
+                if payload['Packages'][0]['Type'] != movie_payload['Packages'][0]['Type']:
+                    movie_payload['Packages'].append(payload['Packages'][0])
+
+                if movie_payload['Cast'] is None:
+                    movie_payload.update({'Cast': payload['Cast']})
+
+                if movie_payload['Directors'] is None:
+                    movie_payload.update({'Directors': payload['Directors']})
+
+                duplicate_value = True
+                break
+
+        # Si no se encontró un duplicado para este contenido, se carga en la BD   
+        if not duplicate_value:
+            Datamanager._checkDBandAppend(self, payload, scraped, payloads_list)
+
+    def seasons_numbers(self, seasons_list):
+        '''
+            Dada una lista correspondiente a los campos Season
+            de una serie, devuelve todos los numeros de temporadas.
+
+            - RETURN int list 
+        '''
+        numbers = []
+        for season in seasons_list:
+            numbers.append(season['Number'])
+        return numbers
+
+    def find_season_data_by_number(self, season_number, seasons_data):
+        '''
+            Dado un .json con información sobre temporadas
+            localiza la temporada correspondiente con el season_number
+
+            - PARÁMETROS:
+                - season_number: int, nro de temporada a localizar
+                - seasons_data: .json con data sobre las temporadas de una serie
+            - RETURN: list iterable con data de la temporada correspondiente    
+        '''
+        season_data = []
+        for season in seasons_data:
+            if season['seasonNumber'] == str(season_number):
+                season_data = season
+                break
+        return [season_data]
