@@ -274,7 +274,9 @@ class Logo():
             Available.click()
             time.sleep(1)
             # Ejecutamos un script que hace que la pagina vaya al punto mas bajo
-            driver.execute_script("return document.body.scrollHeight")
+            driver.execute_script(
+                "return document.body.scrollHeight"
+                )
             driver.execute_script(
             "window.scrollTo(0, document.body.scrollHeight);")
             # Creamos un bucle que busca el boton "Load More" Mientras exista y sea visible
