@@ -242,7 +242,7 @@ class BravoTv():
         Por ultimo, tengo que recorrer cada url de los episodios para sacar la informacion, toda la informacion es guardada en
         lista, puede ser que algunas listas tengan listas adentro.
         """
-
+        cantidadEpisodios=0
         episodes_seasons=[]
         titles_episodes=[]
         description_episodes=[]
@@ -268,8 +268,7 @@ class BravoTv():
                     if '\n' in description:
                         description=description.replace('\n','').strip()
                 except:
-                    description = None
-
+                    description = None              
                 try:
                     airDate = infoEpisode.find('div',class_=self._config['queries']['air_date_episode_div_class']).text
                 except:
@@ -284,6 +283,7 @@ class BravoTv():
                 description_episode.append(description)
                 air_date.append(airDate)
                 rating_episode.append(rating)
+                cantidadEpisodios+=1
 
             episodes_seasons.append(episode_season)
             titles_episodes.append(title_episode)
@@ -304,8 +304,9 @@ class BravoTv():
             payload = Payload(packages=packages,id=_id,title=title,image = img,cleanTitle= _replace(title),
                             platformCode=_platform_code,type=_type,deeplinksWeb = URLContenido,synopsis = description,cast = cast,timestamp=datetime.now().isoformat(),createdAt=self._created_at)
             Datamanager._checkDBandAppend(self, payload.payloadJson(),scraped,payloads)
-            Datamanager._insertIntoDB(self,payloads,self.titanScraping)
-
+        
+        Datamanager._insertIntoDB(self,payloads,self.titanScraping)
+        print(cantidadEpisodios)
         for i in range(0,len(titles_episodes)):
             
             #Saco la informacion de las series que necesito
@@ -322,7 +323,23 @@ class BravoTv():
                     img.append(imgEpisodes[i][j])
                 except:
                     img.append(None)
-                _id = hashlib.md5(title.encode('utf-8')+nameShow.encode('utf-8')).hexdigest()
+                try:
+                    episode = episodes_seasons[i][j].split(' - ')[1][-1]
+                    episode = int(episode)
+                    season = episodes_seasons[i][j].split(' - ')[0][-1]
+                    season = int(season)
+                except:
+                    episode =None
+                    season = None
+                try:
+                    airDate = int(air_dates[i][j].split('/')[-1])
+                except:
+                    airDate = None
+                try:
+                    rating = rating_episodes[i][j]
+                except:
+                    rating = None
+                _id = hashlib.md5(title.encode('utf-8')+nameShow.encode('utf-8')+episodes_seasons[i][j].split(' - ')[0][-1].encode('utf-8')).hexdigest()
                 # seasons = int(episodesSeason[i][j][0][1::])
                 # episode =  int(episodesSeason[i][j][1][2::])
                 URLContenido = urlEpisodes[i][j]
@@ -330,10 +347,12 @@ class BravoTv():
                     description = description_episodes[i][j]
                 except:
                     description = None
-                payload = Payload(packages=packages,id=_id,image = img,parentId = parrentId,parentTitle=nameShow,title=title,
+
+                payload = Payload(packages=packages,id=_id,image = img,parentId = parrentId,parentTitle=nameShow,title=title,season=season,episode=episode, year=airDate, rating=rating,
                                 platformCode=_platform_code,deeplinksWeb = URLContenido,synopsis = description,timestamp=datetime.now().isoformat(),createdAt=self._created_at)
                 Datamanager._checkDBandAppend(self, payload.payloadEpisodeJson(),scrapedEpisodes,payloadsEpisodios,isEpi=True)
-                Datamanager._insertIntoDB(self,payloadsEpisodios,self.titanScrapingEpisodios)
+       
+        Datamanager._insertIntoDB(self,payloadsEpisodios,self.titanScrapingEpisodios)
 
 
         #     soup = Datamanager._getSoup(self,urlShow)

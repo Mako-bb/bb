@@ -17,6 +17,9 @@ from handle.datamanager     import Datamanager
 from updates.upload         import Upload
 from bs4                     import BeautifulSoup
 from selenium.webdriver import ActionChains
+import platform
+from pyvirtualdisplay       import Display
+ 
 import sys
 
 def validacionDatos(datoAValidar,datoAuxiliar):
@@ -40,6 +43,8 @@ class TvLand():
         self.titanScraping          = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodios  = config()['mongo']['collections']['episode']
         path = 'C:\geckodriver.exe'
+        if platform.system() == 'Linux':
+            Display(visible=0, size=(1366, 768)).start()
         self.driver                 = webdriver.Firefox()
         self.sesion = requests.session()
         self.skippedTitles=0

@@ -286,6 +286,7 @@ ott_sites:
       description_episode_div_class: video__description
       air_date_episode_div_class: video__air-date
       rating_episode_div_class: video__rating_expiration
+      season_episode_div_class: video__label
   TvLand:
     countries:
       US: us.tvland
