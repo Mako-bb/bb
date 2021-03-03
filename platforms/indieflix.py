@@ -64,7 +64,7 @@ class Indieflix():
         if type == 'testing':
             self._scraping(testing=True)
 
-    def __query_field(self, collection, field, extra_filter=None):
+    def _query_field(self, collection, field, extra_filter=None):
         if not extra_filter:
             extra_filter = {}
 
@@ -72,9 +72,9 @@ class Indieflix():
             'PlatformCode': self._platform_code,
             'CreatedAt': self._created_at,
         }
-
+        
         find_filter.update(extra_filter)
-
+        
         query = self.mongo.db[collection].find(
             filter=find_filter,
             projection={
@@ -83,12 +83,18 @@ class Indieflix():
             },
             no_cursor_timeout=False
         )
-
+        
         query = {item[field] for item in query}
-
+        
         return query
 
     def _scraping(self, testing=False):
+
+        # Set de Clean Titles
+        self.clean_titles = self._query_field(self.titanScraping, field='CleanTitle')
+        # Set de Ids
+        self.ids = self._query_field(self.titanScraping, field='Id')
+
         #comenzamos haciendo request a una API que contiene
         #las categorias que hay en la pagina
         api_categories = "https://api.unreel.me/api/assets/5ee3f7a04d0e1b0999ec1511/discover?__site=indieflix&__source=web&onlyEnabledChannels=true"
@@ -218,7 +224,20 @@ class Indieflix():
                             "Timestamp":     datetime.now().isoformat(), #Obligatorio      
                             "CreatedAt":     self._created_at, #Obligatorio
                         }
-                        Datamanager._checkDBandAppend(self, payload, self.payloads_db, self.payloads)
+                        if id_ in self.ids:
+                            print("Ingresado")                            
+                            pass
+                        else:
+                            self.ids.add(id_)                            
+                            check = self.check_payload(payload)
+                            if check:
+                                print("Duplicado")
+                                id_ = check
+                            else:                                
+                                mongo.insert(self.titanScraping, payload)                  
+                        # Datamanager._checkDBandAppend(self, payload, self.payloads_db, self.payloads)
+
+                        # check -> Sería el id ingresado. 
                         
                         #Accedemos a la API de los episodios
                         api_epi = "https://api.unreel.me/v2/sites/indieflix/series/{}/episodes?__site=indieflix&__source=web".format(item["uid"])
@@ -470,9 +489,53 @@ class Indieflix():
                             "Timestamp":     datetime.now().isoformat(), #Obligatorio      
                             "CreatedAt":     self._created_at, #Obligatorio
                         } #TODO: aplicar algoritmo juan
-                        Datamanager._checkDBandAppend(self, payload, self.payloads_db, self.payloads)
+                        if id_ in self.ids:
+                            print("Ingresado")                            
+                            pass
+                        else:
+                            self.ids.add(id_)
+                            check = self.check_payload(payload)
+                            if check:
+                                print("Duplicado")
+                            else:                                
+                                self.mongo.insert(self.titanScraping, payload)
+                        # Datamanager._checkDBandAppend(self, payload, self.payloads_db, self.payloads)
         
         Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)
         Datamanager._insertIntoDB(self, self.payloads_epi, self.titanScrapingEpisodios)
 
         Upload(self._platform_code, self._created_at,testing=testing)
+
+    def check_payload(self, payload):
+        """Método que verifica si se ingresó el mismo contenido.
+        Puede haber casos en que un contenido tenga distinto Id
+        o que las series estén separadas.
+
+        Args:
+            payload (str): El diccionario del payload.
+
+        Returns:
+            str or None: Devuelve el Id ingresado. Si no está
+            duplicado, devuelve None.
+        """
+        clean_title = payload['CleanTitle']
+        synopsis = payload['Synopsis']
+
+        if clean_title in self.clean_titles:
+            query_1 = {
+                "PlatformCode": self._platform_code,
+                "CreatedAt": self._created_at,
+                "CleanTitle": clean_title,
+                "Synopsis" : synopsis
+            }
+            consulta = self.mongo.search(self.titanScraping, query_1)
+            if consulta:
+                for ingresado in consulta:
+                    synopsis_ingresada = ingresado['Synopsis']
+                    
+                    if synopsis == synopsis_ingresada:
+                        print("¡Contenido Duplicado!\n")
+                        return ingresado['Id']
+
+        self.clean_titles.add(clean_title)
+        return None
