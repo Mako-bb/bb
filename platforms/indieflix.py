@@ -345,16 +345,6 @@ class Indieflix():
                             title = title.replace("(","")
                             title = title.replace(")","")
                             originaltitle = None
-
-                        #fix especifico para los titulos con formato "title(orinaltitle)"
-                        #5f3de53fbab794234589dff4e8ebf060 == Snowman in July (Der Schneemann)
-                        #3218b56a27cc5d3acdac4a6b99195f75 == Strength Is Not Enough (la forza non basta)
-                        if id_ == "3218b56a27cc5d3acdac4a6b99195f75" or id_ == "5f3de53fbab794234589dff4e8ebf060":
-                            #separamos el titulo a partir del (
-                            split_title = title.split("(")
-                            title = split_title[0]
-                            originaltitle = split_title[-1].replace(")","")
-
                         
                         #ef5fa3e7b0c6b2383740f768ed209602 == (beau)strosity / debe quedar asi
                         #9e57be5389ed6ba4e95ec7bdd5ff9f2f == Salad Days: A Decade of Punk in Washington, DC (1980-90) / debe quedar asi
@@ -479,7 +469,7 @@ class Indieflix():
                             "Country":       None,      
                             "Timestamp":     datetime.now().isoformat(), #Obligatorio      
                             "CreatedAt":     self._created_at, #Obligatorio
-                        }
+                        } #TODO: aplicar algoritmo juan
                         Datamanager._checkDBandAppend(self, payload, self.payloads_db, self.payloads)
         
         Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)
