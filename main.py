@@ -57,6 +57,7 @@ from platforms.roku_channel         import RokuChannel
 from platforms.wwenetwork           import WWENetwork
 from platforms.telemundo            import Telemundo
 from platforms.bravotv              import BravoTv
+from platforms.nbc              import NBC
 
 
 logging.basicConfig(level=logging.INFO)
