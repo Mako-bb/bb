@@ -16,7 +16,7 @@ from updates.upload import Upload
 
 class AMCNetworks():
     """
-        Scraping de las plataformas SundanceTv, Ifc, Amc, WeTV y BBC America. Las 5 pertenecen 
+        Scraping de las plataformas Ifc, WeTV y BBC America. Las 3 pertenecen 
         al mismo dueño (AMC Networks) y comparten estructura tanto gráfica como interna en las APIS,
         por lo tanto se unifica el scraping para evitar repeticiones y redundancia de código. 
 
@@ -102,17 +102,10 @@ class AMCNetworks():
         # TEMPORAL
         platforms = [{
             'PlatformCode': 'us.wetv',
-            'Name': 'wetv',
+            'Name': 'we-tv',
             'MovieIndex': None,
             'SerieIndex': 4,
             'Link': 'www.wetv.com'
-        },
-            {
-            'PlatformCode': 'us.sundancetv',
-            'Name': 'sundance',
-            'MovieIndex': 4,
-            'SerieIndex': 5,
-            'Link': 'www.sundancetv.com'
         },
             {
             'PlatformCode': 'us.ifc',
@@ -122,15 +115,8 @@ class AMCNetworks():
             'Link': 'www.ifc.com'
         },
             {
-            'PlatformCode': 'us.amc',
-            'Name': 'amc',
-            'MovieIndex': 4,
-            'SerieIndex': 4,
-            'Link': 'www.amc.com'
-        },
-            {
             'PlatformCode': 'us.bbca',
-            'Name': 'bbca',
+            'Name': 'bbc-america',
             'MovieIndex': 3,
             'SerieIndex': 4,
             'Link': 'www.bbcamerica.com'
