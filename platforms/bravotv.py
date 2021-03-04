@@ -261,7 +261,7 @@ class BravoTv():
                 infoEpisode = soup.find('details',{"class":self._config['queries']['info_episode_details_class']})
 
                 summary = infoEpisode.find(self._config['queries']['summary_episode'])
-                episodeAndSeason = summary.div.text
+                episodeAndSeason = summary.div.text.replace('\n','').replace(' ','')
                 title = summary.h1.text.split(':')[-1].replace('\n',' ').strip()
                 try:
                     description = infoEpisode.find('div',class_=self._config['queries']['description_episode_div_class']).text
@@ -270,11 +270,11 @@ class BravoTv():
                 except:
                     description = None              
                 try:
-                    airDate = infoEpisode.find('div',class_=self._config['queries']['air_date_episode_div_class']).text
+                    airDate = infoEpisode.find('div',class_=self._config['queries']['air_date_episode_div_class']).text.replace('\n','').strip()
                 except:
                     airDate = None
                 try:
-                    rating = infoEpisode.find('div',class_=self._config['queries']['rating_episode_div_class']).text
+                    rating = infoEpisode.find('div',class_=self._config['queries']['rating_episode_div_class']).text.replace('\n','').strip()
                 except:
                     rating = None
 
@@ -324,9 +324,9 @@ class BravoTv():
                 except:
                     img.append(None)
                 try:
-                    episode = episodes_seasons[i][j].split(' - ')[1][-1]
+                    episode = episodes_seasons[i][j].split('-')[1][-1]
                     episode = int(episode)
-                    season = episodes_seasons[i][j].split(' - ')[0][-1]
+                    season = episodes_seasons[i][j].split('-')[0][-1]
                     season = int(season)
                 except:
                     episode =None
@@ -339,7 +339,11 @@ class BravoTv():
                     rating = rating_episodes[i][j]
                 except:
                     rating = None
-                _id = hashlib.md5(title.encode('utf-8')+nameShow.encode('utf-8')+episodes_seasons[i][j].split(' - ')[0][-1].encode('utf-8')).hexdigest()
+                try:
+                    idEpisodio = episodes_seasons[i][j].split('-')[0][-1]
+                except:
+                    idEpisodio = ""
+                _id = hashlib.md5(title.encode('utf-8')+nameShow.encode('utf-8')+idEpisodio.encode('utf-8')).hexdigest()
                 # seasons = int(episodesSeason[i][j][0][1::])
                 # episode =  int(episodesSeason[i][j][1][2::])
                 URLContenido = urlEpisodes[i][j]
