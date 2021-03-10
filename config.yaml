@@ -143,10 +143,10 @@ ott_sites:
       US: us.amazon_login
   SundanceTvTest:
     countries:
-      US: us.sundancetv_test
+      US: us.sundancetv_test_
   AmcSeries:
     countries:
-      US: us.amcseries
+      US: us.amcseries_
     movie_url: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/movies?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web
     episode_url: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/episodes?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web
     show_url: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/shows?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web
