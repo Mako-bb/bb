@@ -253,8 +253,38 @@ class Shoutfactorytv():
                         
                         
                         #if al que entra si las temporadas de la serie estan juntos en un mismo tab, Ej: "Season 1-3","Season 10-11",
-                        else:
-                            season_list = None
+                        elif len(season.a.text.split(" ")[-1]) > 2:
+                            clean_season = season.a.text.split("Season ")[-1]
+                            split_season = clean_season.split("-")
+                            iterable_seasons = []
+                            if int(split_season[1])-int(split_season[0]) == 2:
+                                iterable_seasons.extend([int(split_season[0]),int(split_season[0])+1,int(split_season[1])])
+                            elif int(split_season[0])+1 == int(split_season[1]):
+                                iterable_seasons.extend([int(split_season[0]),int(split_season[1])])
+                            for season in iterable_seasons:
+                                season_list = []
+                                season_num = int(season)
+                                episode_quantity = []
+                                container_episodes = soup_serie.find_all("div",class_="caption")
+                                for episode in container_episodes:
+                                    sea_epi_container = episode.find_all("span")[1].text.strip()
+                                    sea_epi_split = sea_epi_container.split(",")
+                                    search = sea_epi_split[0].split(" ")[-1]
+                                    if str(season) == search:
+                                        episode_quantity.append(episode)
+                                season_list.append({
+                                "Id": season_id,                   #Importante
+                                "Synopsis": None,                  #Importante   
+                                "Title": season_title,             #Importante, E.J. The Wallking Dead: Season 1 
+                                "Deeplink":  None,                 #Importante
+                                "Number": season_num,              #Importante
+                                "Year": None,                      #Importante
+                                "Image": None, 
+                                "Directors": None,                 #Importante
+                                "Cast": None,                      #Importante
+                                "Episodes": len(episode_quantity),      #Importante 
+                                "IsOriginal": None    
+                                })
                         tab_season_counter = tab_season_counter+1
                         
                     

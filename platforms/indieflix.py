@@ -234,7 +234,7 @@ class Indieflix():
                                 print("Duplicado")
                                 id_ = check
                             else:                                
-                                mongo.insert(self.titanScraping, payload)                  
+                                self.mongo.insert(self.titanScraping, payload)                 
                         # Datamanager._checkDBandAppend(self, payload, self.payloads_db, self.payloads)
 
                         # check -> Sería el id ingresado. 
@@ -338,15 +338,10 @@ class Indieflix():
                         # 9c88225457856ad8f19a6952c950ab32 == "The Andalusian Dog"
                         # 0a1e1d8da51f5dd7077a7f2748b10d58 == "M"
                         # 4fbdc7de3e31de33862586c8db456f53 == "Dawn"
-                        if (id_ == "9c88225457856ad8f19a6952c950ab32") or (id_ == "0a1e1d8da51f5dd7077a7f2748b10d58") or (id_ == "4fbdc7de3e31de33862586c8db456f53") :
-                            continue
+                        #if (id_ == "9c88225457856ad8f19a6952c950ab32") or (id_ == "0a1e1d8da51f5dd7077a7f2748b10d58") or (id_ == "4fbdc7de3e31de33862586c8db456f53") :
+                            #continue
 
                         title = item["title"]
-
-                        #fix para "Ten Fingers of Death (Master With Cracked Fingers)"
-                        if id_ == "7b6f112e7e54968fd8c34d5727e4996d":
-                            title = title.replace(" (",": ")
-                            title = title.replace(")",(""))
 
                         #fix especifico para pelicula donde se debe eliminar
                         #del titulo lo que hay entre parentesis
