@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-from platforms.Oxygen import Oxygen
-from platforms.AmcSeries import AmcSeries
 from platforms.amazon_login import AmazonLogin
-from platforms.sundancetv_test import SundanceTvTest
-from platforms.cmt import Cmt
-from platforms.discoverylife import DiscoveryLife
 from platforms.optimum_test import OptimumTest
 from platforms.boomerang import Boomerang
 from platforms.fandango import FandangoNOW
@@ -38,26 +33,8 @@ from platforms.cartoonnetwork       import CartoonNetwork
 from platforms.fandango             import FandangoNOW
 from platforms.boomerang            import Boomerang
 from platforms.optimum_test         import OptimumTest
-from platforms.indieflix            import Indieflix
-from platforms.comedy_central       import Comedy_central
-from platforms.vh1                  import Vh1
-from platforms.shoutfactorytv       import Shoutfactorytv
-from platforms.discoverylife        import DiscoveryLife
-from platforms.sundancetv_test      import SundanceTvTest
-from platforms.cmt                  import Cmt
-from platforms.fxnow                import Fxnow
-from platforms.tvland               import TvLand
-from platforms.amazon_login         import AmazonLogin
-from platforms.abc                  import Abc
-from platforms.bet import Bet
-from platforms.amc_networks        import AMCNetworks
-from platforms.syfy import Syfy
-from platforms.logo import Logo
-from platforms.roku_channel         import RokuChannel
-from platforms.wwenetwork           import WWENetwork
-from platforms.telemundo            import Telemundo
-from platforms.bravotv              import BravoTv
-from platforms.nbc              import NBC
+from platforms.amcnetworks        import AMCNetworks
+from platforms.nbcnetworks              import NBCNetworks
 
 
 logging.basicConfig(level=logging.INFO)

@@ -313,7 +313,7 @@ ott_sites:
       img_episode_dic_class: content
       botton_episode_load_more: expand-wrap
 
-  NBC:
+  NBCNetworks:
     countries:
       US: us.{}
     urls:
