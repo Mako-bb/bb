@@ -48,7 +48,7 @@ class Optimum():
         if type == 'scraping':
             self._scraping()
         if type == 'testing':
-            self._scraping(testing == True)
+            self._scraping(testing=True)
 
     def __query_field(self, collection, field, extra_filter=None):
         if not extra_filter:
@@ -74,7 +74,7 @@ class Optimum():
 
         return query
 
-    def _scraping(self):
+    def _scraping(self, testing=False):
 
         if platform.system() == 'Linux':
             Display(visible=0, size=(1366, 768)).start()

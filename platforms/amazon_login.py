@@ -74,27 +74,30 @@ class AmazonLogin():
 
     def _scraping(self):
 
-        browser = webdriver.Firefox()
+        # browser = webdriver.Firefox()
 
-        url = 'https://www.amazon.com/ap/signin?accountStatusPolicy=P1&clientContext=132-3713966-1959930&language=es_ES&openid.assoc_handle=amzn_prime_video_desktop_us&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fwww.primevideo.com%2Fauth%2Freturn%2Fref%3Dav_auth_ap%3F_encoding%3DUTF8%26location%3D%252Fdetail%252Famzn1.dv.gti.aab96350-58eb-de2f-e466-60cfebbcdce9%252Fref_%253Ddvm_soc_fcb_ar_jc_s_vla_30_ride_veahora%252Fref%253Ddv_auth_ret%253F_encoding%253DUTF8%2526fbclid%253DIwAR2CLg4fty4TYvbPNITtUPpph8Nte42eVXN9IqjwN_DFEVosm6dZkL8gr3Y'
+        # url = 'https://www.amazon.com/ap/signin?accountStatusPolicy=P1&clientContext=132-3713966-1959930&language=es_ES&openid.assoc_handle=amzn_prime_video_desktop_us&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fwww.primevideo.com%2Fauth%2Freturn%2Fref%3Dav_auth_ap%3F_encoding%3DUTF8%26location%3D%252Fdetail%252Famzn1.dv.gti.aab96350-58eb-de2f-e466-60cfebbcdce9%252Fref_%253Ddvm_soc_fcb_ar_jc_s_vla_30_ride_veahora%252Fref%253Ddv_auth_ret%253F_encoding%253DUTF8%2526fbclid%253DIwAR2CLg4fty4TYvbPNITtUPpph8Nte42eVXN9IqjwN_DFEVosm6dZkL8gr3Y'
 
-        browser.get(url)
+        # browser.get(url)
 
-        elemento_email = browser.find_element_by_id('ap_email')
-        elemento_password = browser.find_element_by_id('ap_password')
+        # elemento_email = browser.find_element_by_id('ap_email')
+        # elemento_password = browser.find_element_by_id('ap_password')
 
-        elemento_email.send_keys("jmoreno@businessbureau.com")
+        # elemento_email.send_keys("jmoreno@businessbureau.com")
 
-        time.sleep(2)
+        # time.sleep(2)
 
-        elemento_password.send_keys("KLM2012a")
+        # elemento_password.send_keys("KLM2012a")
 
-        time.sleep(2)
+        # time.sleep(2)
 
-        elemento_login = browser.find_element_by_id('signInSubmit')
+        # elemento_login = browser.find_element_by_id('signInSubmit')
 
-        elemento_login.click()
+        # elemento_login.click()
 
-        time.sleep(8)
+        # time.sleep(8)
 
-        browser.quit()
+        # browser.quit()
+
+        # 16-03-2021
+        print("Pruebas de BS4")
