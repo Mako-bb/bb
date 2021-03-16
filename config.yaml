@@ -141,10 +141,14 @@ ott_sites:
   AmazonLogin:
     countries:
       US: us.amazon_login
-  SundanceTvTest:
+  SundanceTv:
     countries:
-      US: us.sundancetv_test_
-  AmcSeries:
+      US: us.sundance
+  SundanceNow:
+    countries:
+      US: 'us.sundancenow'
+      CA: 'ca.sundancenow'      
+  Amc:
     countries:
       US: us.amcseries_
     movie_url: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/movies?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web

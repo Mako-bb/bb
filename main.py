@@ -35,7 +35,9 @@ from platforms.boomerang            import Boomerang
 from platforms.optimum_test         import OptimumTest
 from platforms.amcnetworks        import AMCNetworks
 from platforms.nbcnetworks              import NBCNetworks
-
+from platforms.amc   import Amc
+from platforms.sundancenow import SundanceNow
+from platforms.sundancetv import SundanceTv
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
