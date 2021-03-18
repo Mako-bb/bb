@@ -127,8 +127,8 @@ class WeTV():
                 for c in content:
                     cast.append(c['properties']['cardData']['text']['title'])
                     
-            except Exception as e:
-                print(f'Error {title}, no tiene cast disponible, o no se encuentra la key {e}.')
+            except KeyError as e:
+                print(f'Error {title}, no se encuentra la key {e}, no hay cast disponible.')
                 pass
         except:
             pass
@@ -146,13 +146,15 @@ class WeTV():
             solo hay info de la temporada active, aun asi encontramos link de la api_episodes
             que pasariamos a get_pre_episodes.'''
 
+        list_parameters = []
+
         for link in links:
             try:
                 r = self.sesion.get(f'https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/wetv/url{link}')
                 data = r.json()
                 try:
-                    parameter = data['data']['children'][2]['properties']['tabs'][0]['permalink'] #Extrae parametro
-                    self.get_pre_episodes(parameter) #La idea seria armar una lista con parametros, no llamar al metodo en el medio
+                    list_parameters.append(data['data']['children'][2]['properties']['tabs'][0]['permalink']) #Extrae parametro
+
                 except Exception as e:
                     print('Error al extraer datos.')
                     pass
@@ -160,45 +162,59 @@ class WeTV():
                 print(e)
                 pass
 
-    def get_pre_episodes(self, parameter):
+        self.get_pre_episodes(list_parameters)
+
+    def get_pre_episodes(self, parameters):
 
         '''Nuevamente la api_episodes sigue mostrando data de la ultima temporada,
             pero ahora encontramos los links (en dropdownItems) de las demas temporadas,
             si es que las hay'''
 
-        try:
-            r = self.sesion.get(f'https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/wetv/url{parameter}')
-            data = r.json()
-            content = data['data']['children'][3]['properties']['dropdownItems']
-            for a in content:
-                parameter = a['properties']['permalink']
-                self.get_final_episodes(parameter) #La idea seria armar una lista con parametros, no llamar al metodo en el medio
+        list_parameters = []
 
-        except KeyError: #Algunas no tienen series por lo tanto no hay dropdownItems
-            pass
-    
-    def get_final_episodes(self, parameter):
+        for parameter in parameters:
+            try:
+                r = self.sesion.get(f'https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/wetv/url{parameter}')
+                data = r.json()
+                content = data['data']['children'][3]['properties']['dropdownItems']
+
+                for a in content:
+                    list_parameters.append(a['properties']['permalink'])
+                     
+            except KeyError: #Algunas no tienen series por lo tanto no hay dropdownItems
+                pass
+        
+        
+        self.get_final_episodes(list_parameters)
+
+    def get_final_episodes(self, parameters):
         
         '''Finalmente esta función es la que obtiene los datos de todas las seasons'''
-        
+
         list_final_episodes = []
 
-        try:
-            r = requests.get(f'https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/wetv/url{parameter}')
-            data = r.json()
-            content = data['data']['children'][4]['children']
-            for a in content:
-                list_final_episodes.append([a['properties']['cardData']['meta'].get('nid', None),
-                                            a['properties']['cardData']['meta'].get('permalink', None),
-                                            a['properties']['cardData'].get('images', None),
-                                            a['properties']['cardData']['text'].get('title', None),
-                                            a['properties']['cardData']['text'].get('description', None),
-                                            a['properties']['cardData']['text'].get('seasonEpisodeNumber', None)])                  
-        except Exception as e:
-            print(f'Error {e}')
-            pass
+        for parameter in parameters:
+            try:
+                r = requests.get(f'https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/wetv/url{parameter}')
+                data = r.json()
+                content = data['data']['children'][4]['children']
+                for a in content:
+
+                    season_episode = a['properties']['cardData']['text'].get('seasonEpisodeNumber', None)
+
+                    list_final_episodes.append([a['properties']['cardData']['meta'].get('nid', None),
+                                                a['properties']['cardData']['meta'].get('permalink', None),
+                                                a['properties']['cardData'].get('images', None),
+                                                a['properties']['cardData']['text'].get('title', None),
+                                                a['properties']['cardData']['text'].get('description', None),
+                                                season_episode.split(',')[0].replace('S', '') if season_episode else None,
+                                                season_episode.split(',')[1].replace('E', '') if season_episode else None])                  
+            except KeyError as e:
+                print(f'Error campo no encontrado {e} en {r.url}')
+                pass
         
-        pandas = pd.DataFrame(list_final_episodes, columns=['ID', 'Link', 'Descripción', 'Image', 'Link', 'Season'])
+        pandas = pd.DataFrame(list_final_episodes, columns=['ID', 'Link', 'Image', 'Title', 'Descripcion', 'Season', 'Episode'])
+        #pandas.to_excel("series.xlsx",sheet_name='series') #Si queremos previsualizar datos
         print(pandas)
 
 
