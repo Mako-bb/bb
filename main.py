@@ -12,32 +12,31 @@ from common import config
 from platforms.cwtv import CWtv
 import argparse
 import logging
-
-
-from platforms.pongalo              import Pongalo
-from platforms.cinema_uno           import CinemaUno
-from platforms.acorntv              import AcornTV
-from platforms.adultswim            import AdultSwim
-from platforms.flixfling            import FlixFling
-from platforms.trutv                import TruTV
-from platforms.quibi                import Quibi
-from platforms.optimum              import Optimum
+from platforms.pongalo import Pongalo
+from platforms.cinema_uno import CinemaUno
+from platforms.acorntv import AcornTV
+from platforms.adultswim import AdultSwim
+from platforms.flixfling import FlixFling
+from platforms.trutv import TruTV
+from platforms.quibi import Quibi
+from platforms.optimum import Optimum
 # from platforms.acorntv_test         import AcornTV_Test
-from platforms.cwtv                 import CWtv
-from common                         import config
-from platforms.freeform             import Freeform
-from platforms.myoutdoortv          import MyOutdoorTV
-from platforms.cwseed               import CwSeed
-from platforms.pantaya              import Pantaya
-from platforms.cartoonnetwork       import CartoonNetwork
-from platforms.fandango             import FandangoNOW
-from platforms.boomerang            import Boomerang
-from platforms.optimum_test         import OptimumTest
-from platforms.amcnetworks        import AMCNetworks
-from platforms.nbcnetworks              import NBCNetworks
-from platforms.amc   import Amc
+from platforms.cwtv import CWtv
+from common import config
+from platforms.freeform import Freeform
+from platforms.myoutdoortv import MyOutdoorTV
+from platforms.cwseed import CwSeed
+from platforms.pantaya import Pantaya
+from platforms.cartoonnetwork import CartoonNetwork
+from platforms.fandango import FandangoNOW
+from platforms.boomerang import Boomerang
+from platforms.optimum_test import OptimumTest
+from platforms.amcnetworks import AMCNetworks
+from platforms.nbcnetworks import NBCNetworks
+from platforms.amc import Amc
 from platforms.sundancenow import SundanceNow
 from platforms.sundancetv import SundanceTv
+from platforms.wetv import WeTV
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

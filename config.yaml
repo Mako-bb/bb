@@ -113,6 +113,9 @@ ott_sites:
   OptimumTest:
     countries:
       US: us.optimum_test
+  WeTV:
+    countries:
+      US: us.wetv
   Indieflix:
     countries:
       US: us.indieflix
