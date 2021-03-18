@@ -109,6 +109,8 @@ class WeTV():
 
         self.api_each_serie(links)
 
+        self.series_payloads(series_info)
+
 
     def get_cast(self, title, _id):
 
@@ -217,6 +219,59 @@ class WeTV():
         #pandas.to_excel("series.xlsx",sheet_name='series') #Si queremos previsualizar datos
         print(pandas)
 
+    
+    def series_payloads(self, list_info):
+        
+        '''Esta funcion deberia recibir las listas con datos tanto de series 
+        como de episodios, en proceso'''
+        
+        list_db_series = Datamanager._getListDB(self, self.titanScraping)
+
+        payloads = []
+
+        packages = [
+                        {
+                            "Type": "subscription-vod"
+                        }
+                    ]
+
+        for serie in list_info:
+
+            payload = {
+                'PlatformCode':  self._platform_code,
+                'Id':            str(serie[0]),
+                'Title':         serie[1],
+                'OriginalTitle': None,
+                'CleanTitle':    _replace(serie[1]),
+                'Type':          'serie',
+                'Year':          None,
+                'Duration':      None,
+                'Deeplinks': {
+                    'Web':       'https://www.wetv.com' + serie[4],
+                    'Android':   None,
+                    'iOS':       None,
+                    },
+                'Playback':      None,
+                'Synopsis':      serie[2],
+                'Image':         serie[3],
+                'Rating':        None,
+                'Provider':      None,
+                'Genres':        None,
+                'Cast':          serie[5],
+                'Directors':     None,
+                'Availability':  None,
+                'Download':      None,
+                'IsOriginal':    None,
+                'IsAdult':       None,
+                'Packages':      packages,
+                'Country':       None,
+                'Timestamp':     datetime.now().isoformat(),
+                'CreatedAt':     self._created_at
+                }
+
+            Datamanager._checkDBandAppend(self, payload, list_db_series, payloads)
+
+        Datamanager._insertIntoDB(self, payloads, self.titanScraping)
 
     def get_response(self, url):
 
