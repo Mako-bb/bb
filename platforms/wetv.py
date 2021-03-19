@@ -24,8 +24,11 @@ class WeTV():
             data principal (titles, synopsis, etc), lamentablemente desde show all episodes solo se obtiene
             la data de la ultima temporada de cada serie (ya que en la web se muestran las ultimas temporadas como novedades), 
             por lo tanto hay que visitar multiples URL's de las restantes temporadas.
-        Cosas por hacer: Externalizar urls, mejorar interaccion entre funciones (no llamar metodos dentro de for's), 
-        manejar mejor los errores, chequear todos lo datos, agregar los payloads.
+
+        Duración: Dependiendo la pc, aprox. 3 minutos.
+
+        Cosas por hacer: Externalizar urls, manejar mejor los errores, 
+        chequear todos los datos, exprimir la plataforma en busca de mas datos.
     '''
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config                = config()['ott_sites'][ott_site_uid]
@@ -107,9 +110,9 @@ class WeTV():
 
         links = pandas['Url']
 
-        self.api_each_serie(links)
+        self.payloads(series_info, 'series')
 
-        self.series_payloads(series_info)
+        self.api_each_serie(links)
 
 
     def get_cast(self, title, _id):
@@ -219,59 +222,110 @@ class WeTV():
         #pandas.to_excel("series.xlsx",sheet_name='series') #Si queremos previsualizar datos
         print(pandas)
 
+        self.payloads(list_final_episodes, 'episodes')
+
     
-    def series_payloads(self, list_info):
+    def payloads(self, list_info, _type=None):
         
-        '''Esta funcion deberia recibir las listas con datos tanto de series 
-        como de episodios, en proceso'''
-        
-        list_db_series = Datamanager._getListDB(self, self.titanScraping)
+        '''Funcion payloads'''
 
         payloads = []
 
         packages = [
-                        {
-                            "Type": "subscription-vod"
-                        }
-                    ]
+                            {
+                                "Type": "subscription-vod"
+                            }
+                        ]
 
-        for serie in list_info:
+        if _type == 'series':
 
-            payload = {
-                'PlatformCode':  self._platform_code,
-                'Id':            str(serie[0]),
-                'Title':         serie[1],
-                'OriginalTitle': None,
-                'CleanTitle':    _replace(serie[1]),
-                'Type':          'serie',
-                'Year':          None,
-                'Duration':      None,
-                'Deeplinks': {
-                    'Web':       'https://www.wetv.com' + serie[4],
-                    'Android':   None,
-                    'iOS':       None,
-                    },
-                'Playback':      None,
-                'Synopsis':      serie[2],
-                'Image':         serie[3],
-                'Rating':        None,
-                'Provider':      None,
-                'Genres':        None,
-                'Cast':          serie[5],
-                'Directors':     None,
-                'Availability':  None,
-                'Download':      None,
-                'IsOriginal':    None,
-                'IsAdult':       None,
-                'Packages':      packages,
-                'Country':       None,
-                'Timestamp':     datetime.now().isoformat(),
-                'CreatedAt':     self._created_at
-                }
+            list_db_series = Datamanager._getListDB(self, self.titanScraping)
 
-            Datamanager._checkDBandAppend(self, payload, list_db_series, payloads)
 
-        Datamanager._insertIntoDB(self, payloads, self.titanScraping)
+            for serie in list_info:
+
+                payload = {
+                    'PlatformCode':  self._platform_code,
+                    'Id':            str(serie[0]),
+                    'Title':         serie[1],
+                    'OriginalTitle': None,
+                    'CleanTitle':    _replace(serie[1]),
+                    'Type':          'serie',
+                    'Year':          None,
+                    'Duration':      None,
+                    'Deeplinks': {
+                        'Web':       'https://www.wetv.com' + serie[4],
+                        'Android':   None,
+                        'iOS':       None,
+                        },
+                    'Playback':      None,
+                    'Synopsis':      serie[2],
+                    'Image':         serie[3],
+                    'Rating':        None,
+                    'Provider':      None,
+                    'Genres':        None,
+                    'Cast':          serie[5],
+                    'Directors':     None,
+                    'Availability':  None,
+                    'Download':      None,
+                    'IsOriginal':    None,
+                    'IsAdult':       None,
+                    'Packages':      packages,
+                    'Country':       None,
+                    'Timestamp':     datetime.now().isoformat(),
+                    'CreatedAt':     self._created_at
+                    }
+
+                Datamanager._checkDBandAppend(self, payload, list_db_series, payloads)
+
+            Datamanager._insertIntoDB(self, payloads, self.titanScraping)
+        
+        elif _type == 'episodes':
+
+            list_db_episodes = Datamanager._getListDB(self, self.titanScrapingEpisodios)
+
+            for epi in list_info:
+
+                payload_epi = {
+                                    'PlatformCode'  : self._platform_code,
+                                    'ParentId'      : None,
+                                    'ParentTitle'   : None,
+                                    'Id'            : str(epi[0]),
+                                    'Title'         : epi[3],
+                                    'OriginalTitle' : None,
+                                    'CleanTitle'    : _replace(epi[3]),
+                                    'Type':          'serie',
+                                    'Episode'       : epi[6],
+                                    'Season'        : epi[5],
+                                    'Year'          : None,
+                                    'Duration'      : None,
+                                    'Deeplinks'     : {
+                                        'Web': 'https://www.wetv.com' + epi[1],
+                                        'Android': None,
+                                        'iOS': None
+                                    },
+                                    'Synopsis'      : epi[4],
+                                    'Rating'        : None,
+                                    'Provider'      : None,
+                                    'Genres'        : None,
+                                    'Cast'          : None,
+                                    'Directors'     : None,
+                                    'Availability'  : None,
+                                    'Download'      : None,
+                                    'IsOriginal'    : None,
+                                    'IsAdult'       : None,
+                                    'Country'       : None,
+                                    'Packages'      : packages,
+                                    'Timestamp'     : datetime.now().isoformat(),
+                                    'CreatedAt'     : self._created_at
+                                }
+
+                Datamanager._checkDBandAppend(self, payload_epi, list_db_episodes, payloads)
+
+            Datamanager._insertIntoDB(self, payloads, self.titanScrapingEpisodios)
+        
+        else:
+            print('Error, argumento desconocido, instancie el metodo con argumento series o episodes.')
 
     def get_response(self, url):
 
