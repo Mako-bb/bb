@@ -37,6 +37,7 @@ from platforms.amc import Amc
 from platforms.sundancenow import SundanceNow
 from platforms.sundancetv import SundanceTv
 from platforms.wetv import WeTV
+from platforms.bounce import BounceTV
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

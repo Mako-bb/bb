@@ -116,6 +116,9 @@ ott_sites:
   WeTV:
     countries:
       US: us.wetv
+  BounceTV:
+    countries:
+      US: us.bouncetv
   Indieflix:
     countries:
       US: us.indieflix
