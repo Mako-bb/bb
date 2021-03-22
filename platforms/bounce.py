@@ -61,7 +61,7 @@ class BounceTV():
 
         link_movies = 'https://www.bouncetv.com/movies/'
 
-        link_series = 'https://www.bouncetv.com/shows/'
+        link_series = 'https://www.bouncetv.com/shows/?show-type=streaming'
 
         self.get_links(link_movies, 'movies')
         #self.get_links(link_series, 'series')
@@ -159,18 +159,18 @@ class BounceTV():
                     soup = BeautifulSoup(html, "html.parser")
 
                     try: 
-                        _id = [int(s) for s in url.split('/') if s.isdigit()] #Tomamos numerosId de url
-                        div_of_image = soup.find('div', class_='smMoviePoster col-lg-6 col-md-6 col-sm-12') 
+                        _id = [int(s) for s in url.split('/') if s.isdigit()] #Tomamos numerosId de url 
                         cast_genres = soup.find_all('div', class_='singleMovieText') #Cast y genres vienen juntos
-                        info = soup.find('div', class_='singleMovieInfo').get_text().replace('\xa0', '').split('|')
+                        div_of_image = soup.find('div', class_='smMoviePoster col-lg-6 col-md-6 col-sm-12')
+                        data = soup.find('div', class_='singleMovieInfo').get_text().replace('\xa0', '').split('|')
 
                         info_movies.append([int(_id[0]),
                                             soup.find('h4', class_='singleMovieTitle').get_text(),
-                                            info[0],
-                                            info[1], 
-                                            info[2],
+                                            data[0].strip() if len(data) == 0 else 'None',
+                                            data[1].strip() if len(data) == 1 else 'None',
+                                            data[2].strip() if len(data) == 2 else 'None',
                                             soup.find('div', class_='singleMovieDescription').get_text(),
-                                            div_of_image.find('img')['src'],
+                                            div_of_image.find('img')['src'] if div_of_image else None,
                                             cast_genres[0].get_text().replace('\xa0', '').replace('Starring: ', ''),
                                             cast_genres[1].get_text().replace('\xa0', '').replace('/', '')])
                     except KeyError as e:
