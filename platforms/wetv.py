@@ -27,8 +27,7 @@ class WeTV():
 
         Duración: Dependiendo la pc, aprox. 3 minutos.
 
-        Cosas por hacer: Verificar cast (esta en formato tupla y hay nombres en mayusculas)
-                        mover seasons de episodes a series.
+        Cosas por hacer: mover seasons de episodes a series.
     '''
 
     def __init__(self, ott_site_uid, ott_site_country, type):
@@ -141,8 +140,8 @@ class WeTV():
         if not cast:
             return None
         else:
-            tuple_cast = tuple(cast)
-            return tuple_cast
+            final_cast = ', '.join([str(elem).replace(' &', ',') for elem in cast])
+            return final_cast
 
     def get_seasons(self, url):
         '''Funcion que obtiene len de series'''
@@ -283,7 +282,8 @@ class WeTV():
                     'Rating':        None,
                     'Provider':      None,
                     'Genres':        None,
-                    'Cast':          [str(serie[6]).replace(' &', ',')] if serie[6] else None,
+                    'Cast':          [str(serie[6])]
+                                    if serie[6] else None,
                     'Directors':     None,
                     'Availability':  None,
                     'Download':      None,
