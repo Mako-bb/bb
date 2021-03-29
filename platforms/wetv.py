@@ -172,7 +172,7 @@ class WeTV():
             para extraer toda la data de cada episodio.'''
 
         list_parameters = []
-
+        
         for link in links:
             try:
                 r = self.sesion.get(self.common_url + link)
