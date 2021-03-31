@@ -64,11 +64,11 @@ class BounceTV():
         link_series = 'https://www.bouncetv.com/shows/?show-type=streaming'
 
         self.get_links(link_movies, 'movies')
-        self.get_links(link_series, 'series')
+        #self.get_links(link_series, 'series')
 
         self.sesion.close()
 
-        #Upload(self._platform_code, self._created_at, testing = testing)
+        Upload(self._platform_code, self._created_at, testing = testing)
 
     def selenium_options(self):
         '''Aca se setea nuestro selenium'''
@@ -123,13 +123,16 @@ class BounceTV():
                 'stream').find_elements_by_tag_name('a')
             for a_tag in streaming_content:
                 href = a_tag.get_attribute('href')
-                # Hay unos divs vacios que tienen de href esto.
-                if href != 'https://www.bouncetv.com/movie//':
-                    list_url_movies.append(href)
+                img = a_tag.get_attribute('innerHTML')
+                # Hay unos divs vacios que tienen de href esto, y algunas img que retornan vacio
+                if href != 'https://www.bouncetv.com/movie//' and 'img' in img:
+                    list_url_movies.append((href, img.strip()))
 
             list_final = set(list_url_movies)
+            list_final_movies = [list(serie) for serie in list_final]
 
-            self.get_info(list_final, 'movies')
+            print(list_final_movies)
+            self.get_info(list_final_movies, 'movies')
 
         elif _type == 'series':
             list_url_series = []
@@ -138,15 +141,16 @@ class BounceTV():
                 'div.container.posterContainer').find_elements_by_tag_name('a')
 
             for a_tag in streaming_content:
-                href = a_tag.get_attribute('href')
-                # Hay unos divs vacios que tienen de href esto.
-                if href != 'https://www.bouncetv.com/show//':
-                    list_url_series.append(href)
+                if a_tag.get_attribute('text'):
+                    list_url_series.append((
+                        a_tag.get_attribute('href'),
+                        a_tag.get_attribute('text')
+                    ))
 
             list_final = set(list_url_series)
-            print(list_final)
+            list_final_series = [list(serie) for serie in list_final]
 
-            #self.get_info(list_final, 'series')
+            self.get_info(list_final_series, 'series')
 
         else:
             print('No se ha especificado el argumento movies o series a get_links()')
@@ -163,7 +167,7 @@ class BounceTV():
 
             for url in list_urls:
                 try:
-                    driver.get(url)
+                    driver.get(url[0])
                     time.sleep(2)
 
                     body = driver.execute_script("return document.body")
@@ -173,7 +177,8 @@ class BounceTV():
 
                     try:
                         # Tomamos numerosId de url
-                        _id = [int(s) for s in url.split('/') if s.isdigit()]
+                        _id = [int(s)
+                               for s in url[0].split('/') if s.isdigit()]
                         # Cast y genres vienen juntos
                         cast_genres = soup.find_all(
                             'div', class_='singleMovieText')
@@ -183,39 +188,37 @@ class BounceTV():
                             '\xa0', '').split('|')
 
                         info_movies.append([int(_id[0]),
+                                            url[0],
+                                            url[1].replace('<img src="', '').replace(
+                                                '">', '').replace('" <="" a="', ''),
                                             soup.find(
                                                 'h4', class_='singleMovieTitle').get_text(),
-                                            "".join([string for string in data[1] if string.isdigit()]),
-                                            data[2].split(),
+                                            float(data[1].replace('hr ', '.').replace('m', '')) if any(
+                                                string.isdigit() for string in data[1]) else None,
+                                            data[2].strip(),
                                             soup.find(
                                                 'div', class_='singleMovieDescription').get_text(),
-                                            div_of_image.find(
-                                                'img')['src'] if div_of_image else None,
                                             cast_genres[0].get_text().replace(
                                                 '\xa0', '').replace('Starring: ', ''),
-                                            cast_genres[1].get_text().replace('\xa0', '').replace('/', '')])
+                                            cast_genres[1].get_text().replace('\xa0', '').replace('/', '')
+                                            ])
                     except KeyError as e:
                         print(f'Error no se encuentra campo {e} de {url}')
-                        choice = str(
-                            input('Desea seguir colectanto información? (y/n): ')).strip().lower()
-                        if choice == 'y':
-                            pass
-                        elif choice == 'n':
-                            break
-                        else:
-                            print('Seleccion opción correcta (y/n)')
+                        pass
                 except Exception as e:
                     print(f'Error {e}')
                     pass
-
-            print(info_movies)
+            
+            self.payloads(info_movies, 'movies')
 
         elif _type == 'series':
+            # soup.find('div', id=lambda x: x and x.startswith('seasonContainer')
             info_series = []
+            info_episodes = []
 
             for url in list_urls:
                 try:
-                    driver.get(url)
+                    driver.get(url[0])
                     time.sleep(2)
 
                     body = driver.execute_script("return document.body")
@@ -224,33 +227,92 @@ class BounceTV():
                     soup = BeautifulSoup(html, "html.parser")
 
                     try:
-                        info_series.append([url,
+                        info_series.append([url[1],
+                                            url[0],
                                             soup.find(
-                                                'div', id='aboutContainer'),
+                                                'div', id='aboutContainer').get_text(),
+                                            [x.get_text()
+                                             for x in soup.find_all('h3')],
                                             soup.find_all(
-                                                'div', class_='col-md-7 col-lg-7 col-sm-12 castContentDiv'),
-                                            soup.find_all('div', class_='seasonMenu')])
+                                                'div', class_='seasonMenu'),
+                                            [x.get_text() for x in soup.find_all(
+                                                'span', class_='seasonMenu')],
+                                            [x.get_text() for x in soup.find('div', id='seasonContainer1').find_all(
+                                                'div', class_='showCaptions')],
+                                            ])
+
+                        info_episodes.append(
+                            [x.get_text() for x in soup.find_all('div', class_='showCaptions')])
+
                     except KeyError as e:
                         print(
                             f'Error no se encuentra campo {e} al extraer datos de {url}')
-                        choice = str(
-                            input('Desea seguir colectanto información? (y/n): ')).strip().lower()
-
-                        if choice == 'y':
-                            pass
-                        elif choice == 'n':
-                            break
-                        else:
-                            print('Seleccion opción correcta (y/n)')
 
                 except Exception as e:
                     print(f'error {e}')
                     pass
 
-            print(info_series)
+            print(info_episodes)
 
         else:
             print('No se ha especificado el argumento movies o series a get_info()')
+
+    def payloads(self, data, type_=None):
+        '''Funcion payloads'''
+
+        payloads = []
+
+        packages = [
+            {
+                "Type": "subscription-vod"
+            }
+        ]
+
+        if type_ == 'movies':
+
+            list_db_movies = Datamanager._getListDB(self, self.titanScraping)
+
+            for movie in data:
+
+                payload = {
+                    'PlatformCode':  self._platform_code,
+                    'Id':            str(movie[0]),
+                    'Title':         movie[3],
+                    'OriginalTitle': None,
+                    'CleanTitle':    _replace(movie[3]),
+                    'Type':          'movie',
+                    'Year':          movie[5],
+                    'Duration':      movie[4] * 60 if movie[4] else None,
+                    'Deeplinks': {
+                        'Web':       movie[1],
+                        'Android':   None,
+                        'iOS':       None,
+                    },
+                    'Playback':      None,
+                    'Synopsis':      movie[6],
+                    'Image':         [movie[2]],
+                    'Rating':        None,
+                    'Provider':      None,
+                    'Genres':        [movie[8]] if movie [8] else None,
+                    'Cast':          [movie[7]]
+                                    if movie[7] else None,
+                    'Directors':     None,
+                    'Availability':  None,
+                    'Download':      None,
+                    'IsOriginal':    None,
+                    'IsAdult':       None,
+                    'Packages':      packages,
+                    'Country':       None,
+                    'Timestamp':     datetime.now().isoformat(),
+                    'CreatedAt':     self._created_at
+                }
+
+                Datamanager._checkDBandAppend(self, payload, list_db_movies, payloads)
+
+            Datamanager._insertIntoDB(self, payloads, self.titanScraping)
+        
+        else:
+            pass
 
     def get_response(self, url):  # Sin uso todavia
         '''Esta función intenta hacer la conexión mediante request simple. 
