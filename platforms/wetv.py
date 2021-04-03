@@ -34,7 +34,8 @@ class WeTV():
         self.mongo = mongo()
         self._platform_code = self._config['countries'][ott_site_country]
         self.titanScraping = config()['mongo']['collections']['scraping']
-        self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
+        self.titanScrapingEpisodios = config(
+        )['mongo']['collections']['episode']
         self.sesion = requests.session()
         self.skippedEpis = 0
         self.skippedTitles = 0
@@ -90,27 +91,30 @@ class WeTV():
                     'permalink', None)
 
                 series_info.append([a['properties']['cardData']['meta'].get('nid', None),
-                                    a['properties']['cardData']['text'].get('title', None),
-                                    a['properties']['cardData']['text'].get('description', None),
-                                    a['properties']['cardData'].get('images', None),
+                                    a['properties']['cardData']['text'].get(
+                                        'title', None),
+                                    a['properties']['cardData']['text'].get(
+                                        'description', None),
+                                    a['properties']['cardData'].get(
+                                        'images', None),
                                     link,
-                                    self.get_seasons(link), 
+                                    self.get_seasons(link),
                                     self.get_cast(link_to_cast[2], link_to_cast[3])])  # Cast se extrae de otra api (función aparte)
 
             except KeyError:
                 print(f'Error al extraer los datos.')
                 pass
-        
+
         series_info_final = []
 
         for serie in series_info:
             if serie not in series_info_final:
                 series_info_final.append(serie)
-        
+
         self.payloads(series_info_final, 'series')
 
-        pandas = pd.DataFrame(series_info_final, 
-                                columns=['ID', 'Title', 'Descripción', 'Image', 'Url', 'Seasons', 'Cast'])
+        pandas = pd.DataFrame(series_info_final,
+                              columns=['ID', 'Title', 'Descripción', 'Image', 'Url', 'Seasons', 'Cast'])
         links = pandas['Url']
 
         self.api_each_serie(links)
@@ -129,38 +133,43 @@ class WeTV():
             data = r.json()
             content = data['data']['children'][3]['properties']['dropdownItems']
 
-            for season in content: #SEASONS DISPONIBLES EN PLATAFORMA!!
-                links.append([season['properties'].get('permalink', None), 
-                                season['properties'].get('nid', None),
-                                season['properties'].get('title', None)])
+            for season in content:  # SEASONS DISPONIBLES EN PLATAFORMA!!
+                links.append([season['properties'].get('permalink', None).replace('/video-extras/',
+                                                                                  '/seasons/'),
+                              season['properties'].get('nid', None),
+                              season['properties'].get('title', None)])
 
         except Exception as e:
-            print(f'Ocurrio error al extraer data de seasons {e}, de la url {r.url}, no hay seasons disponibles.')
+            print(
+                f'Ocurrio error al extraer data de seasons {e}, de la url {r.url}, no hay seasons disponibles.')
             pass
-        
+
         if links:
             for link in links:
                 try:
                     r = requests.get(self.common_url + link[0])
                     data = r.json()
 
-                    episodes = len(data['data']['children'][4]['children']) #cant. episodes
-                    title = data['data']['children'][1]['properties']['cardData']['text'].get('showTitle', None)
-                    image = data['data']['children'][1]['properties']['cardData']['images'].get('desktop', None)
+                    episodes = len(data['data']['children']
+                                   [4]['children'])  # cant. episodes
+                    title = data['data']['children'][1]['properties']['cardData']['text'].get(
+                        'showTitle', None)
+                    image = data['data']['children'][1]['properties']['cardData']['images'].get(
+                        'desktop', None)
 
-                    seasons.append({ #Tomamos parte del payload
-                                "Id": link[1],
-                                "Synopsis": None,
-                                "Title": title + ' ' + link[2] if link[2] else None,
-                                "Deeplink":  'https://www.wetv.com' + link[0] if link[0] else None,
-                                "Number": None,
-                                "Year": None,
-                                "Image": image if image else None,
-                                "Directors": None,
-                                "Cast": None,
-                                "Episodes": int(episodes) if episodes else None,
-                                "IsOriginal": None
-                            })
+                    seasons.append({  # Tomamos parte del payload
+                        "Id": link[1],
+                        "Synopsis": None,
+                        "Title": title + ' ' + link[2] if link[2] else None,
+                        "Deeplink":  'https://www.wetv.com' + link[0] if link[0] else None,
+                        "Number": None,
+                        "Year": None,
+                        "Image": image if image else None,
+                        "Directors": None,
+                        "Cast": None,
+                        "Episodes": int(episodes) if episodes else None,
+                        "IsOriginal": None
+                    })
 
                 except Exception as e:
                     print(f'Error {e}')
@@ -179,12 +188,15 @@ class WeTV():
         cast = []
 
         try:
-            r = self.sesion.get(self.common_url + f'/shows/{title}/explore--{_id}')
+            r = self.sesion.get(
+                self.common_url + f'/shows/{title}/explore--{_id}')
             data = r.json()
             try:
                 content = data['data']['children'][4]['children']
-                for c in content:
-                    cast.append(c['properties']['cardData']['text']['title'])
+                for name in content:
+                    #Esto es porque a veces no hay cast pero hay shop de la serie
+                    if name['properties']['flagType'] == 'person': 
+                        cast.append(name['properties']['cardData']['text'].get('title', None))
 
             except KeyError as e:
                 print(
@@ -193,11 +205,12 @@ class WeTV():
         except:
             pass
 
-        if not cast:
+        if not cast:  # La pagina cambio y ahora el json de cast trae data rara
             return None
         else:
-            #convertimos lista a strings
-            final_cast = ', '.join([str(elem).replace(' &', ',') for elem in cast])
+            # convertimos lista a strings
+            final_cast = ', '.join(
+                [str(elem).replace(' &', ',') for elem in cast])
             return final_cast
 
     def api_each_serie(self, links):
@@ -218,9 +231,12 @@ class WeTV():
                     content = data['data']['children'][3]['properties']['dropdownItems']
                     for data in content:
                         list_parameters.append([_id[0],
-                                                data['properties'].get('nid', None),
-                                                data['properties'].get('title', None),
-                                                data['properties'].get('permalink', None)])
+                                                data['properties'].get(
+                                                    'nid', None),
+                                                data['properties'].get(
+                                                    'title', None),
+                                                data['properties']['permalink'].replace('/video-extras/',
+                                                                                        '/seasons/') if data['properties']['permalink'] else None])
 
                 except Exception as e:
                     print(
@@ -247,32 +263,47 @@ class WeTV():
                 titles = data['data']['children'][1]['properties']['cardData']['text']
 
                 for episode in content:
+                    type_ = episode['properties']['contentType']
 
-                    season_episode = episode['properties']['cardData']['text'].get('seasonEpisodeNumber', None)
-                    episode_data = episode['properties']['cardData']['meta']
-                    episode_data2 = episode['properties']['cardData']['text']
+                    if type_ == 'video_episode' or type_ == 'episode':
+                    
+                        season_episode = episode['properties']['cardData']['text'].get(
+                            'seasonEpisodeNumber', None)
+                        episode_data = episode['properties']['cardData']['meta']
+                        episode_data2 = episode['properties']['cardData']['text']
+                        
+                        list_final_episodes.append((parameter[0],  # Id serie
+                                                    # Titulo serie
+                                                    titles.get('showTitle', None),
+                                                    # Id season(sin usar)
+                                                    parameter[1],
+                                                    # Title Season (sin usar)
+                                                    parameter[2],
+                                                    # Descripcion season (sin usar)
+                                                    titles.get(
+                                                        'description', None),
+                                                    # Link season (sin usar)
+                                                    parameter[3],
+                                                    episode_data.get(
+                                                        'nid', None),  # Id. epi
+                                                    episode_data2.get(
+                                                        'title', None),  # Title epi
+                                                    # Descripcion epi
+                                                    episode_data2.get(
+                                                        'description', None),
+                                                    episode_data.get(
+                                                        'permalink', None),
+                                                    episode['properties']['cardData'].get(
+                                                        'images', None),
+                                                    season_episode.split(',')[0].replace(
+                                                        'S', '') if season_episode else None,
+                                                    season_episode.split(',')[1].replace(
+                                                        'E', '') if season_episode else None))
 
-                    list_final_episodes.append((parameter[0],  # Id serie
-                                                titles.get('showTitle', None), # Titulo serie
-                                                parameter[1],  # Id season(sin usar)
-                                                parameter[2],  # Title Season (sin usar)
-                                                titles.get('description', None), # Descripcion season (sin usar)
-                                                parameter[3],  # Link season (sin usar)
-                                                episode_data.get('nid', None),  # Id. epi
-                                                episode_data2.get('title', None),  # Title epi
-                                                episode_data2.get('description', None), #Descripcion epi
-                                                episode_data.get('permalink', None),
-                                                episode['properties']['cardData'].get(
-                                                    'images', None),
-                                                season_episode.split(',')[0].replace(
-                                                    'S', '') if season_episode else None,
-                                                season_episode.split(',')[1].replace(
-                                                    'E', '') if season_episode else None))  
-                                
             except KeyError as e:
                 print(f'Error campo no encontrado {e} en {r.url}')
                 pass
-        
+
         list_set = set(list_final_episodes)
         list_final_episodes = [list(serie) for serie in list_set]
 
@@ -285,7 +316,7 @@ class WeTV():
 
         packages = [
             {
-                "Type": "subscription-vod"
+                "Type": "tv-everywhere"
             }
         ]
 
@@ -312,12 +343,12 @@ class WeTV():
                     },
                     'Playback':      None,
                     'Synopsis':      serie[2],
-                    'Image':         [serie[3]],
+                    'Image':         [serie[3]] if serie[3] else None,
                     'Rating':        None,
                     'Provider':      None,
                     'Genres':        None,
                     'Cast':          [str(serie[6])]
-                                    if serie[6] else None,
+                    if serie[6] else None,
                     'Directors':     None,
                     'Availability':  None,
                     'Download':      None,
@@ -329,13 +360,15 @@ class WeTV():
                     'CreatedAt':     self._created_at
                 }
 
-                Datamanager._checkDBandAppend(self, payload, list_db_series, payloads)
+                Datamanager._checkDBandAppend(
+                    self, payload, list_db_series, payloads)
 
             Datamanager._insertIntoDB(self, payloads, self.titanScraping)
 
         elif type_ == 'episodes':
 
-            list_db_episodes = Datamanager._getListDB(self, self.titanScrapingEpisodios)
+            list_db_episodes = Datamanager._getListDB(
+                self, self.titanScrapingEpisodios)
 
             for epi in list_info:
 
@@ -376,9 +409,11 @@ class WeTV():
                     "CreatedAt":     self._created_at,
                 }
 
-                Datamanager._checkDBandAppend(self, payload_epi, list_db_episodes, payloads)
+                Datamanager._checkDBandAppend(
+                    self, payload_epi, list_db_episodes, payloads)
 
-            Datamanager._insertIntoDB(self, payloads, self.titanScrapingEpisodios)
+            Datamanager._insertIntoDB(
+                self, payloads, self.titanScrapingEpisodios)
 
         else:
             print(
@@ -415,7 +450,6 @@ class WeTV():
         elif r.status_code == 503:
             print(
                 f'Error {r.status_code}, el servidor no pudo procesar la petición.')
-                
+
         else:
             print(f'Error {r.status_code}.')
-
