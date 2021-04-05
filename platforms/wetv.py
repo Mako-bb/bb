@@ -83,19 +83,19 @@ class WeTV():
         # Es el indice 4 de la lista la que contiene la info completa
         content = data['data']['children'][4]['children']
 
-        for a in content:
+        for serie in content:
             try:
-                link_to_cast = a['properties']['cardData']['meta'].get(
+                link_to_cast = serie['properties']['cardData']['meta'].get(
                     'permalink', None).replace('--', '/').split('/')
-                link = a['properties']['cardData']['meta'].get(
+                link = serie['properties']['cardData']['meta'].get(
                     'permalink', None)
 
-                series_info.append([a['properties']['cardData']['meta'].get('nid', None),
-                                    a['properties']['cardData']['text'].get(
+                series_info.append([serie['properties']['cardData']['meta'].get('nid', None),
+                                    serie['properties']['cardData']['text'].get(
                                         'title', None),
-                                    a['properties']['cardData']['text'].get(
+                                    serie['properties']['cardData']['text'].get(
                                         'description', None),
-                                    a['properties']['cardData'].get(
+                                    serie['properties']['cardData'].get(
                                         'images', None),
                                     link,
                                     self.get_seasons(link),
@@ -108,7 +108,7 @@ class WeTV():
         series_info_final = []
 
         for serie in series_info:
-            # Mary Mary repetido
+            # Mary Mary repetido, eliminamos por id.
             if serie not in series_info_final and serie[0] != 35415:
                 series_info_final.append(serie)
 
