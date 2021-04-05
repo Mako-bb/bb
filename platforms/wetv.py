@@ -4,7 +4,7 @@ import time
 import requests
 import hashlib
 from common import config
-#from bs4 import BeautifulSoup
+# from bs4 import BeautifulSoup
 from datetime import datetime
 from handle.mongo import mongo
 from updates.upload import Upload
@@ -15,14 +15,14 @@ import pandas as pd
 
 class WeTV():
     '''
-        WeTV es una plataforma de EEUU, la misma provee unicamente series, contenido pago por suscripción 
+        WeTV es una plataforma de EEUU, la misma provee unicamente series, contenido pago por suscripción
             y contenido gratuito (son extras o detras de camara), por lo tanto no nos interesan.
         Se accede sin requerir VPN.
         Forma de obtener la info: API.
         Estructura de la web/apis: La web presenta un "Show All Series" y "Show All Episodes"
-            dentro de las cuales podemos obtener los datos, desde show all series podemos obtener la 
+            dentro de las cuales podemos obtener los datos, desde show all series podemos obtener la
             data principal (titles, synopsis, etc), lamentablemente desde show all episodes solo se obtiene
-            la data de la ultima temporada de cada serie (ya que en la web se muestran las ultimas temporadas como novedades), 
+            la data de la ultima temporada de cada serie (ya que en la web se muestran las ultimas temporadas como novedades),
             por lo tanto hay que visitar multiples URL's de las restantes temporadas.
 
         Duración: Dependiendo la pc, aprox. 5 minutos.
@@ -108,7 +108,8 @@ class WeTV():
         series_info_final = []
 
         for serie in series_info:
-            if serie not in series_info_final:
+            # Mary Mary repetido
+            if serie not in series_info_final and serie[0] != 35415:
                 series_info_final.append(serie)
 
         self.payloads(series_info_final, 'series')
@@ -150,29 +151,36 @@ class WeTV():
                     r = requests.get(self.common_url + link[0])
                     data = r.json()
 
-                    episodes = len(data['data']['children']
-                                   [4]['children'])  # cant. episodes
+                    list_episodes = []
+                    # Cant. episodes
+                    episodes_count = data['data']['children'][4]['children']
+                    for episode in episodes_count:
+                        #Tenemos que ver que cada indice sea de tipo episode
+                        if episode['properties']['contentType'] == 'episode' or episode['properties']['contentType'] == 'video_episode':
+                            list_episodes.append(episode)
+
                     title = data['data']['children'][1]['properties']['cardData']['text'].get(
                         'showTitle', None)
                     image = data['data']['children'][1]['properties']['cardData']['images'].get(
                         'desktop', None)
 
                     seasons.append({  # Tomamos parte del payload
-                        "Id": link[1],
+                        "Id": link[1] if link[1] else None,
                         "Synopsis": None,
                         "Title": title + ' ' + link[2] if link[2] else None,
-                        "Deeplink":  'https://www.wetv.com' + link[0] if link[0] else None,
+                        "Deeplink": 'https://www.wetv.com' + link[0] if link[0] else None,
                         "Number": None,
                         "Year": None,
                         "Image": image if image else None,
                         "Directors": None,
                         "Cast": None,
-                        "Episodes": int(episodes) if episodes else None,
+                        "Episodes": int(len(list_episodes)),
                         "IsOriginal": None
-                    })
+                        })
 
                 except Exception as e:
-                    print(f'Error {e}')
+                    print(f'Error {e}, no hay episodes.')
+                    seasons = None
 
             return seasons
 
@@ -194,9 +202,10 @@ class WeTV():
             try:
                 content = data['data']['children'][4]['children']
                 for name in content:
-                    #Esto es porque a veces no hay cast pero hay shop de la serie
-                    if name['properties']['flagType'] == 'person': 
-                        cast.append(name['properties']['cardData']['text'].get('title', None))
+                    # Esto es porque a veces no hay cast pero hay shop de la serie
+                    if name['properties']['flagType'] == 'person':
+                        cast.append(name['properties']['cardData']
+                                    ['text'].get('title', None))
 
             except KeyError as e:
                 print(
@@ -210,11 +219,12 @@ class WeTV():
         else:
             # convertimos lista a strings
             final_cast = ', '.join(
-                [str(elem).replace(' &', ',') for elem in cast])
+                [str(elem).replace(' &', ',').replace(
+                    ' and', ',').replace(' “Boogie”', '').lower().title() for elem in cast])
             return final_cast
 
     def api_each_serie(self, links):
-        '''Esta funcion hace request a la api general de cada serie, 
+        '''Esta funcion hace request a la api general de cada serie,
             las cuales presentan las url de las distintas temporadas,
             estas url serian usadas por la funcion get_final_episodes
             para extraer toda la data de cada episodio.'''
@@ -266,15 +276,16 @@ class WeTV():
                     type_ = episode['properties']['contentType']
 
                     if type_ == 'video_episode' or type_ == 'episode':
-                    
+
                         season_episode = episode['properties']['cardData']['text'].get(
                             'seasonEpisodeNumber', None)
                         episode_data = episode['properties']['cardData']['meta']
                         episode_data2 = episode['properties']['cardData']['text']
-                        
+
                         list_final_episodes.append((parameter[0],  # Id serie
                                                     # Titulo serie
-                                                    titles.get('showTitle', None),
+                                                    titles.get(
+                                                        'showTitle', None),
                                                     # Id season(sin usar)
                                                     parameter[1],
                                                     # Title Season (sin usar)
@@ -342,7 +353,10 @@ class WeTV():
                         'iOS':       None,
                     },
                     'Playback':      None,
-                    'Synopsis':      serie[2],
+                    'Synopsis':      serie[2].replace(
+                        ' Catch all-new episodes Thursdays at 10/9c on WE tv', '').replace(
+                        ' Go to YouTube.com/WE to watch now', '')
+                    if serie[2] else None,
                     'Image':         [serie[3]] if serie[3] else None,
                     'Rating':        None,
                     'Provider':      None,
@@ -391,7 +405,8 @@ class WeTV():
                         "Android":   None,
                         "iOS":       None,
                     },
-                    "Synopsis":      epi[8],
+                    "Synopsis":      epi[8].replace(' \\r\\', ' ').replace('\r\n', '')
+                    if epi[8] else None,
                     "Image":         ['https://www.wetv.com' + epi[10]] if epi[10] else None,
                     "Rating":        None,
                     "Provider":      None,
