@@ -13,6 +13,7 @@ from handle.replace import _replace
 #import pandas as pd
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
+from string import digits
 
 
 class BounceTV():
@@ -68,7 +69,7 @@ class BounceTV():
 
         self.sesion.close()
 
-        Upload(self._platform_code, self._created_at, testing = testing)
+        Upload(self._platform_code, self._created_at, testing=testing)
 
     def selenium_options(self):
         '''Aca se setea nuestro selenium'''
@@ -131,7 +132,6 @@ class BounceTV():
             list_final = set(list_url_movies)
             list_final_movies = [list(serie) for serie in list_final]
 
-            print(list_final_movies)
             self.get_info(list_final_movies, 'movies')
 
         elif _type == 'series':
@@ -177,7 +177,7 @@ class BounceTV():
 
                     try:
                         # Tomamos numerosId de url
-                        _id = [int(s)
+                        id_ = [int(s)
                                for s in url[0].split('/') if s.isdigit()]
                         # Cast y genres vienen juntos
                         cast_genres = soup.find_all(
@@ -187,7 +187,7 @@ class BounceTV():
                         data = soup.find('div', class_='singleMovieInfo').get_text().replace(
                             '\xa0', '').split('|')
 
-                        info_movies.append([int(_id[0]),
+                        info_movies.append([str(id_[0]),
                                             url[0],
                                             url[1].replace('<img src="', '').replace(
                                                 '">', '').replace('" <="" a="', ''),
@@ -200,7 +200,8 @@ class BounceTV():
                                                 'div', class_='singleMovieDescription').get_text(),
                                             cast_genres[0].get_text().replace(
                                                 '\xa0', '').replace('Starring: ', ''),
-                                            cast_genres[1].get_text().replace('\xa0', '').replace('/', '')
+                                            cast_genres[1].get_text().replace(
+                                                '\xa0', '').replace('/', '')
                                             ])
                     except KeyError as e:
                         print(f'Error no se encuentra campo {e} de {url}')
@@ -209,10 +210,9 @@ class BounceTV():
                     print(f'Error {e}')
                     pass
             
-            self.payloads(info_movies, 'movies')
+            #self.payloads(info_movies, 'movie')
 
         elif _type == 'series':
-            # soup.find('div', id=lambda x: x and x.startswith('seasonContainer')
             info_series = []
             info_episodes = []
 
@@ -223,26 +223,28 @@ class BounceTV():
 
                     body = driver.execute_script("return document.body")
                     html = body.get_attribute('innerHTML')
-
                     soup = BeautifulSoup(html, "html.parser")
 
+                    id_ = [int(s)
+                           for s in url[0].split('/') if s.isdigit()]
+
+                    title = url[1].replace(' EPISODES', '')
                     try:
-                        info_series.append([url[1],
+                        info_series.append([str(id_[0]),
+                                            title,
                                             url[0],
                                             soup.find(
-                                                'div', id='aboutContainer').get_text(),
+                                                'div', id='aboutContainer').get_text().replace('\nX\n', ''),
                                             [x.get_text()
                                              for x in soup.find_all('h3')],
                                             soup.find_all(
                                                 'div', class_='seasonMenu'),
-                                            [x.get_text() for x in soup.find_all(
-                                                'span', class_='seasonMenu')],
-                                            [x.get_text() for x in soup.find('div', id='seasonContainer1').find_all(
-                                                'div', class_='showCaptions')],
-                                            ])
+                                            self.get_seasons(
+                                                soup, id_[0], title),
+                                            soup.find('div', class_='ssFeatureImage col-12').find('img')['src']])
 
-                        info_episodes.append(
-                            [x.get_text() for x in soup.find_all('div', class_='showCaptions')])
+                        # info_episodes.append(
+                        # [x.get_text() for x in soup.find_all('div', class_='showCaptions')])
 
                     except KeyError as e:
                         print(
@@ -251,13 +253,47 @@ class BounceTV():
                 except Exception as e:
                     print(f'error {e}')
                     pass
-
-            print(info_episodes)
+            
+            print(info_series)
+            #self.payloads(info_series, 'serie')
 
         else:
             print('No se ha especificado el argumento movies o series a get_info()')
 
-    def payloads(self, data, type_=None):
+    def get_seasons(self, soup, id_, title):
+        '''Obtiene conteo de seasons y capitulos
+        de cada serie, recibiendo el soap como argumento.'''
+        list_seasons = []
+        try:
+            # Si la serie tiene una temporada entonces el html no tiene un seasonMenu entonces se reemplaza con 1.
+            seasons = [x.get_text().replace('Season ', '') for x in soup.find_all(
+                'span', class_='seasonMenu')] if soup.find_all(
+                'span', class_='seasonMenu') else [1]
+            for season in seasons:
+                list_seasons.append(
+                    {  # Tomamos parte del payload
+                        "Id": id_,
+                        "Synopsis": None,
+                        "Title": title + ' Season ' + str(season),
+                        "Deeplink": None,
+                        "Number": season,
+                        "Year": None,
+                        "Image": None,
+                        "Directors": None,
+                        "Cast": None,
+                        "Episodes": len([x.get_text() for x in soup.find(
+                            'div', id=f'seasonContainer{season}').find_all(
+                            'div', class_='showCaptions')]),
+                        "IsOriginal": None
+                    })
+
+        except Exception as e:
+            print(f'Error {e}')
+            pass
+
+        return list_seasons
+
+    def payloads(self, data, type_):
         '''Funcion payloads'''
 
         payloads = []
@@ -268,34 +304,32 @@ class BounceTV():
             }
         ]
 
-        if type_ == 'movies':
-
+        if type_ == 'movie':
             list_db_movies = Datamanager._getListDB(self, self.titanScraping)
-
-            for movie in data:
+            for content in data:
 
                 payload = {
                     'PlatformCode':  self._platform_code,
-                    'Id':            str(movie[0]),
-                    'Title':         movie[3],
+                    'Id':            content[0],
+                    'Title':         content[3],
                     'OriginalTitle': None,
-                    'CleanTitle':    _replace(movie[3]),
+                    'CleanTitle':    _replace(content[3]),
                     'Type':          'movie',
-                    'Year':          movie[5],
-                    'Duration':      movie[4] * 60 if movie[4] else None,
+                    'Year':          content[5],
+                    'Duration':      int(content[4] * 60) if content[4] else None,
                     'Deeplinks': {
-                        'Web':       movie[1],
+                        'Web':       content[1],
                         'Android':   None,
                         'iOS':       None,
                     },
                     'Playback':      None,
-                    'Synopsis':      movie[6],
-                    'Image':         [movie[2]],
+                    'Synopsis':      content[6],
+                    'Image':         [content[2]] if content[2] else None,
                     'Rating':        None,
                     'Provider':      None,
-                    'Genres':        [movie[8]] if movie [8] else None,
-                    'Cast':          [movie[7]]
-                                    if movie[7] else None,
+                    'Genres':        [content[8]] if content[8] else None,
+                    'Cast':          [content[7]]
+                                        if content[7] else None,
                     'Directors':     None,
                     'Availability':  None,
                     'Download':      None,
@@ -308,43 +342,45 @@ class BounceTV():
                 }
 
                 Datamanager._checkDBandAppend(self, payload, list_db_movies, payloads)
-
             Datamanager._insertIntoDB(self, payloads, self.titanScraping)
-        
+
+        elif type_ == 'serie':
+            list_db_series = Datamanager._getListDB(self, self.titanScraping)
+            for content in data:
+                payload = {
+                    'PlatformCode':  self._platform_code,
+                    'Id':            content[0],
+                    'Title':         content[1],
+                    'OriginalTitle': None,
+                    'CleanTitle':    _replace(content[1]),
+                    'Type':          'serie',
+                    'Year':          None,
+                    'Duration':      None,
+                    "Seasons":       content[6],
+                    'Deeplinks': {
+                        'Web':       content[2],
+                        'Android':   None,
+                        'iOS':       None,
+                    },
+                    'Playback':      None,
+                    'Synopsis':      content[3],
+                    'Image':         [content[7]] if content[7] else None,
+                    'Rating':        None,
+                    'Provider':      None,
+                    'Genres':        None,
+                    'Cast':          [str(content[4])]
+                                        if content[4] else None,
+                    'Directors':     None,
+                    'Availability':  None,
+                    'Download':      None,
+                    'IsOriginal':    None,
+                    'IsAdult':       None,
+                    'Packages':      packages,
+                    'Country':       None,
+                    'Timestamp':     datetime.now().isoformat(),
+                    'CreatedAt':     self._created_at
+                }
+                Datamanager._checkDBandAppend(self, payload, list_db_series, payloads)
+            Datamanager._insertIntoDB(self, payloads, self.titanScraping)
         else:
             pass
-
-    def get_response(self, url):  # Sin uso todavia
-        '''Esta función intenta hacer la conexión mediante request simple. 
-        Si el request es imposible, arrojara error e intentara por el driver.'''
-
-        r = self.sesion.get(url)
-
-        if r.status_code == 200:
-            self.get_links(r)
-
-        elif r.status_code == 301:
-            print(
-                f'Error {r.status_code}, el servidor esta tratando de redirigirte hacia otra URL. Quizas haya cambiado de dominio.')
-
-        elif r.status_code == 400:
-            print(
-                f'Error {r.status_code}, request erroneo, por favor verificar sintaxis y url escrita.')
-
-        elif r.status_code == 401:
-            print(
-                f'Error {r.status_code}, autenticación incorrecta, verifica credenciales o token.')
-
-        elif r.status_code == 403:
-            print(
-                f'Error {r.status_code}, no tienes permiso para ver el/los recurso/s.')
-
-        elif r.status_code == 404:
-            print(f'Error {r.status_code}, recurso no encontrado.')
-
-        elif r.status_code == 503:
-            print(
-                f'Error {r.status_code}, el servidor no pudo procesar la petición.')
-
-        else:
-            print(f'Error {r.status_code}.')
