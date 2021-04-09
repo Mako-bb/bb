@@ -64,7 +64,7 @@ class BounceTV():
         link_series = 'https://www.bouncetv.com/shows/?show-type=streaming'
 
         self.get_links(link_movies, 'movies')
-        #self.get_links(link_series, 'series')
+        self.get_links(link_series, 'series')
 
         self.sesion.close()
 
@@ -79,7 +79,7 @@ class BounceTV():
         # chrome_options.add_argument("--headless") #Primera vez debe estar disabled para ver velocidad scroll.
         chrome_options.add_argument("--incognito")
         driver = webdriver.Chrome(r"C:\Users\tadeo\OneDrive\Escritorio\Curso Data Analyst\Python 0\chromedriver.exe",
-                                  options=chrome_options)  # PATH de chromedriver de C7U
+                                  options=chrome_options)  # PATH de chromedriver de C/U
         return driver
 
     def get_links(self, url, _type=None):
@@ -90,7 +90,7 @@ class BounceTV():
         driver = self.selenium_options()
 
         driver.get(url)
-        time.sleep(2)
+        time.sleep(1)
 
         if _type == 'movies':
 
