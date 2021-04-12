@@ -13,14 +13,14 @@ from handle.replace import _replace
 #import pandas as pd
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
-from string import digits
+import re
 
 
 class BounceTV():
     '''Bounce TV es una platafora de EEUU 
         Requiere VPN ---> NO.
         API/SELENIUM/BS4 ---> SELENIUM/BS4, es imposible hacer un request simple a la pag. principal
-        (no hay permisos).
+        (no hay permisos). Luego en episodes encontre una mini API por id de cada epi.
         Estructura---> Show all movies y show all shows de las cuales podemos
                         extraer todos los href y visitar cada contenido
                         extrayendo data de etiquetas comunes
@@ -82,6 +82,18 @@ class BounceTV():
         driver = webdriver.Chrome(r"C:\Users\tadeo\OneDrive\Escritorio\Curso Data Analyst\Python 0\chromedriver.exe",
                                   options=chrome_options)  # PATH de chromedriver de C/U
         return driver
+    
+    def selenium_html(self, url):
+        '''Aca se prueba la conexion y se devuelve el html'''
+
+        with self.selenium_options() as driver:
+            driver.get(url)
+            time.sleep(2)
+            body = driver.execute_script("return document.body")
+            html = body.get_attribute('innerHTML')
+            soup = BeautifulSoup(html, "html.parser")
+
+        return soup
 
     def get_links(self, url, _type=None):
         '''Esta función sirve para hacer la conexión a las paginas principales mediante el driver, 
@@ -152,28 +164,18 @@ class BounceTV():
 
             self.get_info(list_final_series, 'series')
 
-        else:
-            print('No se ha especificado el argumento movies o series a get_links()')
 
     def get_info(self, list_urls, _type=None):
         '''Dependiendo del argumento _type que tome, esta función, lopea 
             visitando las distintas URL's del contenido, extrayendo datos de etiquetas
             distintas para movies y series'''
 
-        driver = self.selenium_options()
-
         if _type == 'movies':
             info_movies = []
 
             for url in list_urls:
                 try:
-                    driver.get(url[0])
-                    time.sleep(2)
-
-                    body = driver.execute_script("return document.body")
-                    html = body.get_attribute('innerHTML')
-
-                    soup = BeautifulSoup(html, "html.parser")
+                    soup = self.selenium_html(url[0])
 
                     try:
                         # Tomamos numerosId de url
@@ -209,42 +211,36 @@ class BounceTV():
                 except Exception as e:
                     print(f'Error {e}')
                     pass
-            
-            #self.payloads(info_movies, 'movie')
+
+            self.payloads(info_movies, 'movie')
 
         elif _type == 'series':
             info_series = []
-            info_episodes = []
+            soups = []
 
             for url in list_urls:
                 try:
-                    driver.get(url[0])
-                    time.sleep(2)
-
-                    body = driver.execute_script("return document.body")
-                    html = body.get_attribute('innerHTML')
-                    soup = BeautifulSoup(html, "html.parser")
+                    soup = self.selenium_html(url[0])
 
                     id_ = [int(s)
                            for s in url[0].split('/') if s.isdigit()]
 
-                    title = url[1].replace(' EPISODES', '')
+                    title = re.sub(r'\d+', '', url[1].replace(' EPISODES', ''))
+                    synopsis = soup.find('div', id='aboutContainer')
+                    cast = [x.get_text() for x in soup.find_all('h3')] if soup.find_all(
+                        'h3') else None
                     try:
                         info_series.append([str(id_[0]),
                                             title,
                                             url[0],
-                                            soup.find(
-                                                'div', id='aboutContainer').get_text().replace('\nX\n', ''),
-                                            [x.get_text()
-                                             for x in soup.find_all('h3')],
-                                            soup.find_all(
-                                                'div', class_='seasonMenu'),
+                                            synopsis.get_text().replace(
+                                                '\nX\n        ', '').replace('    ', '') if synopsis else None,
+                                            ', '.join([str(name) for name in cast] if cast else None),
                                             self.get_seasons(
-                                                soup, id_[0], title),
+                                                soup, id_[0], title), #Funcion aparte de seasons
                                             soup.find('div', class_='ssFeatureImage col-12').find('img')['src']])
 
-                        # info_episodes.append(
-                        # [x.get_text() for x in soup.find_all('div', class_='showCaptions')])
+                        soups.append([soup, str(id_[0]), title])
 
                     except KeyError as e:
                         print(
@@ -254,11 +250,9 @@ class BounceTV():
                     print(f'error {e}')
                     pass
             
-            print(info_series)
-            #self.payloads(info_series, 'serie')
+            self.payloads(info_series, 'serie')
+            self.get_episodes(soups)
 
-        else:
-            print('No se ha especificado el argumento movies o series a get_info()')
 
     def get_seasons(self, soup, id_, title):
         '''Obtiene conteo de seasons y capitulos
@@ -292,6 +286,55 @@ class BounceTV():
             pass
 
         return list_seasons
+    
+    def get_episodes(self, soups):
+        '''Esta funcion recibe como parametros los soup
+        y recolecta los id de los episodios
+        para luego hacer request a la API'''
+
+        episodes_final = []
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+                'AppleWebKit/537.36 (KHTML, like Gecko)'
+                'Chrome/89.0.4389.114 Safari/537.36'}
+
+        for soup in soups:
+            episodes = soup[0].find('div', id='episodeContainer').find_all(
+                'div', class_=re.compile('^showEpisodeCol*'))
+            for epi in episodes:
+                div = epi.find('div')
+                if div != None:
+                    parameter = div['id']
+                    r = self.sesion.get(
+                        f'https://www.bouncetv.com/json-statics/titles.php?id={parameter}', 
+                            headers=headers)
+                    if r.status_code == 200:
+                        data = r.json()
+                        try:
+                            for json in data:
+                                image = json['images']['thumb']
+                                episodes_final.append([
+                                    soup[1], #parent id
+                                    soup[2], #parent title
+                                    json.get('id', None),
+                                    json.get('title', None),
+                                    json.get('cast', None),
+                                    json.get('yearReleased', None),
+                                    json.get('description', None),
+                                    json.get('rating', None),
+                                    json.get('seasonNumber', None),
+                                    json.get('episodeNumber', None),
+                                    json.get('duration', None),
+                                    image.get('url', None),
+                                    json.get('tags', None)
+                                ])
+                        except KeyError as e:
+                            print(f'Error en campo{e}.')
+                    else:
+                        print(f'Error al conectarse a la url, codigo {r.status_code}')
+                        pass
+        
+        self.payloads(episodes_final, 'episode')
+                    
 
     def payloads(self, data, type_):
         '''Funcion payloads'''
@@ -317,6 +360,7 @@ class BounceTV():
                     'Type':          'movie',
                     'Year':          content[5],
                     'Duration':      int(content[4] * 60) if content[4] else None,
+                    "Seasons":       None,
                     'Deeplinks': {
                         'Web':       content[1],
                         'Android':   None,
@@ -341,7 +385,8 @@ class BounceTV():
                     'CreatedAt':     self._created_at
                 }
 
-                Datamanager._checkDBandAppend(self, payload, list_db_movies, payloads)
+                Datamanager._checkDBandAppend(
+                    self, payload, list_db_movies, payloads)
             Datamanager._insertIntoDB(self, payloads, self.titanScraping)
 
         elif type_ == 'serie':
@@ -356,7 +401,7 @@ class BounceTV():
                     'Type':          'serie',
                     'Year':          None,
                     'Duration':      None,
-                    "Seasons":       content[6],
+                    "Seasons":       content[5],
                     'Deeplinks': {
                         'Web':       content[2],
                         'Android':   None,
@@ -364,7 +409,7 @@ class BounceTV():
                     },
                     'Playback':      None,
                     'Synopsis':      content[3],
-                    'Image':         [content[7]] if content[7] else None,
+                    'Image':         [content[6]] if content[6] else None,
                     'Rating':        None,
                     'Provider':      None,
                     'Genres':        None,
@@ -380,7 +425,56 @@ class BounceTV():
                     'Timestamp':     datetime.now().isoformat(),
                     'CreatedAt':     self._created_at
                 }
-                Datamanager._checkDBandAppend(self, payload, list_db_series, payloads)
+                Datamanager._checkDBandAppend(
+                    self, payload, list_db_series, payloads)
             Datamanager._insertIntoDB(self, payloads, self.titanScraping)
+
         else:
-            pass
+            list_db_episodes = Datamanager._getListDB(
+                self, self.titanScrapingEpisodios)
+
+            for epi in data:
+
+                payload_epi = {
+                    "PlatformCode":  self._platform_code,
+                    "Id":            str(epi[2]) if epi[2] else None,
+                    "ParentId":      epi[0],
+                    "ParentTitle":   epi[1],
+                    "Episode":       int(epi[9]) if epi[9] else None,
+                    "Season":        int(epi[8]) if epi[8] else None,
+                    "Title":         epi[3],
+                    "CleanTitle":    _replace(epi[3]) if epi[3] else None,
+                    "OriginalTitle": epi[3],
+                    "Type":          'episode',
+                    "Year":          int(epi[5]) if epi[5] >= 1700 and epi[5] <= 2021 else None,
+                    "Duration":      int(epi[10] * 60) if epi[10] else None,
+                    "ExternalIds":   None,
+                    "Deeplinks": {
+                        "Web":       f'https://www.bouncetv.com/show/{epi[12]}/{epi[2]}/' 
+                                        if epi[12] and epi[2] else None,
+                        "Android":   None,
+                        "iOS":       None,
+                    },
+                    "Synopsis":      epi[6],
+                    "Image":         [epi[11]] if epi[11] else None,
+                    "Rating":        epi[7],
+                    "Provider":      None,
+                    "Genres":        None,
+                    "Cast":          [epi[4]] if epi[4] else None,
+                    "Directors":     None,
+                    "Availability":  None,
+                    "Download":      None,
+                    "IsOriginal":    None,
+                    "IsAdult":       None,
+                    "IsBranded":     None,
+                    "Packages":      packages,
+                    "Country":       None,
+                    "Timestamp":     datetime.now().isoformat(),
+                    "CreatedAt":     self._created_at,
+                }
+
+                Datamanager._checkDBandAppend(
+                    self, payload_epi, list_db_episodes, payloads)
+
+            Datamanager._insertIntoDB(
+                self, payloads, self.titanScrapingEpisodios)
