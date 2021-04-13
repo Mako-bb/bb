@@ -406,7 +406,7 @@ class WeTV():
                         "iOS":       None,
                     },
                     "Synopsis":      epi[8].replace(' \\r\\', ' ').replace('\r\n', '')
-                    if epi[8] else None,
+                                        if epi[8] else None,
                     "Image":         ['https://www.wetv.com' + epi[10]] if epi[10] else None,
                     "Rating":        None,
                     "Provider":      None,

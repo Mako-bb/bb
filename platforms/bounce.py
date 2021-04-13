@@ -247,14 +247,16 @@ class BounceTV():
                     #Los titles vienen con otra info, la cual sacamos con el modulo re y replace.
                     title = re.sub(r'\d+', '', url[1].replace(' EPISODES', '')) 
                     synopsis = soup.find('div', id='aboutContainer')
-                    cast = [x.get_text() for x in soup.find_all('h3')] if soup.find_all(
+                    #Algunos nombres viene formato Nombre Actor - Personaje
+                    cast = [x.get_text().split(' -')[0] for x in soup.find_all('h3')] if soup.find_all(
                         'h3') else None
                     try:
                         info_series.append([str(id_[0]),
                                             title,
                                             url[0],
                                             synopsis.get_text().replace(
-                                                '\nX\n        ', '').replace('    ', '') if synopsis else None,
+                                                '\nX\n        ', '').replace('    ', '').replace(
+                                                '\n', '') if synopsis else None,
                                             ', '.join([str(name) for name in cast]) if cast else None,
                                             self.get_seasons(soup, id_[0], title), #Funcion aparte de seasons
                                             soup.find('div', class_='ssFeatureImage col-12').find('img')['src']])
@@ -357,6 +359,7 @@ class BounceTV():
                         print(f'Error al conectarse a la url, codigo {r.status_code}')
                         pass
         
+        
         self.payloads(episodes_final, 'episode')
                     
 
@@ -367,7 +370,7 @@ class BounceTV():
 
         packages = [
             {
-                "Type": "subscription-vod"
+                "Type": "tv-everywhere"
             }
         ]
 
