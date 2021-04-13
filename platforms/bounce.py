@@ -5,6 +5,7 @@ import requests
 import hashlib
 from common import config
 from bs4 import BeautifulSoup
+#from HTMLParser import HTMLParseError
 from datetime import datetime
 from handle.mongo import mongo
 from updates.upload import Upload
@@ -12,6 +13,9 @@ from handle.datamanager import Datamanager
 from handle.replace import _replace
 #import pandas as pd
 from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import StaleElementReferenceException
+from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 import re
 
@@ -38,6 +42,9 @@ class BounceTV():
         self.sesion = requests.session()
         self.skippedEpis = 0
         self.skippedTitles = 0
+        self.movies_url = self._config['url_movies']
+        self.series_url = self._config['url_series']
+        self.api = self._config['api']
 
         if type == 'scraping':
             self._scraping()
@@ -60,12 +67,8 @@ class BounceTV():
 
     def _scraping(self, testing=False):
 
-        link_movies = 'https://www.bouncetv.com/movies/'
-
-        link_series = 'https://www.bouncetv.com/shows/?show-type=streaming'
-
-        self.get_links(link_movies, 'movies')
-        self.get_links(link_series, 'series')
+        self.get_links(self.movies_url, 'movies')
+        self.get_links(self.series_url, 'series')
 
         self.sesion.close()
 
@@ -79,7 +82,7 @@ class BounceTV():
         chrome_options = Options()
         # chrome_options.add_argument("--headless") #Primera vez debe estar disabled para ver velocidad scroll.
         chrome_options.add_argument("--incognito")
-        driver = webdriver.Chrome(r"C:\Users\tadeo\OneDrive\Escritorio\Curso Data Analyst\Python 0\chromedriver.exe",
+        driver = webdriver.Chrome(r".\drivers\chromedriver.exe",
                                   options=chrome_options)  # PATH de chromedriver de C/U
         return driver
     
@@ -87,13 +90,21 @@ class BounceTV():
         '''Aca se prueba la conexion y se devuelve el html'''
 
         with self.selenium_options() as driver:
-            driver.get(url)
-            time.sleep(2)
-            body = driver.execute_script("return document.body")
-            html = body.get_attribute('innerHTML')
-            soup = BeautifulSoup(html, "html.parser")
+            try:
+                driver.get(url)
+                time.sleep(2)
+                body = driver.execute_script("return document.body")
+                html = body.get_attribute('innerHTML')
+                soup = BeautifulSoup(html, "html.parser")
+                
+                return soup
 
-        return soup
+            except TimeoutException as e:
+                print(f'Error {e}, la pagina {driver.current_url} no responde.')
+            
+            except StaleElementReferenceException as e:
+                print(f'Error {e}, no se cargaron completamente los elementos.')
+        
 
     def get_links(self, url, _type=None):
         '''Esta función sirve para hacer la conexión a las paginas principales mediante el driver, 
@@ -102,17 +113,25 @@ class BounceTV():
 
         driver = self.selenium_options()
 
-        driver.get(url)
-        time.sleep(1)
+        try:
+            driver.get(url)
+            time.sleep(1)
 
-        if _type == 'movies':
+            if _type == 'movies':
 
-            driver.find_element_by_xpath(
-                '//a[contains(@href,"#stream")]').click()
+                driver.find_element_by_xpath(
+                    '//a[contains(@href,"#stream")]').click()
 
-        elif _type == 'series':
-            driver.find_element_by_xpath(
-                '//a[contains(@href,"/shows/?show-type=streaming")]').click()
+            elif _type == 'series':
+                driver.find_element_by_xpath(
+                    '//a[contains(@href,"/shows/?show-type=streaming")]').click()
+        
+        except TimeoutException as e:
+            print(f'Error {e}, la pagina {driver.current_url} no responde.')
+        
+        except NoSuchElementException as e:
+            print('Error {e}, no se encuentran los componentes principales'
+                    'en el menu superior.')
 
         '''Aca necesitamos generar el scroll para que aparezca todo el contenido
         creo que en un futuro quizas agreguen mas contenido por eso lo dejo'''
@@ -189,7 +208,7 @@ class BounceTV():
                         data = soup.find('div', class_='singleMovieInfo').get_text().replace(
                             '\xa0', '').split('|')
 
-                        info_movies.append([str(id_[0]),
+                        info_movies.append([str(id_[0]), #url[0] es la url, url[1] la imagen.
                                             url[0],
                                             url[1].replace('<img src="', '').replace(
                                                 '">', '').replace('" <="" a="', ''),
@@ -224,8 +243,9 @@ class BounceTV():
 
                     id_ = [int(s)
                            for s in url[0].split('/') if s.isdigit()]
-
-                    title = re.sub(r'\d+', '', url[1].replace(' EPISODES', ''))
+                    
+                    #Los titles vienen con otra info, la cual sacamos con el modulo re y replace.
+                    title = re.sub(r'\d+', '', url[1].replace(' EPISODES', '')) 
                     synopsis = soup.find('div', id='aboutContainer')
                     cast = [x.get_text() for x in soup.find_all('h3')] if soup.find_all(
                         'h3') else None
@@ -235,12 +255,11 @@ class BounceTV():
                                             url[0],
                                             synopsis.get_text().replace(
                                                 '\nX\n        ', '').replace('    ', '') if synopsis else None,
-                                            ', '.join([str(name) for name in cast] if cast else None),
-                                            self.get_seasons(
-                                                soup, id_[0], title), #Funcion aparte de seasons
+                                            ', '.join([str(name) for name in cast]) if cast else None,
+                                            self.get_seasons(soup, id_[0], title), #Funcion aparte de seasons
                                             soup.find('div', class_='ssFeatureImage col-12').find('img')['src']])
 
-                        soups.append([soup, str(id_[0]), title])
+                        soups.append([soup, str(id_[0]), title, url[0]])
 
                     except KeyError as e:
                         print(
@@ -257,9 +276,11 @@ class BounceTV():
     def get_seasons(self, soup, id_, title):
         '''Obtiene conteo de seasons y capitulos
         de cada serie, recibiendo el soap como argumento.'''
+
         list_seasons = []
         try:
-            # Si la serie tiene una temporada entonces el html no tiene un seasonMenu entonces se reemplaza con 1.
+            '''Si la serie tiene una temporada entonces el html no tiene un seasonMenu 
+            entonces se reemplaza con 1.'''
             seasons = [x.get_text().replace('Season ', '') for x in soup.find_all(
                 'span', class_='seasonMenu')] if soup.find_all(
                 'span', class_='seasonMenu') else [1]
@@ -285,7 +306,10 @@ class BounceTV():
             print(f'Error {e}')
             pass
 
-        return list_seasons
+        if not list_seasons:
+            return None
+        else:
+            return list_seasons
     
     def get_episodes(self, soups):
         '''Esta funcion recibe como parametros los soup
@@ -295,17 +319,17 @@ class BounceTV():
         episodes_final = []
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
                 'AppleWebKit/537.36 (KHTML, like Gecko)'
-                'Chrome/89.0.4389.114 Safari/537.36'}
+                'Chrome/89.0.4389.114 Safari/537.36'} #Permiso
 
         for soup in soups:
+            #Modulo re nos permite encontrar todos los div que muestrene episodes.
             episodes = soup[0].find('div', id='episodeContainer').find_all(
                 'div', class_=re.compile('^showEpisodeCol*'))
             for epi in episodes:
                 div = epi.find('div')
                 if div != None:
                     parameter = div['id']
-                    r = self.sesion.get(
-                        f'https://www.bouncetv.com/json-statics/titles.php?id={parameter}', 
+                    r = self.sesion.get(self.api+parameter, 
                             headers=headers)
                     if r.status_code == 200:
                         data = r.json()
@@ -325,7 +349,7 @@ class BounceTV():
                                     json.get('episodeNumber', None),
                                     json.get('duration', None),
                                     image.get('url', None),
-                                    json.get('tags', None)
+                                    soup[3] #url
                                 ])
                         except KeyError as e:
                             print(f'Error en campo{e}.')
@@ -442,7 +466,7 @@ class BounceTV():
                     "ParentTitle":   epi[1],
                     "Episode":       int(epi[9]) if epi[9] else None,
                     "Season":        int(epi[8]) if epi[8] else None,
-                    "Title":         epi[3],
+                    "Title":         epi[3].replace("â\x80\x99", "'") if epi[3] else None,
                     "CleanTitle":    _replace(epi[3]) if epi[3] else None,
                     "OriginalTitle": epi[3],
                     "Type":          'episode',
@@ -450,12 +474,14 @@ class BounceTV():
                     "Duration":      int(epi[10] * 60) if epi[10] else None,
                     "ExternalIds":   None,
                     "Deeplinks": {
-                        "Web":       f'https://www.bouncetv.com/show/{epi[12]}/{epi[2]}/' 
-                                        if epi[12] and epi[2] else None,
+                        "Web":       epi[12] +'/' + str(epi[2]),
                         "Android":   None,
                         "iOS":       None,
                     },
-                    "Synopsis":      epi[6],
+                    "Synopsis":      epi[6].replace("â", "").replace(
+                                    "âs", "'s").replace('\'', "'").replace(
+                                    ' â\x80\x9cwokeâ\x80\x9d', '').replace(
+                                    'Ã©', 'e').replace('\r\n', '') if epi[6] else None,
                     "Image":         [epi[11]] if epi[11] else None,
                     "Rating":        epi[7],
                     "Provider":      None,

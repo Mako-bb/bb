@@ -122,6 +122,9 @@ ott_sites:
   BounceTV:
     countries:
       US: us.bouncetv
+    url_movies: https://www.bouncetv.com/movies/
+    url_series: https://www.bouncetv.com/shows/?show-type=streaming
+    api: https://www.bouncetv.com/json-statics/titles.php?id=
   Indieflix:
     countries:
       US: us.indieflix
