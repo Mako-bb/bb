@@ -342,7 +342,7 @@ class BounceTV():
                                     soup[1], #parent id
                                     soup[2], #parent title
                                     json.get('id', None),
-                                    json.get('title', None),
+                                    json.get('title', None).split('-')[0],
                                     json.get('cast', None),
                                     json.get('yearReleased', None),
                                     json.get('description', None),
