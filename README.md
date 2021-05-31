@@ -78,8 +78,7 @@ Es por esto, que las ideas de mejora, las estamos volcando en este [**link**](ht
 
 1) Clonar el repositorio.
 
-Recomendamos hacerlo en una carpeta dentro de nuestra computadora, en donde organicemos nuestros archivos de trabajo.
-Para clonar solo la rama de desarrollo **platforms-dev** usamos el comando: **Git clone http -b platforms-dev -single-branch**
+Usamos el comando: **git clone https://gitlab.com/jmrodriguez3/agentesnuevo.git**
 
 2) Luego, nos ubicarnos dentro del repositorio con nuestra terminal predilecta y, a la altura donde está ubicado este mismo archivo, en la carpeta clonada llamda **agentes** creamos un entorno virtual.
 
