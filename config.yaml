@@ -359,3 +359,7 @@ ott_sites:
     contents:
       - series
       - movies
+  Pluto:
+    countries:
+      AR: ar.pluto
+    star_url: www.pluto.com
