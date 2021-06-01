@@ -23,6 +23,7 @@ from platforms.trutv import TruTV
 from platforms.quibi import Quibi
 from platforms.optimum import Optimum
 # from platforms.acorntv_test         import AcornTV_Test
+<<<<<<< HEAD
 from platforms.cwtv import CWtv
 from common import config
 from platforms.freeform import Freeform
@@ -36,6 +37,21 @@ from platforms.optimum_test import OptimumTest
 from platforms.amazon_login import AmazonLogin
 from platforms.abc import Abc
 from platforms.pluto import Pluto
+=======
+from platforms.cwtv                 import CWtv
+from common                         import config
+from platforms.freeform             import Freeform
+from platforms.myoutdoortv          import MyOutdoorTV
+from platforms.cwseed               import CwSeed
+from platforms.pantaya              import Pantaya
+from platforms.cartoonnetwork       import CartoonNetwork
+from platforms.fandango             import FandangoNOW
+from platforms.boomerang            import Boomerang
+from platforms.optimum_test         import OptimumTest
+from platforms.amazon_login         import AmazonLogin
+from platforms.abc                  import Abc
+from platforms.hbo_prueba            import HboPrueba
+>>>>>>> 67d00a222151e4f7290357ec2bca353b8f284c88
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
