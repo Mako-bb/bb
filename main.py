@@ -37,6 +37,7 @@ from platforms.optimum_test         import OptimumTest
 from platforms.amazon_login         import AmazonLogin
 from platforms.abc                  import Abc
 from platforms.pluto import Pluto
+from platforms.hbo_prueba            import HboPrueba
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
