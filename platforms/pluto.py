@@ -21,7 +21,7 @@ class Pluto():
         self.titanScraping = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
 
-        self.url = self._config['start_url']
+        self.api_url = self._config['api_url']
 
         self.sesion = requests.session()
 
@@ -47,6 +47,25 @@ class Pluto():
         # 1) Encontrar la API o APIS.
         # 2) Bs4
         # 3) Selenium
-        print("Ok de prueba")
-        print(self.ott_site_country)
-        print(self.url)
+
+        uri = self.api_url
+
+        response = self.sesion.get(uri)
+
+        if response.status_code == 200:
+            from pprint import pprint
+
+            dict_contents = response.json()
+            list_categories = dict_contents['categories']
+
+            for categories in list_categories:
+                print("")
+                contents = categories['items']
+
+                for content in contents:
+                    pprint(content['name'])
+
+                    title = ''
+                    cast = ['Sbaraglia','Francella']
+                    year = 1900
+                    # Imprimir todos los datos que se puedan
