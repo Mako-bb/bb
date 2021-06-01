@@ -19,6 +19,8 @@ class Pluto():
         self.titanScraping = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
 
+        self.api_url = self._config['api_url']
+        
         self.sesion = requests.session()
 
         if type == 'return':
@@ -40,5 +42,50 @@ class Pluto():
             self._scraping(testing=True)
     
     def _scraping(self, testing=False):
-        print("Ok de prueba")
-        
+        uri = self.api_url
+        response = self.sesion.get(uri)
+        if response.status_code == 200:
+            from pprint import pprint
+            dict_contents = response.json()
+            list_categories = dict_contents['categories']
+
+        for categories in list_categories:
+            contents = categories['items']
+
+            # Traduccion de generos
+            for content in contents:
+                if (content['genre']) == 'Children & Family':
+                    genero = 'Famila y ninos'
+                elif (content['genre']) == 'Comedy':
+                    genero = 'Comedia'
+                elif (content['genre']) ==  'Instructional & Educational':
+                    genero = 'Educacion e Instructivos'
+                elif (content['genre']) ==  'Documentaries':
+                    genero = 'Documentales'
+                elif (content['genre']) ==  'Sci-Fi & Fantasy':
+                    genero = 'Ciencia Ficcion y Fantasia'
+                elif (content['genre']) ==  'Action & Adventure':
+                    genero = 'Accion y aventura'
+                else:
+                    genero = content['genre']
+
+                # Traduccion de tipos
+                if (content['type'] == 'series'):
+                    tipo = 'Serie'
+                elif (content['type'] == 'movie'):
+                    tipo = 'Pelicula'
+                else:
+                    tipo = content['type']
+
+                # Traduccion de clasificacion
+                if (content['rating'] == 'Not Rated'):
+                    clasificacion = 'Sin clasificar'
+                else:
+                    clasificacion = content['rating']
+
+                if tipo == 'Serie':                 # Si es una serie, se muestran las temporadas
+                    pprint('Nombre: ' + content['name'] + ' - Tipo: ' + tipo + ' - Temporadas: ' + str(content['seasonsNumbers']) +
+                    ' - Genero: ' + genero + ' - Clasificacion: ' + clasificacion  + ' - Resumen: ' + content['summary'])
+                elif tipo == 'Pelicula':            # Si es una pelicula, no se muestran las temporadas
+                    pprint('Nombre: ' + content['name'] + ' - Tipo: ' + tipo + ' - Genero: ' + genero + ' - Clasificacion: ' + clasificacion
+                    + ' - Resumen: ' + content['summary'])
