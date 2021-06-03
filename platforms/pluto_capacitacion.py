@@ -53,9 +53,10 @@ class Pluto():
             payloads.append(payload)
             if payload['Type'] == 'serie':
                 pass
-                # get_episodes()
+                # Hacer get_episodes()
                 # ¿Puedo reutilizar get_payload?
-                #      
+                # Dejar todo documentado
+                # Completar la lista payloads y episodes.
         self.mongo.insertMany(self.titanScraping, payloads)
         self.mongo.insertMany(self.titanScrapingEpisodios, episodes)
 
@@ -109,6 +110,9 @@ class Pluto():
             return categories['items']
 
     def get_payload(self, dict_metadata):
+        # from handle.payload import Payload
+        # payload = Payload()
+
         payload = {}
         payload['Id'] = dict_metadata['_id']
         payload['Title'] = dict_metadata['name']
