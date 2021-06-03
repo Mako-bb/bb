@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from platforms.amazon_login import AmazonLogin
-
+from platforms.pluto import Pluto
 from platforms.optimum_test import OptimumTest
 from platforms.boomerang import Boomerang
 from platforms.fandango import FandangoNOW
@@ -64,4 +64,4 @@ if __name__ == '__main__':
             from analysis.utils.excel_template import ExcelTemplate
             ExcelTemplate.export_excel(platform_code, logat)
         else:
-            print(f"Error in PlatformCode. See config.yaml")
+            print(f"Error in PlatformCode. See config.yaml")           
