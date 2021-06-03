@@ -93,19 +93,6 @@ class Pluto():
                 time.sleep(request_timeout)
                 continue
 
-    def get_payload(self, dict_metadata):
-        payload = {}
-        payload['Id'] = dict_metadata['_id']
-        payload['Title'] = dict_metadata['name']
-        payload['Type'] = dict_metadata['type']
-        payload['Synopsis'] = dict_metadata.get('description')
-        payload['Duration'] = self.get_duration(dict_metadata)
-
-        return payload
-
-    def get_duration(self, dict_metadata):
-        return int(dict_metadata['allotment'] // 60) or int(dict_metadata['duration'] // 60000)
-
     def get_contents(self):
         """Método que trae los contenidos en forma de diccionario.
 
@@ -118,3 +105,16 @@ class Pluto():
         list_categories = dict_contents['categories']
         for categories in list_categories:
             return categories['items']
+
+    def get_payload(self, dict_metadata):
+        payload = {}
+        payload['Id'] = dict_metadata['_id']
+        payload['Title'] = dict_metadata['name']
+        payload['Type'] = dict_metadata['type']
+        payload['Synopsis'] = dict_metadata.get('description')
+        payload['Duration'] = self.get_duration(dict_metadata)
+
+        return payload
+
+    def get_duration(self, dict_metadata):
+        return int(dict_metadata['allotment'] // 60) or int(dict_metadata['duration'] // 60000)
