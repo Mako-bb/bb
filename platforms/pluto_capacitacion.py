@@ -53,7 +53,9 @@ class Pluto():
             payloads.append(payload)
             if payload['Type'] == 'serie':
                 pass
-                # get_episodes()        
+                # get_episodes()
+                # ¿Puedo reutilizar get_payload?
+                #      
         self.mongo.insertMany(self.titanScraping, payloads)
         self.mongo.insertMany(self.titanScrapingEpisodios, episodes)
 
