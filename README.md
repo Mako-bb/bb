@@ -78,36 +78,35 @@ Es por esto, que las ideas de mejora, las estamos volcando en este [**link**](ht
 
 1) Clonar el repositorio.
 
-Recomendamos hacerlo en una carpeta dentro de nuestra computadora, en donde organicemos nuestros archivos de trabajo.
-Para clonar solo la rama de desarrollo **platforms-dev** usamos el comando: **Git clone http -b platforms-dev -single-branch**
+Usamos el comando: **git clone https://gitlab.com/jmrodriguez3/agentesnuevo.git**
 
-2) Luego, nos ubicarnos dentro del repositorio con nuestra terminal predilecta y, a la altura donde está ubicado este mismo archivo, en la carpeta clonada llamda **agentes** creamos un entorno virtual.
+2) Luego, nos ubicarnos dentro del repositorio con nuestra terminal predilecta y, a la altura donde está ubicado este mismo archivo, en la carpeta clonada llamada **agentesnuevos** creamos un entorno virtual.
 
 Hay varios entornos virtuales, pero en este caso recomendamos el que ofrece la documentación oficial de Python: https://docs.python.org/3/library/venv.html
 
 Para crear el entorno virtual, ejecutamos el siguiente comando:
 
 ```shell
-mi-nombre@pc123:~/Desktop/agentes$ python -m venv env
+mi-nombre@pc123:~/Desktop/agentesnuevos$ python -m venv env
 ```
 Luego accedemos al entorno virtual, lo corrobramos cuando vemos la terminal de esta manera:
 
 ```shell
-(env) mi-nombre@pc123:~/Desktop/agentes$
+(env) mi-nombre@pc123:~/Desktop/agentesnuevos$
 ```
 
 3) Ahora ubicados dentro del entorno virtual, instalar las dependencias:
 
 **Para desarrollo:**
 ```shell
-(env) mi-nombre@pc123:~/Desktop/agentes$ pip install -r requirements/local.txt
+(env) mi-nombre@pc123:~/Desktop/agentesnuevos$ pip install -r requirements/local.txt
 ```
 
 **Importante:** Todas las librerías locales deben ir en requirements/local.txt . En caso de necesitar nuevas librerías en los servidores, comunicarse con los líderes del equipo.
 
 **Para producción:**
 ```shell
-(env) mi-nombre@pc123:~/Desktop/agentes$ pip install -r requirements/production.txt
+(env) mi-nombre@pc123:~/Desktop/agentesnuevos$ pip install -r requirements/production.txt
 ```
 
 4) Hay que instalar MongoDB. Link para instalar según el sistema operativo: https://docs.mongodb.com/manual/installation/

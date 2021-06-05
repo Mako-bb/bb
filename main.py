@@ -36,6 +36,8 @@ from platforms.optimum_test         import OptimumTest
 from platforms.amazon_login         import AmazonLogin
 from platforms.abc                  import Abc
 from platforms.pluto import Pluto
+from platforms.starz_mk import Starz_mk
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
