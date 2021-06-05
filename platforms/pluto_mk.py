@@ -9,7 +9,7 @@ from updates.upload         import Upload
 # from time import sleep
 # import re
 
-class Starz_mk():
+class Pluto_mk():
     """
     """
     def __init__(self, ott_site_uid, ott_site_country, type):
