@@ -23,7 +23,7 @@ from platforms.trutv import TruTV
 from platforms.quibi import Quibi
 from platforms.optimum import Optimum
 # from platforms.acorntv_test         import AcornTV_Test
-<<<<<<< HEAD
+from platforms.pluto_ariel import Pluto
 from platforms.cwtv import CWtv
 from common import config
 from platforms.freeform import Freeform
@@ -36,22 +36,7 @@ from platforms.boomerang import Boomerang
 from platforms.optimum_test import OptimumTest
 from platforms.amazon_login import AmazonLogin
 from platforms.abc import Abc
-from platforms.pluto import Pluto
-=======
-from platforms.cwtv                 import CWtv
-from common                         import config
-from platforms.freeform             import Freeform
-from platforms.myoutdoortv          import MyOutdoorTV
-from platforms.cwseed               import CwSeed
-from platforms.pantaya              import Pantaya
-from platforms.cartoonnetwork       import CartoonNetwork
-from platforms.fandango             import FandangoNOW
-from platforms.boomerang            import Boomerang
-from platforms.optimum_test         import OptimumTest
-from platforms.amazon_login         import AmazonLogin
-from platforms.abc                  import Abc
-from platforms.hbo_prueba            import HboPrueba
->>>>>>> 67d00a222151e4f7290357ec2bca353b8f284c88
+from platforms.hbo_prueba import HboPrueba
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -75,7 +60,8 @@ if __name__ == '__main__':
         locals()[ott_platforms](ott_platforms, ott_site_country, ott_operation)
 
     if ott_operation in ('excel'):
-        platform_code = config()['ott_sites'][ott_platforms]["countries"].get(ott_site_country)
+        platform_code = config()['ott_sites'][ott_platforms]["countries"].get(
+            ott_site_country)
         if platform_code:
             from analysis.utils.excel_template import ExcelTemplate
 
