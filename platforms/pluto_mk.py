@@ -46,4 +46,126 @@ class Pluto_mk():
             self._scraping(testing=True)
     
     def _scraping(self, testing=False):
-        print('ok')
+        uri = self.api_url
+        contents = self.request(uri)
+        contents = contents['categories']
+        for content in contents:
+            for item in content['items']:
+                    if (item['type']) == 'movie':
+                        self.movie_payload(item)
+                    elif (item['type']) == 'series':
+                        self.serie_payload(item)
+    
+    def serie_payload(self, item):
+        deeplink = self.get_deeplink(item, 'serie')
+        image = self.get_image(item, 'serie')
+        payload = {
+            "PlatformCode": self._platform_code, #Obligatorio 
+            "Id": item['_id'], #Obligatorio
+            "Seasons": [ #Unicamente para series
+            {
+            "Id": "str", #Importante
+            "Synopsis": "str", #Importante
+            "Title": "str", #Importante, E.J. The Wallking Dead: Season 1
+            "Deeplink": "str", #Importante
+            "Number": "int", #Importante
+            "Year": "int", #Importante
+            "Image": "list", 
+            "Directors": "list", #Importante
+            "Cast": "list", #Importante
+            "Episodes": "int", #Importante
+            "IsOriginal": "bool" 
+            },
+            ],
+            "Title": "str", #Obligatorio 
+            "CleanTitle": "_replace(str)", #Obligatorio 
+            "OriginalTitle": "str", 
+            "Type": "str", #Obligatorio 
+            "Year": "int", #Important! 
+            "Duration": "int", 
+            "ExternalIds": "list", 
+            "Deeplinks": { 
+            "Web": deeplink, #Obligatorio 
+            "Android": "str", 
+            "iOS": "str", 
+            }, 
+            "Synopsis": "str", 
+            "Image": image, 
+            "Rating": "str", #Important! 
+            "Provider": "list", 
+            "Genres": "list", #Important!  "Cast": "list", 
+            "Directors": "list", #Important! 
+            "Availability": "str", #Important! 
+            "Download": "bool", 
+            "IsOriginal": "bool", #Important! 
+            "IsAdult": "bool", #Important! 
+            "IsBranded": "bool", #Important! (ver link explicativo)
+            "Packages": "list", #Obligatorio 
+            "Country": "list", 
+            "Timestamp": "str", #Obligatorio 
+            "CreatedAt": "str", #Obligatorio
+        }
+        print(payload)
+        
+    def movie_payload(self, item):
+        deeplink = self.get_deeplink(item, 'movie')
+        duration = self.get_duration(item)
+        image = self.get_image(item, 'movie')
+        payload = { 
+            "PlatformCode": self._platform_code, #Obligatorio 
+            "Id": item['_id'], #Obligatorio
+            "Title": item['name'], #Obligatorio 
+            "CleanTitle": item['slug'], #Obligatorio 
+            "OriginalTitle": item['name'], 
+            "Type": item['type'], #Obligatorio 
+            "Year": None, #Important! 
+            "Duration": duration,
+            "ExternalIds": 'falta',  #No estoy seguro de si es
+            "Deeplinks": { 
+            "Web": deeplink, #Obligatorio 
+            "Android": None, 
+            "iOS": None, 
+            }, 
+            "Synopsis": item['summary'], 
+            "Image": image,
+            "Rating": item['rating'], #Important! 
+            "Provider": None,
+            "Genres": item['genre'], #Important!
+            "Cast": None, 
+            "Directors": None, #Important! 
+            "Availability": None, #Important! 
+            "Download": None, 
+            "IsOriginal": None, #Important! 
+            "IsAdult": None, #Important! 
+            "IsBranded": None, #Important! (ver link explicativo)
+            "Packages": 'Free', #Obligatorio 
+            "Country": None, 
+            "Timestamp": "falta", #Obligatorio 
+            "CreatedAt": "falta", #Obligatorio
+            }
+        #self.mongo.insert(self.titanScraping, payload)
+        
+    def get_image(self, item, type):
+        if type == 'movie':
+            image = 'https://api.pluto.tv/v3/images/episodes/' + str(item['_id']) + '/poster.jpg'
+        if type == 'serie':
+            image = 'https://api.pluto.tv/v3/images/series/' + str(item['_id']) + '/poster.jpg'
+        return image
+    
+    def get_duration(self, item):
+        duration = str(int((item['duration']) / 60000)) + ' min'
+        return duration
+        
+    def get_deeplink(self, item, type):
+        if type == 'movie':
+            deeplink = 'https://pluto.tv/on-demand/movies/' + item['slug']
+
+        if type == 'serie':
+            deeplink = 'https://pluto.tv/on-demand/series/' + item['slug']
+        return deeplink
+          
+        
+    def request(self, uri):
+        response = self.session.get(uri)
+        contents = response.json()
+        return contents
