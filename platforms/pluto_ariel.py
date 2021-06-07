@@ -8,7 +8,7 @@ from handle.payload import Payload
 from pymongo import MongoClient
 
 
-class Pluto():
+class Pluto_ari():
     """
     Pluto es una ott onDemand
 
