@@ -43,9 +43,13 @@ from platforms.abc import Abc
 from platforms.hbo_prueba import HboPrueba
 from platforms.pluto_capacitacion import PlutoCapacitacion
 from platforms.pluto_ggarcia import Pluto_gg
+<<<<<<< HEAD
 from platforms.hbo_prueba            import HboPrueba
 from platforms.starz_tom import Starz
 from platforms.pluto_mv import Pluto_mv
+=======
+from platforms.pluto_mk import Pluto_mk
+>>>>>>> 85e4eb6d55f9fd1010444e451424e1e43adeaf50
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
