@@ -102,12 +102,15 @@ class Pluto():
         Returns:
             list: Lista de diccionarios
         """
+        content_list = []
         uri = self.api_url
         response = self.request(uri)
         dict_contents = response.json()
         list_categories = dict_contents['categories']
         for categories in list_categories:
-            return categories['items']
+            content_list += categories['items']
+
+        return content_list
 
     def get_payload(self, dict_metadata):
         # from handle.payload import Payload

@@ -6,6 +6,7 @@ from handle.replace import _replace
 from common import config
 from handle.mongo import mongo
 from updates.upload         import Upload
+from datetime import datetime
 # from time import sleep
 # import re
 
@@ -45,17 +46,63 @@ class Pluto_mk():
 
         if type == 'testing':
             self._scraping(testing=True)
+    def query_field(self, collection, field=None):
+        """Método que devuelve una lista de una columna específica
+        de la bbdd.
+
+        Args:
+            collection (str): Indica la colección de la bbdd.
+            field (str, optional): Indica la columna, por ejemplo puede ser
+            'Id' o 'CleanTitle. Defaults to None.
+
+        Returns:
+            list: Lista de los field encontrados.
+        """
+        find_filter = {
+            'PlatformCode': self._platform_code,
+            'CreatedAt': self._created_at
+        }
+
+        find_projection = {'_id': 0, field: 1, } if field else None
+
+        query = self.mongo.db[collection].find(
+            filter=find_filter,
+            projection=find_projection,
+            no_cursor_timeout=False
+        )
+
+        if field:
+            query = [item[field] for item in query if item.get(field)]
+        else:
+            query = list(query)
+
+        return query
     
     def _scraping(self, testing=False):
-        uri = self.api_url
-        contents = self.request(uri)
-        contents = contents['categories']
-        for content in contents:
-            for item in content['items']:
-                    if (item['type']) == 'movie':
-                        self.movie_payload(item)
-                    elif (item['type']) == 'series':
-                        self.serie_payload(item)
+        # Listas de contentenido scrapeado:
+        self.scraped = self.query_field(self.titanScraping, field='Id')
+        self.scraped_episodes = self.query_field(self.titanScrapingEpisodios, field='Id')
+
+        print(f"{self.titanScraping} {len(self.scraped)}")
+        print(f"{self.titanScrapingEpisodios} {len(self.scraped_episodes)}")
+
+        contents = self.get_contents()
+        for n, item in enumerate(contents):
+            print(f"\n----- Progreso ({n}/{len(contents)}) -----\n")            
+            if item['_id'] in self.scraped:
+                # Que no avance, está repetido.
+                continue
+            self.scraped.append(item['_id'])
+            if (item['type']) == 'movie':
+                self.movie_payload(item)
+            elif (item['type']) == 'series':
+                self.serie_payload(item)
+            break
+
+        # Validar tipo de datos de mongo:
+        Upload(self._platform_code, self._created_at, testing=True)
+        print("Scraping finalizado")
+
     
     def serie_payload(self, item):
         deeplink = self.get_deeplink(item, 'serie')
@@ -164,6 +211,7 @@ class Pluto_mk():
         deeplink = self.get_deeplink(item, 'movie')
         duration = self.get_duration(item)
         image = self.get_image(item, 'movie')
+        print(item['name'])
         payload = { 
             "PlatformCode": self._platform_code, #Obligatorio 
             "Id": item['_id'], #Obligatorio
@@ -193,8 +241,8 @@ class Pluto_mk():
             "IsBranded": None, #Important! (ver link explicativo)
             "Packages": 'Free', #Obligatorio 
             "Country": None, 
-            "Timestamp": "falta", #Obligatorio 
-            "CreatedAt": "falta", #Obligatorio
+            "Timestamp": datetime.now().isoformat(), #Obligatorio 
+            "CreatedAt": self._created_at, #Obligatorio
             }
         self.mongo.insert(self.titanScraping, payload)
         
@@ -226,3 +274,18 @@ class Pluto_mk():
         response = self.session.get(uri)
         contents = response.json()
         return contents
+
+    def get_contents(self):
+        """Método que trae los contenidos en forma de diccionario.
+
+        Returns:
+            list: Lista de diccionarios
+        """
+        content_list = []
+        uri = self.api_url
+        response = self.request(uri)
+        list_categories = response['categories']
+        for categories in list_categories:
+            content_list += categories['items']
+
+        return content_list
