@@ -105,6 +105,7 @@ class Pluto_mk():
         self.mongo.insertMany(self.titanScrapingEpisodios, self.episodes_payloads)
         Upload(self._platform_code, self._created_at, testing=True)
         print("Scraping finalizado")
+        self.session.close()
 
     def serie_payload(self, item):
         deeplink = self.get_deeplink(item, 'serie')
@@ -123,8 +124,8 @@ class Pluto_mk():
             "ExternalIds": None, 
             "Deeplinks": { 
             "Web": deeplink, #Obligatorio 
-            "Android": "str", 
-            "iOS": "str", 
+            "Android": None, 
+            "iOS": None, 
             }, 
             "Synopsis": item['description'], 
             "Image": image, 
@@ -168,7 +169,7 @@ class Pluto_mk():
             },
             season_return.append(season_payload)
             for n, episode in enumerate(season['episodes']):
-                print(f"\n----- Episodio ({n}/{len(season))}) -----\n")  
+                print(f"\n----- Episodio ({n}/{len(season)}) -----\n")  
                 duration = self.get_duration(episode)
                 deeplink = self.get_deeplink(episode, 'episode', season, parentTitle)
                 image = self.get_image(episode, 'episode')
