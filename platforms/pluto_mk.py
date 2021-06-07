@@ -137,8 +137,8 @@ class Pluto_mk():
             "IsBranded": None, #Important! (ver link explicativo)
             "Packages": "Free", #Obligatorio 
             "Country": None, 
-            "Timestamp": "Falta", #Obligatorio 
-            "CreatedAt": "Falta", #Obligatorio
+            "Timestamp": datetime.now().isoformat(), #Obligatorio 
+            "CreatedAt": self._created_at, #Obligatorio
         }
         self.mongo.insert(self.titanScraping, serie_payload)
     
@@ -201,8 +201,8 @@ class Pluto_mk():
                     "IsBranded": None, #Important! (ver link explicativo)
                     "Packages": 'Free', #Obligatorio 
                     "Country": None, 
-                    "Timestamp": "Falta", #Obligatorio 
-                    "CreatedAt": "Falta", #Obligatorio
+                    "Timestamp": datetime.now().isoformat(), #Obligatorio 
+                    "CreatedAt": self._created_at, #Obligatorio
                     }
                 self.mongo.insert(self.titanScrapingEpisodios, episode_payload)
                 return season_return
