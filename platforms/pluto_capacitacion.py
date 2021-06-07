@@ -4,10 +4,11 @@ from handle.replace import _replace
 from common import config
 from handle.mongo import mongo
 from updates.upload         import Upload
+from handle.datamanager import Datamanager
 # from time import sleep
 # import re
 
-class Pluto():
+class PlutoCapacitacion():
     """
     """
     def __init__(self, ott_site_uid, ott_site_country, type):
@@ -45,6 +46,9 @@ class Pluto():
             self._scraping(testing=True)
     
     def _scraping(self, testing=False):
+        scraped = Datamanager._getListDB(self,self.titanScraping)
+        scraped_episodes = Datamanager._getListDB(self,self.titanScrapingEpisodios)
+
         payloads = []
         episodes = []
         contents_list = self.get_contents()
