@@ -8,7 +8,7 @@ import re
 from datetime               import datetime
 from updates.upload         import Upload
 
-class Pluto():
+class Pluto_gg():
     """
     """
     def __init__(self, ott_site_uid, ott_site_country, type):
