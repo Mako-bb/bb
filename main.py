@@ -2,7 +2,7 @@
 from platforms.amazon_login import AmazonLogin
 
 #from platforms.pluto import Pluto
-from platforms.pluto_mv import Pluto
+from platforms.pluto_mv import Pluto_mv
 from platforms.optimum_test import OptimumTest
 from platforms.boomerang import Boomerang
 from platforms.fandango import FandangoNOW
