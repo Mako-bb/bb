@@ -41,7 +41,7 @@ from platforms.abc import Abc
 from platforms.hbo_prueba import HboPrueba
 from platforms.pluto_capacitacion import PlutoCapacitacion
 from platforms.pluto_ggarcia import Pluto_gg
-
+from platforms.pluto_mk import Pluto_mk
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

@@ -46,7 +46,6 @@ class Pluto_mk():
 
         if type == 'testing':
             self._scraping(testing=True)
-
     def query_field(self, collection, field=None):
         """Método que devuelve una lista de una columna específica
         de la bbdd.
@@ -87,10 +86,6 @@ class Pluto_mk():
         print(f"{self.titanScraping} {len(self.scraped)}")
         print(f"{self.titanScrapingEpisodios} {len(self.scraped_episodes)}")
 
-        # Listas con contenidos y episodios dentro:
-        self.payloads = []
-        self.episodes_payloads = []
-
         contents = self.get_contents()
         for n, item in enumerate(contents):
             print(f"\n----- Progreso ({n}/{len(contents)}) -----\n")            
@@ -102,16 +97,12 @@ class Pluto_mk():
                 self.movie_payload(item)
             elif (item['type']) == 'series':
                 self.serie_payload(item)
-
-        # Almaceno la lista de payloads en mongo:
-        if self.payloads:
-            self.mongo.insertMany(self.titanScraping, self.payloads)
-        if self.episodes_payloads:
-            self.mongo.insertMany(self.titanScrapingEpisodios, self.episodes_payloads)
+            break
 
         # Validar tipo de datos de mongo:
         Upload(self._platform_code, self._created_at, testing=True)
         print("Scraping finalizado")
+
     
     def serie_payload(self, item):
         deeplink = self.get_deeplink(item, 'serie')
