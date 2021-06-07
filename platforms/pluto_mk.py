@@ -24,7 +24,6 @@ class Pluto_mk():
         self.titanPreScraping = config()['mongo']['collections']['prescraping']
         self.titanScraping = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
-
         self.api_url = self._config['api_url']
         self.season_url = self._config['season_api_url']
 
@@ -199,8 +198,8 @@ class Pluto_mk():
                     "ExternalIds": deeplink,
                     "Deeplinks": { 
                     "Web": deeplink, #Obligatorio 
-                    "Android": "str", 
-                    "iOS": "str", 
+                    "Android": None, 
+                    "iOS": None, 
                     }, 
                     "Synopsis": episode['description'], 
                     "Image": image, 
@@ -220,7 +219,7 @@ class Pluto_mk():
                     }
                 self.episodes_payloads.append(episode_payload)
                 self.episodios += 1
-        print('Temporadas: ' + str(self.totalSeasons))
+        ('Temporadas: ' + str(self.totalSeasons))
         print('Episodios: ' + str(self.episodios))
         return season_return
             
@@ -239,7 +238,7 @@ class Pluto_mk():
             "Type": item['type'], #Obligatorio 
             "Year": None, #Important! 
             "Duration": duration,
-            "ExternalIds": 'falta',  #No estoy seguro de si es
+            "ExternalIds": None,  #No estoy seguro de si es
             "Deeplinks": { 
             "Web": deeplink, #Obligatorio 
             "Android": None, 
