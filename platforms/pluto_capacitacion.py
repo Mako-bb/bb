@@ -75,41 +75,55 @@ class PlutoCapacitacion():
             query = list(query)
 
         return query
-            
+
     def _scraping(self, testing=False):
         # Listas de contentenido scrapeado:
         self.scraped = self.query_field(self.titanScraping, field='Id')
         self.scraped_episodes = self.query_field(self.titanScrapingEpisodios, field='Id')
 
+        # TODO: Aprender Datamanager
         # scraped = Datamanager._getListDB(self,self.titanScraping)
         # scraped_episodes = Datamanager._getListDB(self,self.titanScrapingEpisodios)
 
-        # Listas con contenidos y episodios dentro:
+        # Listas con contenidos y episodios dentro (DICT):
         self.payloads = []
         self.episodes_payloads = []
 
         contents_list = self.get_contents()
         for content in contents_list:
-            payload = self.get_payload(content)
-            self.payloads.append(payload)
-            if payload['Type'] == 'serie':
-                pass
-                # Hacer get_episodes()
-                # ¿Puedo reutilizar get_payload?
-                # Dejar todo documentado
-                # Completar la lista payloads y episodes.
-
-        # Almaceno la lista de payloads en mongo:
+            # TODO: Agregar enumerate
+            self.content_scraping(content)
+            # Almaceno la lista de payloads en mongo:
         if self.payloads:
             self.mongo.insertMany(self.titanScraping, self.payloads)
         if self.episodes_payloads:
             self.mongo.insertMany(self.titanScrapingEpisodios, self.episodes_payloads)
 
+        self.session.close()
+
         # Validar tipo de datos de mongo:
         Upload(self._platform_code, self._created_at, testing=True)
 
+        print("Fin")
 
-  
+    def content_scraping(self, content):
+        content_id = content['_id']
+
+        if not content_id in self.scraped:
+            payload = self.get_payload(content)
+            if payload['Type'] == 'serie':
+                self.get_episodes(content)
+            if payload:
+                # 1) Almaceno el dict en la lista.
+                self.payloads.append(payload)
+                # 2) Almaceno el id (str) en la lista.
+                self.scraped.append(content_id)
+
+    def get_episodes(self, content):
+        # TODO: Pensar la lógca de episodios.
+        self.scraped_episodes.append('Id')
+        self.episodes_payloads.append({})
+
     def request(self, url, headers=None):
         """Método para hacer y validar una petición a un servidor.
 
