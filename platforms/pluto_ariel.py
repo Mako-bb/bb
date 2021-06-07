@@ -106,6 +106,13 @@ class Pluto():
         from pprint import pprint
         pprint(payload_movies)
 
+    def get_payload(self, content_dict):
+        payload = Payload()
+        payload.id = content_dict['_id']
+        payload.title = content_dict['title']
+
+        return payload
+
     def get_deeplink(self, type_content, slug, season=None, episode_name=None, emission_year=None, ):
         """
         El deeplink no está en la API.
