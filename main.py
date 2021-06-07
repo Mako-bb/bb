@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from platforms.amazon_login import AmazonLogin
 
+#from platforms.pluto import Pluto
+from platforms.pluto_mv import Pluto
 from platforms.optimum_test import OptimumTest
 from platforms.boomerang import Boomerang
 from platforms.fandango import FandangoNOW
@@ -38,6 +40,8 @@ from platforms.amazon_login import AmazonLogin
 from platforms.abc import Abc
 from platforms.hbo_prueba import HboPrueba
 from platforms.pluto_capacitacion import PlutoCapacitacion
+from platforms.pluto_ggarcia import Pluto_gg
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -68,4 +72,4 @@ if __name__ == '__main__':
 
             ExcelTemplate.export_excel(platform_code, logat)
         else:
-            print(f"Error in PlatformCode. See config.yaml")
+            print(f"Error in PlatformCode. See config.yaml")           
