@@ -93,16 +93,23 @@ class Pluto_mk():
             print(f"\n----- Progreso ({n}/{len(contents)}) -----\n")            
             if item['_id'] in self.scraped:
                 # Que no avance, el _id está repetido.
+                print(item['name'] + ' ya esta scrapeado!')
                 continue
-            self.scraped.append(item['_id'])
-            if (item['type']) == 'movie':
-                self.movie_payload(item)
-            elif (item['type']) == 'series':
-                self.serie_payload(item)
-            
+            else:   
+                self.scraped.append(item['_id'])
+                if (item['type']) == 'movie':
+                    self.movie_payload(item)
+                elif (item['type']) == 'series':
+                    self.serie_payload(item)
         # Validar tipo de datos de mongo:
-        self.mongo.insertMany(self.titanScraping, self.payloads)
-        self.mongo.insertMany(self.titanScrapingEpisodios, self.episodes_payloads)
+        if self.payloads:
+            self.mongo.insertMany(self.titanScraping, self.payloads)
+        else:
+            print(f'\n---- Ninguna serie o pelicula para insertar a la base de datos ----\n')
+        if self.episodes_payloads:
+            self.mongo.insertMany(self.titanScrapingEpisodios, self.episodes_payloads)
+        else:
+            print(f'\n---- Ningun episodio para insertar a la base de datos ----\n')
         Upload(self._platform_code, self._created_at, testing=True)
         print("Scraping finalizado")
         self.session.close()
@@ -110,6 +117,7 @@ class Pluto_mk():
     def serie_payload(self, item):
         deeplink = self.get_deeplink(item, 'serie')
         image = self.get_image(item, 'serie')
+        print('Serie: ' + item['name'])
         seasons = self.get_seasons(item['_id'], item['slug'])
         serie_payload = {
             "PlatformCode": self._platform_code, #Obligatorio 
@@ -152,7 +160,9 @@ class Pluto_mk():
         seasons = items['seasons']
         synopsis = items['description']
         name = items['name']
+        self.totalSeasons = 0
         for season in seasons:
+            self.totalSeasons += 1
             deeplink = self.get_deeplink(season, 'season', season['number'], parentTitle)
             season_payload = {
                 "Id": None, #Importante
@@ -168,8 +178,8 @@ class Pluto_mk():
                 "IsOriginal": None 
             },
             season_return.append(season_payload)
-            for n, episode in enumerate(season['episodes']):
-                print(f"\n----- Episodio ({n}/{len(season)}) -----\n")  
+            self.episodios = 0
+            for episode in season['episodes']:
                 duration = self.get_duration(episode)
                 deeplink = self.get_deeplink(episode, 'episode', season, parentTitle)
                 image = self.get_image(episode, 'episode')
@@ -209,13 +219,17 @@ class Pluto_mk():
                     "CreatedAt": self._created_at, #Obligatorio
                     }
                 self.episodes_payloads.append(episode_payload)
-                return season_return
+                self.episodios += 1
+        print('Temporadas: ' + str(self.totalSeasons))
+        print('Episodios: ' + str(self.episodios))
+        return season_return
+            
       
     def movie_payload(self, item):
         deeplink = self.get_deeplink(item, 'movie')
         duration = self.get_duration(item)
         image = self.get_image(item, 'movie')
-        print(item['name'])
+        print('Movie: ' + item['name'])
         payload = { 
             "PlatformCode": self._platform_code, #Obligatorio 
             "Id": item['_id'], #Obligatorio
