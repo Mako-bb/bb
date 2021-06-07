@@ -38,7 +38,7 @@ from platforms.amazon_login         import AmazonLogin
 from platforms.abc                  import Abc
 from platforms.pluto_tomas import Pluto
 from platforms.hbo_prueba            import HboPrueba
-from platforms.starz_mk import Starz_mk
+from platforms.starz_tom import Starz
 from platforms.pluto_mk import Pluto_mk
 
 logging.basicConfig(level=logging.INFO)

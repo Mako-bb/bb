@@ -71,7 +71,7 @@ class Pluto():
         _type = item['type']
         duration = item.get('duration')
         genre = item['genre']
-        id = item['_id']
+        id_ = item['_id']
 
         deep_link = self._get_deep_link(_type, slug)
 
@@ -79,7 +79,7 @@ class Pluto():
                 'Title': title,
                 'Description' : description,
                 'Duration': duration,
-                'ID': id,
+                'ID': id_,
                 'Genre': genre,
                 'Deep Link': deep_link,
                 'Type': _type, 
