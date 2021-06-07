@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 from platforms.amazon_login import AmazonLogin
 
+<<<<<<< HEAD
 from platforms.pluto_tomas import Pluto_tomas
+=======
+#from platforms.pluto import Pluto
+from platforms.pluto_mv import Pluto_mv
+>>>>>>> d5c6d91e61c1f4fe158670962a316f6f3aa04513
 from platforms.optimum_test import OptimumTest
 from platforms.boomerang import Boomerang
 from platforms.fandango import FandangoNOW
@@ -24,22 +29,29 @@ from platforms.trutv import TruTV
 from platforms.quibi import Quibi
 from platforms.optimum import Optimum
 # from platforms.acorntv_test         import AcornTV_Test
-from platforms.cwtv                 import CWtv
-from common                         import config
-from platforms.freeform             import Freeform
-from platforms.myoutdoortv          import MyOutdoorTV
-from platforms.cwseed               import CwSeed
-from platforms.pantaya              import Pantaya
-from platforms.cartoonnetwork       import CartoonNetwork
-from platforms.fandango             import FandangoNOW
-from platforms.boomerang            import Boomerang
-from platforms.optimum_test         import OptimumTest
-from platforms.amazon_login         import AmazonLogin
-from platforms.abc                  import Abc
+from platforms.pluto_ariel import Pluto
+from platforms.cwtv import CWtv
+from common import config
+from platforms.freeform import Freeform
+from platforms.myoutdoortv import MyOutdoorTV
+from platforms.cwseed import CwSeed
+from platforms.pantaya import Pantaya
+from platforms.cartoonnetwork import CartoonNetwork
+from platforms.fandango import FandangoNOW
+from platforms.boomerang import Boomerang
+from platforms.optimum_test import OptimumTest
+from platforms.amazon_login import AmazonLogin
+from platforms.abc import Abc
+from platforms.hbo_prueba import HboPrueba
+from platforms.pluto_capacitacion import PlutoCapacitacion
 from platforms.pluto_ggarcia import Pluto_gg
+<<<<<<< HEAD
 from platforms.hbo_prueba            import HboPrueba
 from platforms.starz_tom import Starz
 from platforms.pluto_mv import Pluto_mv
+=======
+
+>>>>>>> d5c6d91e61c1f4fe158670962a316f6f3aa04513
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
