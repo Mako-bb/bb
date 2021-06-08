@@ -143,7 +143,7 @@ class Starz_mk():
             "Synopsis": content['logLine'], 
             "Image": None, 
             "Rating": content['ratingCode'], #Important! 
-            "Provider": None, 
+            "Provider": [content['studio']], 
             "Genres": genres, #Important!     
             "Cast": cast, 
             "Directors": directors, #Important! 
@@ -185,7 +185,7 @@ class Starz_mk():
             "Synopsis": content['logLine'], 
             "Image": None,
             "Rating": content['ratingCode'], #Important! 
-            "Provider": None,
+            "Provider": [content['studio']],
             "Genres": genres, #Important!
             "Cast": cast, 
             "Directors": directors, #Important! 
@@ -230,7 +230,7 @@ class Starz_mk():
             episode_payload = { 
                 "PlatformCode": self._platform_code, #Obligatorio 
                 "Id": str(element['contentId']), #Obligatorio
-                "ParentId": parentId, #Obligatorio #Unicamente en Episodios
+                "ParentId": str(parentId), #Obligatorio #Unicamente en Episodios
                 "ParentTitle": parentTitle, #Unicamente en Episodios 
                 "Episode": episodeNumber, #Obligatorio #Unicamente en Episodios 
                 "Season": season, #Obligatorio #Unicamente en Episodios
@@ -249,13 +249,13 @@ class Starz_mk():
                 "Synopsis": element['logLine'], 
                 "Image": None,
                 "Rating": element.get('ratingCode'), #Important! 
-                "Provider": element['studio'],
+                "Provider": [element['studio']],
                 "Availability": None, #Important! 
                 "Download": download, 
                 "IsOriginal": element['original'], #Important! 
                 "IsAdult": None, #Important! 
                 "IsBranded": None, #Important! (ver link explicativo)
-                "Packages": "Subscripcion", #Obligatorio 
+                "Packages": [{'Type':'subscription-vod'}], #Obligatorio 
                 "Country": None, 
                 "Timestamp": datetime.now().isoformat(), #Obligatorio 
                 "CreatedAt": self._created_at, #Obligatorio
