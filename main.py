@@ -3,7 +3,7 @@ from platforms.amazon_login import AmazonLogin
 
 from platforms.pluto_tomas import Pluto_tomas
 
-from platforms.pluto_ariel import Pluto_ari
+
 from platforms.pluto_mv import Pluto_mv
 from platforms.optimum_test import OptimumTest
 from platforms.boomerang import Boomerang

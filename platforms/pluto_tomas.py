@@ -1,4 +1,4 @@
-import time 
+import time
 import requests
 from requests import api 
 from handle.replace import _replace
@@ -7,6 +7,9 @@ from handle.mongo import mongo
 from pprint import pprint 
 from bs4 import BeautifulSoup
 from updates.upload         import Upload
+from handle.datamanager import Datamanager
+import json
+from handle.payload import Payload
 
 class Pluto_tomas():
     """    """    
@@ -58,7 +61,7 @@ class Pluto_tomas():
         if self.episodes_payloads:
             self.mongo.insertMany(self.titanScrapingEpisodios, self.episodes_payloads)
 
-        self.session.close()
+        self.sesion.close()
 
         # Validar tipo de datos de mongo:
         Upload(self._platform_code, self._created_at, testing=True)
@@ -152,3 +155,113 @@ class Pluto_tomas():
 
         return query
 
+    def _scraping(self, testing=False):
+        # Listas de contentenido scrapeado:
+        self.scraped = self.query_field(self.titanScraping, field='Id')
+        self.scraped_episodes = self.query_field(self.titanScrapingEpisodios, field='Id')
+
+        # TODO: Aprender Datamanager
+        # scraped = Datamanager._getListDB(self,self.titanScraping)
+        # scraped_episodes = Datamanager._getListDB(self,self.titanScrapingEpisodios)
+
+        # Listas con contenidos y episodios dentro (DICT):
+        self.payloads = []
+        self.episodes_payloads = []
+
+        contents_list = self.get_contents()
+        for content in contents_list:
+            # TODO: Agregar enumerate
+            self.content_scraping(content)
+            # Almaceno la lista de payloads en mongo:
+        if self.payloads:
+            self.mongo.insertMany(self.titanScraping, self.payloads)
+        if self.episodes_payloads:
+            self.mongo.insertMany(self.titanScrapingEpisodios, self.episodes_payloads)
+
+        self.sesion.close()
+
+        # Validar tipo de datos de mongo:
+        Upload(self._platform_code, self._created_at, testing=True)
+
+        print("Fin")
+
+    def content_scraping(self, content):
+        content_id = content['_id']
+
+        if not content_id in self.scraped:
+            payload = self.get_payload(content)
+            if payload['Type'] == 'serie':
+                self.get_episodes(content)
+            if payload:
+                # 1) Almaceno el dict en la lista.
+                self.payloads.append(payload)
+                # 2) Almaceno el id (str) en la lista.
+                self.scraped.append(content_id)
+
+    def get_episodes(self, content):
+        # TODO: Pensar la lógca de episodios.
+        self.scraped_episodes.append('Id')
+        self.episodes_payloads.append({})
+
+    def request(self, url, headers=None):
+        """Método para hacer y validar una petición a un servidor.
+
+        Args:
+            url (str): Url a la cual realizaremos la petición.
+
+        Returns:
+            obj: Retorna un objeto tipo requests.
+        """
+        request_timeout = 5
+        while True:
+            try:
+                # Request con header:
+                response = self.sesion.get(
+                    url,
+                    headers=headers,
+                    timeout=request_timeout
+                )
+                if response.status_code == 200:
+                    return response
+                else:
+                    raise Exception(f"ERROR: {response.status_code}")
+            except requests.exceptions.ConnectionError:
+                print("Connection Error, Retrying")
+                time.sleep(request_timeout)
+                continue
+            except requests.exceptions.RequestException:
+                print('Waiting...')
+                time.sleep(request_timeout)
+                continue
+
+    def get_contents(self):
+        """Método que trae los contenidos en forma de diccionario.
+
+        Returns:
+            list: Lista de diccionarios
+        """
+        content_list = []
+        uri = self.api_url
+        response = self.request(uri)
+        dict_contents = response.json()
+        list_categories = dict_contents['categories']
+        for categories in list_categories:
+            content_list += categories['items']
+
+        return content_list
+
+    def get_payload(self, dict_metadata):
+        
+        # payload = Payload()
+
+        payload = {}
+        payload['Id'] = dict_metadata['_id']
+        payload['Title'] = dict_metadata['name']
+        payload['Type'] = dict_metadata['type']
+        payload['Synopsis'] = dict_metadata.get('description')
+        #payload['Duration'] = self.get_duration(dict_metadata)
+
+        return payload
+
+    # def get_duration(self, dict_metadata):
+    #     return int(dict_metadata['duration'] // 60000) or int(dict_metadata['allotment'])// 60
