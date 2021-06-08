@@ -25,7 +25,6 @@ class Starz_mk():
         self.titanScraping = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
         self.api_url = self._config['api_url']
-
         self.session = requests.session()
 
         if type == 'return':
@@ -100,12 +99,59 @@ class Starz_mk():
                 #self.scraped.append(content['contentId'])
                 if content['contentType'] == 'Movie':
                     self.movie_payload(content)
+                elif content['contentType'] == 'Series with Season':
+                    self.serie_payload(content)
                     
     # Payload para el tipo Movie. Recibe un diccionario con la metadata
+    def serie_payload(self, content):  
+        cleanTitle = self.clean_text(content['title']) 
+        deeplink = self.get_deeplink(content, 'Serie', cleanTitle)
+        genres = self.get_genres(content['genres'])
+        cast = self.get_cast(content['credits'])
+        directors = self.get_directors(content['directors'])
+        seasons = self.get_seasons()
+        serie_payload = {
+            "PlatformCode": self._platform_code, #Obligatorio 
+            "Id": content['contentId'], #Obligatorio
+            "Seasons": 'falta',
+            "Title": content['title'], #Obligatorio 
+            "CleanTitle": _replace(content['title']), #Obligatorio 
+            "OriginalTitle": content['title'], 
+            "Type": 'serie', #Obligatorio 
+            "Year": content['minReleaseYear'], #Important! 
+            "ExternalIds": None, 
+            "Deeplinks": { 
+            "Web": deeplink, #Obligatorio 
+            "Android": None, 
+            "iOS": None, 
+            }, 
+            "Synopsis": content['logLine'], 
+            "Image": None, 
+            "Rating": content['ratingCode'], #Important! 
+            "Provider": None, 
+            "Genres": genres, #Important!     
+            "Cast": cast, 
+            "Directors": directors, #Important! 
+            "Availability": None, #Important! 
+            "Download": None, 
+            "IsOriginal": content['original'], #Important! 
+            "IsAdult": None, #Important! 
+            "IsBranded": None, #Important! (ver link explicativo)
+            "Packages": [{'Type':'subscription-vod',
+                          'HD': content['HD']}],
+            "Country": None, 
+            "Timestamp": datetime.now().isoformat(), #Obligatorio 
+            "CreatedAt": self._created_at, #Obligatorio
+        }
+        self.payloads.append(serie_payload)            
+        
+    # Payload para el tipo Movie. Recibe un diccionario con la metadata
     def movie_payload(self, content):
-        print('Movie: ' + content['name'])
-        genres = self.get_genres()
+        print('Movie: ' + content['title'])
+        genres = self.get_genres(content['genres'])
+        cast = self.get_cast(content['credits'])
         cleanText = self.clean_text(content['title'])
+        deeplink = self.get_deeplink(content, 'Movie', cleanText)
         payload = { 
             "PlatformCode": self._platform_code, #Obligatorio 
             "Id": content['contentId'], #Obligatorio
@@ -113,11 +159,11 @@ class Starz_mk():
             "CleanTitle": cleanText,
             "OriginalTitle": content['title'], 
             "Type": content['contentType'], #Obligatorio 
-            "Year": content['releasedYear'], #Important!
+            "Year": content['releaseYear'], #Important!
             "Duration": content['runtime'] / 60,
             "ExternalIds": None,  
             "Deeplinks": { 
-            "Web": '', #Obligatorio 
+            "Web": deeplink, #Obligatorio 
             "Android": '', 
             "iOS": '', 
             }, 
@@ -125,15 +171,17 @@ class Starz_mk():
             "Image": None,
             "Rating": content['ratingCode'], #Important! 
             "Provider": None,
-            "Genres": '', #Important!
-            "Cast": '', 
+            "Genres": genres, #Important!
+            "Cast": cast, 
             "Directors": '', #Important! 
             "Availability": '', #Important! 
-            "Download": '', 
-            "IsOriginal": '', #Important! 
-            "IsAdult": '', #Important! 
-            "IsBranded": '', #Important! (ver link explicativo)
-            "Packages": '', #Obligatorio 
+            "Download": content['downloadable'], 
+            "IsOriginal": content['original'], #Important! 
+            "IsAdult": None, #Important! 
+            "IsBranded": None, #Important! (ver link explicativo)
+            # "Packages": "Free", #Obligatorio 
+            "Packages": [{'Type':'subscription-vod',
+                          'HD': content['HD']}], 
             "Country": '', 
             "Timestamp": datetime.now().isoformat(), #Obligatorio 
             "CreatedAt": self._created_at, #Obligatorio
@@ -141,9 +189,13 @@ class Starz_mk():
         self.payloads.append(payload)
         
     # Metodo para obtener el deeplink, recibe un dict 'content'
-    def get_deeplink(self, content, type):
+    def get_deeplink(self, content, type, cleanText):
         if type == 'Movie':
-            deeplink = 'https://www.starz.com/ar/es/movies/'
+            deeplink = 'https://www.starz.com/ar/es/movies/' + cleanText + '-' + str(content['contentId'])
+        elif type == 'Serie':
+            deeplink = 'https://www.starz.com/ar/es/series/' + cleanText + '/' + str(content['contentId'])
+        print(deeplink)
+        return deeplink
 
     # Metodo para crear un clean text
     def clean_text(self, text):         
@@ -159,7 +211,31 @@ class Starz_mk():
         cleanText = cleanText.replace('ú', 'u')      
         cleanText = cleanText.replace("'", '') 
         return cleanText           
-                
+    
+    # Metodo para obtener una lista con los generos, que pueden ser uno o varios            
+    def get_genres(self, genres):            
+        genr = []
+        for genre in genres:
+            for description in genre.values():
+                genr.append(description)
+        return genr            
+    
+    # Metodo para obtener los miembros del cast
+    def get_cast(self, cast):              
+        actores = []
+        for actor in cast:
+            actor = actor['name']
+            actores.append(actor)
+        return actores
+    
+    # Metodo para obtener los directores, que pueden ser uno o varios
+    def get_directors(self, directores):    
+        direct = []
+        for director in directores:
+            director = director['fullName']
+            direct.append(director)
+        return direct
+    
     # Con get_content 'limpio' la metadata para que me devuelva el dict en donde esta la 
     # informacion que necesito   
     def get_contents(self, contents):
