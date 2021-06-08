@@ -145,7 +145,8 @@ class Pluto_mk():
             "IsOriginal": None, #Important! 
             "IsAdult": None, #Important! 
             "IsBranded": None, #Important! (ver link explicativo)
-            "Packages": ["Free",], #Obligatorio 
+            # "Packages": "Free", #Obligatorio 
+            "Packages": [{'Type':'free-vod'}],
             "Country": None, 
             "Timestamp": datetime.now().isoformat(), #Obligatorio 
             "CreatedAt": self._created_at, #Obligatorio
@@ -212,7 +213,7 @@ class Pluto_mk():
                     "IsOriginal": None, #Important! 
                     "IsAdult": None, #Important! 
                     "IsBranded": None, #Important! (ver link explicativo)
-                    "Packages": ['Free',], #Obligatorio 
+                    "Packages": [{'Type':'free-vod'}], #Obligatorio 
                     "Country": None, 
                     "Timestamp": datetime.now().isoformat(), #Obligatorio 
                     "CreatedAt": self._created_at, #Obligatorio
@@ -256,7 +257,8 @@ class Pluto_mk():
             "IsOriginal": None, #Important! 
             "IsAdult": None, #Important! 
             "IsBranded": None, #Important! (ver link explicativo)
-            "Packages": ['Free',], #Obligatorio 
+            # "Packages": 'Free', #Obligatorio 
+            "Packages": [{'Type':'free-vod'}],
             "Country": None, 
             "Timestamp": datetime.now().isoformat(), #Obligatorio 
             "CreatedAt": self._created_at, #Obligatorio
