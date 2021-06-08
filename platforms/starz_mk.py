@@ -109,6 +109,7 @@ class Starz_mk():
             print(f'\n---- Ninguna serie o pelicula para insertar a la base de datos ----\n')
         if self.episode_payloads:
             self.mongo.insertMany(self.titanScrapingEpisodios, self.episode_payloads)
+            pass
         else:
             print(f'\n---- Ningun episodio para insertar a la base de datos ----\n')
         Upload(self._platform_code, self._created_at, testing=True)
@@ -127,13 +128,13 @@ class Starz_mk():
         seasons = self.get_seasons(content['childContent'], deeplinkTitle, content['contentId'])
         serie_payload = {
             "PlatformCode": self._platform_code, #Obligatorio 
-            "Id": int(content['contentId']), #Obligatorio
+            "Id": str(content['contentId']), #Obligatorio
             "Seasons": seasons,
             "Title": content['title'], #Obligatorio 
             "CleanTitle": _replace(content['title']), #Obligatorio 
             "OriginalTitle": content['title'], 
             "Type": 'serie', #Obligatorio 
-            "Year": content['minReleaseYear'], #Important! 
+            "Year": int(content['minReleaseYear']), #Important! 
             "ExternalIds": None, 
             "Deeplinks": { 
             "Web": deeplink, #Obligatorio 
@@ -175,7 +176,7 @@ class Starz_mk():
             "OriginalTitle": content['title'], 
             "Type": 'movie', #Obligatorio 
             "Year": int(content['releaseYear']), #Important!
-            "Duration": int(content['runtime'] / 60),
+            "Duration": int(content['runtime'] / 60) if int(content['runtime'] / 60) != 0 else None,
             "ExternalIds": None,  
             "Deeplinks": { 
             "Web": deeplink, #Obligatorio 
@@ -239,7 +240,7 @@ class Starz_mk():
                 "OriginalTitle": element['title'], 
                 "Type": element['contentType'], #Obligatorio 
                 "Year": int(element['releaseYear']), #Important! 
-                "Duration": duration, 
+                "Duration": duration if duration != 0 else None, 
                 "ExternalIds": None, 
                 "Deeplinks": { 
                 "Web": deeplink, #Obligatorio 
