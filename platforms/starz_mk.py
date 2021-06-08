@@ -114,6 +114,7 @@ class Starz_mk():
             print(f'\n---- Ningun episodio para insertar a la base de datos ----\n')
         Upload(self._platform_code, self._created_at, testing=True)
         print("Scraping finalizado")
+        self.session.close()
                     
     # Payload para el tipo Movie. Recibe un diccionario con la metadata
     def serie_payload(self, content):  
@@ -206,10 +207,14 @@ class Starz_mk():
     def get_seasons(self, content, cleanTitle, parentId):  # Funcion para obtener todas las temporadas de una serie
         seasons = []
         for serie in content:
+            deeplinkText = self.get_deeplinkText(serie['title'])
+            deeplink = self.get_deeplink(serie, 'Season', cleanTitle)
+            print(deeplink)
             season = {
                 "Id": str(serie['contentId']), #Importante
                 "Synopsis": serie['logLine'], #Importante
                 "Title": serie['title'], #Importante
+                "Deeplink": deeplink,
                 "Number": serie['order'], #Importante
                 "Year": int(serie['minReleaseYear']), #Importante
                 "Image": None, 
@@ -272,7 +277,8 @@ class Starz_mk():
         elif type == 'Episodio':
             deeplink = ('https://www.starz.com/ar/es/series/' + cleanText + '/season-' + str(season) + '/episode-' 
             + str(episodeNumber) + '/' + str(content['contentId']))
-        print(deeplink)
+        elif type == 'Season':
+            deeplink = 'https://www.starz.com/ar/es/series/' + cleanText + '/season-' + str(content['order']) + '/' + str(content['contentId'])
         return deeplink
 
     # Metodo para darle a un texto el formato utilizado para los deeplinks
