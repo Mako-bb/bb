@@ -24,7 +24,6 @@ class Pluto_mk():
         self.titanPreScraping = config()['mongo']['collections']['prescraping']
         self.titanScraping = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
-
         self.api_url = self._config['api_url']
         self.season_url = self._config['season_api_url']
 
@@ -46,6 +45,7 @@ class Pluto_mk():
 
         if type == 'testing':
             self._scraping(testing=True)
+            
     def query_field(self, collection, field=None):
         """Método que devuelve una lista de una columna específica
         de la bbdd.
@@ -79,68 +79,79 @@ class Pluto_mk():
         return query
     
     def _scraping(self, testing=False):
+        self.payloads = []
+        self.episodes_payloads = []
         # Listas de contentenido scrapeado:
-        self.scraped = self.query_field(self.titanScraping, field='Id')
+        # Comparando estas listas puedo ver si el elemento ya se encuentra scrapeado.
+        self.scraped = self.query_field(self.titanScraping, field='Id')   #
         self.scraped_episodes = self.query_field(self.titanScrapingEpisodios, field='Id')
-
         print(f"{self.titanScraping} {len(self.scraped)}")
         print(f"{self.titanScrapingEpisodios} {len(self.scraped_episodes)}")
-
         contents = self.get_contents()
         for n, item in enumerate(contents):
             print(f"\n----- Progreso ({n}/{len(contents)}) -----\n")            
             if item['_id'] in self.scraped:
-                # Que no avance, está repetido.
+                # Que no avance, el _id está repetido.
+                print(item['name'] + ' ya esta scrapeado!')
                 continue
-            self.scraped.append(item['_id'])
-            if (item['type']) == 'movie':
-                self.movie_payload(item)
-            elif (item['type']) == 'series':
-                self.serie_payload(item)
-            break
-
+            else:   
+                self.scraped.append(item['_id'])
+                if (item['type']) == 'movie':
+                    self.movie_payload(item)
+                elif (item['type']) == 'series':
+                    self.serie_payload(item)
         # Validar tipo de datos de mongo:
+        if self.payloads:
+            self.mongo.insertMany(self.titanScraping, self.payloads)
+        else:
+            print(f'\n---- Ninguna serie o pelicula para insertar a la base de datos ----\n')
+        if self.episodes_payloads:
+            self.mongo.insertMany(self.titanScrapingEpisodios, self.episodes_payloads)
+        else:
+            print(f'\n---- Ningun episodio para insertar a la base de datos ----\n')
         Upload(self._platform_code, self._created_at, testing=True)
         print("Scraping finalizado")
+        self.session.close()
 
-    
     def serie_payload(self, item):
         deeplink = self.get_deeplink(item, 'serie')
         image = self.get_image(item, 'serie')
+        print('Serie: ' + item['name'])
         seasons = self.get_seasons(item['_id'], item['slug'])
         serie_payload = {
             "PlatformCode": self._platform_code, #Obligatorio 
             "Id": item['_id'], #Obligatorio
             "Seasons": seasons,
             "Title": item['name'], #Obligatorio 
-            "CleanTitle": item['slug'], #Obligatorio 
+            "CleanTitle": _replace(item['name']), #Obligatorio 
             "OriginalTitle": item['name'], 
-            "Type": item['type'], #Obligatorio 
+            "Type": 'serie', #Obligatorio 
             "Year": None, #Important! 
             "Duration": None, 
             "ExternalIds": None, 
             "Deeplinks": { 
             "Web": deeplink, #Obligatorio 
-            "Android": "str", 
-            "iOS": "str", 
+            "Android": None, 
+            "iOS": None, 
             }, 
             "Synopsis": item['description'], 
-            "Image": image, 
+            "Image": [image], 
             "Rating": item['rating'], #Important! 
             "Provider": None, 
-            "Genres": item['genre'], #Important!  "Cast": "list", 
+            "Genres": [item['genre']], #Important!  "Cast": "list", 
             "Directors": None, #Important! 
             "Availability": None, #Important! 
             "Download": None, 
             "IsOriginal": None, #Important! 
             "IsAdult": None, #Important! 
             "IsBranded": None, #Important! (ver link explicativo)
-            "Packages": "Free", #Obligatorio 
+            # "Packages": "Free", #Obligatorio 
+            "Packages": [{'Type':'free-vod'}],
             "Country": None, 
             "Timestamp": datetime.now().isoformat(), #Obligatorio 
             "CreatedAt": self._created_at, #Obligatorio
         }
-        self.mongo.insert(self.titanScraping, serie_payload)
+        self.payloads.append(serie_payload)
     
     def get_seasons(self, id, parentTitle):
         season_return = []
@@ -149,7 +160,9 @@ class Pluto_mk():
         seasons = items['seasons']
         synopsis = items['description']
         name = items['name']
+        self.totalSeasons = 0
         for season in seasons:
+            self.totalSeasons += 1
             deeplink = self.get_deeplink(season, 'season', season['number'], parentTitle)
             season_payload = {
                 "Id": None, #Importante
@@ -165,6 +178,7 @@ class Pluto_mk():
                 "IsOriginal": None 
             },
             season_return.append(season_payload)
+            self.episodios = 0
             for episode in season['episodes']:
                 duration = self.get_duration(episode)
                 deeplink = self.get_deeplink(episode, 'episode', season, parentTitle)
@@ -174,64 +188,68 @@ class Pluto_mk():
                     "Id": episode['_id'], #Obligatorio
                     "ParentId": id, #Obligatorio #Unicamente en Episodios
                     "ParentTitle": parentTitle, #Unicamente en Episodios 
-                    "Episode": episode['number'], #Obligatorio #Unicamente en Episodios 
+                    "Episode": episode['number'] if episode['number'] != 0 else None, #Obligatorio #Unicamente en Episodios 
                     "Season": episode['season'], #Obligatorio #Unicamente en Episodios
                     "Title": episode['name'], #Obligatorio 
-                    "CleanTitle": episode['slug'], #Obligatorio 
+                    # "CleanTitle": episode['slug'], #Obligatorio 
                     "OriginalTitle": episode['name'], 
-                    "Type": episode['type'], #Obligatorio 
+                    # "Type": episode['type'], #Obligatorio 
                     "Year": None, #Important! 
                     "Duration": duration,
-                    "ExternalIds": deeplink,
+                    # "ExternalIds": deeplink,
                     "Deeplinks": { 
                     "Web": deeplink, #Obligatorio 
-                    "Android": "str", 
-                    "iOS": "str", 
+                    "Android": None, 
+                    "iOS": None, 
                     }, 
                     "Synopsis": episode['description'], 
-                    "Image": image, 
+                    "Image": [image], 
                     "Rating": episode['rating'], #Important! 
                     "Provider": None, 
-                    "Genres": episode['genre'], #Important! 
+                    "Genres": [episode['genre']], #Important! 
                     "Directors": None, #Important! 
                     "Availability": None, #Important! 
                     "Download": None, 
                     "IsOriginal": None, #Important! 
                     "IsAdult": None, #Important! 
                     "IsBranded": None, #Important! (ver link explicativo)
-                    "Packages": 'Free', #Obligatorio 
+                    "Packages": [{'Type':'free-vod'}], #Obligatorio 
                     "Country": None, 
                     "Timestamp": datetime.now().isoformat(), #Obligatorio 
                     "CreatedAt": self._created_at, #Obligatorio
                     }
-                self.mongo.insert(self.titanScrapingEpisodios, episode_payload)
-                return season_return
+                self.episodes_payloads.append(episode_payload)
+                self.episodios += 1
+        ('Temporadas: ' + str(self.totalSeasons))
+        print('Episodios: ' + str(self.episodios))
+        return season_return
+            
       
     def movie_payload(self, item):
         deeplink = self.get_deeplink(item, 'movie')
         duration = self.get_duration(item)
         image = self.get_image(item, 'movie')
-        print(item['name'])
+        print('Movie: ' + item['name'])
         payload = { 
             "PlatformCode": self._platform_code, #Obligatorio 
             "Id": item['_id'], #Obligatorio
             "Title": item['name'], #Obligatorio 
-            "CleanTitle": item['slug'], #Obligatorio 
+            "CleanTitle": _replace(item['name']), #Obligatorio 
             "OriginalTitle": item['name'], 
             "Type": item['type'], #Obligatorio 
             "Year": None, #Important! 
             "Duration": duration,
-            "ExternalIds": 'falta',  #No estoy seguro de si es
+            "ExternalIds": None,  #No estoy seguro de si es
             "Deeplinks": { 
             "Web": deeplink, #Obligatorio 
             "Android": None, 
             "iOS": None, 
             }, 
             "Synopsis": item['summary'], 
-            "Image": image,
+            "Image": [image],
             "Rating": item['rating'], #Important! 
             "Provider": None,
-            "Genres": item['genre'], #Important!
+            "Genres": [item['genre']], #Important!
             "Cast": None, 
             "Directors": None, #Important! 
             "Availability": None, #Important! 
@@ -239,12 +257,13 @@ class Pluto_mk():
             "IsOriginal": None, #Important! 
             "IsAdult": None, #Important! 
             "IsBranded": None, #Important! (ver link explicativo)
-            "Packages": 'Free', #Obligatorio 
+            # "Packages": 'Free', #Obligatorio 
+            "Packages": [{'Type':'free-vod'}],
             "Country": None, 
             "Timestamp": datetime.now().isoformat(), #Obligatorio 
             "CreatedAt": self._created_at, #Obligatorio
             }
-        self.mongo.insert(self.titanScraping, payload)
+        self.payloads.append(payload)
         
     def get_image(self, item, type):
         if type == 'movie':
@@ -256,7 +275,7 @@ class Pluto_mk():
         return image
     
     def get_duration(self, item):
-        duration = str(int((item['duration']) / 60000)) + ' min'
+        duration = int((item['duration']) / 60000)
         return duration
         
     def get_deeplink(self, item, type, season = None, parentTitle = None):
