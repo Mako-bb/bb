@@ -24,7 +24,6 @@ class Starz_mk():
         self.titanPreScraping = config()['mongo']['collections']['prescraping']
         self.titanScraping = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
-
         self.api_url = self._config['api_url']
 
         self.session = requests.session()
@@ -45,19 +44,22 @@ class Starz_mk():
 
         if type == 'testing':
             self._scraping(testing=True)
-    
+            
+        # Para empezar, utilizo el metodo query_field para validar si el elemento a scrapear 
+        # esta o no ingresado ya en la base de datos
+        
     def query_field(self, collection, field=None):
         """Método que devuelve una lista de una columna específica
         de la bbdd.
 
         Args:
-            collection (str): Indica la colección de la bbdd.
-            field (str, optional): Indica la columna, por ejemplo puede ser
-            'Id' o 'CleanTitle. Defaults to None.
+        collection (str): Indica la colección de la bbdd.
+        field (str, optional): Indica la columna, por ejemplo puede ser
+        'Id' o 'CleanTitle. Defaults to None.
 
         Returns:
-            list: Lista de los field encontrados.
-        """
+        list: Lista de los field encontrados.
+    """
         find_filter = {
             'PlatformCode': self._platform_code,
             'CreatedAt': self._created_at
@@ -77,245 +79,74 @@ class Starz_mk():
             query = list(query)
 
         return query
-    
-    
+
+# Desde _scraping hago la request. Ademas voy a validar si no estan ingresados los datos,
+# utilizando el metodo query_field, y luego de scrapear los datos, desde aca hago los inserts en la DB
+
     def _scraping(self, testing=False):
-        self.payloads = []
-        self.episode_payloads = []
+        self.payloads = []  
+        data_dict = self.request(self.api_url)  
+        contents = self.get_contents(data_dict)
         # Listas de contentenido scrapeado:
         # Comparando estas listas puedo ver si el elemento ya se encuentra scrapeado.
         self.scraped = self.query_field(self.titanScraping, field='Id')   #
         self.scraped_episodes = self.query_field(self.titanScrapingEpisodios, field='Id')
-        print(f"{self.titanScraping} {len(self.scraped)}")
-        print(f"{self.titanScrapingEpisodios} {len(self.scraped_episodes)}")
-        elements = self.get_content(self.api_url)
-        self.payloads(elements)        
-
-    def payloads(self, elements):
-        elements_list = elements['playContentArray']['playContents']
-        for element in elements_list:
-            if element['contentType'] == 'Movie':
-                self.movie_payload(element)
-            elif element['contentType'] == 'Series with Season':
-                self.serie_payload(element)
-                
-    # Payloads:
-    def movie_payload(self, element):               # Payloads para movies
-        payloads = []
-        cleanTitle = self.clean_text(element['title'])
-        deeplink = self.movie_deeplink(cleanTitle, element['contentId'])
-        duration = str(int((element['runtime'] / 60))) + ' min'
-        directors = self.get_directors(element['directors'])
-        try:
-            genre = self.get_genres(element['genres'])
-        except:
-            genre = None
-        try:
-            download = element['downloadable']
-        except:
-            download = False
-        cast = self.get_cast(element['credits'])
+        for n, content in enumerate(contents):
+            print(f"\n----- Progreso ({n + 1}/{len(contents)}) -----\n")  
+            if content['contentId'] in self.scraped:
+                print(content['title'] + ' ya esta scrapeado')
+                continue
+            else:
+                #self.scraped.append(content['contentId'])
+                if content['contentType'] == 'Movie':
+                    self.movie_payload(content)
+                    
+    # Payload para el tipo Movie. Recibe un diccionario con la metadata
+    def movie_payload(self, content):
+        print('Movie: ' + content['name'])
+        genres = self.get_genres()
+        cleanText = self.clean_text(content['title'])
         payload = { 
             "PlatformCode": self._platform_code, #Obligatorio 
-            "Id": element['contentId'], #Obligatorio
-            "Title": element['title'], #Obligatorio 
-            "CleanTitle": cleanTitle, #Obligatorio 
-            "OriginalTitle": element['title'], 
-            "Type": element['contentType'], #Obligatorio 
-            "Year": element['releaseYear'], #Important! 
-            "Duration": duration,
-            "ExternalIds": element['contentId'],  #No estoy seguro de si es
+            "Id": content['contentId'], #Obligatorio
+            "Title": content['title'], #Obligatorio 
+            "CleanTitle": cleanText,
+            "OriginalTitle": content['title'], 
+            "Type": content['contentType'], #Obligatorio 
+            "Year": content['releasedYear'], #Important!
+            "Duration": content['runtime'] / 60,
+            "ExternalIds": None,  
             "Deeplinks": { 
-            "Web": deeplink, #Obligatorio 
-            "Android": None, 
-            "iOS": None, 
+            "Web": '', #Obligatorio 
+            "Android": '', 
+            "iOS": '', 
             }, 
-            "Synopsis": element['logLine'], 
+            "Synopsis": content['logLine'], 
             "Image": None,
-            "Rating": element.get('ratingCode'), #Important! 
-            "Provider": element['studio'],
-            "Genres": genre, #Important!
-            "Cast": cast, 
-            "Directors": directors, #Important! 
-            "Availability": None, #Important! 
-            "Download": download, 
-            "IsOriginal": element['original'], #Important! 
-            "IsAdult": None, #Important! 
-            "IsBranded": None, #Important! (ver link explicativo)
-            "Packages": "Subscripcion", #Obligatorio 
-            "Country": None, 
+            "Rating": content['ratingCode'], #Important! 
+            "Provider": None,
+            "Genres": '', #Important!
+            "Cast": '', 
+            "Directors": '', #Important! 
+            "Availability": '', #Important! 
+            "Download": '', 
+            "IsOriginal": '', #Important! 
+            "IsAdult": '', #Important! 
+            "IsBranded": '', #Important! (ver link explicativo)
+            "Packages": '', #Obligatorio 
+            "Country": '', 
             "Timestamp": datetime.now().isoformat(), #Obligatorio 
             "CreatedAt": self._created_at, #Obligatorio
             }
-        payloads.append(payload)
-        self.mongo.insertMany(self.titanScraping, payloads)
+        self.payloads.append(payload)
+        
+    # Metodo para obtener el deeplink, recibe un dict 'content'
+    def get_deeplink(self, content, type):
+        if type == 'Movie':
+            deeplink = 'https://www.starz.com/ar/es/movies/'
 
-    def serie_payload(self, element):               # Payloads para SERIES
-        payloads = []
-        cleanTitle = self.clean_text(element['title'])
-        deeplink = self.serie_deeplink(cleanTitle, element['contentId'])
-        try:
-            directors = self.get_directors(element['directors'])
-        except:
-            directors = None
-        try:
-            genre = self.get_genres(element['genres'])
-        except:
-            genre = None
-        try:
-            download = element['downloadable']
-        except:
-            download = False
-        cast = self.get_cast(element['credits'])
-        seasons = self.get_seasons(element['childContent'], cleanTitle, directors, cast, genre, element['contentId'])
-        payload = { 
-            "PlatformCode": self._platform_code, #Obligatorio 
-            "Id": element['contentId'], #Obligatorio
-            "Seasons": seasons,
-            "Title": element['title'], #Obligatorio 
-            "CleanTitle": cleanTitle, #Obligatorio 
-            "OriginalTitle": element['title'], 
-            "Type": element['contentType'], #Obligatorio 
-            "Year": element['minReleaseYear'], #Important! 
-            "Duration": None, 
-            "ExternalIds": element['contentId'], 
-            "Deeplinks": { 
-            "Web": deeplink, #Obligatorio 
-            "Android": "str", 
-            "iOS": "str", 
-            }, 
-            "Synopsis": element['logLine'], 
-            "Image": None,
-            "Rating": element.get('ratingCode'), #Important! 
-            "Provider": element['studio'],
-            "Genres": genre, #Important!
-            "Cast": cast, 
-            "Directors": directors, #Important! 
-            "Availability": None, #Important! 
-            "Download": download, 
-            "IsOriginal": element['original'], #Important! 
-            "IsAdult": None, #Important! 
-            "IsBranded": None, #Important! (ver link explicativo)
-            "Packages": "Subscripcion", #Obligatorio 
-            "Country": None, 
-            "Timestamp": datetime.now().isoformat(), #Obligatorio 
-            "CreatedAt": self._created_at, #Obligatorio
-            }
-        payloads.append(payload)
-        self.mongo.insertMany(self.titanScraping, payloads)
-
-
-    def get_seasons(self, element, cleanTitle, directors, cast, genre, id):  # Funcion para obtener todas las temporadas de una serie
-        seasons = []
-        for serie in element:
-            deeplink = self.season_deeplink(serie, cleanTitle)
-            season = {
-                "Id": serie['contentId'], #Importante
-                "Synopsis": serie['logLine'], #Importante
-                "Title": serie['title'], #Importante
-                "Deeplink": deeplink, #Importante
-                "Number": serie['order'], #Importante
-                "Year": serie['minReleaseYear'], #Importante
-                "Image": None, 
-                "Directors": directors, #Importante
-                "Cast": cast, #Importante
-                "Episodes": serie['episodeCount'], #Importante
-                "IsOriginal": serie['original']
-                }
-            self.get_episodes(serie, cleanTitle, directors, cast, genre, serie['order'], id)
-            seasons.append(season)
-        return seasons
-
-    def get_episodes(self, serie, cleanTitle, directors, cast, genre, season, id):    # Funcion para obtener todos los episodios de una temporada
-        payloads = []
-        childContent = serie.get('childContent')
-        for element in childContent:
-            episodeNumber = (element['order'] - season * 100)
-            download = element.get('downloadable')
-            duration = str(int((element['runtime'] / 60))) + ' min'
-            deeplink = self.episode_deeplink(element, cleanTitle, season, element['contentId'])
-            payload = { 
-                "PlatformCode": self._platform_code, #Obligatorio 
-                "Id": element['contentId'], #Obligatorio
-                "ParentId": id, #Obligatorio #Unicamente en Episodios
-                "ParentTitle": "str", #Unicamente en Episodios 
-                "Episode": episodeNumber, #Obligatorio #Unicamente en Episodios 
-                "Season": season, #Obligatorio #Unicamente en Episodios
-                "Title": element['title'], #Obligatorio 
-                "CleanTitle": cleanTitle, #Obligatorio 
-                "OriginalTitle": element['title'], 
-                "Type": element['contentType'], #Obligatorio 
-                "Year": element['releaseYear'], #Important! 
-                "Duration": duration, 
-                "ExternalIds": element['contentId'], 
-                "Deeplinks": { 
-                "Web": deeplink, #Obligatorio 
-                "Android": "str", 
-                "iOS": "str", 
-                }, 
-                "Synopsis": element['logLine'], 
-                "Image": None,
-                "Rating": element.get('ratingCode'), #Important! 
-                "Provider": element['studio'],
-                "Genres": genre, #Important!
-                "Cast": cast, 
-                "Directors": directors, #Important! 
-                "Availability": None, #Important! 
-                "Download": download, 
-                "IsOriginal": element['original'], #Important! 
-                "IsAdult": None, #Important! 
-                "IsBranded": None, #Important! (ver link explicativo)
-                "Packages": "Subscripcion", #Obligatorio 
-                "Country": None, 
-                "Timestamp": datetime.now().isoformat(), #Obligatorio 
-                "CreatedAt": self._created_at, #Obligatorio
-                }
-            payloads.append(payload)
-        self.mongo.insertMany(self.titanScrapingEpisodios, payloads)
-    
-    # Directores, cast y genres:
-    def get_cast(self, cast):              # Funcion para obtener los miembros del cast
-        actores = []
-        for actor in cast:
-            actor = actor['name']
-            actores.append(actor)
-        return actores
-
-    def get_directors(self, directores):    # Funcion para obtener los directores, que pueden ser uno o varios
-        direct = []
-        for director in directores:
-            director = director['fullName']
-            direct.append(director)
-        return direct
-    
-    def get_genres(self, genres):            # Funcion para obtener los generos, que pueden ser uno o varios
-        genr = []
-        for genre in genres:
-            for description in genre.values():
-                genr.append(description)
-        return genr
-
-    # Deeplinks:
-    def movie_deeplink(self, title, id):       # Funcion para generar del Deeplink de las movies
-        deeplink = 'https://www.starz.com/ar/es/movies/' + title + '-' + str(id)
-        return deeplink
-
-    def serie_deeplink(self, title, id):        # Funcion para generar del Deeplink de las series
-        deeplink = 'https://www.starz.com/ar/es/series/' + title + '/' + str(id)
-        return deeplink     
-
-    def season_deeplink(self, serie, cleanTitle):     # Funcion para general el Deeplink de las temporadas
-        deeplink = 'https://www.starz.com/ar/es/series/' + cleanTitle + '/season-' + str(serie['order']) + '/' + str(serie['contentId'])
-        return deeplink
-
-    def episode_deeplink(self, element, cleanTitle, season, id): # Funcion para generar el Deeplink de las series
-        episodeNumber = (element['order'] - season * 100)
-        deeplink = ('https://www.starz.com/ar/es/series/' + cleanTitle + '/season-' + str(season) + '/episode-' 
-        + str(episodeNumber) + '/' + str(id))
-        return deeplink
-
-    # Utilidades generales:
-    def clean_text(self, text):         # Funcion para pasar un texto al formato utilizado en las requests
+    # Metodo para crear un clean text
+    def clean_text(self, text):         
         cleanText = text.lower()
         cleanText = cleanText.replace(':', '')
         cleanText = cleanText.replace(' ', '-') 
@@ -327,16 +158,18 @@ class Starz_mk():
         cleanText = cleanText.replace('í', 'i')
         cleanText = cleanText.replace('ú', 'u')      
         cleanText = cleanText.replace("'", '') 
-        return cleanText
-
-    def get_content(self, uri):
-        dict_content = self.request(uri)
-        return dict_content
-        
+        return cleanText           
+                
+    # Con get_content 'limpio' la metadata para que me devuelva el dict en donde esta la 
+    # informacion que necesito   
+    def get_contents(self, contents):
+        content = contents['playContentArray']['playContents']
+        return content
+       
+    # Desde request hago la request a la api que le ingreso como parametro a la funcion    
     def request(self, uri):
-        print(uri)
         response = self.session.get(uri)
-        print(response)
-        if (response.status_code == 200): 
-            dict_content = response.json()
-            return dict_content
+        contents = response.json()
+        return contents
+    
+    

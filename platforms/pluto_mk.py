@@ -125,7 +125,7 @@ class Pluto_mk():
             "Title": item['name'], #Obligatorio 
             "CleanTitle": item['slug'], #Obligatorio 
             "OriginalTitle": item['name'], 
-            "Type": item['type'], #Obligatorio 
+            "Type": 'serie', #Obligatorio 
             "Year": None, #Important! 
             "Duration": None, 
             "ExternalIds": None, 
@@ -145,7 +145,7 @@ class Pluto_mk():
             "IsOriginal": None, #Important! 
             "IsAdult": None, #Important! 
             "IsBranded": None, #Important! (ver link explicativo)
-            "Packages": "Free", #Obligatorio 
+            "Packages": ["Free",], #Obligatorio 
             "Country": None, 
             "Timestamp": datetime.now().isoformat(), #Obligatorio 
             "CreatedAt": self._created_at, #Obligatorio
@@ -212,7 +212,7 @@ class Pluto_mk():
                     "IsOriginal": None, #Important! 
                     "IsAdult": None, #Important! 
                     "IsBranded": None, #Important! (ver link explicativo)
-                    "Packages": 'Free', #Obligatorio 
+                    "Packages": ['Free',], #Obligatorio 
                     "Country": None, 
                     "Timestamp": datetime.now().isoformat(), #Obligatorio 
                     "CreatedAt": self._created_at, #Obligatorio
@@ -256,7 +256,7 @@ class Pluto_mk():
             "IsOriginal": None, #Important! 
             "IsAdult": None, #Important! 
             "IsBranded": None, #Important! (ver link explicativo)
-            "Packages": 'Free', #Obligatorio 
+            "Packages": ['Free',], #Obligatorio 
             "Country": None, 
             "Timestamp": datetime.now().isoformat(), #Obligatorio 
             "CreatedAt": self._created_at, #Obligatorio
