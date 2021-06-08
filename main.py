@@ -39,6 +39,7 @@ from platforms.amazon_login         import AmazonLogin
 from platforms.abc                  import Abc
 from platforms.pluto_ggarcia import Pluto_gg
 from platforms.hbo_prueba            import HboPrueba
+from platforms.starz_mv             import Starz_mv
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
