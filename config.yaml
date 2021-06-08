@@ -387,3 +387,6 @@ ott_sites:
     api_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&deviceType=web
     movie_url: https://pluto.tv/on-demand/movies/{}
     episodes_url: https://pluto.tv/on-demand/series/{}/season/{}/episode/{}-{}-{}-{}
+  StarzCapacitacion:
+    countries:
+      AR: ar.starz
