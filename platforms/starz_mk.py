@@ -6,6 +6,7 @@ from handle.replace import _replace
 from common import config
 from handle.mongo import mongo
 from updates.upload         import Upload
+from datetime import datetime
 # from time import sleep
 # import re
 
@@ -45,7 +46,48 @@ class Starz_mk():
         if type == 'testing':
             self._scraping(testing=True)
     
+    def query_field(self, collection, field=None):
+        """Método que devuelve una lista de una columna específica
+        de la bbdd.
+
+        Args:
+            collection (str): Indica la colección de la bbdd.
+            field (str, optional): Indica la columna, por ejemplo puede ser
+            'Id' o 'CleanTitle. Defaults to None.
+
+        Returns:
+            list: Lista de los field encontrados.
+        """
+        find_filter = {
+            'PlatformCode': self._platform_code,
+            'CreatedAt': self._created_at
+        }
+
+        find_projection = {'_id': 0, field: 1, } if field else None
+
+        query = self.mongo.db[collection].find(
+            filter=find_filter,
+            projection=find_projection,
+            no_cursor_timeout=False
+        )
+
+        if field:
+            query = [item[field] for item in query if item.get(field)]
+        else:
+            query = list(query)
+
+        return query
+    
+    
     def _scraping(self, testing=False):
+        self.payloads = []
+        self.episode_payloads = []
+        # Listas de contentenido scrapeado:
+        # Comparando estas listas puedo ver si el elemento ya se encuentra scrapeado.
+        self.scraped = self.query_field(self.titanScraping, field='Id')   #
+        self.scraped_episodes = self.query_field(self.titanScrapingEpisodios, field='Id')
+        print(f"{self.titanScraping} {len(self.scraped)}")
+        print(f"{self.titanScrapingEpisodios} {len(self.scraped_episodes)}")
         elements = self.get_content(self.api_url)
         self.payloads(elements)        
 
@@ -102,8 +144,8 @@ class Starz_mk():
             "IsBranded": None, #Important! (ver link explicativo)
             "Packages": "Subscripcion", #Obligatorio 
             "Country": None, 
-            "Timestamp": "falta", #Obligatorio 
-            "CreatedAt": "falta", #Obligatorio
+            "Timestamp": datetime.now().isoformat(), #Obligatorio 
+            "CreatedAt": self._created_at, #Obligatorio
             }
         payloads.append(payload)
         self.mongo.insertMany(self.titanScraping, payloads)
@@ -156,8 +198,8 @@ class Starz_mk():
             "IsBranded": None, #Important! (ver link explicativo)
             "Packages": "Subscripcion", #Obligatorio 
             "Country": None, 
-            "Timestamp": "falta", #Obligatorio 
-            "CreatedAt": "falta", #Obligatorio
+            "Timestamp": datetime.now().isoformat(), #Obligatorio 
+            "CreatedAt": self._created_at, #Obligatorio
             }
         payloads.append(payload)
         self.mongo.insertMany(self.titanScraping, payloads)
@@ -225,8 +267,8 @@ class Starz_mk():
                 "IsBranded": None, #Important! (ver link explicativo)
                 "Packages": "Subscripcion", #Obligatorio 
                 "Country": None, 
-                "Timestamp": "falta", #Obligatorio 
-                "CreatedAt": "falta", #Obligatorio
+                "Timestamp": datetime.now().isoformat(), #Obligatorio 
+                "CreatedAt": self._created_at, #Obligatorio
                 }
             payloads.append(payload)
         self.mongo.insertMany(self.titanScrapingEpisodios, payloads)

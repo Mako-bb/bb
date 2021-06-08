@@ -4,10 +4,11 @@ from handle.replace import _replace
 from common import config
 from handle.mongo import mongo
 from updates.upload         import Upload
+from handle.datamanager import Datamanager
 # from time import sleep
 # import re
 
-class Pluto():
+class PlutoCapacitacion():
     """
     """
     def __init__(self, ott_site_uid, ott_site_country, type):
@@ -43,28 +44,86 @@ class Pluto():
 
         if type == 'testing':
             self._scraping(testing=True)
-    
+    def query_field(self, collection, field=None):
+        """Método que devuelve una lista de una columna específica
+        de la bbdd.
+
+        Args:
+            collection (str): Indica la colección de la bbdd.
+            field (str, optional): Indica la columna, por ejemplo puede ser
+            'Id' o 'CleanTitle. Defaults to None.
+
+        Returns:
+            list: Lista de los field encontrados.
+        """
+        find_filter = {
+            'PlatformCode': self._platform_code,
+            'CreatedAt': self._created_at
+        }
+
+        find_projection = {'_id': 0, field: 1, } if field else None
+
+        query = self.mongo.db[collection].find(
+            filter=find_filter,
+            projection=find_projection,
+            no_cursor_timeout=False
+        )
+
+        if field:
+            query = [item[field] for item in query if item.get(field)]
+        else:
+            query = list(query)
+
+        return query
+
     def _scraping(self, testing=False):
-        payloads = []
-        episodes = []
+        # Listas de contentenido scrapeado:
+        self.scraped = self.query_field(self.titanScraping, field='Id')
+        self.scraped_episodes = self.query_field(self.titanScrapingEpisodios, field='Id')
+
+        # TODO: Aprender Datamanager
+        # scraped = Datamanager._getListDB(self,self.titanScraping)
+        # scraped_episodes = Datamanager._getListDB(self,self.titanScrapingEpisodios)
+
+        # Listas con contenidos y episodios dentro (DICT):
+        self.payloads = []
+        self.episodes_payloads = []
+
         contents_list = self.get_contents()
         for content in contents_list:
-            payload = self.get_payload(content)
-            payloads.append(payload)
-            if payload['Type'] == 'serie':
-                pass
-                # Hacer get_episodes()
-                # ¿Puedo reutilizar get_payload?
-                # Dejar todo documentado
-                # Completar la lista payloads y episodes.
-        self.mongo.insertMany(self.titanScraping, payloads)
-        self.mongo.insertMany(self.titanScrapingEpisodios, episodes)
+            # TODO: Agregar enumerate
+            self.content_scraping(content)
+            # Almaceno la lista de payloads en mongo:
+        if self.payloads:
+            self.mongo.insertMany(self.titanScraping, self.payloads)
+        if self.episodes_payloads:
+            self.mongo.insertMany(self.titanScrapingEpisodios, self.episodes_payloads)
+
+        self.session.close()
 
         # Validar tipo de datos de mongo:
         Upload(self._platform_code, self._created_at, testing=True)
 
+        print("Fin")
 
-  
+    def content_scraping(self, content):
+        content_id = content['_id']
+
+        if not content_id in self.scraped:
+            payload = self.get_payload(content)
+            if payload['Type'] == 'serie':
+                self.get_episodes(content)
+            if payload:
+                # 1) Almaceno el dict en la lista.
+                self.payloads.append(payload)
+                # 2) Almaceno el id (str) en la lista.
+                self.scraped.append(content_id)
+
+    def get_episodes(self, content):
+        # TODO: Pensar la lógca de episodios.
+        self.scraped_episodes.append('Id')
+        self.episodes_payloads.append({})
+
     def request(self, url, headers=None):
         """Método para hacer y validar una petición a un servidor.
 
