@@ -46,7 +46,7 @@ class Pluto_mk():
 
         if type == 'testing':
             self._scraping(testing=True)
-
+            
     def query_field(self, collection, field=None):
         """Método que devuelve una lista de una columna específica
         de la bbdd.
@@ -80,42 +80,44 @@ class Pluto_mk():
         return query
     
     def _scraping(self, testing=False):
-        # Listas de contentenido scrapeado:
-        self.scraped = self.query_field(self.titanScraping, field='Id')
-        self.scraped_episodes = self.query_field(self.titanScrapingEpisodios, field='Id')
-
-        print(f"{self.titanScraping} {len(self.scraped)}")
-        print(f"{self.titanScrapingEpisodios} {len(self.scraped_episodes)}")
-
-        # Listas con contenidos y episodios dentro:
         self.payloads = []
         self.episodes_payloads = []
-
+        # Listas de contentenido scrapeado:
+        # Comparando estas listas puedo ver si el elemento ya se encuentra scrapeado.
+        self.scraped = self.query_field(self.titanScraping, field='Id')   #
+        self.scraped_episodes = self.query_field(self.titanScrapingEpisodios, field='Id')
+        print(f"{self.titanScraping} {len(self.scraped)}")
+        print(f"{self.titanScrapingEpisodios} {len(self.scraped_episodes)}")
         contents = self.get_contents()
         for n, item in enumerate(contents):
             print(f"\n----- Progreso ({n}/{len(contents)}) -----\n")            
             if item['_id'] in self.scraped:
-                # Que no avance, está repetido.
+                # Que no avance, el _id está repetido.
+                print(item['name'] + ' ya esta scrapeado!')
                 continue
-            self.scraped.append(item['_id'])
-            if (item['type']) == 'movie':
-                self.movie_payload(item)
-            elif (item['type']) == 'series':
-                self.serie_payload(item)
-
-        # Almaceno la lista de payloads en mongo:
+            else:   
+                self.scraped.append(item['_id'])
+                if (item['type']) == 'movie':
+                    self.movie_payload(item)
+                elif (item['type']) == 'series':
+                    self.serie_payload(item)
+        # Validar tipo de datos de mongo:
         if self.payloads:
             self.mongo.insertMany(self.titanScraping, self.payloads)
+        else:
+            print(f'\n---- Ninguna serie o pelicula para insertar a la base de datos ----\n')
         if self.episodes_payloads:
             self.mongo.insertMany(self.titanScrapingEpisodios, self.episodes_payloads)
-
-        # Validar tipo de datos de mongo:
+        else:
+            print(f'\n---- Ningun episodio para insertar a la base de datos ----\n')
         Upload(self._platform_code, self._created_at, testing=True)
         print("Scraping finalizado")
-    
+        self.session.close()
+
     def serie_payload(self, item):
         deeplink = self.get_deeplink(item, 'serie')
         image = self.get_image(item, 'serie')
+        print('Serie: ' + item['name'])
         seasons = self.get_seasons(item['_id'], item['slug'])
         serie_payload = {
             "PlatformCode": self._platform_code, #Obligatorio 
@@ -130,8 +132,8 @@ class Pluto_mk():
             "ExternalIds": None, 
             "Deeplinks": { 
             "Web": deeplink, #Obligatorio 
-            "Android": "str", 
-            "iOS": "str", 
+            "Android": None, 
+            "iOS": None, 
             }, 
             "Synopsis": item['description'], 
             "Image": image, 
@@ -146,10 +148,10 @@ class Pluto_mk():
             "IsBranded": None, #Important! (ver link explicativo)
             "Packages": "Free", #Obligatorio 
             "Country": None, 
-            "Timestamp": "Falta", #Obligatorio 
-            "CreatedAt": "Falta", #Obligatorio
+            "Timestamp": datetime.now().isoformat(), #Obligatorio 
+            "CreatedAt": self._created_at, #Obligatorio
         }
-        self.mongo.insert(self.titanScraping, serie_payload)
+        self.payloads.append(serie_payload)
     
     def get_seasons(self, id, parentTitle):
         season_return = []
@@ -158,7 +160,9 @@ class Pluto_mk():
         seasons = items['seasons']
         synopsis = items['description']
         name = items['name']
+        self.totalSeasons = 0
         for season in seasons:
+            self.totalSeasons += 1
             deeplink = self.get_deeplink(season, 'season', season['number'], parentTitle)
             season_payload = {
                 "Id": None, #Importante
@@ -174,6 +178,7 @@ class Pluto_mk():
                 "IsOriginal": None 
             },
             season_return.append(season_payload)
+            self.episodios = 0
             for episode in season['episodes']:
                 duration = self.get_duration(episode)
                 deeplink = self.get_deeplink(episode, 'episode', season, parentTitle)
@@ -210,17 +215,21 @@ class Pluto_mk():
                     "IsBranded": None, #Important! (ver link explicativo)
                     "Packages": 'Free', #Obligatorio 
                     "Country": None, 
-                    "Timestamp": "Falta", #Obligatorio 
-                    "CreatedAt": "Falta", #Obligatorio
+                    "Timestamp": datetime.now().isoformat(), #Obligatorio 
+                    "CreatedAt": self._created_at, #Obligatorio
                     }
-                self.mongo.insert(self.titanScrapingEpisodios, episode_payload)
-                return season_return
+                self.episodes_payloads.append(episode_payload)
+                self.episodios += 1
+        print('Temporadas: ' + str(self.totalSeasons))
+        print('Episodios: ' + str(self.episodios))
+        return season_return
+            
       
     def movie_payload(self, item):
         deeplink = self.get_deeplink(item, 'movie')
         duration = self.get_duration(item)
         image = self.get_image(item, 'movie')
-        print(item['name'])
+        print('Movie: ' + item['name'])
         payload = { 
             "PlatformCode": self._platform_code, #Obligatorio 
             "Id": item['_id'], #Obligatorio
@@ -253,7 +262,7 @@ class Pluto_mk():
             "Timestamp": datetime.now().isoformat(), #Obligatorio 
             "CreatedAt": self._created_at, #Obligatorio
             }
-        self.mongo.insert(self.titanScraping, payload)
+        self.payloads.append(payload)
         
     def get_image(self, item, type):
         if type == 'movie':
