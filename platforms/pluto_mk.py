@@ -123,7 +123,7 @@ class Pluto_mk():
             "Id": item['_id'], #Obligatorio
             "Seasons": seasons,
             "Title": item['name'], #Obligatorio 
-            "CleanTitle": item['slug'], #Obligatorio 
+            "CleanTitle": _replace(item['name']), #Obligatorio 
             "OriginalTitle": item['name'], 
             "Type": 'serie', #Obligatorio 
             "Year": None, #Important! 
@@ -135,10 +135,10 @@ class Pluto_mk():
             "iOS": None, 
             }, 
             "Synopsis": item['description'], 
-            "Image": image, 
+            "Image": [image], 
             "Rating": item['rating'], #Important! 
             "Provider": None, 
-            "Genres": item['genre'], #Important!  "Cast": "list", 
+            "Genres": [item['genre']], #Important!  "Cast": "list", 
             "Directors": None, #Important! 
             "Availability": None, #Important! 
             "Download": None, 
@@ -187,25 +187,25 @@ class Pluto_mk():
                     "Id": episode['_id'], #Obligatorio
                     "ParentId": id, #Obligatorio #Unicamente en Episodios
                     "ParentTitle": parentTitle, #Unicamente en Episodios 
-                    "Episode": episode['number'], #Obligatorio #Unicamente en Episodios 
+                    "Episode": episode['number'] if episode['number'] != 0 else None, #Obligatorio #Unicamente en Episodios 
                     "Season": episode['season'], #Obligatorio #Unicamente en Episodios
                     "Title": episode['name'], #Obligatorio 
-                    "CleanTitle": episode['slug'], #Obligatorio 
+                    # "CleanTitle": episode['slug'], #Obligatorio 
                     "OriginalTitle": episode['name'], 
-                    "Type": episode['type'], #Obligatorio 
+                    # "Type": episode['type'], #Obligatorio 
                     "Year": None, #Important! 
                     "Duration": duration,
-                    "ExternalIds": deeplink,
+                    # "ExternalIds": deeplink,
                     "Deeplinks": { 
                     "Web": deeplink, #Obligatorio 
                     "Android": None, 
                     "iOS": None, 
                     }, 
                     "Synopsis": episode['description'], 
-                    "Image": image, 
+                    "Image": [image], 
                     "Rating": episode['rating'], #Important! 
                     "Provider": None, 
-                    "Genres": episode['genre'], #Important! 
+                    "Genres": [episode['genre']], #Important! 
                     "Directors": None, #Important! 
                     "Availability": None, #Important! 
                     "Download": None, 
@@ -233,7 +233,7 @@ class Pluto_mk():
             "PlatformCode": self._platform_code, #Obligatorio 
             "Id": item['_id'], #Obligatorio
             "Title": item['name'], #Obligatorio 
-            "CleanTitle": item['slug'], #Obligatorio 
+            "CleanTitle": _replace(item['name']), #Obligatorio 
             "OriginalTitle": item['name'], 
             "Type": item['type'], #Obligatorio 
             "Year": None, #Important! 
@@ -245,10 +245,10 @@ class Pluto_mk():
             "iOS": None, 
             }, 
             "Synopsis": item['summary'], 
-            "Image": image,
+            "Image": [image],
             "Rating": item['rating'], #Important! 
             "Provider": None,
-            "Genres": item['genre'], #Important!
+            "Genres": [item['genre']], #Important!
             "Cast": None, 
             "Directors": None, #Important! 
             "Availability": None, #Important! 
@@ -273,7 +273,7 @@ class Pluto_mk():
         return image
     
     def get_duration(self, item):
-        duration = str(int((item['duration']) / 60000)) + ' min'
+        duration = int((item['duration']) / 60000)
         return duration
         
     def get_deeplink(self, item, type, season = None, parentTitle = None):
