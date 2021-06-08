@@ -24,7 +24,7 @@ class ExcelTemplate():
         df = conexion_local.find_mongo(query, collection='titanScraping')
         df_episodes = conexion_local.find_mongo(query, collection='titanScrapingEpisodes')
 
-        if df_p.empty and df.empty and df_episodes.empty:
+        if df.empty and df_episodes.empty:
             print(f"\n¡No se encontró {platform_code} al {date} en mongo local!")
 
         file_name = ("Analisis " + platform_code + " " + str(date) + ".xlsx" )
