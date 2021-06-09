@@ -24,7 +24,7 @@ class ExcelTemplate():
         df = conexion_local.find_mongo(query, collection='titanScraping')
         df_episodes = conexion_local.find_mongo(query, collection='titanScrapingEpisodes')
 
-        if df_p.empty and df.empty and df_episodes.empty:
+        if df.empty and df_episodes.empty:
             print(f"\n¡No se encontró {platform_code} al {date} en mongo local!")
 
         file_name = ("Analisis " + platform_code + " " + str(date) + ".xlsx" )
@@ -39,11 +39,10 @@ class ExcelTemplate():
         del os
 
         with pd.ExcelWriter("excel_exports/" + file_name) as writer:
-            if df_p.empty:
-                pass
-            else:
+            try:
                 df_p.to_excel(writer, sheet_name='titanPreScraping', encoding="utf-8", index=False)
-
+            except:
+                pass
             df.to_excel(writer, sheet_name='titanScraping', encoding="utf-8", index=False)
             df_episodes.to_excel(writer, sheet_name='titanScrapingEpisodes', encoding="utf-8", index=False)
 
