@@ -11,6 +11,8 @@ from updates.upload         import Upload
 
 
 class Starz():
+    """clase para la plataforma Starz
+    """
 
     def __init__(self, ott_site_uid, ott_site_country, type):
 
@@ -38,6 +40,11 @@ class Starz():
             self._scraping(testing=True)
     
     def _scraping(self, testing = False ):
+        """metodo para scrapear la plataforma
+
+        Args:
+            self, testing o scraping 
+        """
 
         items = self._request_parser(self.api_url)
         payload_list = self._payloads(items)
@@ -71,6 +78,14 @@ class Starz():
 
         
     def _request_parser(self, uri):
+        """recibe una uri de la API y devuelve la response parseada (JSON)
+
+        Args:
+            uri : uri de la API
+
+        Returns:
+            content_dict[dict]: devuelve la response parseada (JSON)
+        """
 
         response = self.sesion.get(uri)
         if (response.status_code == 200): 
@@ -97,8 +112,8 @@ class Starz():
             
             try:
                 payload['Actors'] = self._get_cast(item_list['actors'])
-            except: 
-                KeyError
+            except KeyError: 
+                pass
             payload_list.append(payload)
         return payload_list
          
@@ -121,9 +136,9 @@ class Starz():
                 payload['Rol'] = item['keyedRoles'][0]['name']
                 payload['ID'] = item['id']
 
-            except:
-                KeyError
-            
+            except KeyError:
+                pass 
+                 
         return payload 
 
     def _get_data_serie(self, items):

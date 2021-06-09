@@ -1,15 +1,17 @@
 import time
 import requests
-from requests import api 
+import json
 from handle.replace import _replace
 from common import config
 from handle.mongo import mongo
 from pprint import pprint 
 from bs4 import BeautifulSoup
-from updates.upload         import Upload
+from updates.upload import Upload
 from handle.datamanager import Datamanager
-import json
 from handle.payload import Payload
+from pymongo.message import insert
+import ast
+from datetime import datetime
 
 class Pluto_tomas():
     """    """    
@@ -23,7 +25,8 @@ class Pluto_tomas():
         self.titanScraping = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
         self.api_url = self._config['api_url']
-        self.sesion = requests.session()
+        self.season_url = self._config['season_api_url']
+        self.session = requests.session()
         if type == 'return':
             '''            Retorna a la Ultima Fecha            '''            
             params = {"PlatformCode": self._platform_code}
@@ -39,89 +42,249 @@ class Pluto_tomas():
 
     def _scraping(self, testing=False):
 
-        # Listas de contentenido scrapeado:
-        self.scraped = self.query_field(self.titanScraping, field='Id')
-        self.scraped_episodes = self.query_field(self.titanScrapingEpisodios, field='Id')
+        " Metodo de scrap que inserta datos validados a la BBDD "
 
-        # TODO: Aprender Datamanager
-        # scraped = Datamanager._getListDB(self,self.titanScraping)
-        # scraped_episodes = Datamanager._getListDB(self,self.titanScrapingEpisodios)
-
-        # Listas con contenidos y episodios dentro (DICT):
         self.payloads = []
         self.episodes_payloads = []
 
-        contents_list = self.get_contents()
-        for content in contents_list:
-            # TODO: Agregar enumerate
-            self.content_scraping(content)
-            # Almaceno la lista de payloads en mongo:
+        self.scraped = self.query_field(self.titanScraping, field='Id')
+        self.scraped_episodes = self.query_field(self.titanScrapingEpisodios, field='Id')
+        print(f"{self.titanScraping} {len(self.scraped)}")
+        print(f"{self.titanScrapingEpisodios} {len(self.scraped_episodes)}")
+        
+        contents = self._get_contents()
+
+        for n, item in enumerate(contents):
+            print(f"\n----- Progreso ({n}/{len(contents)}) -----\n")            
+            if item['_id'] in self.scraped:
+                print(item['name'] + ' ya esta scrapeado!')
+                continue
+            else:
+                self.scraped.append(item['_id'])
+                if (item['type']) == 'movie':
+                    self._movies_payload(item)
+                elif (item['type']) == 'series':
+                    self._series_payload(item)
+
         if self.payloads:
             self.mongo.insertMany(self.titanScraping, self.payloads)
+        else:
+            print(f'\n---- Ninguna serie o pelicula para insertar a la base de datos ----\n')
         if self.episodes_payloads:
             self.mongo.insertMany(self.titanScrapingEpisodios, self.episodes_payloads)
+        else:
+            print(f'\n---- Ningun episodio para insertar a la base de datos ----\n')
 
-        self.sesion.close()
-
-        # Validar tipo de datos de mongo:
         Upload(self._platform_code, self._created_at, testing=True)
 
-        print("Fin")
+        print("Scraping finalizado")
+        self.session.close()
 
-    def _parse_response(self, response_json):
-        data_response = []
+    def _get_contents(self):
 
-        list_categories = response_json['categories']
-        for category in list_categories:
-            titles_categories = category['name']
-            items = category['items']
-            for item in items:
-                payload = self._get_payload(item)
-  
-                data_response.append(payload)
-        return data_response
-
-    def _get_payload(self, item):
-        """[summary]
-
-        Args:
-            item ([type]): [description]
-
+        """ Metodo que realiza una request a la uri (API) y retorna la response parseada (JSON).
         Returns:
-            [type]: [description]
+            list: Lista de diccionarios
         """
+        content_list = []
+        uri = self.api_url
+        response = self.request(uri)
+        dict_contents = response.json()
+        list_categories = dict_contents['categories']
+        for categories in list_categories:
+            content_list += categories['items']
 
-        title = item['name']
-        description = item['description']
-        slug = item['slug']
-        _type = item['type']
-        duration = item.get('duration')
-        genre = item['genre']
-        id_ = item['_id']
+        return content_list
 
-        deep_link = self._get_deep_link(_type, slug)
+    def _movies_payload(self, item):
+    
+        deeplink = self._get_deep_link('movie', item['slug'], parentTitle= None)
+        duration = self._get_duration(item)
+        image = self._get_image('movie', item)
+        print('Movie: ' + item['name'])
 
-        payload ={
-                'Title': title,
-                'Description' : description,
-                'Duration': duration,
-                'ID': id_,
-                'Genre': genre,
-                'Deep Link': deep_link,
-                'Type': _type, 
-                #'Seasons': seasonsNumbers,
-            }
-        return payload
+        payload = { 
 
-    def _get_deep_link(self, _type, slug ):
+            "PlatformCode": self._platform_code, 
+            "Id": item['_id'], 
+            "Title": item['name'],
+            "CleanTitle": _replace(item['name']),  
+            "OriginalTitle": item['name'], 
+            "Type": item['type'],  
+            "Year": None, 
+            "Duration": duration,
+            "ExternalIds": None,
+            "Deeplinks": { 
+            "Web": deeplink, 
+            "Android": None, 
+            "iOS": None,
+        }, 
+            "Synopsis": item['summary'], 
+            "Image": [image],
+            "Rating": item['rating'] if item['rating'] != 'Not Rated' else None, 
+            "Provider": None,
+            "Genres": [item['genre']], 
+            "Cast": None, 
+            "Directors": None, 
+            "Availability": None, 
+            "Download": None, 
+            "IsOriginal": None, 
+            "IsAdult": None, 
+            "IsBranded": None, 
+            "Packages": [{'Type':'free-vod'}],
+            "Country": None, 
+            "Timestamp": datetime.now().isoformat(), 
+            "CreatedAt": self._created_at, 
+        }
+        self.payloads.append(payload)
+
+    def _series_payload(self, item):
+
+        deeplink = self._get_deep_link(item['type'],item['slug'], parentTitle=None)
+        image = self._get_image(item, 'serie')
+        print('Serie: ' + item['name'])
+        seasons = self.get_seasons(item['_id'], item['slug'])
+
+        serie_payload = {
+            
+            "PlatformCode": self._platform_code, 
+            "Id": item['_id'], 
+            "Seasons": seasons,
+            "Title": item['name'], 
+            "CleanTitle": _replace(item['name']), 
+            "OriginalTitle": item['name'], 
+            "Type": 'serie', 
+            "Year": None,  
+            "Duration": None, 
+            "ExternalIds": None, 
+            "Deeplinks": { 
+            "Web": deeplink,  
+            "Android": None, 
+            "iOS": None, 
+        }, 
+           "Synopsis": item['description'], 
+            "Image": [image], 
+            "Rating": item['rating'] if item['rating'] != 'Not Rated' else None, 
+            "Provider": None, 
+            "Genres": [item['genre']], 
+            "Directors": None, 
+            "Availability": None,  
+            "Download": None, 
+            "IsOriginal": None, 
+            "IsAdult": None,  
+            "IsBranded": None, 
+            "Packages": [{'Type':'free-vod'}],
+            "Country": None, 
+            "Timestamp": datetime.now().isoformat(), 
+            "CreatedAt": self._created_at, 
+        }
+
+        self.payloads.append(serie_payload)
+
+    def _get_deep_link(self, _type, slug, parentTitle):
+
+        """Metodo para formatear el deeplink"""
 
         if _type == 'series':
             deep_link = "https://pluto.tv/on-demand/{}/{}".format(_type, slug)
-            #seasonsNumbers = categories.get('seasonsNumbers')
-        else:
+        elif _type == 'movie' :
             deep_link = "https://pluto.tv/on-demand/{}s/{}".format(_type, slug)
+        elif _type == 'episode':
+            deep_link = "https://pluto.tv/on-demand/series/{}/episode/{}".format(parentTitle, slug )
+        elif _type == 'season':
+            deep_link = "https://pluto.tv/on-demand/series/{}/season/{}".format(parentTitle, slug)
 
         return deep_link
+
+    def _get_duration(self, item):
+        """Metodo que obtiene la duracion del contenido
+
+        Args:
+            item ([dict]): contenidos en formato json
+
+        Returns:
+            devuelve la duracion parseada (int) en minutos
+        """
+
+        try:
+            duration = int((item['duration']) / 60000)
+        except:
+            duration = int((item['allotment']) / 60)
+
+        return duration
+
+    def get_seasons(self, id, parentTitle):
+
+        season_return = []
+
+        uri = self.season_url + str(id) + '/seasons?deviceType=web' 
+        items = self.request(uri).json()
+
+        seasons = items['seasons']
+        synopsis = items['description']
+        name = items['name']
+        self.totalSeasons = 0
+        for season in seasons:
+            self.totalSeasons += 1
+            deeplink = self._get_deep_link('season', items['slug'], parentTitle)
+            season_payload = {
+                "Id": None, 
+                "Synopsis": synopsis,
+                "Title": name, 
+                "Deeplink": deeplink,
+                "Number": season['number'],
+                "Year": None,
+                "Image": None, 
+                "Directors": None, 
+                "Cast": None,
+                "Episodes": len(season['episodes']), 
+                "IsOriginal": None 
+            },
+            season_return.append(season_payload)
+            self.episodios = 0
+            for episode in season['episodes']:
+                duration = self._get_duration(episode)
+                deeplink = self._get_deep_link('episode', items['slug'], parentTitle)
+                image = self._get_image(episode, 'episode')
+                episode_payload = { 
+                    "PlatformCode": self._platform_code, 
+                    "Id": episode['_id'], 
+                    "ParentId": id,
+                    "ParentTitle": parentTitle, 
+                    "Episode": episode['number'] if episode['number'] != 0 else None, 
+                    "Season": episode['season'], 
+                    "Title": episode['name'], 
+                    "OriginalTitle": episode['name'],  
+                    "Year": None, 
+                    "Duration": duration,
+                    "Deeplinks": { 
+                    "Web": deeplink, 
+                    "Android": None, 
+                    "iOS": None, 
+                    }, 
+                    "Synopsis": episode['description'], 
+                    "Image": [image], 
+                    "Rating": episode['rating'] if episode['rating'] != 'Not Rated' else None, 
+                    "Provider": None, 
+                    "Genres": [episode['genre']], 
+                    "Directors": None, 
+                    "Availability": None, 
+                    "Download": None, 
+                    "IsOriginal": None,  
+                    "IsAdult": None,  
+                    "IsBranded": None, 
+                    "Packages": [{'Type':'free-vod'}], 
+                    "Country": None, 
+                    "Timestamp": datetime.now().isoformat(), 
+                    "CreatedAt": self._created_at, 
+                    }
+                self.episodes_payloads.append(episode_payload)
+                self.episodios += 1
+        ('Temporadas: ' + str(self.totalSeasons))
+        print('Episodios: ' + str(self.episodios))
+        return season_return
+
+
     
     def query_field(self, collection, field=None):
         """Método que devuelve una lista de una columna específica
@@ -155,54 +318,6 @@ class Pluto_tomas():
 
         return query
 
-    def _scraping(self, testing=False):
-        # Listas de contentenido scrapeado:
-        self.scraped = self.query_field(self.titanScraping, field='Id')
-        self.scraped_episodes = self.query_field(self.titanScrapingEpisodios, field='Id')
-
-        # TODO: Aprender Datamanager
-        # scraped = Datamanager._getListDB(self,self.titanScraping)
-        # scraped_episodes = Datamanager._getListDB(self,self.titanScrapingEpisodios)
-
-        # Listas con contenidos y episodios dentro (DICT):
-        self.payloads = []
-        self.episodes_payloads = []
-
-        contents_list = self.get_contents()
-        for content in contents_list:
-            # TODO: Agregar enumerate
-            self.content_scraping(content)
-            # Almaceno la lista de payloads en mongo:
-        if self.payloads:
-            self.mongo.insertMany(self.titanScraping, self.payloads)
-        if self.episodes_payloads:
-            self.mongo.insertMany(self.titanScrapingEpisodios, self.episodes_payloads)
-
-        self.sesion.close()
-
-        # Validar tipo de datos de mongo:
-        Upload(self._platform_code, self._created_at, testing=True)
-
-        print("Fin")
-
-    def content_scraping(self, content):
-        content_id = content['_id']
-
-        if not content_id in self.scraped:
-            payload = self.get_payload(content)
-            if payload['Type'] == 'serie':
-                self.get_episodes(content)
-            if payload:
-                # 1) Almaceno el dict en la lista.
-                self.payloads.append(payload)
-                # 2) Almaceno el id (str) en la lista.
-                self.scraped.append(content_id)
-
-    def get_episodes(self, content):
-        # TODO: Pensar la lógca de episodios.
-        self.scraped_episodes.append('Id')
-        self.episodes_payloads.append({})
-
     def request(self, url, headers=None):
         """Método para hacer y validar una petición a un servidor.
 
@@ -216,7 +331,7 @@ class Pluto_tomas():
         while True:
             try:
                 # Request con header:
-                response = self.sesion.get(
+                response = self.session.get(
                     url,
                     headers=headers,
                     timeout=request_timeout
@@ -234,34 +349,17 @@ class Pluto_tomas():
                 time.sleep(request_timeout)
                 continue
 
-    def get_contents(self):
-        """Método que trae los contenidos en forma de diccionario.
+    def _get_image(self, item, _type):
+        image = ''
+        if _type == 'movie':
+            image = 'https://api.pluto.tv/v3/images/episodes/{}/poster.jpg'.format(str(item['_id']))
+        elif _type == 'serie':
+            image = 'https://api.pluto.tv/v3/images/series/{}/poster.jpg'.format(str(item['_id']))
+        elif _type == 'episode':
+            image = 'https://api.pluto.tv/v3/images/episodes/{}/poster.jpg'.format(str(item['_id']))
 
-        Returns:
-            list: Lista de diccionarios
-        """
-        content_list = []
-        uri = self.api_url
-        response = self.request(uri)
-        dict_contents = response.json()
-        list_categories = dict_contents['categories']
-        for categories in list_categories:
-            content_list += categories['items']
+        return image
 
-        return content_list
-
-    def get_payload(self, dict_metadata):
-        
-        # payload = Payload()
-
-        payload = {}
-        payload['Id'] = dict_metadata['_id']
-        payload['Title'] = dict_metadata['name']
-        payload['Type'] = dict_metadata['type']
-        payload['Synopsis'] = dict_metadata.get('description')
-        #payload['Duration'] = self.get_duration(dict_metadata)
-
-        return payload
-
-    # def get_duration(self, dict_metadata):
-    #     return int(dict_metadata['duration'] // 60000) or int(dict_metadata['allotment'])// 60
+    # def _get_year(self, item):
+    #     year = int()
+    #     for i
