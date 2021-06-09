@@ -1,10 +1,11 @@
 import time
 import requests
-from handle.replace import _replace
-from common import config
-from handle.mongo import mongo
+from handle.replace         import _replace
+from common                 import config
+from handle.mongo           import mongo
 from updates.upload         import Upload
-from handle.datamanager import Datamanager
+from handle.payload         import Payload
+from handle.datamanager     import Datamanager
 # from time import sleep
 # import re
 

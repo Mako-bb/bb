@@ -362,11 +362,6 @@ ott_sites:
     contents:
       - series
       - movies
-  Pluto_mv: #PRUEBA
-    countries:
-      AR: ar.pluto
-    api_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.0-38a9908bb8d8f15260d990bd00c1f6b49c7bba28&app_name=web&clientDeviceType=0&clientID=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&clientModelNumber=na&deviceDNT=false&deviceId=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&deviceLat=-34.5106&deviceLon=-58.7536&deviceMake=Microsoft%2BEdge&deviceModel=web&deviceType=web&deviceVersion=91.0.864.37&marketingRegion=VE&serverSideAds=true&sessionID=02158376-c248-11eb-975c-0242ac110002&sid=02158376-c248-11eb-975c-0242ac110002&userId=&attributeV4=foo
-    season_api_url: https://service-vod.clusters.pluto.tv/v3/vod/series/
   Starz:
     countries:
       AR: ar.starz
@@ -389,7 +384,8 @@ ott_sites:
       api_url: https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/content
 
   Pluto_ari: #Prueba
-       AR: ar.starz
+    countries:
+       AR: ar.pluto
     api_url: https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/content
   Pluto_gg:
     countries:
@@ -402,13 +398,17 @@ ott_sites:
     api_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&deviceType=web
     movie_url: https://pluto.tv/on-demand/movies/{}
     episodes_url: https://pluto.tv/on-demand/series/{}/season/{}/episode/{}-{}-{}-{}
-  Starz_mv: #Prueba
+  Starz_mv: 
     countries:
       AR: ar.starz
     api_url:      https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/blocks?playContents=map&lang=es-419&pages=BROWSE,HOME,MOVIES,PLAYLIST,SEARCH,SEARCH%20RESULTS,SERIES&&includes=childContent,properCaseTitle,logLine,releaseYear,genres,ratingCode,audioType,free,newContent,comingSoon,runtime,contentId,title,order,topContentId,titleBrief,contentType,seasonNumber,mediaId,seriesName,credits,product
-    movie_url:    https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/content?lang=es-419&contentIds=58726&includes=title,logLine,contentType,contentId,ratingName,properCaseTitle,topContentId,releaseYear,runtime,images,credits,episodeCount,seasonNumber,childContent,order
-    episodes_url: https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/content?lang=es-419&contentIds={}&includes=title,logLine,contentType,contentId,ratingName,properCaseTitle,topContentId,releaseYear,runtime,images,credits,episodeCount,seasonNumber,childContent,order
-  Pluto_tomas:
+  Pluto_mv: #PRUEBA
+    countries:
+      AR: ar.pluto
+    api_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.0-38a9908bb8d8f15260d990bd00c1f6b49c7bba28&app_name=web&clientDeviceType=0&clientID=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&clientModelNumber=na&deviceDNT=false&deviceId=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&deviceLat=-34.5106&deviceLon=-58.7536&deviceMake=Microsoft%2BEdge&deviceModel=web&deviceType=web&deviceVersion=91.0.864.37&marketingRegion=VE&serverSideAds=true&sessionID=02158376-c248-11eb-975c-0242ac110002&sid=02158376-c248-11eb-975c-0242ac110002&userId=&attributeV4=foo
+    api_season: https://service-vod.clusters.pluto.tv/v3/vod/series/{}/seasons?deviceType=web
+
+    Pluto_tomas:
     countries:
       AR: ar.pluto
     api_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.0-38a9908bb8d8f15260d990bd00c1f6b49c7bba28&app_name=web&clientDeviceType=0&clientID=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&clientModelNumber=na&deviceDNT=false&deviceId=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&deviceLat=-34.5106&deviceLon=-58.7536&deviceMake=Microsoft%2BEdge&deviceModel=web&deviceType=web&deviceVersion=91.0.864.37&marketingRegion=VE&serverSideAds=true&sessionID=02158376-c248-11eb-975c-0242ac110002&sid=02158376-c248-11eb-975c-0242ac110002&userId=&attributeV4=foo
