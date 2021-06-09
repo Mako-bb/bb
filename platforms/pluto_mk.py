@@ -193,7 +193,7 @@ class Pluto_mk():
                     "Title": episode['name'], #Obligatorio 
                     "OriginalTitle": episode['name'],  
                     "Year": None, #Important! 
-                    "Duration": duration,
+                    "Duration": duration if duration else episode['allotment'] / 60,
                     "Deeplinks": { 
                     "Web": deeplink, #Obligatorio 
                     "Android": None, 
@@ -201,7 +201,7 @@ class Pluto_mk():
                     }, 
                     "Synopsis": episode['description'], 
                     "Image": [image], 
-                    "Rating": episode['rating'], #Important! 
+                    "Rating": episode['rating'] if episode['rating'] != 'Not rated' else None, #Important! 
                     "Provider": None, 
                     "Genres": [episode['genre']], #Important! 
                     "Directors": None, #Important! 
@@ -235,7 +235,7 @@ class Pluto_mk():
             "OriginalTitle": item['name'], 
             "Type": item['type'], #Obligatorio 
             "Year": None, #Important! 
-            "Duration": duration,
+            "Duration": duration if duration else item['allotment'] / 60,,
             "ExternalIds": None,  #No estoy seguro de si es
             "Deeplinks": { 
             "Web": deeplink, #Obligatorio 
@@ -244,7 +244,7 @@ class Pluto_mk():
             }, 
             "Synopsis": item['summary'], 
             "Image": [image],
-            "Rating": item['rating'], #Important! 
+            "Rating": item['rating'] if item['rating'] != 'Not rated' else None, #Important! 
             "Provider": None,
             "Genres": [item['genre']], #Important!
             "Cast": None, 
