@@ -235,7 +235,7 @@ class Pluto_mk():
             "OriginalTitle": item['name'], 
             "Type": item['type'], #Obligatorio 
             "Year": None, #Important! 
-            "Duration": duration if duration else item['allotment'] / 60,,
+            "Duration": duration if duration else item['allotment'] / 60,
             "ExternalIds": None,  #No estoy seguro de si es
             "Deeplinks": { 
             "Web": deeplink, #Obligatorio 
