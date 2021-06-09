@@ -7,6 +7,7 @@ from common import config
 from handle.mongo import mongo
 from updates.upload         import Upload
 from datetime import datetime
+import pandas
 # from time import sleep
 # import re
 
@@ -210,6 +211,8 @@ class Starz_mk():
             deeplinkText = self.get_deeplinkText(serie['title'])
             deeplink = self.get_deeplink(serie, 'Season', cleanTitle)
             print(deeplink)
+            self.totalEpisodios = 0
+            self.get_episodes(serie, cleanTitle, serie['order'], parentId)
             season = {
                 "Id": str(serie['contentId']), #Importante
                 "Synopsis": serie['logLine'], #Importante
@@ -221,7 +224,7 @@ class Starz_mk():
                 "Episodes": serie['episodeCount'], #Importante
                 "IsOriginal": serie['original']
                 }
-            self.get_episodes(serie, cleanTitle, serie['order'], parentId)
+            
             seasons.append(season)
         return seasons
     
@@ -233,7 +236,9 @@ class Starz_mk():
             duration = int((element['runtime'] / 60))
             deeplinkText = self.get_deeplinkText(element['title'])
             deeplink = self.get_deeplink(element, 'Episodio', deeplinkText, season, episodeNumber)
-            episode_payload = { 
+            if ((episodeNumber > 0) and  (episodeNumber < 800 )): 
+                self.totalEpisodios += 1
+                episode_payload = { 
                 "PlatformCode": self._platform_code, #Obligatorio 
                 "Id": str(element['contentId']), #Obligatorio
                 "ParentId": str(parentId), #Obligatorio #Unicamente en Episodios
@@ -266,7 +271,9 @@ class Starz_mk():
                 "Timestamp": datetime.now().isoformat(), #Obligatorio 
                 "CreatedAt": self._created_at, #Obligatorio
                 }
-            self.episode_payloads.append(episode_payload)
+                self.episode_payloads.append(episode_payload)
+            else:
+                pass
     
    # Metodo para obtener el deeplink, recibe un dict 'content'
     def get_deeplink(self, content, type, cleanText, season = None, episodeNumber = None):
