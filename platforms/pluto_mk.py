@@ -10,6 +10,21 @@ from datetime import datetime
 # from time import sleep
 # import re
 
+"""
+    PlutoTv es una ott de Estados Unidos.
+
+    DATOS IMPORTANTES:
+    - VPN: No 
+    - ¿Usa Selenium?: No
+    - ¿Tiene API?: Si: Dos. Una para las movies y series y otra para los episodios.
+    - ¿Usa BS4?: No
+    - ¿Se relaciona con scripts TP? No
+    - ¿Instanacia otro archivo de la carpeta "platforms"?: No
+    - ¿Cuanto demoró la ultima vez? 6 min el 09/06/2021
+    - ¿Cuanto contenidos trajo la ultima vez? 1,494 series y movies, 19,512 episodios
+"""
+
+
 class Pluto_mk():
     """
     """
