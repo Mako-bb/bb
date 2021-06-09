@@ -136,7 +136,7 @@ class Pluto_mk():
             }, 
             "Synopsis": item['description'], 
             "Image": [image], 
-            "Rating": item['rating'], #Important! 
+            "Rating": item['rating'] if item['rating'] != 'Not rated' else None, #Important! 
             "Provider": None, 
             "Genres": [item['genre']], #Important!  "Cast": "list", 
             "Directors": None, #Important! 

@@ -193,7 +193,7 @@ class Starz_mk():
             "Cast": cast, 
             "Directors": directors, #Important! 
             "Availability": '', #Important! 
-            "Download": content['downloadable'], 
+            "Download": content['downloadable'] if content['downloadable'] else None, 
             "IsOriginal": content['original'], #Important! 
             "IsAdult": None, #Important! 
             "IsBranded": None, #Important! (ver link explicativo)
@@ -262,7 +262,7 @@ class Starz_mk():
                 "Rating": element.get('ratingCode'), #Important! 
                 "Provider": [element['studio']],
                 "Availability": None, #Important! 
-                "Download": download, 
+                "Download": download if download else None, 
                 "IsOriginal": element['original'], #Important! 
                 "IsAdult": None, #Important! 
                 "IsBranded": None, #Important! (ver link explicativo)
