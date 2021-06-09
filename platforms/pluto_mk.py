@@ -136,7 +136,7 @@ class Pluto_mk():
             }, 
             "Synopsis": item['description'], 
             "Image": [image], 
-            "Rating": item['rating'] if item['rating'] != 'Not rated' else None, #Important! 
+            "Rating": item['rating'] if item['rating'] != 'Not Rated' else None, #Important! 
             "Provider": None, 
             "Genres": [item['genre']], #Important!  "Cast": "list", 
             "Directors": None, #Important! 
@@ -201,7 +201,7 @@ class Pluto_mk():
                     }, 
                     "Synopsis": episode['description'], 
                     "Image": [image], 
-                    "Rating": episode['rating'] if episode['rating'] != 'Not rated' else None, #Important! 
+                    "Rating": episode['rating'] if episode['rating'] != 'Not Rated' else None, #Important! 
                     "Provider": None, 
                     "Genres": [episode['genre']], #Important! 
                     "Directors": None, #Important! 
@@ -237,14 +237,14 @@ class Pluto_mk():
             "Year": None, #Important! 
             "Duration": duration if duration else item['allotment'] / 60,
             "ExternalIds": None,  #No estoy seguro de si es
-            "Deeplinks": { 
+            "Deeplinks": { #
             "Web": deeplink, #Obligatorio 
             "Android": None, 
             "iOS": None, 
             }, 
             "Synopsis": item['summary'], 
             "Image": [image],
-            "Rating": item['rating'] if item['rating'] != 'Not rated' else None, #Important! 
+            "Rating": item['rating'] if item['rating'] != 'Not Rated' else None, #Important! 
             "Provider": None,
             "Genres": [item['genre']], #Important!
             "Cast": None, 
