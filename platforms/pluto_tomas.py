@@ -97,6 +97,7 @@ class Pluto_tomas():
         return content_list
 
     def _movies_payload(self, item):
+        """Metodo que ordena el payload de las movies"""
     
         deeplink = self._get_deep_link('movie', item['slug'], parentTitle= None)
         duration = self._get_duration(item)
@@ -139,6 +140,7 @@ class Pluto_tomas():
         self.payloads.append(payload)
 
     def _series_payload(self, item):
+        """Metodo que ordena el payload de las series"""
 
         deeplink = self._get_deep_link(item['type'],item['slug'], parentTitle=None)
         image = self._get_image(item, 'serie')
@@ -214,6 +216,7 @@ class Pluto_tomas():
         return duration
 
     def get_seasons(self, id, parentTitle):
+        """Metodo que ordena el payload de las seasons"""
 
         season_return = []
 
