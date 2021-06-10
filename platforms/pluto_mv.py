@@ -8,7 +8,7 @@ from common                 import config
 from handle.mongo           import mongo
 from updates.upload         import Upload
 from datetime               import datetime
-
+import pandas
 # from time import sleep
 # import re
  
@@ -89,8 +89,25 @@ class Pluto_mv():
         print(f"{self.titanScraping} {len(self.scraped)}")
         print(f"{self.titanScrapingEpisodios} {len(self.scraped_episodes)}")
         
-        self.get_contents()
-        
+        contents = self.get_contents()
+        for n, items in enumerate(contents):
+            print(f"\n----- Progreso ({n}/{len(contents)}) -----\n")
+            try:
+                if items['type'] == 'movie':                #MOVIE  #bastante ok
+                    self.get_payload(items)
+                else:                                       #SERIE
+                    uri_epi = self.api_season.format(items['_id']) #PORQUE NO ESTA EN AMARILLO? WTF,anda
+                    response_epi = self.request(uri_epi)    #Hago el Request aca.
+                    list_epi = response_epi.json()
+                    self.get_payload(list_epi) 
+            except:
+                print(items)
+                print("Arreglar.")
+
+        self.mongo.insertMany(self.titanScraping, self.payloads)
+        self.mongo.insertMany(self.titanScrapingEpisodios, self.episodes)
+
+
         Upload(self._platform_code, self._created_at, testing=True)
         print("Scraping finalizado")
         self.session.close()
@@ -101,29 +118,36 @@ class Pluto_mv():
         if response.status_code == 200:
             return response
 
-
     def get_contents(self):
         uri = self.api_url
         response = self.request(uri)
         dict_contents = response.json()
         list_categories = dict_contents['categories']
+        #scraped = []
+        content_list = []
         for categories in list_categories:
-            for items in categories['items']:
-                #try:
-                    if items['type'] == 'movie':                #MOVIE  #bastante ok
-                        self.get_payload(items)
+            if categories['items'] in content_list:
+                print('Este contenido ya fue ingresado.')
+                continue
+            else:
+                content_list += categories['items']   
 
-                    else:                                       #SERIE
-                        uri_epi = self.api_season.format(items['_id']) #PORQUE NO ESTA EN AMARILLO? WTF,anda
-                        response_epi = self.request(uri_epi)    #Hago el Request aca.
-                        list_epi = response_epi.json()
+        """Método que trae los contenidos en forma de diccionario.
 
-                        self.get_payload(list_epi) 
-                        
-        self.mongo.insertMany(self.titanScraping, self.payloads)
-        self.mongo.insertMany(self.titanScrapingEpisodios, self.episodes)
+        Returns:
+            list: Lista de diccionarios
+        """
+        content_list = []
+        uri = self.api_url
+        response = self.request(uri)
+        list_categories = response['categories']
+        for categories in list_categories:
+            content_list += categories['items']
 
+        return content_list   
+        
     def get_payload(self,content):
+        
         if content['type'] == 'movie':
             self.movie_payload(content)
         elif content['type'] == 'series':
@@ -133,8 +157,8 @@ class Pluto_mv():
         duration = self.get_duration(element['duration'])
         
         deeplink = self.movie_deeplink(str(element['slug']))
-        image = "FALTA LA FOTO CHABOON"
-        genre = element['genre'].split(" & ")
+        image = self.get_image(element['_id'], element['type'])
+        genre = str(element['genre']).split(" & ")
         print(element['name'])
         payload = { 
             "PlatformCode": str(self._platform_code),#Obligatorio 
@@ -152,7 +176,7 @@ class Pluto_mv():
             "iOS":      None, 
             }, 
             "Synopsis": str(element['summary']), 
-            "Image":    list(image),
+            "Image":    [image],
             "Rating":   str(element['rating']),  #Important! 
             "Provider":     None,
             "Genres":       genre,  #Important!
@@ -163,34 +187,33 @@ class Pluto_mv():
             "IsOriginal":   None,   #Important! 
             "IsAdult":      None,   #Important! 
             "IsBranded":    None,   #Important! (ver link explicativo)
-            "Packages": 'Free',     #Obligatorio 
+            "Packages":     [{'Type':'free-vod'}],     #Obligatorio 
             "Country":      None, 
             "Timestamp":    str(datetime.now().isoformat()),#Obligatorio 
             "CreatedAt":    str(self._created_at),          #Obligatorio
             }
         self.payloads.append(payload)   
         
-
     def serie_payload(self, element):
         
         deeplink = self.serie_deeplink(str(element['slug']))
         seasons = self.get_season(element)
-        genre = element['genre'].split(" & ")
-        image = self.get_image(element["featuredImage"]["path"])
+        genre = str(element['genre']).split(" & ")
+        image = self.get_image(element['_id'], element['type'])
         print(element['name'])
 
         payloads = []
         payload = { 
             "PlatformCode": str(self._platform_code),#Obligatorio #
-            "Id":       str(element['_id']),         #Obligatorio #  
-            "Seasons": str(seasons),                                 ######SEASON
-            "Title":    str(element['name']),        #Obligatorio #
-            "CleanTitle": str(element['name']),      #Obligatorio #
+            "Id":           str(element['_id']),         #Obligatorio #  
+            "Seasons":      str(seasons),                                 ######SEASON
+            "Title":        str(element['name']),        #Obligatorio #
+            "CleanTitle":   str(element['name']),      #Obligatorio #
             "OriginalTitle":None,               
             "Type":         'serie',                #Obligatorio #
             "Year":         None,                   #Important!  #
             "Duration":     None,                                #
-            "ExternalIds": None,             
+            "ExternalIds":  None,             
             "Deeplinks": { 
             "Web":  str(deeplink),                    #Obligatorio#
             "Android":  None, 
@@ -200,7 +223,7 @@ class Pluto_mv():
             "Image":    [image],                                #######IMAGEN
             "Rating":   str(element['rating']),      #Important! 
             "Provider":     None,
-            "Genres":       genre,       #Important!     ##SPLIT GENRE
+            "Genres":       genre,       #           Important!     ##SPLIT GENRE
             "Cast":         None, 
             "Directors":    None,               #Important! 
             "Availability": None,               #Important! 
@@ -208,10 +231,10 @@ class Pluto_mv():
             "IsOriginal":   None, #Important! 
             "IsAdult":      None, #Important! 
             "IsBranded":    None, #Important! (ver link explicativo)
-            "Packages":     'Free', #Obligatorio 
+            "Packages":     [{'Type':'free-vod'}],                   #Obligatorio 
             "Country":      None, 
-            "Timestamp": str(datetime.now().isoformat()), #Obligatorio 
-            "CreatedAt": str(self._created_at), #Obligatorio
+            "Timestamp": str(datetime.now().isoformat()),   #Obligatorio 
+            "CreatedAt": str(self._created_at),             #Obligatorio
             }
         payloads.append(payload)  
 
@@ -219,20 +242,20 @@ class Pluto_mv():
         seasons_dict = []
         seasons = element['seasons']
         for season in seasons:
-            
+            #image = self.get_image(season['_id'], episode['type']) 
             deeplink = self.seasson_deeplink(element['slug'],season['number'])
             season_payload = {
-                "Id": str(element['_id']), #Importante
-                "Synopsis": str(element['description']), #Importante
-                "Title": str(element['name']), #Importante
-                "Deeplink": str(deeplink), #Importante
-                "Number": season['number'], #Importante
-                "Year": None, #Importante
-                "Image": None, ################
-                "Directors": None, #Importante
-                "Cast": None, #Importante
-                "Episodes": len(season['episodes']), #Importante
-                "IsOriginal": None 
+                "Id":       str(element['_id']),        #Importante
+                "Synopsis": str(element['description']),#Importante
+                "Title":    str(element['name']),       #Importante
+                "Deeplink": str(deeplink),              #Importante
+                "Number":   season['number'],           #Importante
+                "Year":     None,   #Importante
+                "Image":    None,                       #no hay image
+                "Directors":None,   #Importante
+                "Cast":     None,   #Importante
+                "Episodes": len(season['episodes']),    #Importante
+                "IsOriginal":None 
             }
             seasons_dict.append(season_payload)
             
@@ -240,8 +263,8 @@ class Pluto_mv():
                             
                 duration = self.get_duration(episode['duration'])           ####
                 deeplink = self.episode_deeplink(element['slug'], season['number'],episode['slug'])                          ####funcionan los self? no entiendo
-                image = self.get_image(element['covers'])
-                genre = element['genre'].split(" & ")
+                image = self.get_image(episode['_id'], episode['type'])
+                genre = str(element['genre']).split(" & ")
 
                 episode_payload = { 
                         "PlatformCode": str(self._platform_code),    #Obligatorio 
@@ -281,7 +304,7 @@ class Pluto_mv():
                         
                 self.episodes.append(episode_payload)
                           
-
+    #Duration
     def get_duration(self, duration):
         return int(duration // 60000)
 
@@ -300,8 +323,10 @@ class Pluto_mv():
         deeplink = "https://pluto.tv/on-demand/series/{}/season/{}/episode/{}".format(slug,number_season, episode_slug)
         return deeplink
 
-    def get_image(self, covers):
-        image = []
-        for img in range(len(covers)):
-            image.append(img['url'])
+    #Image
+    def get_image(self, id, type):
+        if type == 'movie' or 'episode':
+            image = 'https://api.pluto.tv/v3/images/episodes/{}/poster.jpg'.format(str(id))
+        elif type == 'serie':
+            image = 'https://api.pluto.tv/v3/images/series/{}}/poster.jpg'.format(str(id)) 
         return image
