@@ -12,17 +12,6 @@ from datetime import datetime
 
 class Pluto_mk():
     """
-    PlutoTv es una ott de Estados Unidos.
-
-    DATOS IMPORTANTES:
-    - VPN: No 
-    - ¿Usa Selenium?: No
-    - ¿Tiene API?: Si: Dos. Una para las movies y series y otra para los episodios.
-    - ¿Usa BS4?: No
-    - ¿Se relaciona con scripts TP? No
-    - ¿Instanacia otro archivo de la carpeta "platforms"?: No
-    - ¿Cuanto demoró la ultima vez? 2 min el 09/06/2021
-    - ¿Cuanto contenidos trajo la ultima vez? 1,494 series y movies, 19,512 episodios
     """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self.ott_site_uid = ott_site_uid
@@ -59,6 +48,8 @@ class Pluto_mk():
             
     def query_field(self, collection, field=None):
         """Método que devuelve una lista de una columna específica
+        de la bbdd.
+
         Args:
             collection (str): Indica la colección de la bbdd.
             field (str, optional): Indica la columna, por ejemplo puede ser
@@ -88,12 +79,6 @@ class Pluto_mk():
         return query
     
     def _scraping(self, testing=False):
-        """
-        Método principal, desde donde se llaman a los demas metodos y se hacen los inserts a la db
-        Args:
-            self
-            testing: True si es un test
-        """
         self.payloads = []
         self.episodes_payloads = []
         # Listas de contentenido scrapeado:
@@ -129,30 +114,17 @@ class Pluto_mk():
         self.session.close()
 
     def serie_payload(self, item):
-        """
-        Método para definir el payload de la serie enviada por parametro
-        Args:
-            item = dict con la metadata necesaria (de una serie) para hacer el payload
-        Returns:
-            No tiene return pero al final del metodo se hace un append a la lista self.payloads
-            y deja el contenido listo para insertar en la db
-        """
-        try:
-            genres = item['genres'].split(' & ')
-        except:
-            genres = item['genres']
         deeplink = self.get_deeplink(item, 'serie')
         image = self.get_image(item, 'serie')
-        cleanTitle = _replace(item['name'])
         print('Serie: ' + item['name'])
-        seasons = self.get_seasons(item['_id'], cleanTitle)
+        seasons = self.get_seasons(item['_id'], item['slug'])
         serie_payload = {
             "PlatformCode": self._platform_code, #Obligatorio 
             "Id": item['_id'], #Obligatorio
             "Seasons": seasons,
             "Title": item['name'], #Obligatorio 
-            "CleanTitle": cleanTitle, #Obligatorio 
-            "OriginalTitle": None, 
+            "CleanTitle": _replace(item['name']), #Obligatorio 
+            "OriginalTitle": item['name'], 
             "Type": 'serie', #Obligatorio 
             "Year": None, #Important! 
             "Duration": None, 
@@ -164,16 +136,16 @@ class Pluto_mk():
             }, 
             "Synopsis": item['description'], 
             "Image": [image], 
-            "Rating": item['rating'] if item['rating'] != 'Not Rated' else None, #Important! 
+            "Rating": item['rating'], #Important! 
             "Provider": None, 
-            "Genres": genres, #Important! 
-            "Cast": None, 
+            "Genres": [item['genre']], #Important!  "Cast": "list", 
             "Directors": None, #Important! 
             "Availability": None, #Important! 
             "Download": None, 
             "IsOriginal": None, #Important! 
             "IsAdult": None, #Important! 
             "IsBranded": None, #Important! (ver link explicativo)
+            # "Packages": "Free", #Obligatorio 
             "Packages": [{'Type':'free-vod'}],
             "Country": None, 
             "Timestamp": datetime.now().isoformat(), #Obligatorio 
@@ -182,16 +154,6 @@ class Pluto_mk():
         self.payloads.append(serie_payload)
     
     def get_seasons(self, id, parentTitle):
-        """
-        Método para obtener las temporadas de una serie y devolverlas como un return
-        Tambien hace un payload de episodio, y le hace un append al self.episode_payload 
-        para que quede listo para insertar el episodio a la base de datos
-        Args:
-            item = dict con la metadata necesaria (de una serie) para obtener las seasons de la serie
-            y luego los episodios de cada temporada. 
-        Returns:
-            Devuelve las temporadas de una serie
-        """
         season_return = []
         uri = self.season_url + str(id) + '/seasons?deviceType=web' 
         items = self.request(uri)
@@ -219,7 +181,7 @@ class Pluto_mk():
             self.episodios = 0
             for episode in season['episodes']:
                 duration = self.get_duration(episode)
-                deeplink = self.get_deeplink(episode, 'episode', season['number'], parentTitle)
+                deeplink = self.get_deeplink(episode, 'episode', season, parentTitle)
                 image = self.get_image(episode, 'episode')
                 episode_payload = { 
                     "PlatformCode": self._platform_code, #Obligatorio 
@@ -227,11 +189,14 @@ class Pluto_mk():
                     "ParentId": id, #Obligatorio #Unicamente en Episodios
                     "ParentTitle": parentTitle, #Unicamente en Episodios 
                     "Episode": episode['number'] if episode['number'] != 0 else None, #Obligatorio #Unicamente en Episodios 
-                    "Season": episode['season'] if episode['season'] < 1000 else None, #Obligatorio #Unicamente en Episodios
+                    "Season": episode['season'], #Obligatorio #Unicamente en Episodios
                     "Title": episode['name'], #Obligatorio 
-                    "OriginalTitle": None,  
+                    # "CleanTitle": episode['slug'], #Obligatorio 
+                    "OriginalTitle": episode['name'], 
+                    # "Type": episode['type'], #Obligatorio 
                     "Year": None, #Important! 
-                    "Duration": duration if duration else episode['allotment'] / 60,
+                    "Duration": duration,
+                    # "ExternalIds": deeplink,
                     "Deeplinks": { 
                     "Web": deeplink, #Obligatorio 
                     "Android": None, 
@@ -239,7 +204,7 @@ class Pluto_mk():
                     }, 
                     "Synopsis": episode['description'], 
                     "Image": [image], 
-                    "Rating": episode['rating'] if episode['rating'] != 'Not Rated' else None, #Important! 
+                    "Rating": episode['rating'], #Important! 
                     "Provider": None, 
                     "Genres": [episode['genre']], #Important! 
                     "Directors": None, #Important! 
@@ -258,16 +223,9 @@ class Pluto_mk():
         ('Temporadas: ' + str(self.totalSeasons))
         print('Episodios: ' + str(self.episodios))
         return season_return
-             
+            
+      
     def movie_payload(self, item):
-        """
-        Método para definir el payload de la pelicula enviada por parametro
-        Args:
-            item = dict con la metadata necesaria (de una pelicula) para hacer el payload
-        Returns:
-            No tiene return pero al final del metodo se hace un append a la lista self.payloads
-            y deja el contenido listo para insertar en la db
-        """
         deeplink = self.get_deeplink(item, 'movie')
         duration = self.get_duration(item)
         image = self.get_image(item, 'movie')
@@ -277,19 +235,19 @@ class Pluto_mk():
             "Id": item['_id'], #Obligatorio
             "Title": item['name'], #Obligatorio 
             "CleanTitle": _replace(item['name']), #Obligatorio 
-            "OriginalTitle": None, 
+            "OriginalTitle": item['name'], 
             "Type": item['type'], #Obligatorio 
             "Year": None, #Important! 
-            "Duration": duration if duration else item['allotment'] / 60,
+            "Duration": duration,
             "ExternalIds": None,  #No estoy seguro de si es
-            "Deeplinks": { #
+            "Deeplinks": { 
             "Web": deeplink, #Obligatorio 
             "Android": None, 
             "iOS": None, 
             }, 
             "Synopsis": item['summary'], 
             "Image": [image],
-            "Rating": item['rating'] if item['rating'] != 'Not Rated' else None, #Important! 
+            "Rating": item['rating'], #Important! 
             "Provider": None,
             "Genres": [item['genre']], #Important!
             "Cast": None, 
@@ -308,70 +266,37 @@ class Pluto_mk():
         self.payloads.append(payload)
         
     def get_image(self, item, type):
-        """
-        Método obtener la imagen del elemento
-        Args:
-            item = dict con la metadata del elemento del cual necesitamos obtener la imagen
-            type = Tipo de elemento, el cual puede ser movie, serie o episode
-        Returns:
-            devuelve un string con la imagen del elemento
-        """
         if type == 'movie':
             image = 'https://api.pluto.tv/v3/images/episodes/' + str(item['_id']) + '/poster.jpg'
         elif type == 'serie':
             image = 'https://api.pluto.tv/v3/images/series/' + str(item['_id']) + '/poster.jpg' 
         elif type == 'episode':
-            image = 'https://images.pluto.tv/episodes/' + str(item['_id']) + '/screenshot16_9.jpg'
+            image = 'https://api.pluto.tv/v3/images/episodes/' + str(item['_id']) + '/poster.jpg'
         return image
     
     def get_duration(self, item):
-        """
-        Método para obtener la duracion de un elemento
-        Args:
-            item = dict con la metadata del elemento para calcular la duracion
-        Returns:
-            devuelve la duracion
-        """
         duration = int((item['duration']) / 60000)
         return duration
         
     def get_deeplink(self, item, type, season = None, parentTitle = None):
-        """
-        Método para obtener el deeplink del elemento enviado por parametro
-        Args:
-            item = dict con la metadata del elemento del cual necesitamos obtener el deeplink
-            type = tipo de elemento (serie, season, movie o episode)
-            season = por default es None, es para los deeplinks de episodios y series que necesitan
-            el nro de temporada
-            parentTitle - al igual que season, es para los episodios y series, que necesitan el parent Title
-            del elemento
-        Returns:
-            devuelve un string con el deeplink
-        """
         if type == 'movie':
             deeplink = 'https://pluto.tv/on-demand/movies/' + item['slug']
         elif type == 'serie':
             deeplink = 'https://pluto.tv/on-demand/series/' + item['slug']
         elif type == 'episode':
-            deeplink = 'https://pluto.tv/on-demand/series/' + parentTitle + '/season/' + str(season) + '/episode/' + str(item['slug'])
+            deeplink = 'https://pluto.tv/on-demand/series/' + parentTitle + '/episode/' + str(item['slug'])
         elif type == 'season':
             deeplink = 'https://pluto.tv/on-demand/series/' + parentTitle + '/season/' + str(season)
-        return deeplink.lower()
+        return deeplink
 
     def request(self, uri):
-        """
-        Método para obtener una request y abrir una session
-        Args:
-            uri = la uri a la cual le vamos a hacer el request
-        Returns:
-            devuelve un dict con los contenidos en formato json
-        """
         response = self.session.get(uri)
         contents = response.json()
         return contents
 
     def get_contents(self):
         """Método que trae los contenidos en forma de diccionario.
+
         Returns:
             list: Lista de diccionarios
         """
