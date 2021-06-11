@@ -146,6 +146,7 @@ class Pluto_tomas():
         image = self._get_image(item, 'serie')
         print('Serie: ' + item['name'])
         seasons = self.get_seasons(item['_id'], item['slug'])
+        #year = self._get_year(item)
 
         serie_payload = {
             
@@ -363,6 +364,3 @@ class Pluto_tomas():
 
         return image
 
-    # def _get_year(self, item):
-    #     year = int()
-    #     for i

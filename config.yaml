@@ -366,6 +366,7 @@ ott_sites:
     countries:
       AR: ar.starz
     api_url: https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/content
+    
   PlutoCapacitacion: # PRUEBA
     countries:
       AR: ar.pluto
@@ -380,7 +381,16 @@ ott_sites:
 
   Starz_mk: 
     countries:
+<<<<<<< HEAD
+      AR: ar.starz
+      api_url: https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/content
+
+  Pluto_ari: #Prueba
+    countries:
+       AR: ar.pluto
+=======
        AR: ar.starz
+>>>>>>> d134580a350d9548c57d4e047cee5baac99f94be
     api_url: https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/content
   Pluto_gg:
     countries:
@@ -415,9 +425,18 @@ ott_sites:
   StarzCapacitacion:
     countries:
       AR: ar.starz
+<<<<<<< HEAD
     api_url: https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/blocks?playContents=map&lang=es-419&pages=BROWSE,HOME,MOVIES,PLAYLIST,SEARCH,SEARCH%20RESULTS,SERIES&&includes=childContent,properCaseTitle,logLine,releaseYear,genres,ratingCode,audioType,free,newContent,comingSoon,runtime,contentId,title,order,topContentId,titleBrief,contentType,seasonNumber,mediaId,seriesName,credits,product
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> 727e393c77b95066b4be06fc3d48971f7c19b26e
 
   Starz_panda:
     countries:
       AR: ar.starz
+<<<<<<< HEAD
     api_url: https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/blocks?playContents=map&lang=es-419&pages=BROWSE,HOME,MOVIES,PLAYLIST,SEARCH,SEARCH%20RESULTS,SERIES&&includes=childContent,properCaseTitle,logLine,releaseYear,genres,ratingCode,audioType,free,newContent,comingSoon,runtime,contentId,title,order,topContentId,titleBrief,contentType,seasonNumber,mediaId,seriesName,credits,product
+=======
+>>>>>>> d134580a350d9548c57d4e047cee5baac99f94be
+>>>>>>> 727e393c77b95066b4be06fc3d48971f7c19b26e
