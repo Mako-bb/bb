@@ -1,3 +1,5 @@
+from requests.models import Response
+from requests.sessions import session
 from handle.payload import Payload
 import time
 import requests
@@ -27,7 +29,6 @@ class Starz_panda():
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
 
         self.api_url = self._config['api_url']
-        self.api_series = self._config['api_series']
         self.session = requests.session()
 
         if type == 'return':
@@ -48,8 +49,73 @@ class Starz_panda():
             self._scraping()
 
         if type == 'testing':
-            self.request_series
             self._scraping(testing=True)
-           
-                    
-    #def _scraping(self, testing=False):
+
+    def query_field(self, collection, field=None):
+        """Método que devuelve una lista de una columna específica
+        de la bbdd.
+
+        Args:
+            collection (str): Indica la colección de la bbdd.
+            field (str, optional): Indica la columna, por ejemplo puede ser
+            'Id' o 'CleanTitle. Defaults to None.
+
+        Returns:
+            list: Lista de los field encontrados.
+        """
+        find_filter = {
+            'PlatformCode': self._platform_code,
+            'CreatedAt': self._created_at
+        }
+
+        find_projection = {'_id': 0, field: 1, } if field else None
+
+        query = self.mongo.db[collection].find(
+            filter=find_filter,
+            projection=find_projection,
+            no_cursor_timeout=False
+        )
+
+        if field:
+            query = [item[field] for item in query if item.get(field)]
+        else:
+            query = list(query)
+
+        return query
+
+    def _scraping(self, testing=False):
+        # Listas de contentenido scrapeado:
+        self.scraped = self.query_field(self.titanScraping, field='Id')                #estudiar
+        self.scraped_episodes = self.query_field(self.titanScrapingEpisodios, field='Id')
+
+        payload = []
+        payload_episodes = []
+        dict_contents = self.request()
+        contents = self.get_contents(dict_contents)
+        for id in contents['id']:
+            print(id) 
+
+       
+    def request(self):
+        """Método que realiza una peticion a la api y devielve el contenido en forma de diccionario"""
+        uri = self.api_url
+        response = self.session.get(uri)
+        dict_contents = response.json()
+        return dict_contents
+
+    def get_contents(self, dict_contents):
+
+        content_list = []
+        for play_contents in dict_contents['blocks']:
+            for content in play_contents['blocks']:
+                if content['blockType'] == str:
+                    continue
+                #for categorie in
+        #return content_list
+
+
+   
+
+    
+    
+    
