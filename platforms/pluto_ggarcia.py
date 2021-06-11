@@ -1,3 +1,4 @@
+from handle.payload import Payload
 import time
 import requests
 from handle.replace         import _replace
@@ -53,40 +54,71 @@ class Pluto_gg():
                     
     def _scraping(self, testing=False):
         """Método que realiza el scraping y controla los duplicados """
-        payloads = []
-        payload_episodes = []
-        dict_metadata = {}
-        for categorie in self._get_contents():
+        self.movies = []
+        self.series = []
+        self.payloads = []
+        self.payload_episodes = []
+        self.scraped = []
+        for categorie in self._get_categories():#
             items_list = categorie['items']
             for _item in items_list:
+                if _item['type'] == 'movie':
                     payload = self.get_payloads(_item)
-                    if payload in payloads:
-                        print('se pudrio')
-                        continue
+                    if payload in self.payloads:
+                        print('-------------------------' + payload['Title'] + 'ya esta scrapeado')
                     else:
-                        payloads.append(payload)
-                        self.mongo.insert(self.titanScraping, payload)
-                        print(f"Se ingreso {payload} correctamente")
-                        if _item['type'] != 'movie': 
-                            episode =  self.get_payloadepisode(_item['slug'])
-                            if episode in payload_episodes:
-                                continue
-                            else:
-                                result = self.get_payloadepisode(_item['slug'])
-                                if result == None:
-                                    continue
-                                payload_episodes.append(episode)
-                                self.mongo.insert(self.titanScrapingEpisodios, episode)
-                                print(f"Se ingreso {episode} correctamente")  
-            
+                        self.payloads.append(payload)
+                        self.movies.append(payload)
+                    #self.scraped.append(_item)
+                    #self.mongo.insert(self.titanScraping, payload)
+                        print(f"Se scrapeó {payload['Title']} correctamente")
+                        print('Cantidad de ' + payload['Type'] +  ' scrapeadas')
+                        print(len(self.movies))
+                        print('---------------------------')   
+                elif _item['type'] == 'series':
+                    serie_payload = self.get_serie_payload(_item)
+                    if serie_payload != None:
+                        if serie_payload in self.payloads:
+                            print('Esta serie ya fue scrapeadad')
+                        else:    
+                            #self.series.append(serie_payload)
+                            self.payloads.append(serie_payload)
+                            self.series.append(serie_payload) 
+                            print(f"Se ingreso {serie_payload['Title']} correctamente")
+                            print(len(self.series))
+                            #print(serie_payload['Title'] + 'fue scrapeada correctamente')
+                            #print('---------------------------')
+                    else:
+                        print('Error = 404')
+                        continue 
+        print('------------------------')
+        print('Total de peliculas: ')
+        print( len(self.movies))
+        print('------------------------')
+        print('Total de series: ')
+        print(len(self.series))
+        print('------------------------')       
+        if self.payloads:
+            for payload in self.payloads:
+                self.mongo.insert(self.titanScraping, payload)
+        else: 
+            print('------------------Nada mas para ingresar-----------------')
+        if self.payload_episodes:
+            for episode_payload in self.payload_episodes:
+                self.mongo.insert(self.titanScrapingEpisodios, episode_payload)
+        else: 
+            Upload(self._platform_code, self._created_at, testing=True)
+            print('------------------Nada mas para ingresar-----------------')
+            print("Fin")
+            self.session.close()
 
-    def _get_contents(self):
-        """Método que trae un diccionario de contenidos """
+    def _get_categories(self):
+        """Método que trae una lista de categorias """
         list_categories = self.request().json()
         dict_contents = list_categories['categories']
         return dict_contents
 
-
+  
     def request(self): 
        """metodo para hacer una peticion a un servidor"""
 
@@ -94,64 +126,205 @@ class Pluto_gg():
        response = self.session.get(uri)
        return response  
 
-    def request_series(self, slug):
-        """Método que hace requests y devielve una lista de temporadas
+    def request_series(self, _item):
+        """Método que hace requests y devielve un diccionario
         Esta funcion rompe en una parte, casi al final de extraer todos los contenidos ###revisar """
-        uri_series = self.api_series + slug
+        uri_series = self.api_series + _item['slug']
         response = self.session.get(uri_series)
         if response.status_code != 200:
-            try:
-                request_timeout = 5
-                response = self.session.get(uri_series, timeout=request_timeout)
-            except:
-                return None
+            #try:
+                #request_timeout = 5
+                #response = self.session.get(uri_series, timeout=request_timeout)
+            #except:
+            return None
 
         dict_seasons = response.json()
-        seasons = dict_seasons['seasons']
-        return seasons            
-            
-    def get_payloadepisode(self, slug):
-        """Método que trae payloads por episodio """
-        season = self.request_series(slug)
-        if season == None:
+        return dict_seasons            
+
+    def get_seasons(self, serie, _item, id):
+        season_payloads = []
+        name = _item['name']
+        total_seasons = 0
+        if serie:
+            for season in serie['seasons']:
+                total_seasons += 1
+                synopsis = serie['summary']
+                deeplink = self.get_deeplink(_item, season=season, parentTitle=_item['slug'])
+                season_payload = {
+                    "Id": None, #Importante
+                    "Synopsis": synopsis, #Importante
+                    "Title": name, #Importante, E.J. The Wallking Dead: Season 1
+                    "Deeplink": deeplink, #Importante
+                    "Number": season['number'], #Importante
+                    "Year": None, #Importante
+                    "Image": None, 
+                    "Directors": None, #Importante
+                    "Cast": None, #Importante
+                    "Episodes": len(season['episodes']), #Importante
+                    "IsOriginal": None 
+                },
+                self.payloads.append(season_payload)
+                self.episodios = 0
+                
+                for episode in season['episodes']:
+                    duration = self.get_duration(episode)
+                    deeplink = self.get_deeplink(episode, season=season, parentTitle=_item['slug']) 
+                    image = self.get_image(_item, episode=episode)
+                    parentTitle = _item['slug']
+                    episode_payload = { 
+                        "PlatformCode": self._platform_code, #Obligatorio 
+                        "Id": episode['_id'], #Obligatorio
+                        "ParentId": id, #Obligatorio #Unicamente en Episodios
+                         "ParentTitle": parentTitle, #Unicamente en Episodios 
+                        "Episode": episode['number'] if episode['number'] != 0 else None, #Obligatorio #Unicamente en Episodios 
+                        "Season": episode['season'], #Obligatorio #Unicamente en Episodios
+                        "Title": episode['name'], #Obligatorio 
+                        "CleanTitle": episode['slug'], #Obligatorio 
+                        "OriginalTitle": episode['name'], 
+                        "Type": episode['type'], #Obligatorio 
+                        "Year": None, #Important! 
+                        "Duration": duration,
+                        "ExternalIds": deeplink,
+                        "Deeplinks": { 
+                        "Web": deeplink, #Obligatorio 
+                        "Android": None, 
+                        "iOS": None, 
+                        }, 
+                        "Synopsis": episode['description'], 
+                        "Image": [image], 
+                        "Rating": episode['rating'], #Important! 
+                        "Provider": None, 
+                        "Genres": [episode['genre']], #Important! 
+                        "Directors": None, #Important! 
+                        "Availability": None, #Important! 
+                        "Download": None, 
+                        "IsOriginal": None, #Important! 
+                        "IsAdult": None, #Important! 
+                        "IsBranded": None, #Important! (ver link explicativo)
+                        "Packages": [{'Type':'free-vod'}], #Obligatorio 
+                        "Country": None, 
+                        "Timestamp": datetime.now().isoformat(), #Obligatorio 
+                        "CreatedAt": self._created_at, #Obligatorio
+                        }
+                    if episode_payload in self.payload_episodes:
+                        continue
+                    else:
+                        self.payload_episodes.append(episode_payload)
+                        self.episodios += 1
+            return season_payloads 
+        else:
+            return None  
+
+    def get_serie_payload(self, _item):
+        serie = self.request_series(_item)
+        if serie:
+            seasons = self.get_seasons(serie, _item, _item['_id'])
+            deeplink = self.get_deeplink(_item, serie['slug'])
+            #image = self.get_image(_item)
+            serie_payload = {
+                "PlatformCode": self._platform_code, #Obligatorio 
+                "Id": _item['_id'], #Obligatorio
+                "Seasons": len(seasons),
+                "Title": _item['name'], #Obligatorio  
+                "CleanTitle": _replace(_item['name']), #Obligatorio 
+                "OriginalTitle": _item['name'], 
+                "Type": 'serie', #Obligatorio 
+                "Year": None, #Important! 
+                "Duration": None, 
+                "ExternalIds": None, 
+                "Deeplinks": { 
+                "Web": deeplink, #Obligatorio 
+                "Android": None, 
+                "iOS": None, 
+                }, 
+                "Synopsis": _item['description'], 
+                #"Image": [image], 
+                "Rating": _item['rating'], #Important! 
+                "Provider": None, 
+                "Genres": [_item['genre']], #Important!  "Cast": "list", 
+                "Directors": None, #Important! 
+                "Availability": None, #Important! 
+                "Download": None, 
+                "IsOriginal": None, #Important! 
+                "IsAdult": None, #Important! 
+                "IsBranded": None, #Important! (ver link explicativo)
+                # "Packages": "Free", #Obligatorio 
+                "Packages": [{'Type':'free-vod'}],
+                "Country": None, 
+                "Timestamp": datetime.now().isoformat(), #Obligatorio 
+                "CreatedAt": self._created_at, #Obligatorio
+            }
+            return serie_payload
+        else:
             return None
-        for episodes in season['episodes']:
-            payload_episode = {'Id': episodes['_id'],
-                'Episode': episodes['name'],
-                'season': episodes['season'],}
-            return payload_episode
+    
 
-
-
+   
 
     def get_payloads(self, _item):
         """Metodo que genera payloads por contenido """ 
-       
-            
-        payload = {}
-        payload["Id"] = _item['_id']
-        payload["Title"] = _item['name']
-        payload["Type"] = _item['type']
-        payload["Duración"] = self.get_duration(_item.get('duration'))
-        payload['Synopsis'] = _item['description']
-        payload["Year"] = _item.get('year')
-        payload['Rating'] = _item['rating']
-        payload["Género"] = _item['genre']
-        payload['Directors'] = _item.get('directors')
-        payload["CleanTitle"] = _replace(_item['name'])
-        payload['Deeplinks'] = {
-                    "Web": self.api_series + _item['slug'], 
-                    "Android": None,
-                    "iOS": None,
-                                }
-        payload['Timestamp']= datetime.now().isoformat()
+      
+        deeplink = self.get_deeplink(_item, 'movie')
+        duration = self.get_duration(_item)
+        image = self.get_image(_item)
+        #print('Movie: ' + _item['name'])
+        payload = { 
+            "PlatformCode": self._platform_code, #Obligatorio 
+            "Id": _item['_id'], #Obligatorio
+            "Title": _item['name'], #Obligatorio 
+            "CleanTitle": _replace(_item['name']), #Obligatorio 
+            "OriginalTitle": _item['name'], 
+            "Type": _item['type'], #Obligatorio 
+            "Year": None, #Important! 
+            "Duration": duration,
+            "ExternalIds": None,  #No estoy seguro de si es
+            "Deeplinks": { 
+            "Web": deeplink, #Obligatorio 
+            "Android": None, 
+            "iOS": None, 
+            }, 
+            "Synopsis": _item['summary'], 
+            "Image": [image],
+            "Rating": _item['rating'], #Important! 
+            "Provider": None,
+            "Genres": [_item['genre']], #Important!
+            "Cast": None, 
+            "Directors": None, #Important! 
+            "Availability": None, #Important! 
+            "Download": None, 
+            "IsOriginal": None, #Important! 
+            "IsAdult": None, #Important! 
+            "IsBranded": None, #Important! (ver link explicativo)
+            # "Packages": 'Free', #Obligatorio 
+            "Packages": [{'Type':'free-vod'}],
+            "Country": None, 
+            "Timestamp": datetime.now().isoformat(), #Obligatorio 
+            "CreatedAt": self._created_at, #Obligatorio
+            }
+      #  self.payloads.append(payload)
         return payload
       
-
+    def get_image(self, _item, episode=None):
+        if _item['type'] == 'movie':
+            image = 'https://api.pluto.tv/v3/images/episodes/' + str(_item['_id']) + '/poster.jpg'
+        elif _item['type'] == 'serie':
+            image = ['https://api.pluto.tv/v3/images/series/' + str(_item['_id']) + '/poster.jpg'] 
+        elif episode:
+            image = _item['featuredImage']
+        return image
     
-    def get_duration(self, payload):
+    def get_deeplink(self, _item,  season = None, parentTitle = None):
+        if _item['type'] == 'movie':
+            deeplink = 'https://pluto.tv/on-demand/movies/' + _item['slug']
+        elif _item['type'] == 'series':
+            deeplink = 'https://pluto.tv/on-demand/series/' + _item['slug']
+        elif _item['type'] == 'episode':
+            deeplink = 'https://pluto.tv/on-demand/series/' + parentTitle + '/episode/' + str(_item['slug'])
+        elif _item['type'] == 'season':
+            deeplink = 'https://pluto.tv/on-demand/series/' + parentTitle + '/season/' + str(season)
+        return deeplink
+
+    def get_duration(self, _item):
         """Método que convierte la duración en horas(?)"""
-        if payload == 0:
-            return None
-        else:
-            return None
+        duration = int((_item['duration']) / 60000)
+        return duration

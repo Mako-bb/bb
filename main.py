@@ -3,8 +3,8 @@ from platforms.amazon_login import AmazonLogin
 
 from platforms.pluto_tomas import Pluto_tomas
 
-
-
+from platforms.pluto_ariel import Pluto_ari
+from platforms.pluto_mv import Pluto_mv
 from platforms.optimum_test import OptimumTest
 from platforms.boomerang import Boomerang
 from platforms.fandango import FandangoNOW
@@ -37,20 +37,18 @@ from platforms.pantaya import Pantaya
 from platforms.cartoonnetwork import CartoonNetwork
 from platforms.fandango import FandangoNOW
 from platforms.boomerang import Boomerang
-from platforms.optimum_test         import OptimumTest
-from platforms.amazon_login         import AmazonLogin
-from platforms.abc                  import Abc
-from platforms.hbo_prueba           import HboPrueba
-from platforms.pluto_capacitacion   import PlutoCapacitacion
-from platforms.pluto_ggarcia        import Pluto_gg
-from platforms.hbo_prueba           import HboPrueba
-
-from platforms.starz_capacitacion   import StarzCapacitacion
+from platforms.optimum_test import OptimumTest
+from platforms.amazon_login import AmazonLogin
+from platforms.abc import Abc
+from platforms.hbo_prueba import HboPrueba
+from platforms.pluto_capacitacion import PlutoCapacitacion
+from platforms.pluto_ggarcia import Pluto_gg
 from platforms.pluto_mk import Pluto_mk
 from platforms.starz_mk import Starz_mk
 from platforms.pluto_mv             import Pluto_mv
 from platforms.starz_mv             import Starz_mv
 from platforms.starz_tom import Starz
+from platforms.starz_panda import Starz_panda
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
