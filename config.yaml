@@ -415,3 +415,7 @@ ott_sites:
   StarzCapacitacion:
     countries:
       AR: ar.starz
+
+  Starz_panda:
+    contries:
+      AR: ar.starz
