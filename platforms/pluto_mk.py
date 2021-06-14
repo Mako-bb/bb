@@ -1,11 +1,9 @@
 import time
 from pymongo.message import insert
-import requests
-import ast
 from handle.replace import _replace
 from common import config
 from handle.mongo import mongo
-from updates.upload         import Upload
+from updates.upload import Upload
 from datetime import datetime
 # from time import sleep
 # import re
