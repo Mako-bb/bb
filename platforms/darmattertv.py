@@ -94,21 +94,25 @@ class DarkMattertv():
             list_content = contents['objects']
             contents_list.append(list_content)
 
+
         self.scraped = self.query_field(self.titanScraping, field='Id')
         #self.scraped_episodes = self.query_field(self.titanScrapingEpisodios, field='Id')
         print(f"{self.titanScraping} {len(self.scraped)}")
         #print(f"{self.titanScrapingEpisodios} {len(self.scraped_episodes)}")
+        
 
         for n, item in enumerate(contents_list) :
+            
+            self._movies_payload(item)
 
-            print(f"\n----- Progreso ({n}/{len(contents_list)}) -----\n")            
-            if item['id'] in self.scraped:
-                print(item['name'] + ' ya esta scrapeado!')
-                continue
-            else:
-                self.scraped.append(item['id'])
-                if (item['type']) == 'video':
-                    self._movies_payload(item)
+            # print(f"\n----- Progreso ({n}/{len(contents_list)}) -----\n")            
+            # if item['_id'] in self.scraped:
+            #     print(item['name'] + ' ya esta scrapeado!')
+            #     continue
+            # else:
+            #     self.scraped.append(item['_id'])
+            #     if (item['type']) == 'video':
+
 
         if self.payloads:
             self.mongo.insertMany(self.titanScraping, self.payloads)
@@ -119,7 +123,7 @@ class DarkMattertv():
         # else:
         #     print(f'\n---- Ningun episodio para insertar a la base de datos ----\n')
 
-        Upload(self._platform_code, self._created_at, testing=True)
+        #Upload(self._platform_code, self._created_at, testing=True)
 
         print("Scraping finalizado")
         self.session.close()
@@ -133,6 +137,7 @@ class DarkMattertv():
         """
         response = self.request(uri_formated, headers=self.headers)
         dict_contents = response.json()
+        print(dict_contents)
 
         return dict_contents
 
@@ -171,10 +176,9 @@ class DarkMattertv():
 
         """Metodo que ordena el payload de las movies"""
     
-
         # duration = self._get_duration(item)
         # image = self._get_image('movie', item)
-        # print('Movie: ' + item['name'])ç
+        # print('Movie: ' + item['name'])
         deeplink = self._get_deep_link(items)
         genres = self._get_genres(items)
         cast = self._get_cast(items)
@@ -182,10 +186,7 @@ class DarkMattertv():
 
         for item in items:
 
-
-
-
-            payload = { 
+            payload = {
 
                 "PlatformCode": self._platform_code, 
                 "Id": item['id'], 
@@ -193,7 +194,7 @@ class DarkMattertv():
                 "CleanTitle": _replace(item['name']),  
                 "OriginalTitle": item['name'], 
                 "Type":'movie', #plataforma solo de movies  
-                #"Year": int(item['year']), 
+                #"Year": item['year] 
                 "Duration": int(item['duration'])/60,
                 "ExternalIds": None,
                 "Deeplinks": { 
@@ -223,7 +224,7 @@ class DarkMattertv():
     def _get_deep_link(self, items):
 
         for item in items:
-            deep_links = {'video_url' : item['video_url'], 'download_url' : item['download_url']}
+            deep_links = item['progressive_url']
         return deep_links
 
     def _get_genres(self, items):
