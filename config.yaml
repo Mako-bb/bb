@@ -425,10 +425,13 @@ ott_sites:
   StarzCapacitacion:
     countries:
       AR: ar.starz
-<<<<<<< HEAD
-=======
 
   Starz_panda:
     contries:
       AR: ar.starz
->>>>>>> d134580a350d9548c57d4e047cee5baac99f94be
+  
+   DarkMattertv:
+    countries:
+      AR: ar.darkmatter
+    start_url: https://www.darkmattertv.com/?
+    api_url: https://api-ott.darkmattertv.com/getreferencedobjects?&auth_token=27e87908-8537-4350-8775-eec416fa12a4&banners=0&connection=wifi&device_type=desktop&for_user=0&image_format=poster&image_width=213&is_af_request=0&language=es&max=18&parent_id={}&parent_type=collection&partner=internal&platform=web&timestamp=1623685147&use_device_width_widescreen=1&version=11.0
