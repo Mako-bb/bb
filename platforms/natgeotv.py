@@ -1,6 +1,7 @@
 import time
 from pymongo.message import insert
 import requests
+from bs4 import BeautifulSoup
 import ast
 from handle.replace import _replace
 from common import config
@@ -50,12 +51,19 @@ class Natgeotv():
         metadata = self.get_contents(self.api_url)
         for element in metadata:
             for content in [element]:
-                self.payload(content)
-
-    def payload(self, content):
+                soup = self.bs4request(("https://www.nationalgeographic.com" + content["link"]["urlValue"]))
+                isSerie = self.season_request(soup)
+                if isSerie:                   # SI TIENE SEASONS, ES PORQUE ES UNA SERIE. SINO, ES UN EPISODIO
+                    self.serie_payload(content, isSerie)
+                else:
+                    print('es un episodio')
+                
+    def serie_payload(self, content, seasons):
+        print("ES UNA SERIE")
         payload = {
-            "PlatformCode": "us.natgeotv",
+            "PlatformCode": "us.national-geographic",
             "Id": content["show"]["id"],
+            #"Seasons": seasons,
             "Title": content["show"]["title"],
             "CleanTitle": _replace(content["show"]["title"]),
             "OriginalTitle": content["show"]["title"], 
@@ -69,7 +77,25 @@ class Natgeotv():
                 "iOS": None,
                 }
         }            
-        print(payload)
+        
+    def season_request(self, soup):
+        allSeasons = soup.find_all('span', class_='titletext')
+        seasons = []
+        for season in allSeasons:
+            season = season.text.strip()
+            if season != 'You May Also Like':
+                seasons.append(season)
+            else:
+                pass
+        return seasons
+        
+            
+
+    def bs4request(self, uri):
+        page = requests.get(uri)
+        soup = BeautifulSoup(page.content, 'html.parser')
+        return soup
+
 
     def request(self, uri):
         response = self.session.get(uri)
