@@ -2,9 +2,9 @@ import time
 from pymongo.message import insert
 import requests
 from bs4 import BeautifulSoup
-import ast
 from handle.replace import _replace
 from common import config
+from re import split
 from handle.mongo import mongo
 from updates.upload         import Upload
 from datetime import datetime
@@ -55,17 +55,17 @@ class Natgeotv():
                 soup = self.bs4request(("https://www.nationalgeographic.com" + content["link"]["urlValue"]))
                 isSerie = self.season_request(soup)
                 if isSerie:                   # SI TIENE SEASONS, ES PORQUE ES UNA SERIE. SINO, ES UN EPISODIO
-                    self.serie_payload(content, isSerie)
+                    self.serie_payload(content, soup)
                 else:
-                    print('es un episodio')
+                    pass
                 
-                
-    def serie_payload(self, content, seasons):
+    def serie_payload(self, content, soup):
+        seasons = self.seasons_data(soup)
         image = self.get_image(content)
-        payload = payload = {
+        payload = {
             "PlatformCode": "us.national-geographic",
             "Id": content["show"]["id"],
-            "Seasons": len(seasons),
+            "Seasons": None,
             "Title": content["show"]["title"],
             "CleanTitle": _replace(content["show"]["title"]),#Obligatorio 
             "OriginalTitle": content["show"]["title"],  
@@ -96,9 +96,54 @@ class Natgeotv():
         }        
         #print(payload)
         
-    def seasons_data(self, content):
-        print(self.allSeasons)    
-        
+    def seasons_data(self, soup):
+        seasons = []
+        allSeasons = soup.find_all("div", class_="tilegroup tilegroup--shows tilegroup--carousel tilegroup--landscape")
+        for season in allSeasons:
+            title = self.get_title(season)
+            deeplink = self.get_deeplink(season)
+            number = self.get_number(title)
+            episodes = self.get_episodes_count(season)
+            season = {
+                "Id": None,
+                "Title": title, #Importante, E.J. The Wallking Dead: Season 1
+                "Deeplink": deeplink, #Importante
+                "Number": number, #Importante
+                "Year": None, #Importante
+                "Image": None, 
+                "Directors": None, #Importante
+                "Cast": None, #Importante
+                "Episodes": episodes, #Importante
+                "IsOriginal": None
+            } 
+            print(season)
+
+    def get_episodes(season):   # TODO: para obtener los episodios de cada temporada falta.
+        pass
+    
+    def get_episodes_count(self, season):
+        episodes = season.find_all("a", "AnchorLink CarouselSlide relative pointer tile tile--video tile--hero-inactive tile--landscape")
+        episodes = len(episodes) + 1 #porque empiezo a contar desde el segundo
+        return episodes
+
+    def get_number(self, title):
+        number = split("\D+", title)
+        number = number[1]
+        return number
+
+    def get_title(self, content):
+        title = content.find('span', class_='titletext')
+        title = title.text.strip()
+        return title
+
+    def get_deeplink(self, content):
+        atag = content.div.a
+        try:
+            deeplink = ("https://www.nationalgeographic.com" + atag.get("href"))
+        except:
+            deeplink = None
+        return deeplink
+
     def season_request(self, soup):
         allSeasons = soup.find_all('span', class_='titletext')
         seasons = []
@@ -118,15 +163,11 @@ class Natgeotv():
                 if 'showimages' in images['value']:
                     image = images['value']
         return image
-                    
-        
-            
 
     def bs4request(self, uri):
         page = requests.get(uri)
         soup = BeautifulSoup(page.content, 'html.parser')
         return soup
-
 
     def request(self, uri):
         response = self.session.get(uri)
