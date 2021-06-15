@@ -47,7 +47,8 @@ class Natgeotv():
             self._scraping(testing=True)
         
     def _scraping(self, testing=False):
-        payloads = []
+        self.serie_payloads = []
+        self.episode_payloads = []
         metadata = self.get_contents(self.api_url)
         for element in metadata:
             for content in [element]:
@@ -58,25 +59,45 @@ class Natgeotv():
                 else:
                     print('es un episodio')
                 
+                
     def serie_payload(self, content, seasons):
-        print("ES UNA SERIE")
-        payload = {
+        image = self.get_image(content)
+        payload = payload = {
             "PlatformCode": "us.national-geographic",
             "Id": content["show"]["id"],
-            #"Seasons": seasons,
+            "Seasons": len(seasons),
             "Title": content["show"]["title"],
-            "CleanTitle": _replace(content["show"]["title"]),
-            "OriginalTitle": content["show"]["title"], 
-            "Type": content["show"]["type"],
-            "Year": None,
-            "Duration": None,
+            "CleanTitle": _replace(content["show"]["title"]),#Obligatorio 
+            "OriginalTitle": content["show"]["title"],  
+            "Type": 'Show with Seasons/Episodes',
+            "Year": 'ver si con BS4',
+            "ExternalIds": None, 
             "ExternalIds": None,
             "Deeplinks": { 
                 "Web": "https://www.nationalgeographic.com" + content["link"]["urlValue"], 
                 "Android": None, 
                 "iOS": None,
-                }
-        }            
+                }, 
+            "Synopsis": content['show']['aboutTheShowSummary'],
+            "Image": image,
+            "Rating": 'ver si con BS4',
+            "Provider": None, 
+            "Genres": content['show']['genre'],
+            "Directors": None, #Important! 
+            "Availability": None, #Important! 
+            "Download": None, 
+            "IsOriginal": None, #Important! 
+            "IsAdult": None, #Important! 
+            "IsBranded": None, #Important! (ver link explicativo)
+            "Packages": [{'Type':'subscription-vod'}],
+            "Country": None, 
+            "Timestamp": datetime.now().isoformat(), #Obligatorio 
+            "CreatedAt": self._created_at, #Obligatorio
+        }        
+        #print(payload)
+        
+    def seasons_data(self, content):
+        print(self.allSeasons)    
         
     def season_request(self, soup):
         allSeasons = soup.find_all('span', class_='titletext')
@@ -88,6 +109,16 @@ class Natgeotv():
             else:
                 pass
         return seasons
+        
+    def get_image(self, content):
+        images_list = content['images']
+        image = None
+        for all_images in images_list:
+            for images in [all_images]:
+                if 'showimages' in images['value']:
+                    image = images['value']
+        return image
+                    
         
             
 
