@@ -381,16 +381,7 @@ ott_sites:
 
   Starz_mk: 
     countries:
-<<<<<<< HEAD
-      AR: ar.starz
-      api_url: https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/content
-
-  Pluto_ari: #Prueba
-    countries:
-       AR: ar.pluto
-=======
        AR: ar.starz
->>>>>>> d134580a350d9548c57d4e047cee5baac99f94be
     api_url: https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/content
   Pluto_gg:
     countries:
@@ -430,7 +421,7 @@ ott_sites:
     contries:
       AR: ar.starz
   
-   DarkMattertv:
+  DarkMattertv:
     countries:
       AR: ar.darkmatter
     start_url: https://www.darkmattertv.com/?
