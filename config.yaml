@@ -412,6 +412,11 @@ ott_sites:
     countries:
       AR: ar.starz
  
+  Natgeotv:
+    countries: 
+      US: us.national-geographic
+    api_url: 
+
   Allblk_panda:
     countries:
       US: us.umc
