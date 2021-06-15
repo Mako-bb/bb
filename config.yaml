@@ -142,6 +142,8 @@ ott_sites:
       US: us.fxnow
     movie_api: https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module/tilegroup/2430495?start={}&size=24&authlevel=0&brand=025&device=001
     serie_api: https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module/tilegroup/2430493?start={}&size=24&authlevel=0&brand=025&device=001
+
+
   DiscoveryLife:
     countries:
       US: us.discoverylife
@@ -329,6 +331,7 @@ ott_sites:
       date_episode_div_class: meta
       img_episode_dic_class: content
       botton_episode_load_more: expand-wrap
+
   NBCNetworks:
     countries:
       US: us.{}
@@ -363,20 +366,24 @@ ott_sites:
     countries:
       AR: ar.starz
     api_url: https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/content
+    
   PlutoCapacitacion: # PRUEBA
     countries:
       AR: ar.pluto
     api_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.0-38a9908bb8d8f15260d990bd00c1f6b49c7bba28&app_name=web&clientDeviceType=0&clientID=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&clientModelNumber=na&deviceDNT=false&deviceId=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&deviceLat=-34.5106&deviceLon=-58.7536&deviceMake=Microsoft%2BEdge&deviceModel=web&deviceType=web&deviceVersion=91.0.864.37&marketingRegion=VE&serverSideAds=true&sessionID=02158376-c248-11eb-975c-0242ac110002&sid=02158376-c248-11eb-975c-0242ac110002&userId=&attributeV4=foo
     season_api_url: https://service-vod.clusters.pluto.tv/v3/vod/series/  
+
   Pluto_mk: 
     countries:
       AR: ar.pluto
     api_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.0-38a9908bb8d8f15260d990bd00c1f6b49c7bba28&app_name=web&clientDeviceType=0&clientID=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&clientModelNumber=na&deviceDNT=false&deviceId=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&deviceLat=-34.5106&deviceLon=-58.7536&deviceMake=Microsoft%2BEdge&deviceModel=web&deviceType=web&deviceVersion=91.0.864.37&marketingRegion=VE&serverSideAds=true&sessionID=02158376-c248-11eb-975c-0242ac110002&sid=02158376-c248-11eb-975c-0242ac110002&userId=&attributeV4=foo
     season_api_url: https://service-vod.clusters.pluto.tv/v3/vod/series/
+
   Starz_mk: 
     countries:
       AR: ar.starz
       api_url: https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/content
+
   Pluto_ari: #Prueba
     countries:
        AR: ar.pluto
@@ -388,6 +395,7 @@ ott_sites:
     api_series: https://service-vod.clusters.pluto.tv/v3/vod/slugs/
   Pluto: #Prueba
     api_url: https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/content
+
   Pluto_gg:
     countries:
       AR: ar.pluto
@@ -397,23 +405,34 @@ ott_sites:
   Starz_mv: 
     countries:
       AR: ar.starz
-    api_url: https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/content
+    api_url: https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/blocks?playContents=map&lang=es-419&pages=BROWSE,HOME,MOVIES,PLAYLIST,SEARCH,SEARCH%20RESULTS,SERIES&&includes=childContent,properCaseTitle,logLine,releaseYear,genres,ratingCode,audioType,free,newContent,comingSoon,runtime,contentId,title,order,topContentId,titleBrief,contentType,seasonNumber,mediaId,seriesName,credits,product
   Pluto_mv: #PRUEBA
     countries:
       AR: ar.pluto
     api_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.0-38a9908bb8d8f15260d990bd00c1f6b49c7bba28&app_name=web&clientDeviceType=0&clientID=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&clientModelNumber=na&deviceDNT=false&deviceId=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&deviceLat=-34.5106&deviceLon=-58.7536&deviceMake=Microsoft%2BEdge&deviceModel=web&deviceType=web&deviceVersion=91.0.864.37&marketingRegion=VE&serverSideAds=true&sessionID=02158376-c248-11eb-975c-0242ac110002&sid=02158376-c248-11eb-975c-0242ac110002&userId=&attributeV4=foo
     api_season: https://service-vod.clusters.pluto.tv/v3/vod/series/{}/seasons?deviceType=web
+
   Pluto_tomas:
     countries:
       AR: ar.pluto
     api_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.0-38a9908bb8d8f15260d990bd00c1f6b49c7bba28&app_name=web&clientDeviceType=0&clientID=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&clientModelNumber=na&deviceDNT=false&deviceId=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&deviceLat=-34.5106&deviceLon=-58.7536&deviceMake=Microsoft%2BEdge&deviceModel=web&deviceType=web&deviceVersion=91.0.864.37&marketingRegion=VE&serverSideAds=true&sessionID=02158376-c248-11eb-975c-0242ac110002&sid=02158376-c248-11eb-975c-0242ac110002&userId=&attributeV4=foo
     season_api_url: https://service-vod.clusters.pluto.tv/v3/vod/series/
+
   StarzCapacitacion:
     countries:
       AR: ar.starz
- 
-  Allblk_panda:
+
+  Starz_panda:
+    contries:
+      AR: ar.starz
+  
+  DarkMattertv:
     countries:
-      US: us.umc
-    url: https://allblk.tv/browse/all/
-    api_url: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/wetv/url
+      AR: ar.darkmatter
+    start_url: https://www.darkmattertv.com/?
+    api_url: https://api-ott.darkmattertv.com/getreferencedobjects?&auth_token=27e87908-8537-4350-8775-eec416fa12a4&banners=0&connection=wifi&device_type=desktop&for_user=0&image_format=poster&image_width=213&is_af_request=0&language=es&max=18&parent_id={}&parent_type=collection&partner=internal&platform=web&timestamp=1623685147&use_device_width_widescreen=1&version=11.0
+
+  Natgeotv:
+    countries:
+      US: us.natgeotv
+    api_url: https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module/tilegroup/2431500?brand=026&device=001&size=999999
