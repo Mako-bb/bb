@@ -53,8 +53,23 @@ class Natgeotv():
                 self.payload(content)
 
     def payload(self, content):
-        print(content["link"]["urlValue"])
-
+        payload = {
+            "PlatformCode": "us.natgeotv",
+            "Id": content["show"]["id"],
+            "Title": content["show"]["title"],
+            "CleanTitle": _replace(content["show"]["title"]),
+            "OriginalTitle": content["show"]["title"], 
+            "Type": content["show"]["type"],
+            "Year": None,
+            "Duration": None,
+            "ExternalIds": None,
+            "Deeplinks": { 
+                "Web": "https://www.nationalgeographic.com" + content["link"]["urlValue"], 
+                "Android": None, 
+                "iOS": None,
+                }
+        }            
+        print(payload)
 
     def request(self, uri):
         response = self.session.get(uri)
