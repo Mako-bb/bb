@@ -411,3 +411,9 @@ ott_sites:
   StarzCapacitacion:
     countries:
       AR: ar.starz
+ 
+  Allblk_panda:
+    countries:
+      US: us.umc
+    url: https://allblk.tv/browse/all/
+    api_url: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/wetv/url

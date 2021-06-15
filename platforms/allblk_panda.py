@@ -7,6 +7,7 @@ import pymongo
 import re
 import json
 import platform
+from requests import api
 import selenium
 from handle.replace     import _replace
 from common             import config
@@ -15,9 +16,11 @@ from handle.mongo       import mongo
 from handle.datamanager import Datamanager
 from updates.upload     import Upload
 from bs4                import BeautifulSoup
+from selenium           import webdriver
 
 
-class HboPrueba:
+class Allblk_panda:
+
 
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config = config()['ott_sites'][ott_site_uid]
@@ -44,6 +47,9 @@ class HboPrueba:
         if type == 'scraping':
             self._scraping()
 
+        if type == 'testing':
+            self._scraping(testing=True)
+
     def __query_field(self, collection, field, extra_filter=None):
         if not extra_filter:
             extra_filter = {}
@@ -63,8 +69,13 @@ class HboPrueba:
         query = {item[field] for item in query}
         return query
 
-  #  def get_response(self):
-     #   url = 
 
-    #def _scraping(self):
+    def _scraping(self, testing=False):
+        req = self.sesion.get('https://allblk.tv/browse/all/')#se que esta hardcodeado, es porque estoy teniendo un problema con el config.yaml
+        soup = BeautifulSoup(req.text, 'html.parser')
+        rows = soup.find_all('div', {'class':'row'}) #buscar bien en las rows
+                                                     #en las <a hay url, quizas si busco por ahi, puedo evitar selenium.
+        
+            
 
+        
