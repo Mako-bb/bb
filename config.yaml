@@ -436,3 +436,8 @@ ott_sites:
     countries:
       US: us.natgeotv
     api_url: https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module/tilegroup/2431500?brand=026&device=001&size=999999
+
+  Allblk_panda:
+    countries: 
+      US: us.umc
+    start_url: https://allblk.tv/browse/all/

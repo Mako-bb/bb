@@ -19,7 +19,7 @@ class Pluto_gg():
         self.ott_site_country = ott_site_country
         self._config = config()['ott_sites'][ott_site_uid]
         self._platform_code = self._config['countries'][ott_site_country]
-        # self._start_url             = self._config['start_url']
+        self._start_url             = self._config['start_url']
         self._created_at = time.strftime("%Y-%m-%d")
         self.mongo = mongo()
         self.titanPreScraping = config()['mongo']['collections']['prescraping']
