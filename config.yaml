@@ -421,15 +421,6 @@ ott_sites:
   StarzCapacitacion:
     countries:
       AR: ar.starz
-<<<<<<< HEAD
- 
-  Natgeotv:
-    countries: 
-      US: us.national-geographic
-    api_url: 
-
-  Allblk_panda:
-=======
 
   Starz_panda:
     contries:
@@ -442,7 +433,6 @@ ott_sites:
     api_url: https://api-ott.darkmattertv.com/getreferencedobjects?&auth_token=27e87908-8537-4350-8775-eec416fa12a4&banners=0&connection=wifi&device_type=desktop&for_user=0&image_format=poster&image_width=213&is_af_request=0&language=es&max=18&parent_id={}&parent_type=collection&partner=internal&platform=web&timestamp=1623685147&use_device_width_widescreen=1&version=11.0
 
   Natgeotv:
->>>>>>> 6ba7ba4f139ab3cf48d92987beb8ab5de71f7468
     countries:
       US: us.natgeotv
     api_url: https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module/tilegroup/2431500?brand=026&device=001&size=999999

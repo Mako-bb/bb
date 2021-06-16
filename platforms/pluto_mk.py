@@ -188,10 +188,9 @@ class Pluto_mk():
                     "ParentTitle": parentTitle, #Unicamente en Episodios 
                     "Episode": episode['number'] if episode['number'] != 0 else None, #Obligatorio #Unicamente en Episodios 
                     "Season": episode['season'], #Obligatorio #Unicamente en Episodios
-                    "Title": episode['name'], #Obligatorio 
-                    # "CleanTitle": episode['slug'], #Obligatorio 
+                    "Title": episode['name'], #Obligatorio o 
                     "OriginalTitle": episode['name'], 
-                    # "Type": episode['type'], #Obligatorio 
+                    "Type": episode['type'], #Obligatorio 
                     "Year": None, #Important! 
                     "Duration": duration,
                     # "ExternalIds": deeplink,
