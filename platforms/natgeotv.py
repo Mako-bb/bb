@@ -81,6 +81,21 @@ class Natgeotv():
             "Android": None, 
             "iOS": None, 
             },
+            "Synopsis": content['show']['aboutTheShowSummary'],
+            "Image": image,
+            "Rating": 'ver si con BS4',
+            "Provider": None, 
+            "Genres": content['show']['genre'],
+            "Directors": None, #Important! 
+            "Availability": None, #Important! 
+            "Download": None, 
+            "IsOriginal": None, #Important! 
+            "IsAdult": None, #Important! 
+            "IsBranded": True, #Important! (ver link explicativo)
+            "Packages": [{'Type':'subscription-vod'}],
+            "Country": None, 
+            "Timestamp": datetime.now().isoformat(), #Obligatorio 
+            "CreatedAt": self._created_at, #Obligatorio
         }
         print(payload)
 
