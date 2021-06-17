@@ -26,7 +26,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 class Allblk_panda:
     """Allblk es una plataforma estadounidense que si bien tiene todos los contenidos en una misma url
     es necesario ir a cada url de cada película para obtener la info.
-    La información que contiene cada url es el Título, Sinopsis y a veces el cast y el director"""
+    La información que contiene cada url es el Título, Sinopsis y a veces el cast y el director
+    VER PLATAFORMA DE CWSEED.PY QUE ES PARECIDA A ESTA."""
 
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config = config()['ott_sites'][ott_site_uid]
@@ -77,11 +78,13 @@ class Allblk_panda:
         return query
 
         
-
+    def _get_request(self, url):
+        """Método hace request por url"""
+        req = self.sesion.get(url)
+        return req
           
-    def _get_url(self):
-        """Método que trae una lista de url de cada contenido de la plataforma"""
-        req = self.sesion.get(self.start_url)
+    def _get_url_list(self, req):
+        """Método que busca url y devuelve una lista con ellos"""
         soup = BeautifulSoup(req.text, 'html.parser')
         contenedor = soup.find_all('a', href=True, itemprop=True)
         url_list = []
@@ -90,18 +93,61 @@ class Allblk_panda:
             print('Found the URL: ', url['href'])
             url_list.append(url['href'])
         return url_list
-    def _request_url(self, url_list):
+        
+    
+    def _get_movies_or_series(self, url_list):
+        """Método que hace una request por cada contenido y distingue si es serie o pelicula"""
         for url in url_list:
             req = self.sesion.get(url)
             soup = BeautifulSoup(req.text, 'html.parser')
             contents = soup.find('meta', content=True, itemprop=True)
-            print(contents['content'])## Con esto puedo saber si es una serie o una pelicula.
-            for content in contents:
-                if content == dict:
-                    print()
+            if int(contents['content']) > 1:
+                self.series_list.append(req)
+                print('serie')
+            else:
+                self.movies_list.append(req)
+                print('Pelicula')
+        return
 
+    def _get_movie_payload(self, req):
+        """metodo que va a hacer un payload de cada pelicula"""
+        soup = BeautifulSoup(req.text, 'html.parser')
+        name_html = soup.find('span', itemprop=True)#Busca la etiqueta
+        soup_name = BeautifulSoup(name_html.text, 'html.parser')#busca el name
+        name = soup_name.prettify()
+        description_html = soup.find('p', id=True)###Aca tengo que poder sacar la descripcion del elemento encontrado
+        #descriptdion = description_html['id']
+        # print(descriptdion)
+        
+
+
+
+    def _get_season_url_list(self, req):
+        soup = BeautifulSoup(req.text, 'html.parser')
+        contenedor = soup.find_all('h4', {"class": True})
+        season_url_list = []
+        for url in contenedor:
+            print('Found the URL: ', url['href'])
+            season_url_list.append(url['href'])
+        return season_url_list
 
     def _scraping(self, testing=False):
-        list_url = self._get_url() 
-        req = self._request_url(list_url)
-        return
+        self.movies_list = []
+        self.series_list = []
+        req = self._get_request(self.start_url)#Hago una req a la plataforma
+        lista_url_prueba = ['https://allblk.tv/winnie-mandela/', 'https://allblk.tv/nephew-tommy-just-thoughts/']
+        list_url = self._get_url_list(req)#me traigo una lista de todos los contenidos que tiene
+        prueba = lista_url_prueba
+        self._get_movies_or_series(prueba)#diferencio los contenidos entre series y movies
+        #self._get_movie_payload(prueba)
+        for movie in self.movies_list:
+            self._get_movie_payload(movie)
+            print('extraer el contenido de la pelicula con un payload')
+        for serie in self.series_list:
+            print('Aca va el pyload de cada serie')
+            seasons_url_list = self._get_season_url_list(serie)#url por temporadas
+            episode_url_list = self._get_url_list(serie)#aca guardamos das las urls de los episodios 
+           # for episode in episode_url_list:
+            #    episode_req = self._get_request(episode)
+
+        
