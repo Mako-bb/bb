@@ -1,3 +1,4 @@
+from handle.payload import Payload
 import time
 import regex as re
 from pymongo.message import insert
@@ -54,7 +55,8 @@ class Natgeotv():
         self.rating = None
         metadata = self.get_contents(self.api_url)
         for element in metadata:
-            for content in [element]:
+            for n, content in enumerate([element]):
+                print(f"\n----- Progreso ({n}/{len([element])}) -----\n") 
                 soup = self.bs4request(("https://www.nationalgeographic.com" + content["link"]["urlValue"]))
                 isSerie = self.season_request(soup)
                 if isSerie != []:                   # SI TIENE SEASONS, ES PORQUE ES UNA SERIE. SINO, ES UN EPISODIO
@@ -101,27 +103,7 @@ class Natgeotv():
             "Timestamp": datetime.now().isoformat(), #Obligatorio 
             "CreatedAt": self._created_at, #Obligatorio
         }
-        #print(payload)
-
-    def get_duration(self, content, type):
-        if type == "Episode":
-            duration = content.find("div", "tile__video-duration")
-            duration = duration.text.strip()
-        else:
-            try:
-                duration = content.find("div", "Video__Metadata")
-                duration = duration.text.strip()
-                duration = duration[19:]
-                duration = duration[:8]
-                if "|" in duration:
-                    duration = duration[:5]
-            except:
-                try:
-                    duration = content.find("div", "tile__video-duration")
-                    duration = duration.text.strip()
-                except: 
-                    duration = None
-        return duration
+        self.payloads.append(payload)
 
     def get_year(self, content, type):
         if type == "Episode":
@@ -185,31 +167,10 @@ class Natgeotv():
             "Country": None, 
             "Timestamp": datetime.now().isoformat(), #Obligatorio 
             "CreatedAt": self._created_at, #Obligatorio
-        }        
-
-    def seasons_data(self, soup, parentId, parentTitle):
-        seasons = []
-        allSeasons = soup.find_all("div", class_="tilegroup tilegroup--shows tilegroup--carousel tilegroup--landscape")
-        for season in allSeasons:
-            title = self.get_title(season)
-            deeplink = self.get_deeplink(season, "Season")
-            number = self.get_number(title)
-            episodes = self.get_episodes(season, parentId, parentTitle, number)
-            payload = {
-                "Id": None,
-                "Title": title, #Importante, E.J. The Wallking Dead: Season 1
-                "Deeplink": deeplink, #Importante
-                "Number": number, #Importante
-                "Year": self.year, #Importante
-                "Image": None, 
-                "Directors": None, #Importante
-                "Cast": None, #Importante
-                "Episodes": episodes, #Importante
-                "IsOriginal": None
-            } 
-            seasons.append(payload)
-        return seasons
-
+            }        
+        self.payloads.append(payload)
+    
+    
     def get_episodes(self, season, parentId, parentTitle, seasonNumber):
         if seasonNumber == "":
             seasonNumber = "Latest Clips"
@@ -265,6 +226,7 @@ class Natgeotv():
                 "Timestamp": datetime.now().isoformat(), #Obligatorio 
                 "CreatedAt": self._created_at, #Obligatorio 
                 }
+        self.episode_payloads.append(episode_payload)
     
     def last_episode_payload(self, season, n, parentId, parentTitle, seasonNumber):
         try:
@@ -313,8 +275,53 @@ class Natgeotv():
                     "Timestamp": datetime.now().isoformat(), #Obligatorio 
                     "CreatedAt": self._created_at, #Obligatorio 
                     } 
+            self.episode_payloads.append(last_episode_payload)
         except: 
             pass
+
+    def get_duration(self, content, type):
+        if type == "Episode":
+            duration = content.find("div", "tile__video-duration")
+            duration = duration.text.strip()
+        else:
+            try:
+                duration = content.find("div", "Video__Metadata")
+                duration = duration.text.strip()
+                duration = duration[19:]
+                duration = duration[:8]
+                if "|" in duration:
+                    duration = duration[:5]
+            except:
+                try:
+                    duration = content.find("div", "tile__video-duration")
+                    duration = duration.text.strip()
+                except: 
+                    duration = None
+        return duration
+
+    def seasons_data(self, soup, parentId, parentTitle):
+        seasons = []
+        allSeasons = soup.find_all("div", class_="tilegroup tilegroup--shows tilegroup--carousel tilegroup--landscape")
+        for season in allSeasons:
+            title = self.get_title(season)
+            deeplink = self.get_deeplink(season, "Season")
+            number = self.get_number(title)
+            episodes = self.get_episodes(season, parentId, parentTitle, number)
+            payload = {
+                "Id": None,
+                "Title": title, #Importante, E.J. The Wallking Dead: Season 1
+                "Deeplink": deeplink, #Importante
+                "Number": number, #Importante
+                "Year": self.year, #Importante
+                "Image": None, 
+                "Directors": None, #Importante
+                "Cast": None, #Importante
+                "Episodes": episodes, #Importante
+                "IsOriginal": None
+            } 
+            seasons.append(payload)
+        return seasons
+
 
     def get_rating(self, content, type):
         if type == "Episode":
