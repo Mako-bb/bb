@@ -212,7 +212,7 @@ class Natgeotv():
         for season in allSeasons:
             title = self.get_title(season)
             deeplink = self.get_deeplink(season, "Season")
-            number = self.get_number(title)
+            number = self.get_season_number(title)
             episodes = self.get_episodes(season, parentId, parentTitle, number)
             payload = {
                 "Id": None,
@@ -376,6 +376,15 @@ class Natgeotv():
             pass
         
     def get_year(self, content, type):
+        """Método para obtener el año que trae el BS4
+
+        Args:
+            content: Argumento que trae la metadata de bs4 
+            type: tipo de contenido
+            
+        Return: 
+            devuelve el año
+        """
         if type == "Episode":
             year = content.find("span", "tile__details-date-duration")
             year = year.text.strip()
@@ -401,6 +410,15 @@ class Natgeotv():
 
 
     def get_duration(self, content, type):
+        """Método para obtener la duracion que trae el BS4
+
+        Args:
+            content: Argumento que trae la metadata de bs4 
+            type: tipo de contenido
+            
+        Return: 
+            devuelve la duracion
+        """
         if type == "Episode":
             duration = content.find("div", "tile__video-duration")
             duration = duration.text.strip()
@@ -438,23 +456,57 @@ class Natgeotv():
             
     
     def get_episode_title(self, title):
+        """Método para limpiar el titulo de los episodios
+
+        Args:
+            title: trae el título "sucio". por ejemplo: S2 E4 Episodio
+            
+        Return: 
+            devuelve el título limpio. por ejemplo: Episodio (sin el S2 E4)
+        """
         title = title.text.strip()
         title = re.sub("\E1 |\E2 |\E3 |\E4 |\E5 |\E6 |\E7 |\E8 |\E9 |\E10 |\E11 |\E12 |\E13 |\E14 |\E15 ","",title)
         title = re.sub("\S1 |\S2 |\S3 |\S4 |\S5 |\S6 |\S7 |\S8 |\S9 |\S10 |\S11 |\S12 |\S13 |\S14 |\S15 ","",title)
         title = title.replace("- ", "")
         return title
 
-    def get_number(self, title):
+    def get_season_number(self, title):
+        """Método que me trae el número de una temporada
+        Me sirve para hacer el payload de las series. y para validar que sea el nro correcto de temporada
+
+        Args:
+            title: trae el nombre de la temporada "sucio". por ejemplo: SEASON 2
+            
+        Return: 
+            devuelve el numero de la temporada limpio. por ejemplo:  2
+        """
         number = split("\D+", title)
         number = number[1]
         return number
 
     def get_title(self, content):
+        """Método para obtener el título de un elemento mediante BS4
+
+        Args:
+            content: metadata bs4 a la cual le voy a extraer el título
+            
+        Return: 
+            devuelve el título
+        """
         title = content.find('span', class_='titletext')
         title = title.text.strip()
         return title
 
     def get_deeplink(self, content, type):
+        """Método para obtener el deeplink del bs4 de un elemento
+
+        Args:
+            content: metadata bs4 a la cual le voy a extraer el deeplink
+            type: tipo de elemento
+            
+        Return: 
+            devuelve el deeplink
+        """
         if type == "Episode":
             try:
                 deeplink = ("https://www.nationalgeographic.com" + content.get("href"))
@@ -469,6 +521,17 @@ class Natgeotv():
         return deeplink
 
     def season_request(self, soup):
+        """Método para saber si un elemento tiene seasons.
+        Es una de las dos validaciones que utilizo para saber si es una serie o una movie
+        Si el request season devuelve algo, es porque el elemento tiene seasons
+        Y si tiene seasons, es una serie
+        
+        Args:
+            soup: metadata bs4 a la cual le voy a hacer el analisis a ver si tiene temporadas
+            
+        Return: 
+            devuelve una lista con los nombres de las temporadas
+        """
         allSeasons = soup.find_all('span', class_='titletext')
         seasons = []
         for season in allSeasons:
@@ -480,6 +543,17 @@ class Natgeotv():
         return seasons
         
     def get_image(self, content, type):
+        """Método para obtener la imagen de un elemento
+
+        Args:
+            content: metadata bs4 a la cual le voy a extraer el deeplink
+            type: tipo de elemento
+            
+        Return: 
+            devuelve la url de la imagen
+            ****** en realidad la devuelve en base64 ********
+            TODO: Fixear esto
+        """
         if type == "Episode":
             image = content.find("img")
             image = image.get("src")
@@ -493,16 +567,41 @@ class Natgeotv():
         return image
 
     def bs4request(self, uri):
+        """Método para hacer una request con bs4
+        
+        Args:
+            uri: uri a la cual le vamos a hacer la request
+            
+        Return: 
+            devuelve el bs4
+        """
         page = requests.get(uri)
         soup = BeautifulSoup(page.content, 'html.parser')
         return soup
 
     def request(self, uri):
+        """Método para hacer una request a la API
+
+        Args:
+            uri: uri a la cual le voy a hacer la request
+            
+        Return: 
+            devuelve los contenidos en formato .json()
+        """
         response = self.session.get(uri)
         contents = response.json()
         return contents
 
     def get_contents(self, uri):
+        """Método para obtener los contenidos 
+        invoca la función request, y "limpia" el dict.json() para que devuelva el dict con la metadata
+
+        Args:
+           uri: uri de la cual vamos a obtener los contenidos
+            
+        Return: 
+            devuelve un dict con la lista de contenidos
+        """
         data_dict = self.request(uri) 
         content_list = data_dict["tiles"]
         return content_list
