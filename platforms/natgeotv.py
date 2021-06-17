@@ -63,7 +63,7 @@ class Natgeotv():
                 
     def serie_payload(self, content, soup):
         seasons = self.seasons_data(soup, content["show"]["id"], content["show"]["title"])
-        image = self.get_image(content)
+        image = self.get_image(content, "Serie")
         payload = {
             "PlatformCode": "us.national-geographic",
             "Id": content["show"]["id"],
@@ -127,36 +127,66 @@ class Natgeotv():
         episodes = season.find_all("a", "AnchorLink CarouselSlide relative pointer tile tile--video tile--hero-inactive tile--landscape")
         n = 0
         for n, episode in enumerate(reversed(episodes)):
-            title = episode.find("span", "tile__details-season-data")
-            original_title = self.get_episode_title(title)
-            year = self.get_year(episode, "Episode")
-            duration = self.get_duration(episode, "Episode")
-            deeplink = self.get_deeplink(episode, "Episode")
-            episode_payload = { 
-                    "PlatformCode": self._platform_code, #Obligatorio 
-                    "Id": None, #Obligatorio
-                    "ParentId": parentId,
-                    "ParentTitle": parentTitle, 
-                    "Episode": n+1,
-                    "Season": seasonNumber,
-                    "Title": title.text.strip(),
-                    "OriginalTitle": original_title,
-                    "Type": "Episode",
-                    "Year": year, 
-                    "Duration": duration,
-                    "Deeplinks": { 
-                        "Web": deeplink, #Obligatorio 
-                        "Android": None, 
-                        "iOS": None, 
-                    }}
+            self.episode_payload(episode, n, parentId, parentTitle, seasonNumber)
             n += 1
-            print(episode_payload)
+        self.last_episode_payload(season, n, parentId, parentTitle, seasonNumber)
+        episodes_count = len(episodes) + 1 #porque falta el ultimo
+        return episodes_count
+
+    def episode_payload(self, episode, n, parentId, parentTitle, seasonNumber):
+        title = episode.find("span", "tile__details-season-data")
+        original_title = self.get_episode_title(title)
+        year = self.get_year(episode, "Episode")
+        duration = self.get_duration(episode, "Episode")
+        deeplink = self.get_deeplink(episode, "Episode")
+        image = self.get_image(episode, "Episode")
+        rating = self.get_rating(episode, "Episode")
+        episode_payload = { 
+                "PlatformCode": self._platform_code, #Obligatorio 
+                "Id": None, #Obligatorio
+                "ParentId": parentId,
+                "ParentTitle": parentTitle, 
+                "Episode": n+1,
+                "Season": seasonNumber,
+                "Title": title.text.strip(),
+                "OriginalTitle": original_title,
+                "Type": "Episode",
+                "Year": year, 
+                "Duration": duration,
+                "Deeplinks": { 
+                    "Web": deeplink, #Obligatorio 
+                    "Android": None, 
+                    "iOS": None, 
+                },
+                "Synopsis": None,
+                "Image": image,
+                "Rating": rating, 
+                "Provider": None, 
+                "Genres": None, #Important! 
+                "Directors": None, #Important! 
+                "Availability": None, #Important! 
+                "Download": None, 
+                "IsOriginal": None, #Important! 
+                "IsAdult": None, #Important!
+                "IsBranded": True, #Important! (ver link explicativo)
+                "Packages": [{'Type':'subscription-vod'}], #Obligatorio 
+                "Country": "US", 
+                "Timestamp": datetime.now().isoformat(), #Obligatorio 
+                "CreatedAt": self._created_at, #Obligatorio 
+                }
+        print(episode_payload)
+            
+
+
+    def last_episode_payload(self, season, n, parentId, parentTitle, seasonNumber):
         last_episode = season.find("a", "AnchorLink CarouselSlide relative pointer tile CarouselSlide--active tile--video tile--hero-inactive tile--landscape")
         title = last_episode.find("span", "tile__details-season-data")
         original_title = self.get_episode_title(title)
         year = self.get_year(last_episode, "Episode")
         duration = self.get_duration(last_episode, "Episode")
         deeplink = self.get_deeplink(last_episode, "Episode")
+        image = self.get_image(last_episode, "Episode")
+        rating = self.get_rating(last_episode, "Episode")
         last_episode_payload = {
                     "PlatformCode": self._platform_code, #Obligatorio 
                     "Id": None, #Obligatorio
@@ -174,10 +204,30 @@ class Natgeotv():
                         "Android": None, 
                         "iOS": None, 
                     },
-                    "Synopsis": None, } 
-        print(last_episode_payload)
-        episodes_count = len(episodes) + 1 #porque empiezo a contar desde el segundo
-        return episodes_count
+                    "Synopsis": None,
+                    "Image": image, 
+                    "Rating": rating, 
+                    "Provider": None, 
+                    "Genres": None, #Important! 
+                    "Directors": None, #Important! 
+                    "Availability": None, #Important! 
+                    "Download": None, 
+                    "IsOriginal": None, #Important! 
+                    "IsAdult": None, #Important! 
+                    "IsBranded": True, #Important! (ver link explicativo)
+                    "Packages": [{'Type':'subscription-vod'}], #Obligatorio 
+                    "Country": "US", 
+                    "Timestamp": datetime.now().isoformat(), #Obligatorio 
+                    "CreatedAt": self._created_at, #Obligatorio 
+                    } 
+        
+
+    def get_rating(self, content, type):
+        if type == "Episode":
+            rating = content.find("span", "tile__details-date-duration")
+            rating = rating.text.strip()
+            rating = rating[:5]
+        return(rating)
 
     def get_duration(self, content, type):
         if type == "Episode":
@@ -215,7 +265,6 @@ class Natgeotv():
                 deeplink = ("https://www.nationalgeographic.com" + content.get("href"))
             except:
                 deeplink = None
-            print(deeplink)
         elif type == "Season":
             atag = content.div.a
             try:
@@ -235,13 +284,18 @@ class Natgeotv():
                 pass
         return seasons
         
-    def get_image(self, content):
-        images_list = content['images']
-        image = None
-        for all_images in images_list:
-            for images in [all_images]:
-                if 'showimages' in images['value']:
-                    image = images['value']
+    def get_image(self, content, type):
+        if type == "Serie":
+            images_list = content['images']
+            image = None
+            for all_images in images_list:
+                for images in [all_images]:
+                    if 'showimages' in images['value']:
+                        image = images['value']
+        elif type == "Episode":
+            image = content.find("img")
+            image = image.get("src")
+            
         return image
 
     def bs4request(self, uri):
