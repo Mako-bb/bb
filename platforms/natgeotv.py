@@ -15,6 +15,18 @@ from datetime import datetime
 
 class Natgeotv():
     """
+    DATOS IMPORTANTES:
+    - VPN: Si, de USA (Yo utilicé HMA y no tuve problemas).
+    - ¿Usa Selenium?: No.
+    - ¿Tiene API?: Si. Para obtener movies y series. No trae mucha info
+    - ¿Usa BS4?: Si. Debido a que la API trae escasa info, utilizo BS4 para complementar, y traer episodios
+    - ¿Se relaciona con scripts TP? No.
+    - ¿Instanacia otro archivo de la carpeta "platforms"?: No.
+    - ¿Cuanto demoró la ultima vez? tiempo + fecha.
+    - ¿Cuanto contenidos trajo la ultima vez? cantidad + fecha.
+
+    OTROS COMENTARIOS:
+    Tuve que hacer un pip install regex
     """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self.ott_site_uid = ott_site_uid
@@ -49,6 +61,11 @@ class Natgeotv():
             self._scraping(testing=True)
         
     def _scraping(self, testing=False):
+        """Método principal del scraping.
+        Desde acá se hacen los updates a la DB, entre otras cosas
+        Args:
+            testing (bool, optional): Indica si está en modo testing. Defaults to False.
+        """
         self.payloads = []
         self.episode_payloads = []
         self.year = None
@@ -69,8 +86,8 @@ class Natgeotv():
             self.mongo.insertMany(self.titanScraping, self.payloads)
         else:
             print(f'\n---- Ninguna serie o pelicula para insertar a la base de datos ----\n')
-        if self.episodes_payloads:
-            self.mongo.insertMany(self.titanScrapingEpisodios, self.episodes_payloads)
+        if self.episode_payloads:
+            self.mongo.insertMany(self.titanScrapingEpisodios, self.episode_payloads)
         else:
             print(f'\n---- Ningun episodio para insertar a la base de datos ----\n')
         Upload(self._platform_code, self._created_at, testing=True)
@@ -78,6 +95,14 @@ class Natgeotv():
         self.session.close()
         
     def movie_payload(self, content, soup):
+        """Método para hacer un payload de movies
+            Al final del método, hace un append del payload a la lista que se
+            va a subir a la DB
+
+        Args:
+            content: Argumento que trae un dict la información de la API
+            soup: Argumento que trae la metadata de bs4 
+        """
         image = self.get_image(content, "Movie")
         year = self.get_year(soup, "Movie")
         duration = self.get_duration(soup, "Movie")
@@ -116,31 +141,15 @@ class Natgeotv():
         self.payloads.append(payload)
         print("Movie: " + content["show"]["title"] + " // Scraped!")
 
-    def get_year(self, content, type):
-        if type == "Episode":
-            year = content.find("span", "tile__details-date-duration")
-            year = year.text.strip()
-            year = re.search(r"\d{4}",year).group()
-        elif type == "Movie":
-            try:
-                year = content.find("div", "Video__Metadata")
-                year = year.text.strip()
-                year = re.search(r"\d{2}.\d{2}.\d{2}",year).group()
-                year = year[6:]
-                if int(year) > 60:
-                    year = int(year) + 1900
-                else:
-                    year = int(year) + 2000
-            except:
-                try: 
-                    year = content.find("span", "tile__details-date-duration")
-                    year = year.text.strip()
-                    year = re.search(r"\d{4}",year).group()
-                except:
-                    year = None
-            return year 
-
     def serie_payload(self, content, soup):
+        """Método para hacer un payload de series
+            Al final del método, hace un append del payload a la lista que se
+            va a subir a la DB
+
+        Args:
+            content: Argumento que trae un dict la información de la API
+            soup: Argumento que trae la metadata de bs4 
+        """
         self.total_seasons = 0
         self.total_episodes = 0
         seasons = self.seasons_data(soup, content["show"]["id"], content["show"]["title"])
@@ -185,9 +194,54 @@ class Natgeotv():
         print("Serie: " + content["show"]["title"] + " // Scraped!")
         if self.total_seasons:
             print("(Temporadas: " + str(self.total_seasons) + " - Episodios: " + str(self.total_episodes) + ")")
+    
+    def seasons_data(self, soup, parentId, parentTitle):
+        """Método para obtener la informacion de las temporadas
+        Para que la data esté dentro del payload de series
 
+        Args:
+            soup: Argumento que trae la metadata de bs4 
+            parentId: el id de la serie a la cual pertenecen las temporadas
+            parentTitle: el nombre de la serie a la cual pertenecen las temporadas
+            
+        Return:
+            Una lista con toda la información de las seasons, lista para incluirla en los payloads de series
+        """
+        seasons = []
+        allSeasons = soup.find_all("div", class_="tilegroup tilegroup--shows tilegroup--carousel tilegroup--landscape")
+        for season in allSeasons:
+            title = self.get_title(season)
+            deeplink = self.get_deeplink(season, "Season")
+            number = self.get_number(title)
+            episodes = self.get_episodes(season, parentId, parentTitle, number)
+            payload = {
+                "Id": None,
+                "Title": title, #Importante, E.J. The Wallking Dead: Season 1
+                "Deeplink": deeplink, #Importante
+                "Number": number, #Importante
+                "Year": self.year, #Importante
+                "Image": None, 
+                "Directors": None, #Importante
+                "Cast": None, #Importante
+                "Episodes": episodes, #Importante
+                "IsOriginal": None
+            } 
+            seasons.append(payload)
+            self.total_seasons += 1
+        return seasons
     
     def get_episodes(self, season, parentId, parentTitle, seasonNumber):
+        """Método para obtener los episodios de una serie   
+        NO HACE EL PAYLOAD.
+        desde este método se invocan las funciones que hacen los payloads de episodios 
+
+        Args:
+            season: Argumento que trae la metadata de la season en bs4 
+            parentId: el id de la serie a la cual pertenecen las temporadas
+            parentTitle: el nombre de la serie a la cual pertenecen las temporadas
+            seasonNumber: numero de temporada
+
+        """
         if seasonNumber == "":
             seasonNumber = "Latest Clips"
         episodes = season.find_all("a", "AnchorLink CarouselSlide relative pointer tile tile--video tile--hero-inactive tile--landscape")
@@ -199,7 +253,19 @@ class Natgeotv():
         episodes_count = len(episodes) + 1 #porque falta el ultimo
         return episodes_count
 
+
+
     def episode_payload(self, episode, n, parentId, parentTitle, seasonNumber):
+        """Método para hacer el payload de los episodios desde el primero hasta el anteultimo
+        (El ultimo lo tengo que traer con otro metodo por cuestiones del bs4)
+
+        Args:
+            n: variable que cuenta el nro de episodios, para desp saber ctos episodios tiene cada season
+            season: Argumento que trae la metadata de la season en bs4 
+            parentId: el id de la serie a la cual pertenecen las temporadas
+            parentTitle: el nombre de la serie a la cual pertenecen las temporadas
+            seasonNumber: numero de temporada
+        """
         title = episode.find("span", "tile__details-season-data")
         original_title = self.get_episode_title(title)
         year = self.get_year(episode, "Episode")
@@ -246,6 +312,18 @@ class Natgeotv():
         self.episode_payloads.append(episode_payload)
     
     def last_episode_payload(self, season, n, parentId, parentTitle, seasonNumber):
+        """Método para hacer el payload del último episodio
+        (Este último lo tengo que traer con otro metodo por cuestiones del bs4)
+        Al final del método, hace un append del payload a la lista que se
+        va a subir a la DB
+
+        Args:
+            n: variable que cuenta el nro de episodios
+            season: Argumento que trae la metadata de la season en bs4 
+            parentId: el id de la serie a la cual pertenecen las temporadas
+            parentTitle: el nombre de la serie a la cual pertenecen las temporadas
+            seasonNumber: numero de temporada
+        """
         try:
             last_episode = season.find("a", "AnchorLink CarouselSlide relative pointer tile CarouselSlide--active tile--video tile--hero-inactive tile--landscape")
             title = last_episode.find("span", "tile__details-season-data")
@@ -296,6 +374,31 @@ class Natgeotv():
             self.episode_payloads.append(last_episode_payload)
         except: 
             pass
+        
+    def get_year(self, content, type):
+        if type == "Episode":
+            year = content.find("span", "tile__details-date-duration")
+            year = year.text.strip()
+            year = re.search(r"\d{4}",year).group()
+        elif type == "Movie":
+            try:
+                year = content.find("div", "Video__Metadata")
+                year = year.text.strip()
+                year = re.search(r"\d{2}.\d{2}.\d{2}",year).group()
+                year = year[6:]
+                if int(year) > 60:
+                    year = int(year) + 1900
+                else:
+                    year = int(year) + 2000
+            except:
+                try: 
+                    year = content.find("span", "tile__details-date-duration")
+                    year = year.text.strip()
+                    year = re.search(r"\d{4}",year).group()
+                except:
+                    year = None
+            return year 
+
 
     def get_duration(self, content, type):
         if type == "Episode":
@@ -316,31 +419,6 @@ class Natgeotv():
                 except: 
                     duration = None
         return duration
-
-    def seasons_data(self, soup, parentId, parentTitle):
-        seasons = []
-        allSeasons = soup.find_all("div", class_="tilegroup tilegroup--shows tilegroup--carousel tilegroup--landscape")
-        for season in allSeasons:
-            title = self.get_title(season)
-            deeplink = self.get_deeplink(season, "Season")
-            number = self.get_number(title)
-            episodes = self.get_episodes(season, parentId, parentTitle, number)
-            payload = {
-                "Id": None,
-                "Title": title, #Importante, E.J. The Wallking Dead: Season 1
-                "Deeplink": deeplink, #Importante
-                "Number": number, #Importante
-                "Year": self.year, #Importante
-                "Image": None, 
-                "Directors": None, #Importante
-                "Cast": None, #Importante
-                "Episodes": episodes, #Importante
-                "IsOriginal": None
-            } 
-            seasons.append(payload)
-            self.total_seasons += 1
-        return seasons
-
 
     def get_rating(self, content, type):
         if type == "Episode":

@@ -161,7 +161,7 @@ class Pluto_mk():
         self.totalSeasons = 0
         for season in seasons:
             self.totalSeasons += 1
-            deeplink = self.get_deeplink(season, 'season', season['number'], parentTitle)
+            deeplink = self.(season, 'season', season['number'], parentTitle)
             season_payload = {
                 "Id": None, #Importante
                 "Synopsis": synopsis, #Importante
