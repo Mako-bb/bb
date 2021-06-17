@@ -59,6 +59,40 @@ class Natgeotv():
 
         if type == 'testing':
             self._scraping(testing=True)
+            
+            
+    def query_field(self, collection, field=None):
+        """Método que devuelve una lista de una columna específica
+        de la bbdd. Utilizo este método para saber si el contenido ya fue scrapeado
+
+        Args:
+            collection (str): Indica la colección de la bbdd.
+            field (str, optional): Indica la columna, por ejemplo puede ser
+            'Id' o 'CleanTitle. Defaults to None.
+
+        Returns:
+            list: Lista de los field encontrados.
+        """
+        find_filter = {
+            'PlatformCode': self._platform_code,
+            'CreatedAt': self._created_at
+        }
+
+        find_projection = {'_id': 0, field: 1, } if field else None
+
+        query = self.mongo.db[collection].find(
+            filter=find_filter,
+            projection=find_projection,
+            no_cursor_timeout=False
+        )
+
+        if field:
+            query = [item[field] for item in query if item.get(field)]
+        else:
+            query = list(query)
+
+        return query
+
         
     def _scraping(self, testing=False):
         """Método principal del scraping.
@@ -68,20 +102,29 @@ class Natgeotv():
         """
         self.payloads = []
         self.episode_payloads = []
+        # Listas de contentenido scrapeado:
+        # Comparando estas listas puedo ver si el elemento ya se encuentra scrapeado.
+        self.scraped = self.query_field(self.titanScraping, field='Id')   #
+        self.scraped_episodes = self.query_field(self.titanScrapingEpisodios, field='Id')
+        print(f"{self.titanScraping} {len(self.scraped)}")
+        print(f"{self.titanScrapingEpisodios} {len(self.scraped_episodes)}")
         self.year = None
         self.rating = None
         metadata = self.get_contents(self.api_url)
         for n, element in enumerate(metadata):
             print(f"\n----- Progreso ({n+1}/{len(metadata)}) -----\n") 
             for content in [element]:
-                soup = self.bs4request(("https://www.nationalgeographic.com" + content["link"]["urlValue"]))
-                isSerie = self.season_request(soup)
-                if isSerie != []:                   # SI TIENE SEASONS, ES PORQUE ES UNA SERIE. SINO, ES UN EPISODIO
-                    self.serie_payload(content, soup)
-                elif "show" in content["link"]["urlValue"]:
-                    self.serie_payload(content, soup)     # SI ES UN SHOW, TAMBIEN ES UNA SERIE
+                if content["show"]["id"] in self.scraped:
+                    print(content["show"]["title"] + ' ya esta scrapeado!')
                 else:
-                    self.movie_payload(content, soup)
+                    soup = self.bs4request(("https://www.nationalgeographic.com" + content["link"]["urlValue"]))
+                    isSerie = self.season_request(soup)
+                    if isSerie != []:                   # SI TIENE SEASONS, ES PORQUE ES UNA SERIE. SINO, ES UN EPISODIO
+                        self.serie_payload(content, soup)
+                    elif "show" in content["link"]["urlValue"]:
+                        self.serie_payload(content, soup)     # SI ES UN SHOW, TAMBIEN ES UNA SERIE
+                    else:
+                        self.movie_payload(content, soup)
         if self.payloads:
             self.mongo.insertMany(self.titanScraping, self.payloads)
         else:
