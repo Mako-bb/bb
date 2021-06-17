@@ -1,5 +1,5 @@
 import time
-import re
+import regex as re
 from pymongo.message import insert
 import requests
 from bs4 import BeautifulSoup
