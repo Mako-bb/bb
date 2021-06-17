@@ -54,9 +54,9 @@ class Natgeotv():
         self.year = None
         self.rating = None
         metadata = self.get_contents(self.api_url)
-        for element in metadata:
-            for n, content in enumerate([element]):
-                print(f"\n----- Progreso ({n}/{len([element])}) -----\n") 
+        for n, element in enumerate(metadata):
+            print(f"\n----- Progreso ({n+1}/{len(metadata)}) -----\n") 
+            for content in [element]:
                 soup = self.bs4request(("https://www.nationalgeographic.com" + content["link"]["urlValue"]))
                 isSerie = self.season_request(soup)
                 if isSerie != []:                   # SI TIENE SEASONS, ES PORQUE ES UNA SERIE. SINO, ES UN EPISODIO
@@ -65,10 +65,20 @@ class Natgeotv():
                     self.serie_payload(content, soup)     # SI ES UN SHOW, TAMBIEN ES UNA SERIE
                 else:
                     self.movie_payload(content, soup)
-                
+        if self.payloads:
+            self.mongo.insertMany(self.titanScraping, self.payloads)
+        else:
+            print(f'\n---- Ninguna serie o pelicula para insertar a la base de datos ----\n')
+        if self.episodes_payloads:
+            self.mongo.insertMany(self.titanScrapingEpisodios, self.episodes_payloads)
+        else:
+            print(f'\n---- Ningun episodio para insertar a la base de datos ----\n')
+        Upload(self._platform_code, self._created_at, testing=True)
+        print("----- Web Scraping finalizado -----")
+        self.session.close()
+        
     def movie_payload(self, content, soup):
         image = self.get_image(content, "Movie")
-        print("https://www.nationalgeographic.com" + content["link"]["urlValue"])
         year = self.get_year(soup, "Movie")
         duration = self.get_duration(soup, "Movie")
         rating = self.get_rating(soup, "Movie")
@@ -104,6 +114,7 @@ class Natgeotv():
             "CreatedAt": self._created_at, #Obligatorio
         }
         self.payloads.append(payload)
+        print("Movie: " + content["show"]["title"] + " // Scraped!")
 
     def get_year(self, content, type):
         if type == "Episode":
@@ -130,6 +141,8 @@ class Natgeotv():
             return year 
 
     def serie_payload(self, content, soup):
+        self.total_seasons = 0
+        self.total_episodes = 0
         seasons = self.seasons_data(soup, content["show"]["id"], content["show"]["title"])
         image = self.get_image(content, "Serie")
         try:
@@ -169,7 +182,10 @@ class Natgeotv():
             "CreatedAt": self._created_at, #Obligatorio
             }        
         self.payloads.append(payload)
-    
+        print("Serie: " + content["show"]["title"] + " // Scraped!")
+        if self.total_seasons:
+            print("(Temporadas: " + str(self.total_seasons) + " - Episodios: " + str(self.total_episodes) + ")")
+
     
     def get_episodes(self, season, parentId, parentTitle, seasonNumber):
         if seasonNumber == "":
@@ -226,6 +242,7 @@ class Natgeotv():
                 "Timestamp": datetime.now().isoformat(), #Obligatorio 
                 "CreatedAt": self._created_at, #Obligatorio 
                 }
+        self.total_episodes += 1
         self.episode_payloads.append(episode_payload)
     
     def last_episode_payload(self, season, n, parentId, parentTitle, seasonNumber):
@@ -275,6 +292,7 @@ class Natgeotv():
                     "Timestamp": datetime.now().isoformat(), #Obligatorio 
                     "CreatedAt": self._created_at, #Obligatorio 
                     } 
+            self.total_episodes += 1
             self.episode_payloads.append(last_episode_payload)
         except: 
             pass
@@ -320,6 +338,7 @@ class Natgeotv():
                 "IsOriginal": None
             } 
             seasons.append(payload)
+            self.total_seasons += 1
         return seasons
 
 
@@ -335,10 +354,8 @@ class Natgeotv():
                 rating = content.find("div", "Video__Metadata")
                 rating = rating.text.strip()
                 rating = rating[:5]
-                print(rating)
             except:
                 rating = "None"
-            
         return(rating)
             
     
