@@ -51,6 +51,7 @@ class Natgeotv():
         self.payloads = []
         self.episode_payloads = []
         self.year = None
+        self.rating = None
         metadata = self.get_contents(self.api_url)
         for element in metadata:
             for content in [element]:
@@ -58,14 +59,17 @@ class Natgeotv():
                 isSerie = self.season_request(soup)
                 if isSerie != []:                   # SI TIENE SEASONS, ES PORQUE ES UNA SERIE. SINO, ES UN EPISODIO
                     self.serie_payload(content, soup)
+                elif "show" in content["link"]["urlValue"]:
+                    self.serie_payload(content, soup)     # SI ES UN SHOW, TAMBIEN ES UNA SERIE
                 else:
                     self.movie_payload(content, soup)
                 
     def movie_payload(self, content, soup):
         image = self.get_image(content, "Movie")
-        print()
+        print("https://www.nationalgeographic.com" + content["link"]["urlValue"])
         year = self.get_year(soup, "Movie")
         duration = self.get_duration(soup, "Movie")
+        rating = self.get_rating(soup, "Movie")
         payload = {
             "PlatformCode": "us.national-geographic",
             "Id": content["show"]["id"],
@@ -83,7 +87,7 @@ class Natgeotv():
             },
             "Synopsis": content['show']['aboutTheShowSummary'],
             "Image": image,
-            "Rating": 'ver si con BS4',
+            "Rating": rating,
             "Provider": None, 
             "Genres": content['show']['genre'],
             "Directors": None, #Important! 
@@ -93,11 +97,11 @@ class Natgeotv():
             "IsAdult": None, #Important! 
             "IsBranded": True, #Important! (ver link explicativo)
             "Packages": [{'Type':'subscription-vod'}],
-            "Country": None, 
+            "Country": "US", 
             "Timestamp": datetime.now().isoformat(), #Obligatorio 
             "CreatedAt": self._created_at, #Obligatorio
         }
-        print(payload)
+        #print(payload)
 
     def get_duration(self, content, type):
         if type == "Episode":
@@ -146,6 +150,10 @@ class Natgeotv():
     def serie_payload(self, content, soup):
         seasons = self.seasons_data(soup, content["show"]["id"], content["show"]["title"])
         image = self.get_image(content, "Serie")
+        try:
+           genre = content['show']['genre']
+        except:
+            genre = None
         payload = {
             "PlatformCode": "us.national-geographic",
             "Id": content["show"]["id"],
@@ -166,7 +174,7 @@ class Natgeotv():
             "Image": image,
             "Rating": 'ver si con BS4',
             "Provider": None, 
-            "Genres": content['show']['genre'],
+            "Genres": genre,
             "Directors": None, #Important! 
             "Availability": None, #Important! 
             "Download": None, 
@@ -223,6 +231,7 @@ class Natgeotv():
         deeplink = self.get_deeplink(episode, "Episode")
         image = self.get_image(episode, "Episode")
         rating = self.get_rating(episode, "Episode")
+        self.rating = rating
         episode_payload = { 
                 "PlatformCode": self._platform_code, #Obligatorio 
                 "Id": None, #Obligatorio
@@ -263,12 +272,14 @@ class Natgeotv():
             title = last_episode.find("span", "tile__details-season-data")
             original_title = self.get_episode_title(title)
             year = self.get_year(last_episode, "Episode")
-            if self.year == None:
-                self.year = year
             duration = self.get_duration(last_episode, "Episode")
             deeplink = self.get_deeplink(last_episode, "Episode")
             image = self.get_image(last_episode, "Episode")
             rating = self.get_rating(last_episode, "Episode")
+            if self.year == None:
+                self.year = year
+            if self.rating == None:
+                self.rating = rating
             last_episode_payload = {
                     "PlatformCode": self._platform_code, #Obligatorio 
                     "Id": None, #Obligatorio
@@ -310,7 +321,19 @@ class Natgeotv():
             rating = content.find("span", "tile__details-date-duration")
             rating = rating.text.strip()
             rating = rating[:5]
+            if "NR" in rating:
+                rating = "NR"
+        elif type == "Movie":
+            try:
+                rating = content.find("div", "Video__Metadata")
+                rating = rating.text.strip()
+                rating = rating[:5]
+                print(rating)
+            except:
+                rating = "None"
+            
         return(rating)
+            
     
     def get_episode_title(self, title):
         title = title.text.strip()
@@ -348,7 +371,7 @@ class Natgeotv():
         seasons = []
         for season in allSeasons:
             season = season.text.strip()
-            if (season != 'You May Also Like') & (season != "Latest Clips"):
+            if (season != 'You May Also Like'):
                 seasons.append(season)
             else:
                 pass
