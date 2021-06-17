@@ -50,6 +50,7 @@ class Natgeotv():
     def _scraping(self, testing=False):
         self.payloads = []
         self.episode_payloads = []
+        self.year = None
         metadata = self.get_contents(self.api_url)
         for element in metadata:
             for content in [element]:
@@ -58,9 +59,75 @@ class Natgeotv():
                 if isSerie != []:                   # SI TIENE SEASONS, ES PORQUE ES UNA SERIE. SINO, ES UN EPISODIO
                     self.serie_payload(content, soup)
                 else:
-                    pass
+                    self.movie_payload(content, soup)
                 
-                
+    def movie_payload(self, content, soup):
+        image = self.get_image(content, "Movie")
+        print()
+        year = self.get_year(soup, "Movie")
+        duration = self.get_duration(soup, "Movie")
+        payload = {
+            "PlatformCode": "us.national-geographic",
+            "Id": content["show"]["id"],
+            "Title": content["show"]["title"],
+            "CleanTitle": _replace(content["show"]["title"]),
+            "OriginalTitle": content["show"]["title"], 
+            "Type": "Movie",
+            "Year": year,
+            "Duration": duration,
+            "ExternalIds": None,  #No estoy seguro de si es
+            "Deeplinks": { 
+            "Web": "https://www.nationalgeographic.com" + content["link"]["urlValue"], #Obligatorio 
+            "Android": None, 
+            "iOS": None, 
+            },
+        }
+        print(payload)
+
+    def get_duration(self, content, type):
+        if type == "Episode":
+            duration = content.find("div", "tile__video-duration")
+            duration = duration.text.strip()
+        else:
+            try:
+                duration = content.find("div", "Video__Metadata")
+                duration = duration.text.strip()
+                duration = duration[19:]
+                duration = duration[:8]
+                if "|" in duration:
+                    duration = duration[:5]
+            except:
+                try:
+                    duration = content.find("div", "tile__video-duration")
+                    duration = duration.text.strip()
+                except: 
+                    duration = None
+        return duration
+
+    def get_year(self, content, type):
+        if type == "Episode":
+            year = content.find("span", "tile__details-date-duration")
+            year = year.text.strip()
+            year = re.search(r"\d{4}",year).group()
+        elif type == "Movie":
+            try:
+                year = content.find("div", "Video__Metadata")
+                year = year.text.strip()
+                year = re.search(r"\d{2}.\d{2}.\d{2}",year).group()
+                year = year[6:]
+                if int(year) > 60:
+                    year = int(year) + 1900
+                else:
+                    year = int(year) + 2000
+            except:
+                try: 
+                    year = content.find("span", "tile__details-date-duration")
+                    year = year.text.strip()
+                    year = re.search(r"\d{4}",year).group()
+                except:
+                    year = None
+            return year 
+
     def serie_payload(self, content, soup):
         seasons = self.seasons_data(soup, content["show"]["id"], content["show"]["title"])
         image = self.get_image(content, "Serie")
@@ -71,8 +138,8 @@ class Natgeotv():
             "Title": content["show"]["title"],
             "CleanTitle": _replace(content["show"]["title"]),
             "OriginalTitle": content["show"]["title"],  
-            "Type": 'Show with Seasons/Episodes',
-            "Year": 'ver si con BS4',
+            "Type": 'serie',
+            "Year": self.year,
             "ExternalIds": None, 
             "ExternalIds": None,
             "Deeplinks": { 
@@ -90,14 +157,13 @@ class Natgeotv():
             "Download": None, 
             "IsOriginal": None, #Important! 
             "IsAdult": None, #Important! 
-            "IsBranded": None, #Important! (ver link explicativo)
+            "IsBranded": True, #Important! (ver link explicativo)
             "Packages": [{'Type':'subscription-vod'}],
             "Country": None, 
             "Timestamp": datetime.now().isoformat(), #Obligatorio 
             "CreatedAt": self._created_at, #Obligatorio
         }        
-        #print(payload)
-        
+
     def seasons_data(self, soup, parentId, parentTitle):
         seasons = []
         allSeasons = soup.find_all("div", class_="tilegroup tilegroup--shows tilegroup--carousel tilegroup--landscape")
@@ -111,7 +177,7 @@ class Natgeotv():
                 "Title": title, #Importante, E.J. The Wallking Dead: Season 1
                 "Deeplink": deeplink, #Importante
                 "Number": number, #Importante
-                "Year": None, #Importante
+                "Year": self.year, #Importante
                 "Image": None, 
                 "Directors": None, #Importante
                 "Cast": None, #Importante
@@ -137,6 +203,7 @@ class Natgeotv():
         title = episode.find("span", "tile__details-season-data")
         original_title = self.get_episode_title(title)
         year = self.get_year(episode, "Episode")
+        self.year = year
         duration = self.get_duration(episode, "Episode")
         deeplink = self.get_deeplink(episode, "Episode")
         image = self.get_image(episode, "Episode")
@@ -174,20 +241,20 @@ class Natgeotv():
                 "Timestamp": datetime.now().isoformat(), #Obligatorio 
                 "CreatedAt": self._created_at, #Obligatorio 
                 }
-        print(episode_payload)
-            
-
-
+    
     def last_episode_payload(self, season, n, parentId, parentTitle, seasonNumber):
-        last_episode = season.find("a", "AnchorLink CarouselSlide relative pointer tile CarouselSlide--active tile--video tile--hero-inactive tile--landscape")
-        title = last_episode.find("span", "tile__details-season-data")
-        original_title = self.get_episode_title(title)
-        year = self.get_year(last_episode, "Episode")
-        duration = self.get_duration(last_episode, "Episode")
-        deeplink = self.get_deeplink(last_episode, "Episode")
-        image = self.get_image(last_episode, "Episode")
-        rating = self.get_rating(last_episode, "Episode")
-        last_episode_payload = {
+        try:
+            last_episode = season.find("a", "AnchorLink CarouselSlide relative pointer tile CarouselSlide--active tile--video tile--hero-inactive tile--landscape")
+            title = last_episode.find("span", "tile__details-season-data")
+            original_title = self.get_episode_title(title)
+            year = self.get_year(last_episode, "Episode")
+            if self.year == None:
+                self.year = year
+            duration = self.get_duration(last_episode, "Episode")
+            deeplink = self.get_deeplink(last_episode, "Episode")
+            image = self.get_image(last_episode, "Episode")
+            rating = self.get_rating(last_episode, "Episode")
+            last_episode_payload = {
                     "PlatformCode": self._platform_code, #Obligatorio 
                     "Id": None, #Obligatorio
                     "ParentId": parentId,
@@ -220,7 +287,8 @@ class Natgeotv():
                     "Timestamp": datetime.now().isoformat(), #Obligatorio 
                     "CreatedAt": self._created_at, #Obligatorio 
                     } 
-        
+        except: 
+            pass
 
     def get_rating(self, content, type):
         if type == "Episode":
@@ -228,19 +296,6 @@ class Natgeotv():
             rating = rating.text.strip()
             rating = rating[:5]
         return(rating)
-
-    def get_duration(self, content, type):
-        if type == "Episode":
-            duration = content.find("div", "tile__video-duration")
-            duration = duration.text.strip()
-            return duration
-
-    def get_year(self, content, type):
-        if type == "Episode":
-            year = content.find("span", "tile__details-date-duration")
-            year = year.text.strip()
-            year = re.search(r"\d{4}",year).group()
-        return year
     
     def get_episode_title(self, title):
         title = title.text.strip()
@@ -285,17 +340,16 @@ class Natgeotv():
         return seasons
         
     def get_image(self, content, type):
-        if type == "Serie":
+        if type == "Episode":
+            image = content.find("img")
+            image = image.get("src")
+        else:
             images_list = content['images']
             image = None
             for all_images in images_list:
                 for images in [all_images]:
                     if 'showimages' in images['value']:
                         image = images['value']
-        elif type == "Episode":
-            image = content.find("img")
-            image = image.get("src")
-            
         return image
 
     def bs4request(self, uri):
