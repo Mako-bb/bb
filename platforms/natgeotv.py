@@ -151,7 +151,7 @@ class Natgeotv():
         duration = self.get_duration(soup, "Movie")
         rating = self.get_rating(soup, "Movie")
         payload = {
-            "PlatformCode": "us.national-geographic",
+            "PlatformCode": self._platform_code,
             "Id": content["show"]["id"],
             "Title": content["show"]["title"],
             "CleanTitle": _replace(content["show"]["title"]),
@@ -202,7 +202,7 @@ class Natgeotv():
         except:
             genre = None
         payload = {
-            "PlatformCode": "us.national-geographic",
+            "PlatformCode": self._platform_code,
             "Id": content["show"]["id"],
             "Seasons": seasons,
             "Title": content["show"]["title"],

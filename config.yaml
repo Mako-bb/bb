@@ -434,7 +434,7 @@ ott_sites:
 
   Natgeotv:
     countries:
-      US: us.natgeotv
+      US: us.national-geographic
     api_url: https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module/tilegroup/2431500?brand=026&device=001&size=999999
 
   Allblk_panda:
