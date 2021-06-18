@@ -1,6 +1,7 @@
+from os import replace
 import time
 from typing import Dict
-
+import regex
 import requests
 import hashlib
 import pymongo
@@ -9,6 +10,7 @@ import json
 import platform
 from requests import api
 import selenium
+from handle.replace         import _replace
 from selenium.webdriver.firefox.webdriver import WebDriver
 from handle.replace     import _replace
 from common             import config
@@ -113,13 +115,22 @@ class Allblk_panda:
         """metodo que va a hacer un payload de cada pelicula"""
         soup = BeautifulSoup(req.text, 'html.parser')
         name_html = soup.find('span', itemprop=True)#Busca la etiqueta
-        soup_name = BeautifulSoup(name_html.text, 'html.parser')#busca el name
-        name = soup_name.prettify()
-        description_html = soup.find('p', id=True)###Aca tengo que poder sacar la descripcion del elemento encontrado
-        #descriptdion = description_html['id']
-        # print(descriptdion)
+        soup_name = str(BeautifulSoup(name_html.text, 'html.parser'))#busca el name
+        meta_data = soup.find_all('p', {'itemprop':True})
+        for description in meta_data[0]:
+            description = description
+            print(description)
+        for cast_html in meta_data[1]:#estoy perdido aca
+            pattern = '([A-Z])+([a-z])+ ([A-Z])+([a-z])+'
+            re.compile(pattern)
+            cast = re.split(pattern, cast_html)
+            print(cast)
+        for director in meta_data[2]:#estoy perdido aca
+            director = director
+            print(director)
+            #con esto realizaria el pailot con la poca info de la pagina
         
-
+        
 
 
     def _get_season_url_list(self, req):
@@ -135,6 +146,7 @@ class Allblk_panda:
         self.movies_list = []
         self.series_list = []
         req = self._get_request(self.start_url)#Hago una req a la plataforma
+        #Esto esta hardcodeado para no hacer una recuest por pelicula hasta que resuelva las payloads
         lista_url_prueba = ['https://allblk.tv/winnie-mandela/', 'https://allblk.tv/nephew-tommy-just-thoughts/']
         list_url = self._get_url_list(req)#me traigo una lista de todos los contenidos que tiene
         prueba = lista_url_prueba
