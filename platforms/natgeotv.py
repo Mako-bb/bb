@@ -156,7 +156,7 @@ class Natgeotv():
             "Title": content["show"]["title"],
             "CleanTitle": _replace(content["show"]["title"]),
             "OriginalTitle": content["show"]["title"], 
-            "Type": "Movie",
+            "Type": "movie",
             "Year": year,
             "Duration": duration,
             "ExternalIds": None,  #No estoy seguro de si es
@@ -166,10 +166,10 @@ class Natgeotv():
             "iOS": None, 
             },
             "Synopsis": content['show']['aboutTheShowSummary'],
-            "Image": image,
+            "Image": [image],
             "Rating": rating,
             "Provider": None, 
-            "Genres": content['show']['genre'],
+            "Genres": [content['show']['genre']],
             "Directors": None, #Important! 
             "Availability": None, #Important! 
             "Download": None, 
@@ -177,7 +177,7 @@ class Natgeotv():
             "IsAdult": None, #Important! 
             "IsBranded": True, #Important! (ver link explicativo)
             "Packages": [{'Type':'subscription-vod'}],
-            "Country": "US", 
+            "Country": ["US"], 
             "Timestamp": datetime.now().isoformat(), #Obligatorio 
             "CreatedAt": self._created_at, #Obligatorio
         }
@@ -218,10 +218,10 @@ class Natgeotv():
                 "iOS": None,
                 }, 
             "Synopsis": content['show']['aboutTheShowSummary'],
-            "Image": image,
-            "Rating": 'ver si con BS4',
+            "Image": [image],
+            "Rating": self.rating,
             "Provider": None, 
-            "Genres": genre,
+            "Genres": [genre],
             "Directors": None, #Important! 
             "Availability": None, #Important! 
             "Download": None, 
@@ -229,7 +229,7 @@ class Natgeotv():
             "IsAdult": None, #Important! 
             "IsBranded": True, #Important! (ver link explicativo)
             "Packages": [{'Type':'subscription-vod'}],
-            "Country": None, 
+            "Country": ["US"], 
             "Timestamp": datetime.now().isoformat(), #Obligatorio 
             "CreatedAt": self._created_at, #Obligatorio
             }        
@@ -296,8 +296,6 @@ class Natgeotv():
         episodes_count = len(episodes) + 1 #porque falta el ultimo
         return episodes_count
 
-
-
     def episode_payload(self, episode, n, parentId, parentTitle, seasonNumber):
         """Método para hacer el payload de los episodios desde el primero hasta el anteultimo
         (El ultimo lo tengo que traer con otro metodo por cuestiones del bs4)
@@ -327,7 +325,7 @@ class Natgeotv():
                 "Season": seasonNumber,
                 "Title": title.text.strip(),
                 "OriginalTitle": original_title,
-                "Type": "Episode",
+                "Type": "episode",
                 "Year": year, 
                 "Duration": duration,
                 "Deeplinks": { 
@@ -336,7 +334,7 @@ class Natgeotv():
                     "iOS": None, 
                 },
                 "Synopsis": None,
-                "Image": image,
+                "Image": [image],
                 "Rating": rating, 
                 "Provider": None, 
                 "Genres": None, #Important! 
@@ -347,7 +345,7 @@ class Natgeotv():
                 "IsAdult": None, #Important!
                 "IsBranded": True, #Important! (ver link explicativo)
                 "Packages": [{'Type':'subscription-vod'}], #Obligatorio 
-                "Country": "US", 
+                "Country": ["US"], 
                 "Timestamp": datetime.now().isoformat(), #Obligatorio 
                 "CreatedAt": self._created_at, #Obligatorio 
                 }
@@ -389,7 +387,7 @@ class Natgeotv():
                     "Season": seasonNumber,
                     "Title": title.text.strip(),
                     "OriginalTitle": original_title,
-                    "Type": "Episode",
+                    "Type": "episode",
                     "Year": year, 
                     "Duration": duration, 
                     "Deeplinks": { 
@@ -398,7 +396,7 @@ class Natgeotv():
                         "iOS": None, 
                     },
                     "Synopsis": None,
-                    "Image": image, 
+                    "Image": [image], 
                     "Rating": rating, 
                     "Provider": None, 
                     "Genres": None, #Important! 
@@ -436,6 +434,7 @@ class Natgeotv():
             try:
                 year = content.find("div", "Video__Metadata")
                 year = year.text.strip()
+                print(year)
                 year = re.search(r"\d{2}.\d{2}.\d{2}",year).group()
                 year = year[6:]
                 if int(year) > 60:
@@ -449,7 +448,10 @@ class Natgeotv():
                     year = re.search(r"\d{4}",year).group()
                 except:
                     year = None
-            return year 
+        if year != None:
+            return int(year) 
+        else:
+            return None
 
 
     def get_duration(self, content, type):
@@ -469,8 +471,12 @@ class Natgeotv():
             try:
                 duration = content.find("div", "Video__Metadata")
                 duration = duration.text.strip()
-                duration = duration[19:]
+                if "TV-G" in duration:
+                    duration = duration[18:]
+                else: 
+                    duration = duration[19:]
                 duration = duration[:8]
+                print(duration)
                 if "|" in duration:
                     duration = duration[:5]
             except:
@@ -479,7 +485,24 @@ class Natgeotv():
                     duration = duration.text.strip()
                 except: 
                     duration = None
-        return duration
+        # FÓRMULA PARA OBTENER LA DURACIÓN EN MINUTOS, PORQUE VIENE EN OTRO FORMATO
+        if duration == None:                # Si la duracion es None, no hagas nada
+            return None
+        else:                               # si hay una duración, traela en minutos
+            if len(duration) == 5:
+                duration = duration[:2]
+                duration = duration.replace(":","")
+            elif len(duration) == 4:
+                duration = duration[:1]
+                duration = duration.replace(":","") 
+            elif len(duration) == 8:
+                duration = duration[:5]
+                hours = duration[:2]
+                minutes = duration[3:]
+                duration = int(hours) * 60 + int(minutes)
+            if (duration == ""):
+                return None
+            return int(duration)
 
     def get_rating(self, content, type):
         if type == "Episode":
