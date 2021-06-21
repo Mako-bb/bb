@@ -1,6 +1,6 @@
 from os import replace
 import time
-from typing import Dict
+from typing import Dict, cast
 import regex
 import requests
 import hashlib
@@ -112,24 +112,26 @@ class Allblk_panda:
         return
 
     def _get_movie_payload(self, req):
-        """metodo que va a hacer un payload de cada pelicula"""
+        """metodo que extrae la info de html con bs4 y devuelve un payload de cada pelicula"""
         soup = BeautifulSoup(req.text, 'html.parser')
         name_html = soup.find('span', itemprop=True)#Busca la etiqueta
-        soup_name = str(BeautifulSoup(name_html.text, 'html.parser'))#busca el name
-        meta_data = soup.find_all('p', {'itemprop':True})
-        for description in meta_data[0]:
-            description = description
-            print(description)
-        for cast_html in meta_data[1]:#estoy perdido aca
-            pattern = '([A-Z])+([a-z])+ ([A-Z])+([a-z])+'
-            re.compile(pattern)
-            cast = re.split(pattern, cast_html)
-            print(cast)
-        for director in meta_data[2]:#estoy perdido aca
-            director = director
-            print(director)
-            #con esto realizaria el pailot con la poca info de la pagina
-        
+        for title in name_html:
+            title = title.strip()
+        content_description = soup.find('p', {'itemprop':'description'})
+        for item in content_description:#Extraemos la Descripcion
+            description = str(item)
+        content_cast= soup.find('p', {'itemprop':'actor'})#Buscamos los actores del contenido en el html
+        cast_list = []
+        for item in content_cast:
+            cast_list.append(str(item))#Creo una lista con el resultado de la busqueda de los actores
+        cast_html = cast_list[2]#saco la string del cast que me interesa
+        cast_html_list = re.split(string=cast_html, pattern= ',')
+        cast = []#creo una lista de actores para el cast
+        for item in cast_html_list:
+            item = item.strip()#limpio todos los items de la lista de cast. (tabulaciones, etc.)
+            cast.append(item)
+        content_director = soup.find('p', {'itemprop':'director'})
+        ###Agregar el Director y pasar a series    
         
 
 
