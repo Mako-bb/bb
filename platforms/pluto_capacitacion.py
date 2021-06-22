@@ -79,8 +79,7 @@ class PlutoCapacitacion():
 
     def _scraping(self, testing=False):
         # Listas de contentenido scrapeado:
-        self.scraped = self.query_field(self.titanScraping, field='Id')
-        self.scraped_episodes = self.query_field(self.titanScrapingEpisodios, field='Id')
+        print ("fefo")
 
         # TODO: Aprender Datamanager
         # scraped = Datamanager._getListDB(self,self.titanScraping)
