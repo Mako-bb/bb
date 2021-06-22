@@ -52,7 +52,7 @@ from platforms.darmattertv import DarkMattertv
 from platforms.natgeotv import Natgeotv
 from platforms.allblk_panda import Allblk_panda
 
-# Fiore
+from platforms.pluto_fiov import PlutoFioV
 from platforms.pluto_dl import PlutoDL
 # Fede
 # Naza
