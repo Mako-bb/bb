@@ -97,16 +97,8 @@ Luego accedemos al entorno virtual, lo corrobramos cuando vemos la terminal de e
 
 3) Ahora ubicados dentro del entorno virtual, instalar las dependencias:
 
-**Para desarrollo:**
 ```shell
-(env) mi-nombre@pc123:~/Desktop/agentesnuevos$ pip install -r requirements/local.txt
-```
-
-**Importante:** Todas las librerías locales deben ir en requirements/local.txt . En caso de necesitar nuevas librerías en los servidores, comunicarse con los líderes del equipo.
-
-**Para producción:**
-```shell
-(env) mi-nombre@pc123:~/Desktop/agentesnuevos$ pip install -r requirements/production.txt
+(env) mi-nombre@pc123:~/Desktop/agentesnuevos$ pip install -r requirements.txt
 ```
 
 4) Hay que instalar MongoDB. Link para instalar según el sistema operativo: https://docs.mongodb.com/manual/installation/
