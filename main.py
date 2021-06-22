@@ -53,7 +53,7 @@ from platforms.natgeotv import Natgeotv
 from platforms.allblk_panda import Allblk_panda
 
 # Fiore
-# Damian
+from platforms.pluto_dl import PlutoDL
 # Fede
 # Naza
 # Dario
