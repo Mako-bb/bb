@@ -16,17 +16,16 @@ from datetime import datetime
 class Natgeotv():
     """
     DATOS IMPORTANTES:
-    - VPN: Si, de USA (Yo utilicé HMA y no tuve problemas).
-    - ¿Usa Selenium?: No.
-    - ¿Tiene API?: Si. Para obtener movies y series. No trae mucha info
-    - ¿Usa BS4?: Si. Debido a que la API trae escasa info, utilizo BS4 para complementar, y traer episodios
-    - ¿Se relaciona con scripts TP? No.
-    - ¿Instanacia otro archivo de la carpeta "platforms"?: No.
-    - ¿Cuanto demoró la ultima vez? tiempo + fecha.
-    - ¿Cuanto contenidos trajo la ultima vez? cantidad + fecha.
-
+        - VPN: Si, de USA (Yo utilicé HMA y no tuve problemas).
+        - ¿Usa Selenium?: No.
+        - ¿Tiene API?: Si. Para obtener movies y series. No trae mucha info
+        - ¿Usa BS4?: Si. Debido a que la API trae escasa info, utilizo BS4 para complementar, y traer episodios
+        - ¿Se relaciona con scripts TP? No.
+        - ¿Instanacia otro archivo de la carpeta "platforms"?: No.
+        - ¿Cuanto demoró la ultima vez? tiempo + fecha.
+        - ¿Cuanto contenidos trajo la ultima vez? cantidad + fecha.
     OTROS COMENTARIOS:
-    Tuve que hacer un pip install regex
+        - Tuve que hacer un pip install regex
     """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self.ott_site_uid = ott_site_uid
@@ -62,37 +61,34 @@ class Natgeotv():
             
             
     def query_field(self, collection, field=None):
-        """Método que devuelve una lista de una columna específica
-        de la bbdd. Utilizo este método para saber si el contenido ya fue scrapeado
+        """
+        Desc: 
+            Método que devuelve una lista de una columna específica
+            de la bbdd. Utilizo este método para saber si el contenido ya fue scrapeado
 
-        Args:
-            collection (str): Indica la colección de la bbdd.
-            field (str, optional): Indica la columna, por ejemplo puede ser
-            'Id' o 'CleanTitle. Defaults to None.
+            Args:
+                collection (str): Indica la colección de la bbdd.
+                field (str, optional): Indica la columna, por ejemplo puede ser
+                'Id' o 'CleanTitle. Defaults to None.
 
-        Returns:
-            list: Lista de los field encontrados.
+            Returns:
+                list: Lista de los field encontrados.
         """
         find_filter = {
             'PlatformCode': self._platform_code,
             'CreatedAt': self._created_at
         }
-
         find_projection = {'_id': 0, field: 1, } if field else None
-
         query = self.mongo.db[collection].find(
             filter=find_filter,
             projection=find_projection,
             no_cursor_timeout=False
         )
-
         if field:
             query = [item[field] for item in query if item.get(field)]
         else:
             query = list(query)
-
         return query
-
         
     def _scraping(self, testing=False):
         """Método principal del scraping.
@@ -110,21 +106,18 @@ class Natgeotv():
         print(f"{self.titanScrapingEpisodios} {len(self.scraped_episodes)}")
         self.year = None
         self.rating = None
-        metadata = self.get_contents(self.api_url)
-        for n, element in enumerate(metadata):
-            print(f"\n----- Progreso ({n+1}/{len(metadata)}) -----\n") 
-            for content in [element]:
+        data_dict = self.get_contents(self.api_url)
+        for n, contents in enumerate(data_dict):
+            print(f"\n----- Progreso ({n+1}/{len(data_dict)}) -----\n") 
+            for content in [contents]:
                 if content["show"]["id"] in self.scraped:
                     print(content["show"]["title"] + ' ya esta scrapeado!')
+                    continue
                 else:
-                    soup = self.bs4request(("https://www.nationalgeographic.com" + content["link"]["urlValue"]))
-                    isSerie = self.season_request(soup)
-                    if isSerie != []:                   # SI TIENE SEASONS, ES PORQUE ES UNA SERIE. SINO, ES UN EPISODIO
-                        self.serie_payload(content, soup)
-                    elif "show" in content["link"]["urlValue"]:
-                        self.serie_payload(content, soup)     # SI ES UN SHOW, TAMBIEN ES UNA SERIE
+                    if "movies" in content['link']['urlValue']:
+                        self.movie_payload(content)
                     else:
-                        self.movie_payload(content, soup)
+                        self.serie_payload(content)
         if self.payloads:
             self.mongo.insertMany(self.titanScraping, self.payloads)
         else:
@@ -137,19 +130,12 @@ class Natgeotv():
         print("----- Web Scraping finalizado -----")
         self.session.close()
         
-    def movie_payload(self, content, soup):
-        """Método para hacer un payload de movies
-            Al final del método, hace un append del payload a la lista que se
-            va a subir a la DB
-
-        Args:
-            content: Argumento que trae un dict la información de la API
-            soup: Argumento que trae la metadata de bs4 
-        """
-        image = self.get_image(content, "Movie")
-        year = self.get_year(soup, "Movie")
-        duration = self.get_duration(soup, "Movie")
-        rating = self.get_rating(soup, "Movie")
+    def movie_payload(self, content):
+        soup = self.bs4request("https://www.nationalgeographic.com" + content["link"]["urlValue"])
+        image = self.get_image(content)
+        year = self.get_year(soup, 'movie')
+        rating = self.get_rating(soup, 'movie')
+        duration = self.get_duration(soup, 'movie')
         payload = {
             "PlatformCode": self._platform_code,
             "Id": content["show"]["id"],
@@ -183,22 +169,18 @@ class Natgeotv():
         }
         self.payloads.append(payload)
         print("Movie: " + content["show"]["title"] + " // Scraped!")
-
-    def serie_payload(self, content, soup):
-        """Método para hacer un payload de series
-            Al final del método, hace un append del payload a la lista que se
-            va a subir a la DB
-
-        Args:
-            content: Argumento que trae un dict la información de la API
-            soup: Argumento que trae la metadata de bs4 
-        """
+                
+    def serie_payload(self, content):
+        print(content["show"]["title"])
         self.total_seasons = 0
-        self.total_episodes = 0
+        self.total_episodes = 0  
+        soup = self.bs4request("https://www.nationalgeographic.com" + content["link"]["urlValue"])
         seasons = self.seasons_data(soup, content["show"]["id"], content["show"]["title"])
-        image = self.get_image(content, "Serie")
+        image = self.get_image(content)
+        year = self.get_year(soup, 'serie')
+        rating = self.get_rating(soup, 'serie')
         try:
-           genre = content['show']['genre']
+            genre = content['show']['genre']
         except:
             genre = None
         payload = {
@@ -209,7 +191,7 @@ class Natgeotv():
             "CleanTitle": _replace(content["show"]["title"]),
             "OriginalTitle": content["show"]["title"],  
             "Type": 'serie',
-            "Year": self.year,
+            "Year": year,
             "ExternalIds": None, 
             "ExternalIds": None,
             "Deeplinks": { 
@@ -219,7 +201,7 @@ class Natgeotv():
                 }, 
             "Synopsis": content['show']['aboutTheShowSummary'],
             "Image": [image],
-            "Rating": self.rating,
+            "Rating": rating,
             "Provider": None, 
             "Genres": [genre],
             "Directors": None, #Important! 
@@ -232,12 +214,12 @@ class Natgeotv():
             "Country": ["US"], 
             "Timestamp": datetime.now().isoformat(), #Obligatorio 
             "CreatedAt": self._created_at, #Obligatorio
-            }        
+            }
         self.payloads.append(payload)
         print("Serie: " + content["show"]["title"] + " // Scraped!")
         if self.total_seasons:
             print("(Temporadas: " + str(self.total_seasons) + " - Episodios: " + str(self.total_episodes) + ")")
-    
+        
     def seasons_data(self, soup, parentId, parentTitle):
         """Método para obtener la informacion de las temporadas
         Para que la data esté dentro del payload de series
@@ -254,7 +236,7 @@ class Natgeotv():
         allSeasons = soup.find_all("div", class_="tilegroup tilegroup--shows tilegroup--carousel tilegroup--landscape")
         for season in allSeasons:
             title = self.get_title(season)
-            deeplink = self.get_deeplink(season, "Season")
+            deeplink = self.get_deeplink(season, "season")
             number = self.get_season_number(title)
             episodes = self.get_episodes(season, parentId, parentTitle, number)
             payload = {
@@ -272,7 +254,7 @@ class Natgeotv():
             seasons.append(payload)
             self.total_seasons += 1
         return seasons
-    
+       
     def get_episodes(self, season, parentId, parentTitle, seasonNumber):
         """Método para obtener los episodios de una serie   
         NO HACE EL PAYLOAD.
@@ -295,7 +277,7 @@ class Natgeotv():
         self.last_episode_payload(season, n, parentId, parentTitle, seasonNumber)
         episodes_count = len(episodes) + 1 #porque falta el ultimo
         return episodes_count
-
+    
     def episode_payload(self, episode, n, parentId, parentTitle, seasonNumber):
         """Método para hacer el payload de los episodios desde el primero hasta el anteultimo
         (El ultimo lo tengo que traer con otro metodo por cuestiones del bs4)
@@ -309,20 +291,23 @@ class Natgeotv():
         """
         title = episode.find("span", "tile__details-season-data")
         original_title = self.get_episode_title(title)
-        year = self.get_year(episode, "Episode")
+        year = self.get_year(episode, "episode")
         self.year = year
-        duration = self.get_duration(episode, "Episode")
-        deeplink = self.get_deeplink(episode, "Episode")
-        image = self.get_image(episode, "Episode")
-        rating = self.get_rating(episode, "Episode")
+        duration = self.get_duration(episode, "episode")
+        deeplink = self.get_deeplink(episode, "episode")
+        id = deeplink[-12:]
+        image = self.get_image(episode, True)
+        rating = self.get_rating(episode, "episode")
         self.rating = rating
+        if seasonNumber == 'Latest Clips':
+            seasonNumber = 0
         episode_payload = { 
                 "PlatformCode": self._platform_code, #Obligatorio 
-                "Id": None, #Obligatorio
+                "Id": id, #Obligatorio
                 "ParentId": parentId,
                 "ParentTitle": parentTitle, 
                 "Episode": n+1,
-                "Season": seasonNumber,
+                "Season": int(seasonNumber),
                 "Title": title.text.strip(),
                 "OriginalTitle": original_title,
                 "Type": "episode",
@@ -351,7 +336,7 @@ class Natgeotv():
                 }
         self.total_episodes += 1
         self.episode_payloads.append(episode_payload)
-    
+
     def last_episode_payload(self, season, n, parentId, parentTitle, seasonNumber):
         """Método para hacer el payload del último episodio
         (Este último lo tengo que traer con otro metodo por cuestiones del bs4)
@@ -369,22 +354,25 @@ class Natgeotv():
             last_episode = season.find("a", "AnchorLink CarouselSlide relative pointer tile CarouselSlide--active tile--video tile--hero-inactive tile--landscape")
             title = last_episode.find("span", "tile__details-season-data")
             original_title = self.get_episode_title(title)
-            year = self.get_year(last_episode, "Episode")
-            duration = self.get_duration(last_episode, "Episode")
-            deeplink = self.get_deeplink(last_episode, "Episode")
-            image = self.get_image(last_episode, "Episode")
-            rating = self.get_rating(last_episode, "Episode")
+            year = self.get_year(last_episode, "episode")
+            duration = self.get_duration(last_episode, "episode")
+            deeplink = self.get_deeplink(last_episode, "episode")
+            id = deeplink[-12:]
+            image = self.get_image(last_episode, True)
+            rating = self.get_rating(last_episode, "episode")
+            if seasonNumber == 'Latest Clips':
+                seasonNumber = 0
             if self.year == None:
                 self.year = year
             if self.rating == None:
                 self.rating = rating
             last_episode_payload = {
                     "PlatformCode": self._platform_code, #Obligatorio 
-                    "Id": None, #Obligatorio
+                    "Id": id, #Obligatorio
                     "ParentId": parentId,
                     "ParentTitle": parentTitle, 
                     "Episode": n+1,
-                    "Season": seasonNumber,
+                    "Season": int(seasonNumber),
                     "Title": title.text.strip(),
                     "OriginalTitle": original_title,
                     "Type": "episode",
@@ -407,7 +395,7 @@ class Natgeotv():
                     "IsAdult": None, #Important! 
                     "IsBranded": True, #Important! (ver link explicativo)
                     "Packages": [{'Type':'subscription-vod'}], #Obligatorio 
-                    "Country": "US", 
+                    "Country": ["US"], 
                     "Timestamp": datetime.now().isoformat(), #Obligatorio 
                     "CreatedAt": self._created_at, #Obligatorio 
                     } 
@@ -416,111 +404,6 @@ class Natgeotv():
         except: 
             pass
         
-    def get_year(self, content, type):
-        """Método para obtener el año que trae el BS4
-
-        Args:
-            content: Argumento que trae la metadata de bs4 
-            type: tipo de contenido
-            
-        Return: 
-            devuelve el año
-        """
-        if type == "Episode":
-            year = content.find("span", "tile__details-date-duration")
-            year = year.text.strip()
-            year = re.search(r"\d{4}",year).group()
-        elif type == "Movie":
-            try:
-                year = content.find("div", "Video__Metadata")
-                year = year.text.strip()
-                print(year)
-                year = re.search(r"\d{2}.\d{2}.\d{2}",year).group()
-                year = year[6:]
-                if int(year) > 60:
-                    year = int(year) + 1900
-                else:
-                    year = int(year) + 2000
-            except:
-                try: 
-                    year = content.find("span", "tile__details-date-duration")
-                    year = year.text.strip()
-                    year = re.search(r"\d{4}",year).group()
-                except:
-                    year = None
-        if year != None:
-            return int(year) 
-        else:
-            return None
-
-
-    def get_duration(self, content, type):
-        """Método para obtener la duracion que trae el BS4
-
-        Args:
-            content: Argumento que trae la metadata de bs4 
-            type: tipo de contenido
-            
-        Return: 
-            devuelve la duracion
-        """
-        if type == "Episode":
-            duration = content.find("div", "tile__video-duration")
-            duration = duration.text.strip()
-        else:
-            try:
-                duration = content.find("div", "Video__Metadata")
-                duration = duration.text.strip()
-                if "TV-G" in duration:
-                    duration = duration[18:]
-                else: 
-                    duration = duration[19:]
-                duration = duration[:8]
-                print(duration)
-                if "|" in duration:
-                    duration = duration[:5]
-            except:
-                try:
-                    duration = content.find("div", "tile__video-duration")
-                    duration = duration.text.strip()
-                except: 
-                    duration = None
-        # FÓRMULA PARA OBTENER LA DURACIÓN EN MINUTOS, PORQUE VIENE EN OTRO FORMATO
-        if duration == None:                # Si la duracion es None, no hagas nada
-            return None
-        else:                               # si hay una duración, traela en minutos
-            if len(duration) == 5:
-                duration = duration[:2]
-                duration = duration.replace(":","")
-            elif len(duration) == 4:
-                duration = duration[:1]
-                duration = duration.replace(":","") 
-            elif len(duration) == 8:
-                duration = duration[:5]
-                hours = duration[:2]
-                minutes = duration[3:]
-                duration = int(hours) * 60 + int(minutes)
-            if (duration == ""):
-                return None
-            return int(duration)
-
-    def get_rating(self, content, type):
-        if type == "Episode":
-            rating = content.find("span", "tile__details-date-duration")
-            rating = rating.text.strip()
-            rating = rating[:5]
-            if "NR" in rating:
-                rating = "NR"
-        elif type == "Movie":
-            try:
-                rating = content.find("div", "Video__Metadata")
-                rating = rating.text.strip()
-                rating = rating[:5]
-            except:
-                rating = "None"
-        return(rating)
-            
-    
     def get_episode_title(self, title):
         """Método para limpiar el titulo de los episodios
 
@@ -535,7 +418,7 @@ class Natgeotv():
         title = re.sub("\S1 |\S2 |\S3 |\S4 |\S5 |\S6 |\S7 |\S8 |\S9 |\S10 |\S11 |\S12 |\S13 |\S14 |\S15 ","",title)
         title = title.replace("- ", "")
         return title
-
+       
     def get_season_number(self, title):
         """Método que me trae el número de una temporada
         Me sirve para hacer el payload de las series. y para validar que sea el nro correcto de temporada
@@ -548,8 +431,8 @@ class Natgeotv():
         """
         number = split("\D+", title)
         number = number[1]
-        return number
-
+        return number  
+       
     def get_title(self, content):
         """Método para obtener el título de un elemento mediante BS4
 
@@ -561,8 +444,8 @@ class Natgeotv():
         """
         title = content.find('span', class_='titletext')
         title = title.text.strip()
-        return title
-
+        return title   
+       
     def get_deeplink(self, content, type):
         """Método para obtener el deeplink del bs4 de un elemento
 
@@ -573,99 +456,153 @@ class Natgeotv():
         Return: 
             devuelve el deeplink
         """
-        if type == "Episode":
+        if type == "episode":
             try:
                 deeplink = ("https://www.nationalgeographic.com" + content.get("href"))
             except:
                 deeplink = None
-        elif type == "Season":
+        elif type == "season":
             atag = content.div.a
             try:
                 deeplink = ("https://www.nationalgeographic.com" + atag.get("href"))
             except:
                 deeplink = None
         return deeplink
-
-    def season_request(self, soup):
-        """Método para saber si un elemento tiene seasons.
-        Es una de las dos validaciones que utilizo para saber si es una serie o una movie
-        Si el request season devuelve algo, es porque el elemento tiene seasons
-        Y si tiene seasons, es una serie
-        
-        Args:
-            soup: metadata bs4 a la cual le voy a hacer el analisis a ver si tiene temporadas
-            
-        Return: 
-            devuelve una lista con los nombres de las temporadas
-        """
-        allSeasons = soup.find_all('span', class_='titletext')
-        seasons = []
-        for season in allSeasons:
-            season = season.text.strip()
-            if (season != 'You May Also Like'):
-                seasons.append(season)
+          
+    def get_duration(self, soup, type):
+        total_minutes = None
+        if type == 'episode':
+            info = soup.find("div", "tile__video-duration")
+        elif type == 'movie':
+            info = soup.find("div", "Video__Metadata")
+        try:
+            info = info.text.strip()
+            duration = None
+            try:
+                duration = re.search(r"\d{2}:\d{2}:",info).group()   # HORAS Y MINUTOS
+                duration = duration.replace(':','')
+                hours = duration[:2]
+                minutes = duration[2:]
+                total_minutes = (int(hours) * 60) + int(minutes)
+            except:
+                try: 
+                    duration = re.search(r"\d{2}:\d{2}",info).group()   # MINUTOS Y SEGUNDOS
+                    duration = duration.replace(':','')
+                    total_minutes = duration[:2]
+                except:
+                    pass
+        except:
+            pass
+        if total_minutes != None:
+            total_minutes = int(total_minutes)
+        return total_minutes
+    
+    def get_rating(self, soup, type):
+        if type == "episode":
+            rating = soup.find("span", "tile__details-date-duration")
+            rating = rating.text.strip()
+            rating = rating[:5]
+            if "NR" in rating:
+                rating = "NR"
+        elif type == 'movie':
+            info = soup.find("div", "Video__Metadata")
+        elif type == 'serie':
+            info = soup.find("span", "tile__details-date-duration")
+        try: 
+            info = info.text.strip()
+        except:
+            pass
+        rating = None
+        try:
+            if "NR" in info:      # Si es un elemento not rated...
+                rating = 'NR'
             else:
-                pass
-        return seasons
+                try:
+                    rating = re.search(r"\D{2}-\d{2}",info).group()    # si es p ej. un TV-14
+                except: 
+                    try:
+                        rating = re.search(r"\D{2}-\D{2}",info).group()  # si es p ej. un TV-PG o un TV-G
+                    except:
+                        pass
+        except:
+            pass
+        return rating
         
-    def get_image(self, content, type):
-        """Método para obtener la imagen de un elemento
-
-        Args:
-            content: metadata bs4 a la cual le voy a extraer el deeplink
-            type: tipo de elemento
+    def get_year(self, soup, type):
+        if type == 'movie':
+            info = soup.find("div", "Video__Metadata")
+            try:
+                info = info.text.strip()
+                year = re.search(r"\d{2}.\d{2}.\d{2}",info).group()
+                year = year[6:]
+                if int(year) > 60:
+                    year = int(year) + 1900
+                else:
+                    year = int(year) + 2000
+            except:
+                year = None
+        elif type == 'serie' or type == 'episode':          # LAS SERIES NO TRAEN YEAR DE POR SI, TRAIGO EL YEAR DEL ULTIMO EPISODIO EMITIDO
+            info = soup.find("span", "tile__details-date-duration")
+            if info != None:
+                year = info.text.strip()
+                year = re.search(r"\d{4}",year).group()
+            else:
+                year = None
+        if year != None:
+            year = int(year)
+        return year
             
-        Return: 
-            devuelve la url de la imagen
-            ****** en realidad la devuelve en base64 ********
-            TODO: Fixear esto
-        """
-        if type == "Episode":
-            image = content.find("img")
-            image = image.get("src")
-        else:
+    def get_image(self, content, episode = False):
+        if episode == False:
             images_list = content['images']
             image = None
             for all_images in images_list:
                 for images in [all_images]:
                     if 'showimages' in images['value']:
                         image = images['value']
+        elif episode == True:
+            image = content.find("img")
+            image = image.get("src")
         return image
-
+    
     def bs4request(self, uri):
-        """Método para hacer una request con bs4
-        
-        Args:
-            uri: uri a la cual le vamos a hacer la request
-            
-        Return: 
-            devuelve el bs4
+        """
+        Desc:
+            Método para hacer una request con bs4
+            Args:
+                uri: uri a la cual le vamos a hacer la request
+                
+            Return: 
+                devuelve el bs4
         """
         page = requests.get(uri)
         soup = BeautifulSoup(page.content, 'html.parser')
         return soup
 
     def request(self, uri):
-        """Método para hacer una request a la API
-
-        Args:
-            uri: uri a la cual le voy a hacer la request
-            
-        Return: 
-            devuelve los contenidos en formato .json()
+        """
+        Desc:
+            Método para hacer una request a la API
+            Args:
+                uri: uri a la cual le voy a hacer la request
+                
+            Return: 
+                devuelve los contenidos en formato .json()
         """
         response = self.session.get(uri)
         contents = response.json()
         return contents
 
     def get_contents(self, uri):
-        """Método para obtener los contenidos 
-        invoca la función request, y "limpia" el dict.json() para que devuelva el dict con la metadata
+        """
+        Desc:
+                Método para obtener los contenidos 
+                invoca la función request, y "limpia" el dict.json() para que devuelva el dict con la metadata
 
-        Args:
-           uri: uri de la cual vamos a obtener los contenidos
-            
-        Return: 
+            Args:
+            uri: uri de la cual vamos a obtener los contenidos
+                
+            Return: 
             devuelve un dict con la lista de contenidos
         """
         data_dict = self.request(uri) 
