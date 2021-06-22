@@ -441,3 +441,27 @@ ott_sites:
     countries: 
       US: us.umc
     start_url: https://allblk.tv/browse/all/
+  PlutoDL: #Damian
+    countries:
+      AR: ar.pluto
+  PlutoFV: #Fede
+    countries:
+      AR: ar.pluto
+  PlutoNO: #Nazareno
+    countries:
+      AR: ar.pluto
+  PlutoDM: #Dario
+    countries:
+      AR: ar.pluto
+  PlutoAH: #Axel
+    countries:
+      AR: ar.pluto
+  PlutoFioV: #Fiorella
+    countries:
+      AR: ar.pluto
+  PlutoMI: #Matias
+    countries:
+      AR: ar.pluto
+  PlutoPQ: #Patricio
+    countries:
+      AR: ar.pluto       
