@@ -442,6 +442,7 @@ ott_sites:
     countries: 
       US: us.umc
     start_url: https://allblk.tv/browse/all/
+    package_url: https://allblk.tv/gift/
   PlutoDL: #Damian
     countries:
       AR: ar.pluto
