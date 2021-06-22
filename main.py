@@ -58,8 +58,6 @@ from platforms.pluto_dl import PlutoDL
 # Naza
 from platforms.pluto_dm import PlutoDM #Darío
 from platforms.pluto_ah import PlutoAH
-# Pato
-from plattforms.pluto_dm import PlutoDM #Darío
 # Axel
 # Pato
 from platform.pluto_pq import PlutoPQ
