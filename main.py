@@ -52,6 +52,22 @@ from platforms.darmattertv import DarkMattertv
 from platforms.natgeotv import Natgeotv
 from platforms.allblk_panda import Allblk_panda
 
+# Fiore
+from platforms.pluto_dl import PlutoDL
+# Fede
+# Naza
+from platforms.pluto_dm import PlutoDM #Darío
+from platforms.pluto_ah import PlutoAH
+# Pato
+from platforms.pluto_dm import PlutoDM #Darío
+# Axel
+# Pato
+from platforms.pluto_pq import PlutoPQ
+from platforms.pluto_mi import PlutoMI
+
+# Pato from platform.pluto_pq import PlutoPQ
+# Matias
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
