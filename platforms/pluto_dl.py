@@ -9,7 +9,7 @@ from handle.datamanager     import Datamanager
 # from time import sleep
 # import re
 
-class PlutoDLgi():
+class PlutoDL():
     """
     """
     def __init__(self, ott_site_uid, ott_site_country, type):
@@ -24,7 +24,7 @@ class PlutoDLgi():
         self.titanScraping = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
 
-        self.api_url = self._config['api_url']
+        # self.api_url = self._config['api_url']
 
         self.session = requests.session()
 

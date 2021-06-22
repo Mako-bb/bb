@@ -53,12 +53,16 @@ from platforms.natgeotv import Natgeotv
 from platforms.allblk_panda import Allblk_panda
 
 # Fiore
-# Damian
+from platforms.pluto_dl import PlutoDL
 # Fede
 from platforms.pluto_no import PlutoNO
 # Dario
 # Axel
 # Pato
+from platforms.pluto_pq import PlutoPQ
+from platforms.pluto_mi import PlutoMI
+
+# Pato from platform.pluto_pq import PlutoPQ
 # Matias
 
 

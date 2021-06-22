@@ -78,4 +78,8 @@ class PlutoNO():
         return query
 
     def _scraping(self, testing=False):
-        print("Nazareno Ordiz")
+        print("true")
+        # url = 
+
+        # response = self.session.get(url)
+        

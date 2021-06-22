@@ -9,7 +9,7 @@ from handle.datamanager     import Datamanager
 # from time import sleep
 # import re
 
-class PlutoRC():
+class PlutoCapacitacion():
     """
     """
     def __init__(self, ott_site_uid, ott_site_country, type):
@@ -76,5 +76,6 @@ class PlutoRC():
             query = list(query)
 
         return query
+
     def _scraping(self, testing=False):
-        print("Ricardo Carotenuto")
+        print("Fefo Velasco")
