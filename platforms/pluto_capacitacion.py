@@ -78,10 +78,7 @@ class PlutoCapacitacion():
         return query
 
     def _scraping(self, testing=False):
-        print("ok")
-
-        print("Juancito")
-        print("nico")
+       print("hola")
 
     def content_scraping(self, content):
         content_id = content['_id']
@@ -161,5 +158,5 @@ class PlutoCapacitacion():
 
         return payload
 
-    # def get_duration(self, dict_metadata):
-    #     return int(dict_metadata['allotment'] // 60) or int(dict_metadata['duration'] // 60000)
+    def get_duration(self, dict_metadata):
+        return int(dict_metadata['allotment'] // 60) or int(dict_metadata['duration'] // 60000)
