@@ -77,7 +77,8 @@ class PlutoCapacitacion():
 
         return query
     def _scraping(self, testing=False):
-        print("ok")
+        print("Juancito")
+        print("nico")
 
     def content_scraping(self, content):
         content_id = content['_id']
