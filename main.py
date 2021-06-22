@@ -51,14 +51,23 @@ from platforms.starz_panda import Starz_panda
 from platforms.darmattertv import DarkMattertv
 from platforms.natgeotv import Natgeotv
 from platforms.allblk_panda import Allblk_panda
-# Fiore
-# Damian
-# Fede
-# Naza
-# Dario
-# Axel
-# Pato
-# Matias
+
+# from platforms.pluto_ggarcia import Pluto_gg
+#from platforms.starz_mk import Starz_mk
+#from platforms.pluto_mv             import Pluto_mv
+#from platforms.starz_mv             import Starz_mv
+#from platforms.starz_tom import Starz
+#from platforms.starz_panda import Starz_panda
+
+#from platforms.darmattertv import DarkMattertv
+#from platforms.natgeotv import Natgeotv
+#from platforms.allblk_panda import Allblk_panda
+
+# from platforms.darmattertv import DarkMattertv
+# from platforms.natgeotv import Natgeotv
+# from platforms.allblk_panda import Allblk_panda
+
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
