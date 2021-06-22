@@ -48,15 +48,9 @@ from platforms.pluto_capacitacion import PlutoCapacitacion
 #from platforms.starz_mv             import Starz_mv
 #from platforms.starz_tom import Starz
 #from platforms.starz_panda import Starz_panda
-<<<<<<< HEAD
-#from platforms.darmattertv import DarkMattertv
-#from platforms.natgeotv import Natgeotv
-#from platforms.allblk_panda import Allblk_panda
-=======
 # from platforms.darmattertv import DarkMattertv
 # from platforms.natgeotv import Natgeotv
 # from platforms.allblk_panda import Allblk_panda
->>>>>>> 7a57b910731b4d44a7709cdfef6e16b33cefd4ff
 
 
 logging.basicConfig(level=logging.INFO)
