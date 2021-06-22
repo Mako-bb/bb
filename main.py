@@ -59,8 +59,10 @@ from platforms.allblk_panda import Allblk_panda
 # Dario
 # Axel
 # Pato
-from platforms.pluto_mi import PlutoMi
+from platforms.pluto_mi import PlutoMI
 
+# Pato from platform.pluto_pq import PlutoPQ
+# Matias
 
 
 logging.basicConfig(level=logging.INFO)
