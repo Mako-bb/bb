@@ -76,7 +76,6 @@ class PlutoCapacitacion():
             query = list(query)
 
         return query
-
     def _scraping(self, testing=False):
         print("ok")
 
