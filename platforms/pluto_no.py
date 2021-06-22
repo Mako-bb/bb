@@ -24,7 +24,7 @@ class PlutoNO():
         self.titanScraping = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
 
-        self.api_url = self._config['api_url']
+        # self.api_url = self._config['api_url']
 
         self.session = requests.session()
 
