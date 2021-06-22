@@ -56,9 +56,9 @@ from platforms.allblk_panda import Allblk_panda
 from platforms.pluto_dl import PlutoDL
 # Fede
 # Naza
-# Dario
+from plattforms.pluto_dm import PlutoDM #Darío
 # Axel
-# Pato
+# Pato from platform.pluto_pq import PlutoPQ
 # Matias
 
 

@@ -9,7 +9,7 @@ from handle.datamanager     import Datamanager
 # from time import sleep
 # import re
 
-class PlutoCapacitacion():
+class PlutoPQ():
     """
     """
     def __init__(self, ott_site_uid, ott_site_country, type):
