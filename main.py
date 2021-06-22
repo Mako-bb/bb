@@ -42,32 +42,23 @@ from platforms.amazon_login import AmazonLogin
 from platforms.abc import Abc
 from platforms.hbo_prueba import HboPrueba
 from platforms.pluto_capacitacion import PlutoCapacitacion
-from platforms.pluto_ggarcia import Pluto_gg
-from platforms.starz_mk import Starz_mk
-from platforms.pluto_mv             import Pluto_mv
-from platforms.starz_mv             import Starz_mv
-from platforms.starz_tom import Starz
-from platforms.starz_panda import Starz_panda
-from platforms.darmattertv import DarkMattertv
-from platforms.natgeotv import Natgeotv
-from platforms.allblk_panda import Allblk_panda
+#from platforms.pluto_ggarcia import Pluto_gg
+#from platforms.starz_mk import Starz_mk
+#from platforms.pluto_mv             import Pluto_mv
+#from platforms.starz_mv             import Starz_mv
+#from platforms.starz_tom import Starz
+#from platforms.starz_panda import Starz_panda
+#from platforms.darmattertv import DarkMattertv
+#from platforms.natgeotv import Natgeotv
+#from platforms.allblk_panda import Allblk_panda
 
 # Fiore
-from platforms.pluto_dl import PlutoDL
+#from platforms.pluto_dl import PlutoDL
 # Fede
 # Naza
-<<<<<<< HEAD
 # Dario
 from platforms.pluto_ah import PlutoAH
 # Pato
-=======
-from plattforms.pluto_dm import PlutoDM #Darío
-# Axel
-# Pato
-from platforms.pluto_mi import PlutoMI
-
-# Pato from platform.pluto_pq import PlutoPQ
->>>>>>> ded0aa5b559db15040522d6eede3421ad76254e7
 # Matias
 
 

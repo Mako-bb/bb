@@ -24,7 +24,7 @@ class PlutoAH():
         self.titanScraping = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
 
-        self.api_url = self._config['api_url']
+        #self.api_url = self._config['api_url']
 
         self.session = requests.session()
 
@@ -77,4 +77,7 @@ class PlutoAH():
 
         return query
     def _scraping(self, testing=False):
-        print("ok")
+        print("Axel Holmes")
+        #1) API
+        # 2) bs4
+        #3)selenium
