@@ -1,6 +1,7 @@
+from os import replace
 import time
-from typing import Dict
-
+from typing import Dict, cast
+import regex
 import requests
 import hashlib
 import pymongo
@@ -9,6 +10,7 @@ import json
 import platform
 from requests import api
 import selenium
+from handle.replace         import _replace
 from selenium.webdriver.firefox.webdriver import WebDriver
 from handle.replace     import _replace
 from common             import config
@@ -110,16 +112,27 @@ class Allblk_panda:
         return
 
     def _get_movie_payload(self, req):
-        """metodo que va a hacer un payload de cada pelicula"""
+        """metodo que extrae la info de html con bs4 y devuelve un payload de cada pelicula"""
         soup = BeautifulSoup(req.text, 'html.parser')
         name_html = soup.find('span', itemprop=True)#Busca la etiqueta
-        soup_name = BeautifulSoup(name_html.text, 'html.parser')#busca el name
-        name = soup_name.prettify()
-        description_html = soup.find('p', id=True)###Aca tengo que poder sacar la descripcion del elemento encontrado
-        #descriptdion = description_html['id']
-        # print(descriptdion)
+        for title in name_html:
+            title = title.strip()
+        content_description = soup.find('p', {'itemprop':'description'})
+        for item in content_description:#Extraemos la Descripcion
+            description = str(item)
+        content_cast= soup.find('p', {'itemprop':'actor'})#Buscamos los actores del contenido en el html
+        cast_list = []
+        for item in content_cast:
+            cast_list.append(str(item))#Creo una lista con el resultado de la busqueda de los actores
+        cast_html = cast_list[2]#saco la string del cast que me interesa
+        cast_html_list = re.split(string=cast_html, pattern= ',')
+        cast = []#creo una lista de actores para el cast
+        for item in cast_html_list:
+            item = item.strip()#limpio todos los items de la lista de cast. (tabulaciones, etc.)
+            cast.append(item)
+        content_director = soup.find('p', {'itemprop':'director'})
+        ###Agregar el Director y pasar a series    
         
-
 
 
     def _get_season_url_list(self, req):
@@ -135,6 +148,7 @@ class Allblk_panda:
         self.movies_list = []
         self.series_list = []
         req = self._get_request(self.start_url)#Hago una req a la plataforma
+        #Esto esta hardcodeado para no hacer una recuest por pelicula hasta que resuelva las payloads
         lista_url_prueba = ['https://allblk.tv/winnie-mandela/', 'https://allblk.tv/nephew-tommy-just-thoughts/']
         list_url = self._get_url_list(req)#me traigo una lista de todos los contenidos que tiene
         prueba = lista_url_prueba
