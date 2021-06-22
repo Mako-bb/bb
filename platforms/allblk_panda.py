@@ -1,3 +1,4 @@
+#from _typeshed import NoneType
 from os import replace
 import time
 from typing import Dict, cast
@@ -42,6 +43,7 @@ class Allblk_panda:
         self.skippedEpis            = 0
         self.skippedTitles          = 0
         self.start_url = self._config['start_url']
+        self.package_url = self._config['package_url']
 
         if type == 'return':
             '''
@@ -96,6 +98,10 @@ class Allblk_panda:
             url_list.append(url['href'])
         return url_list
         
+    def _get_dict_url_img(self, url_list, img_list):
+        """Método que mediante la lista de url y la de las imágenes, devuelve un diccionario"""
+        dict_url_img = dict(zip(url_list, img_list))
+        return dict_url_img
     
     def _get_movies_or_series(self, url_list):
         """Método que hace una request por cada contenido y distingue si es serie o pelicula"""
@@ -111,27 +117,98 @@ class Allblk_panda:
                 print('Pelicula')
         return
 
-    def _get_movie_payload(self, req):
-        """metodo que extrae la info de html con bs4 y devuelve un payload de cada pelicula"""
+    def _get_movie_metadata(self, req):
+        """metodo que extrae la metadata y devuelve un diccionario con los metadatos limpios"""
+        metadata = {}
         soup = BeautifulSoup(req.text, 'html.parser')
         name_html = soup.find('span', itemprop=True)#Busca la etiqueta
         for title in name_html:
             title = title.strip()
+            metadata['title']= title
         content_description = soup.find('p', {'itemprop':'description'})
-        for item in content_description:#Extraemos la Descripcion
-            description = str(item)
+        for description in content_description:#Extraemos la Descripcion
+            description = str(description)
+            metadata['synopsis']= description
         content_cast= soup.find('p', {'itemprop':'actor'})#Buscamos los actores del contenido en el html
         cast_list = []
         for item in content_cast:
             cast_list.append(str(item))#Creo una lista con el resultado de la busqueda de los actores
         cast_html = cast_list[2]#saco la string del cast que me interesa
         cast_html_list = re.split(string=cast_html, pattern= ',')
-        cast = []#creo una lista de actores para el cast
-        for item in cast_html_list:
-            item = item.strip()#limpio todos los items de la lista de cast. (tabulaciones, etc.)
-            cast.append(item)
+        cast_clean_list = []
+        for cast in cast_html_list:
+            cast = cast.strip()#limpio todos los items de la lista de cast. (tabulaciones, etc.)
+            cast_clean_list.append(cast)
+        metadata['cast'] = cast_clean_list 
         content_director = soup.find('p', {'itemprop':'director'})
-        ###Agregar el Director y pasar a series    
+        director_list = []
+        if content_director == None:
+            director = None
+            pass
+        else:
+            for item in content_director:
+                director_list.append(item)
+            director = str(director_list[2].strip())
+        metadata['director'] = director
+        return metadata
+
+    def get_image(self, req):
+        """Método busca todas las imagenes de todos los contenidos y los guarda en una lista"""
+        soup = BeautifulSoup(req.text, 'html.parser')
+        contenedor = soup.find_all('img', itemprop='image')
+        img_list = []
+        for img in contenedor:
+            img_list.append(img['src'])
+        return img_list
+
+    def get_package(self, url):
+        """Método que devuelve un dicconario con el package"""
+        req = self._get_request(url)
+        soup = BeautifulSoup(req.text, 'html.parser')
+        contenedor_package = soup.find('span', {'id':'membership-cost-allblk'})
+        package = {}
+        for package_item in contenedor_package:
+            package['BuyPrice'] = str(package_item)
+        return package
+
+    def get_id(self, movie):
+        """Método que trae el id de cada pelicula"""
+        
+    def get_payload_movies(self, metadata, movie, dict_url_img):
+        """Método que devuelve un payload de peliculas"""
+        payload = { 
+            "PlatformCode": self._platform_code, #Obligatorio 
+            "Id": None, #Hashear id
+            "Title": metadata['title'], #Obligatorio 
+            "CleanTitle": _replace(metadata['title']), #Obligatorio 
+            "OriginalTitle": metadata['title'], 
+            "Type": 'Movie', #Obligatorio 
+            "Year": None, #Important! 
+            "Duration": None,
+            "ExternalIds": None,  
+            "Deeplinks": { 
+            "Web": movie, #Obligatorio 
+            "Android": None, 
+            "iOS": None, 
+            }, 
+            "Synopsis": metadata['synopsis'], 
+            "Image": dict_url_img['movie'],
+            "Rating": None, #Important! 
+            "Provider": None,
+            "Genres": None, #Important!
+            "Cast": metadata['cast'], 
+            "Directors": metadata['directors'], #Important! 
+            "Availability": None, #Important! 
+            "Download": None, 
+            "IsOriginal": None, #Important! 
+            "IsAdult": None, #Important! 
+            "IsBranded": None, #Important! (ver link explicativo)
+            "Packages": [self.get_package(self.package_url)],
+            "Country": None, 
+            "Timestamp": datetime.now().isoformat(), #Obligatorio 
+            "CreatedAt": self._created_at, #Obligatorio
+            }
+        
         
 
 
@@ -148,14 +225,19 @@ class Allblk_panda:
         self.movies_list = []
         self.series_list = []
         req = self._get_request(self.start_url)#Hago una req a la plataforma
+
         #Esto esta hardcodeado para no hacer una recuest por pelicula hasta que resuelva las payloads
         lista_url_prueba = ['https://allblk.tv/winnie-mandela/', 'https://allblk.tv/nephew-tommy-just-thoughts/']
         list_url = self._get_url_list(req)#me traigo una lista de todos los contenidos que tiene
+        
         prueba = lista_url_prueba
+        list_img = self.get_image(req)
+        dict_url_img = self._get_dict_url_img(list_url, list_img)
+        self.get_package(self.package_url)
         self._get_movies_or_series(prueba)#diferencio los contenidos entre series y movies
         #self._get_movie_payload(prueba)
         for movie in self.movies_list:
-            self._get_movie_payload(movie)
+            self._get_movie_metadata(movie)
             print('extraer el contenido de la pelicula con un payload')
         for serie in self.series_list:
             print('Aca va el pyload de cada serie')

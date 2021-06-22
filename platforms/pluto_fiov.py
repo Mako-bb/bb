@@ -9,7 +9,7 @@ from handle.datamanager     import Datamanager
 # from time import sleep
 # import re
 
-class PlutoDL():
+class PlutoFioV():
     """
     """
     def __init__(self, ott_site_uid, ott_site_country, type):
@@ -24,7 +24,7 @@ class PlutoDL():
         self.titanScraping = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
 
-        # self.api_url = self._config['api_url']
+        #self.api_url = self._config['api_url']
 
         self.session = requests.session()
 
@@ -76,7 +76,7 @@ class PlutoDL():
             query = list(query)
 
         return query
-
     def _scraping(self, testing=False):
-        print("Damian Lorenzo")
-        
+
+        #1) obtener API
+        print("Fiorella Valente")
