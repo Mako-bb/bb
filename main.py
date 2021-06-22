@@ -53,7 +53,7 @@ from platforms.natgeotv import Natgeotv
 from platforms.allblk_panda import Allblk_panda
 
 # Fiore
-# Damian
+from platforms.pluto_dl import PlutoDL
 # Fede
 # Naza
 <<<<<<< HEAD
@@ -63,6 +63,9 @@ from platforms.pluto_ah import PlutoAH
 =======
 from plattforms.pluto_dm import PlutoDM #Darío
 # Axel
+# Pato
+from platforms.pluto_mi import PlutoMI
+
 # Pato from platform.pluto_pq import PlutoPQ
 >>>>>>> ded0aa5b559db15040522d6eede3421ad76254e7
 # Matias
