@@ -78,34 +78,8 @@ class PlutoCapacitacion():
         return query
 
     def _scraping(self, testing=False):
-        # Listas de contentenido scrapeado:
-        self.scraped = self.query_field(self.titanScraping, field='Id')
-        self.scraped_episodes = self.query_field(self.titanScrapingEpisodios, field='Id')
+       print("ok")
 
-        # TODO: Aprender Datamanager
-        # scraped = Datamanager._getListDB(self,self.titanScraping)
-        # scraped_episodes = Datamanager._getListDB(self,self.titanScrapingEpisodios)
-
-        # Listas con contenidos y episodios dentro (DICT):
-        self.payloads = []
-        self.episodes_payloads = []
-
-        contents_list = self.get_contents()
-        for content in contents_list:
-            # TODO: Agregar enumerate
-            self.content_scraping(content)
-            # Almaceno la lista de payloads en mongo:
-        if self.payloads:
-            self.mongo.insertMany(self.titanScraping, self.payloads)
-        if self.episodes_payloads:
-            self.mongo.insertMany(self.titanScrapingEpisodios, self.episodes_payloads)
-
-        self.session.close()
-
-        # Validar tipo de datos de mongo:
-        Upload(self._platform_code, self._created_at, testing=True)
-
-        print("Fin")
 
     def content_scraping(self, content):
         content_id = content['_id']
@@ -185,5 +159,5 @@ class PlutoCapacitacion():
 
         return payload
 
-    def get_duration(self, dict_metadata):
-        return int(dict_metadata['allotment'] // 60) or int(dict_metadata['duration'] // 60000)
+    # def get_duration(self, dict_metadata):
+    #     return int(dict_metadata['allotment'] // 60) or int(dict_metadata['duration'] // 60000)
