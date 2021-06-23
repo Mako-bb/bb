@@ -61,6 +61,9 @@ from platforms.pluto_ah import PlutoAH
 #Matias
 from platforms.pluto_mi import PlutoMI
 
+#HBO
+from platforms.hbo_test import HBO_Test
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
