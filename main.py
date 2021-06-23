@@ -52,6 +52,7 @@ from platforms.pluto_capacitacion import PlutoCapacitacion
 #from platforms.natgeotv import Natgeotv
 #from platforms.allblk_panda import Allblk_panda
 
+<<<<<<< HEAD
 # Fiore
 #from platforms.pluto_dl import PlutoDL
 # Fede
@@ -61,19 +62,24 @@ from platforms.pluto_capacitacion import PlutoCapacitacion
 from platforms.pluto_ah import PlutoAH
 # Pato
 =======
+=======
+from platforms.pluto_fiov import PlutoFioV
+from platforms.pluto_dl import PlutoDL
+from platforms.pluto_fv import PlutoFV
+#Naza
+>>>>>>> 2cb55a1a0b368102be9d74035aeff66a1475feab
 from platforms.pluto_dm import PlutoDM #Darío
 from platforms.pluto_ah import PlutoAH
-# Pato
-from platforms.pluto_dm import PlutoDM #Darío
-# Axel
-# Pato
-from platforms.pluto_pq import PlutoPQ
+#Matias
 from platforms.pluto_mi import PlutoMI
 
+<<<<<<< HEAD
 # Pato from platform.pluto_pq import PlutoPQ
 >>>>>>> 7e2f2e4ab782ffbee4b86998c9e491bdbfe9851f
 # Matias
 
+=======
+>>>>>>> 2cb55a1a0b368102be9d74035aeff66a1475feab
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
