@@ -87,30 +87,34 @@ class PlutoNO():
         contents_metadata = response.json()        
         
         categories = contents_metadata["categories"]
+        
 
         for categorie in categories:
-            items = categorie.get("items")
-            for item in items:
-                id = item.get("_id")
-                title = item.get("name")
-                type = item.get("type")
-                synopsis = item.get("summary")
-                duration = item.get("duration")
-                rating = item.get("rating")
-                genres = item.get("genre")
-                for item in item["covers"]:
-                    image = item.get("url")
+            contents = categorie.get("items")
+            for content in contents:
+                id = content.get("_id")
+                title = content.get("name")
+                type = content.get("type")
+                synopsis = content.get("summary")
+                duration = content.get("duration")
+                rating = content.get("rating")
+                genres = content.get("genre")
+                covers = content["covers"]
+                for content in covers:
+                    image = content.get("url")
+                
 
-                payload = {
+                payload_contenidos = {
                     "PlatformCode": "algo", #no recuerdo que iba aca
                     "Id": id,
                     "Title": title,
                     "CleanTitle": _replace(title),
                     "Type": type,
-                    "Synopsis" : synopsis,
                     "Duration": duration, #no pude ponerlo en segundos
+                    "Synopsis" : synopsis,
+                    "Image": image,
                     "Rating": rating,
                     "Genres": genres,
-                    "Image": image,
+                    
                 }
-                print(payload) 
+                print(payload_contenidos) 

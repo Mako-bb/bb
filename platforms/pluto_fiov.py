@@ -1,19 +1,15 @@
-from requests.models import Response
-from requests.sessions import session
-from handle.payload import Payload
 import time
 import requests
 from handle.replace         import _replace
-from common import config
-from handle.mongo import mongo
-from time import sleep
-import re
-from datetime               import datetime
+from common                 import config
+from handle.mongo           import mongo
 from updates.upload         import Upload
-import pandas
-import numpy
+from handle.payload         import Payload
+from handle.datamanager     import Datamanager
+# from time import sleep
+# import re
 
-class Starz_panda():
+class PlutoFioV():
     """
     """
     def __init__(self, ott_site_uid, ott_site_country, type):
@@ -28,7 +24,8 @@ class Starz_panda():
         self.titanScraping = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
 
-        self.api_url = self._config['api_url']
+        #self.api_url = self._config['api_url']
+
         self.session = requests.session()
 
         if type == 'return':
@@ -42,15 +39,12 @@ class Starz_panda():
                     self._created_at = lastContent['CreatedAt']
 
             self._scraping()
-            print('se ingresaron todos los contenidos correctamente')
-            
 
         if type == 'scraping':
             self._scraping()
 
         if type == 'testing':
             self._scraping(testing=True)
-
     def query_field(self, collection, field=None):
         """Método que devuelve una lista de una columna específica
         de la bbdd.
@@ -82,40 +76,7 @@ class Starz_panda():
             query = list(query)
 
         return query
-
     def _scraping(self, testing=False):
-        # Listas de contentenido scrapeado:
-        self.scraped = self.query_field(self.titanScraping, field='Id')                #estudiar
-        self.scraped_episodes = self.query_field(self.titanScrapingEpisodios, field='Id')
 
-        payload = []
-        payload_episodes = []
-        dict_contents = self.request()
-        contents = self.get_contents(dict_contents)
-        for id in contents['id']:
-            print(id) 
-
-       
-    def request(self):
-        """Método que realiza una peticion a la api y devielve el contenido en forma de diccionario"""
-        uri = self.api_url
-        response = self.session.get(uri)
-        dict_contents = response.json()
-        return dict_contents
-
-    def get_contents(self, dict_contents):
-
-        content_list = []
-        for play_contents in dict_contents['blocks']:
-            for content in play_contents['blocks']:
-                if content['blockType'] == str:
-                    continue
-                #for categorie in
-        #return content_list
-
-
-   
-
-    
-    
-    
+        #1) obtener API
+        print("Fiorella Valente")
