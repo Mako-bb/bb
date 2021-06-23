@@ -78,8 +78,38 @@ class PlutoNO():
         return query
 
     def _scraping(self, testing=False):
-        print("true")
-        # url = 
 
-        # response = self.session.get(url)
         
+        url = 'https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&deviceLat=-34.5106&deviceLon=-58.7536&deviceMake=Microsoft%2BEdge&deviceModel=web&deviceType=web&deviceVersion=91.0.864.54&marketingRegion=VE&serverSideAds=true'
+        
+        response = self.session.get(url)
+
+        dict_of_pluto = response.json()        
+        #print([i.get("name") for i in dict_of_pluto["categories"]])
+
+        for i in dict_of_pluto["categories"]:
+            items = i.get("items")
+            for item in items:
+                id = item.get("_id")
+                title = item.get("name")
+                type = item.get("type")
+                synopsis = item.get("summary")
+                duration = item.get("duration")
+                rating = item.get("rating")
+                genres = item.get("genre")
+                for item in item["covers"]:
+                    image = item.get("url")
+
+                payload = {
+                    "PlatformCode": "algo", #no recuerdo que iba aca
+                    "Id": id,
+                    "Title": title,
+                    "CleanTitle": _replace(title),
+                    "Type": type,
+                    "Synopsis" : synopsis,
+                    "Duration": duration, #no pude ponerlo en segundos
+                    "Rating": rating,
+                    "Genres": genres,
+                    "Image": image,
+                }
+                print(payload) 
