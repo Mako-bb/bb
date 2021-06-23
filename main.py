@@ -69,6 +69,9 @@ from platforms.pluto_ah import PlutoAH
 #Matias
 from platforms.pluto_mi import PlutoMI
 
+#HBO
+from platforms.hbo_test import HBO_Test
+
 
 # Pato from platform.pluto_pq import PlutoPQ
 # Matias
