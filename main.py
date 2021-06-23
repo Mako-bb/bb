@@ -54,22 +54,11 @@ from platforms.allblk_panda import Allblk_panda
 
 from platforms.pluto_fiov import PlutoFioV
 from platforms.pluto_dl import PlutoDL
-# from platforms.pluto_fv import PlutoFV
-# Naza
+from platforms.pluto_fv import PlutoFV
+#Naza
 from platforms.pluto_dm import PlutoDM #Darío
 from platforms.pluto_ah import PlutoAH
-<<<<<<< HEAD
-=======
-# Pato
-from platforms.pluto_dm import PlutoDM #Darío
-# Axel
-# Pato
-from platforms.pluto_pq import PlutoPQ
-from platforms.pluto_mi import PlutoMI
-
-# Pato from platform.pluto_pq import PlutoPQ
->>>>>>> bb22a464a33e40799e16c78943468f5e23031779
-# Matias
+#Matias
 
 
 logging.basicConfig(level=logging.INFO)
