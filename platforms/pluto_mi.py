@@ -96,11 +96,11 @@ class PlutoMI():
                     item, self.series_list)
         
         #log para debug si saca los datos ok
-        '''
+        
         for movie in self.movies_list:
             for title,value in movie.items():
                 print(title,value)
-        '''
+
 
     def movie_payload(self, content, contents_list):
         self.movie = {
@@ -111,7 +111,7 @@ class PlutoMI():
             "OriginalTitle": content['slug'],
             "Type": content['type'],
             "Year": None,
-            "Duration": datetime.timedelta(seconds=content['duration']),
+            "Duration": datetime.timedelta(milliseconds=content['duration']),
             "ExternalIds": None,
             "Deeplinks": {
                 # No estoy seguro si es este dato
