@@ -53,6 +53,9 @@ ott_sites:
   AmazonLogin:
     countries:
       US: us.amazon_login
+  HBO_Test:
+    countries:
+      US: us.hbo_test
   FlixFling:
     countries:
       US: us.flixfling
