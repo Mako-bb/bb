@@ -84,11 +84,12 @@ class PlutoNO():
         
         response = self.session.get(url)
 
-        dict_of_pluto = response.json()        
-        #print([i.get("name") for i in dict_of_pluto["categories"]])
+        contents_metadata = response.json()        
+        
+        categories = contents_metadata["categories"]
 
-        for i in dict_of_pluto["categories"]:
-            items = i.get("items")
+        for categorie in categories:
+            items = categorie.get("items")
             for item in items:
                 id = item.get("_id")
                 title = item.get("name")
