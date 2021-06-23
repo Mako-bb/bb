@@ -54,13 +54,10 @@ from platforms.allblk_panda import Allblk_panda
 
 # Fiore
 from platforms.pluto_dl import PlutoDL
-from platforms.pluto_fv import PlutoFV
+# from platforms.pluto_fv import PlutoFV
 # Naza
 from platforms.pluto_dm import PlutoDM #Darío
 from platforms.pluto_ah import PlutoAH
-# Pato
-
-# Pato from platform.pluto_pq import PlutoPQ
 # Matias
 
 
