@@ -96,9 +96,9 @@ class PlutoCapacitacion():
             print("ok")
             # Imprimir los payloads:
             payload = {
-                "Id": "01",
-                "Title": "Los simpsons",
-                "Type": "Serie"
+                "Id": "",
+                "Title": "",
+                "Type": ""
                 # Lo pueden hacer completo.
             }
             print(payload)
