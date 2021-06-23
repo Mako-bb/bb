@@ -36,7 +36,6 @@ from platforms.boomerang import Boomerang
 from platforms.optimum_test import OptimumTest
 from platforms.amazon_login import AmazonLogin
 from platforms.abc import Abc
-from platforms.hbo_prueba import HboPrueba
 from platforms.pluto_capacitacion import PlutoCapacitacion
 from platforms.darmattertv import DarkMattertv
 from platforms.natgeotv import Natgeotv
