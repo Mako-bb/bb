@@ -24,7 +24,7 @@ class PlutoCapacitacion():
         self.titanScraping = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
 
-        self.api_url = self._config['api_url']
+        self.api_url = self._config['url']
 
         self.session = requests.session()
 
@@ -77,86 +77,28 @@ class PlutoCapacitacion():
 
         return query
     def _scraping(self, testing=False):
-        print("ok")
+        # 1) Obtener la API.
+        # 2) BS4.
+        # 3) Selenium.
 
+        url = 'https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&deviceLat=-34.5106&deviceLon=-58.7536&deviceMake=Microsoft%2BEdge&deviceModel=web&deviceType=web&deviceVersion=91.0.864.54&marketingRegion=VE&serverSideAds=true'
+        
+        response = self.session.get(url)
 
-    def content_scraping(self, content):
-        content_id = content['_id']
+        dict_of_pluto = response.json()        
+        print([i.get("name") for i in dict_of_pluto["categories"]])
+        
+        # Recorrer dict_of_pluto e imprimir todos los datos que se
+        # puedan de sus contenidos
 
-        if not content_id in self.scraped:
-            payload = self.get_payload(content)
-            if payload['Type'] == 'serie':
-                self.get_episodes(content)
-            if payload:
-                # 1) Almaceno el dict en la lista.
-                self.payloads.append(payload)
-                # 2) Almaceno el id (str) en la lista.
-                self.scraped.append(content_id)
-
-    def get_episodes(self, content):
-        # TODO: Pensar la lógca de episodios.
-        self.scraped_episodes.append('Id')
-        self.episodes_payloads.append({})
-
-    def request(self, url, headers=None):
-        """Método para hacer y validar una petición a un servidor.
-
-        Args:
-            url (str): Url a la cual realizaremos la petición.
-
-        Returns:
-            obj: Retorna un objeto tipo requests.
-        """
-        request_timeout = 5
-        while True:
-            try:
-                # Request con header:
-                response = self.session.get(
-                    url,
-                    headers=headers,
-                    timeout=request_timeout
-                )
-                if response.status_code == 200:
-                    return response
-                else:
-                    raise Exception(f"ERROR: {response.status_code}")
-            except requests.exceptions.ConnectionError:
-                print("Connection Error, Retrying")
-                time.sleep(request_timeout)
-                continue
-            except requests.exceptions.RequestException:
-                print('Waiting...')
-                time.sleep(request_timeout)
-                continue
-
-    def get_contents(self):
-        """Método que trae los contenidos en forma de diccionario.
-
-        Returns:
-            list: Lista de diccionarios
-        """
-        content_list = []
-        uri = self.api_url
-        response = self.request(uri)
-        dict_contents = response.json()
-        list_categories = dict_contents['categories']
-        for categories in list_categories:
-            content_list += categories['items']
-
-        return content_list
-
-    def get_payload(self, dict_metadata):
-        # from handle.payload import Payload
-        # payload = Payload()
-
-        payload = {}
-        payload['Id'] = dict_metadata['_id']
-        payload['Title'] = dict_metadata['name']
-        payload['Type'] = dict_metadata['type']
-        payload['Synopsis'] = dict_metadata.get('description')
-        payload['Duration'] = self.get_duration(dict_metadata)
-
-        return payload
-
-    #def get_duration(self, dict_metadata):
-    #    return int(dict_metadata['allotment'] // 60) or int(dict_metadata['duration'] // 60000)
+        # Ejemplo:
+        for content in dict_of_pluto:
+            print("ok")
+            # Imprimir los payloads:
+            payload = {
+                "Id": "01",
+                "Title": "Los simpsons",
+                "Type": "Serie"
+                # Lo pueden hacer completo.
+            }
+            print(payload)

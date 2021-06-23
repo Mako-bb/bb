@@ -56,9 +56,22 @@ from platforms.pluto_capacitacion import PlutoCapacitacion
 #from platforms.pluto_dl import PlutoDL
 # Fede
 # Naza
+<<<<<<< HEAD
 # Dario
 from platforms.pluto_ah import PlutoAH
 # Pato
+=======
+from platforms.pluto_dm import PlutoDM #Darío
+from platforms.pluto_ah import PlutoAH
+# Pato
+from platforms.pluto_dm import PlutoDM #Darío
+# Axel
+# Pato
+from platforms.pluto_pq import PlutoPQ
+from platforms.pluto_mi import PlutoMI
+
+# Pato from platform.pluto_pq import PlutoPQ
+>>>>>>> 7e2f2e4ab782ffbee4b86998c9e491bdbfe9851f
 # Matias
 
 
