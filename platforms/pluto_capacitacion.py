@@ -83,6 +83,7 @@ class PlutoCapacitacion():
 
         url = 'https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&deviceLat=-34.5106&deviceLon=-58.7536&deviceMake=Microsoft%2BEdge&deviceModel=web&deviceType=web&deviceVersion=91.0.864.54&marketingRegion=VE&serverSideAds=true'
         
+<<<<<<< HEAD
         response = self.session.get(url) # Recorrer dict_of_pluto e imprimir todos los datos que se
         # puedan de sus contenidos
 
@@ -100,18 +101,31 @@ class PlutoCapacitacion():
 
         dict_of_pluto = response.json()        
         print([i.get("name") for i in dict_of_pluto["categories"]])
+=======
+        response = self.session.get(url)
+        contents_metadata = response.json()        
+        # print([i.get("name") for i in dict_of_pluto["categories"]])
+>>>>>>> f09c23d18b18644c143866c740c4e72dfed5b0df
         
         # Recorrer dict_of_pluto e imprimir todos los datos que se
         # puedan de sus contenidos
 
+        categories = contents_metadata["categories"]
+
+        contents = []
         # Ejemplo:
-        for content in dict_of_pluto:
-            print("ok")
-            # Imprimir los payloads:
+        for categorie in categories:
+            print(categorie.get("name"))
+            contents += categorie["items"]
+
+        for content in contents:
+            from pprint import pprint as print_lindo
+            # print_lindo(content)
+            # # Imprimir los payloads:
             payload = {
-                "Id": "01",
-                "Title": "Los simpsons",
-                "Type": "Serie"
+                "Id": content["_id"],
+                "Title": content["title"],
+                "Type": ""
                 # Lo pueden hacer completo.
             }
             print(payload)

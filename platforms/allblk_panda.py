@@ -3,6 +3,7 @@ from os import replace
 import time
 from typing import Dict, cast
 import regex
+import hashlib
 import requests
 import hashlib
 import pymongo
@@ -110,14 +111,14 @@ class Allblk_panda:
             soup = BeautifulSoup(req.text, 'html.parser')
             contents = soup.find('meta', content=True, itemprop=True)
             if int(contents['content']) > 1:
-                self.series_list.append(req)
+                self.series_url_list.append(url)
                 print('serie')
             else:
-                self.movies_list.append(req)
+                self.movies_url_list.append(url)
                 print('Pelicula')
         return
 
-    def _get_movie_metadata(self, req):
+    def _get_metadata(self, req):
         """metodo que extrae la metadata y devuelve un diccionario con los metadatos limpios"""
         metadata = {}
         soup = BeautifulSoup(req.text, 'html.parser')
@@ -171,18 +172,20 @@ class Allblk_panda:
             package['BuyPrice'] = str(package_item)
         return package
 
-    def get_id(self, movie):
+    def get_id(self, url, metadata):
         """Método que trae el id de cada pelicula"""
-        
-    def get_payload_movies(self, metadata, movie, dict_url_img):
+        id = hash(url + metadata['title'])
+        return id
+   
+    def get_payload_movies(self, metadata, movie):
         """Método que devuelve un payload de peliculas"""
         payload = { 
             "PlatformCode": self._platform_code, #Obligatorio 
-            "Id": None, #Hashear id
+            "Id": self.get_id(movie, metadata), #Hashear id
             "Title": metadata['title'], #Obligatorio 
             "CleanTitle": _replace(metadata['title']), #Obligatorio 
             "OriginalTitle": metadata['title'], 
-            "Type": 'Movie', #Obligatorio 
+            "Type": 'Movie', #Hardcodeado
             "Year": None, #Important! 
             "Duration": None,
             "ExternalIds": None,  
@@ -192,12 +195,12 @@ class Allblk_panda:
             "iOS": None, 
             }, 
             "Synopsis": metadata['synopsis'], 
-            "Image": dict_url_img['movie'],
+            "Image": metadata['image'],
             "Rating": None, #Important! 
             "Provider": None,
             "Genres": None, #Important!
             "Cast": metadata['cast'], 
-            "Directors": metadata['directors'], #Important! 
+            "Directors": metadata['director'], #Important! 
             "Availability": None, #Important! 
             "Download": None, 
             "IsOriginal": None, #Important! 
@@ -208,10 +211,8 @@ class Allblk_panda:
             "Timestamp": datetime.now().isoformat(), #Obligatorio 
             "CreatedAt": self._created_at, #Obligatorio
             }
+        return payload
         
-        
-
-
     def _get_season_url_list(self, req):
         soup = BeautifulSoup(req.text, 'html.parser')
         contenedor = soup.find_all('h4', {"class": True})
@@ -222,12 +223,14 @@ class Allblk_panda:
         return season_url_list
 
     def _scraping(self, testing=False):
-        self.movies_list = []
-        self.series_list = []
+        self.payloads = []
+        self.payloads_episodes = []
+        self.movies_url_list = []
+        self.series_url_list = []
         req = self._get_request(self.start_url)#Hago una req a la plataforma
 
         #Esto esta hardcodeado para no hacer una recuest por pelicula hasta que resuelva las payloads
-        lista_url_prueba = ['https://allblk.tv/winnie-mandela/', 'https://allblk.tv/nephew-tommy-just-thoughts/']
+        lista_url_prueba = ['https://allblk.tv/lawdhavemercy/', 'https://allblk.tv/worldwidenate/']
         list_url = self._get_url_list(req)#me traigo una lista de todos los contenidos que tiene
         
         prueba = lista_url_prueba
@@ -236,10 +239,23 @@ class Allblk_panda:
         self.get_package(self.package_url)
         self._get_movies_or_series(prueba)#diferencio los contenidos entre series y movies
         #self._get_movie_payload(prueba)
-        for movie in self.movies_list:
-            self._get_movie_metadata(movie)
-            print('extraer el contenido de la pelicula con un payload')
-        for serie in self.series_list:
+        for movie in self.movies_url_list:#Solo me falta hashear el id
+            req = self._get_request(movie)#hago una request
+            metadata = self._get_metadata(req)#Extraigo los datos que hay en la url
+            metadata['image'] = dict_url_img[movie]
+            metadata['id'] = self.get_id(movie, metadata)
+            payload = self.get_payload_movies(metadata, movie)
+            self.payloads.append(payload)
+        for serie in self.series_url_list:
+            req = self._get_request(serie)
+            metadata = self._get_metadata(req)
+            metadata['image'] = dict_url_img[serie]
+            metadata['id'] = self.get_id(serie, metadata)
+            payload = self.get_payload_movies(metadata, serie)
+            #tengo que pensar como meter el pauload episodes
+
+
+
             print('Aca va el pyload de cada serie')
             seasons_url_list = self._get_season_url_list(serie)#url por temporadas
             episode_url_list = self._get_url_list(serie)#aca guardamos das las urls de los episodios 
