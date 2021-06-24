@@ -112,3 +112,12 @@ class HBO_Fev():
         soup_ejemplo = BeautifulSoup(req_ejemplo.text, 'html.parser')
         details_ejemplo = soup_ejemplo.find('div', {'modules/InfoSlice--assetDetails'})
         print(details_ejemplo)
+    
+    payload = {
+        "Id": "1",
+        "Title": "Titanic",
+        "Type": "movie"# Lo pueden hacer completo.
+        }
+    
+    print(payload)
+    #self.mongo.insert("titanScraping", payload)
