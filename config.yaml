@@ -56,6 +56,9 @@ ott_sites:
   HBO_Test:
     countries:
       US: us.hbo_test
+  HBO_Fev:
+    countries:
+      US: us.hbo_fev
   FlixFling:
     countries:
       US: us.flixfling

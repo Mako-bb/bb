@@ -35,7 +35,7 @@ from platforms.boomerang import Boomerang
 from platforms.optimum_test import OptimumTest
 from platforms.amazon_login import AmazonLogin
 from platforms.abc import Abc
-from platforms.pluto_capacitacion import PlutoCapacitacion
+#from platforms.pluto_capacitacion import PlutoCapacitacion
 from platforms.darmattertv import DarkMattertv
 from platforms.natgeotv import Natgeotv
 from platforms.allblk_panda import Allblk_panda
@@ -51,6 +51,7 @@ from platforms.pluto_mi import PlutoMI
 
 #HBO
 from platforms.hbo_test import HBO_Test
+from platforms.hbo_fev import HBO_Fev
 
 
 logging.basicConfig(level=logging.INFO)
