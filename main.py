@@ -63,7 +63,7 @@ from platforms.pluto_ah import PlutoAH
 from platforms.pluto_fiov import PlutoFioV
 from platforms.pluto_dl import PlutoDL
 from platforms.pluto_fv import PlutoFV
-#Naza
+from platforms.pluto_no import PlutoNO
 from platforms.pluto_dm import PlutoDM #Darío
 from platforms.pluto_ah import PlutoAH
 #Matias
@@ -71,13 +71,10 @@ from platforms.pluto_mi import PlutoMI
 
 #HBO
 from platforms.hbo_test import HBO_Test
+from platforms.hbo_no import HBO_NO
 #Mati HBO
-#from platforms.hbo_mi import HboMI
-#from platforms.starz_mi import StarzMI
-
-
-# Pato from platform.pluto_pq import PlutoPQ
-# Matias
+# from platforms.hbo_mi import HboMI
+# from platforms.starz_mi import StarzMI
 
 
 logging.basicConfig(level=logging.INFO)
