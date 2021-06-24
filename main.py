@@ -36,14 +36,34 @@ from platforms.optimum_test import OptimumTest
 from platforms.amazon_login import AmazonLogin
 from platforms.abc import Abc
 from platforms.pluto_capacitacion import PlutoCapacitacion
-from platforms.darmattertv import DarkMattertv
-from platforms.natgeotv import Natgeotv
-from platforms.allblk_panda import Allblk_panda
 
+#from platforms.pluto_ggarcia import Pluto_gg
+#from platforms.starz_mk import Starz_mk
+#from platforms.pluto_mv             import Pluto_mv
+#from platforms.starz_mv             import Starz_mv
+#from platforms.starz_tom import Starz
+#from platforms.starz_panda import Starz_panda
+#from platforms.darmattertv import DarkMattertv
+#from platforms.natgeotv import Natgeotv
+#from platforms.allblk_panda import Allblk_panda
+
+from platforms.darmattertv import DarkMattertv
+#from platforms.natgeotv import Natgeotv
+#from platforms.allblk_panda import Allblk_panda
+
+
+
+# Fiore
+#from platforms.pluto_dl import PlutoDL
+# Fede
+# Naza
+# Dario
+from platforms.pluto_ah import PlutoAH
+# Pato
 from platforms.pluto_fiov import PlutoFioV
 from platforms.pluto_dl import PlutoDL
 from platforms.pluto_fv import PlutoFV
-#Naza
+from platforms.pluto_no import PlutoNO
 from platforms.pluto_dm import PlutoDM #Darío
 from platforms.pluto_ah import PlutoAH
 #Matias
@@ -51,8 +71,9 @@ from platforms.pluto_mi import PlutoMI
 
 #HBO
 from platforms.hbo_test import HBO_Test
+from platforms.hbo_no import HBO_NO
 #Mati HBO
-from platforms.hbo_mi import HboMI
+#from platforms.hbo_mi import HboMI
 from platforms.starz_mi import StarzMI
 
 

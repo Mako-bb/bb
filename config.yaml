@@ -53,6 +53,9 @@ ott_sites:
   AmazonLogin:
     countries:
       US: us.amazon_login
+  HBO_NO:
+    countries:
+      US: us.hbo_test      
   HBO_Test:
     countries:
       US: us.hbo_test
@@ -279,7 +282,7 @@ ott_sites:
       start_url: 'https://espanol.wwe.com'
       api_url: 'https://cdn.watch.wwe.com/api/'
       cdn_watch_url: 'https://cdn.watch.wwe.com'
-  HboPrueba:
+  Prueba:
     countries:
       US: us.freeform2
   BravoTv:
@@ -417,6 +420,17 @@ ott_sites:
     api_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&deviceLat=-34.5106&deviceLon=-58.7536&deviceMake=Microsoft%2BEdge&deviceModel=web&deviceType=web&deviceVersion=91.0.864.54&marketingRegion=VE&serverSideAds=true
   PlutoPQ: #Patricio
     countries:
+      AR: ar.pluto     
+    
+      
+
+
+
+
+
+
+
+
       AR: ar.pluto
   HboMI:
     countries:
@@ -426,4 +440,5 @@ ott_sites:
       AR: ar.starz_mi
     api_url: http://playdata.starz.com/metadata-service/play/partner/Web_ES/v8/content
     url: https://www.starz.com/ar/es
+  
   
