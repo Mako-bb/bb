@@ -12,9 +12,6 @@ import datetime
 
 
 class PlutoMI():
-    """
-    """
-
     def __init__(self, ott_site_uid, ott_site_country, type):
         self.ott_site_uid = ott_site_uid
         self.ott_site_country = ott_site_country
@@ -28,7 +25,8 @@ class PlutoMI():
         self.titanScrapingEpisodios = config(
         )['mongo']['collections']['episode']
 
-        # self.api_url = self._config['api_url']
+        self.api_url = self._config['api_url']
+        self.url=self._config['url']
 
         self.session = requests.session()
 
@@ -83,44 +81,34 @@ class PlutoMI():
         return query
 
     def _scraping(self, testing=False):
-        url = 'https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&deviceLat=-34.5106&deviceLon=-58.7536&deviceMake=Microsoft%2BEdge&deviceModel=web&deviceType=web&deviceVersion=91.0.864.54&marketingRegion=VE&serverSideAds=true'
-        response = self.session.get(url)
+        url_api = self.api_url
+        response = self.session.get(url_api)
         json_data_pluto = response.json()
-
-        movies_list = []
-        series_list = []
 
         for content in json_data_pluto["categories"]:
             for item in content["items"]:
-                self.movie_payload(item, movies_list) if item["type"] == 'movie' else self.series_payload(
-                    item, series_list)
-        
-        #log para debug si saca los datos ok
-        '''
-        for movie in self.movies_list:
-            for title,value in movie.items():
-                print(title,value)
-        '''
+                self.movie_payload(item) if item["type"] == 'movie' else self.series_payload(item)
 
-    def movie_payload(self, content, contents_list):
+    def movie_payload(self, content):
+        seconds=content['duration']
+        minutes=seconds/60
+        duration= int(minutes)
         movie = {
-            "PlatformCode": "ar.pultotv",  # No se de donde sacarlo lo hardcode
+            "PlatformCode": self._platform_code,
             "Id": content['_id'],
             "Title": content['name'],
             "CleanTitle": _replace(content['name']),
             "OriginalTitle": content['slug'],
             "Type": content['type'],
             "Year": None,
-            "Duration": datetime.timedelta(milliseconds=content['duration']),
+            "Duration": duration,
             "ExternalIds": None,
             "Deeplinks": {
-                # No estoy seguro si es este dato
-                "Web": content['stitched']['urls'][0]['url'],
-                "Android": None,  # No se de donde sacarlo
-                "iOS": None,  # No se de donde sacarlo
+                "Web": self.url,
+                "Android": None,
+                "iOS": None,
             },
             "Synopsis": content['summary'],
-            # No estoy seguro si es este dato
             "Image": content['featuredImage']['path'],
             "Rating": content['rating'],
             "Provider": None,
@@ -132,17 +120,19 @@ class PlutoMI():
             "IsOriginal": None,
             "IsAdult": None,
             "IsBranded": None,
-            # No estoy seguro si es este dato
             "Packages": [{'Type': 'free-vod'}],
-            "Country": None,
+            "Country": self.ott_site_country,
             "Timestamp":datetime.datetime.now().isoformat(),
             "CreatedAt": self._created_at,
         }
-        contents_list.append(movie)
+        if self.mongo.search("titanScraping",movie):
+            pass
+        else:
+            self.mongo.insert("titanScraping",movie)
 
-    def series_payload(self, content, contents_list):
+    def series_payload(self, content):
         series = {
-            'PlatformCode': "ar.pultotv",  # No se de donde sacarlo lo hardcode
+            'PlatformCode': self._platform_code,
             'Id': content['_id'],
             'Title': content['name'],
             'OriginalTitle': content['slug'],
@@ -151,15 +141,13 @@ class PlutoMI():
             'Year': None,
             'Duration': None,
             'Deeplinks': {
-                # No estoy seguro si es este dato
-                "Web": content['stitched']['urls'][0]['url'],
-                'Android': None,  # No se de donde sacarlo
-                'iOS': None,  # No se de donde sacarlo
+                "Web": self.url,
+                'Android': None,
+                'iOS': None,
             },
             'Seasons': len(content['seasonsNumbers']),
             'Playback': None,  # No se que es
             'Synopsis': content['summary'],
-            # No estoy seguro si es este dato
             'Image': content['featuredImage']['path'],
             'Rating': content['rating'],
             'Provider': None,
@@ -172,10 +160,62 @@ class PlutoMI():
             'IsOriginal': None,
             'IsBranded': None,
             'IsAdult': None,
-            # No estoy seguro si es este dato
             "Packages": [{'Type': 'free-vod'}],
-            'Country': None,
+            'Country': self.ott_site_country,
             'Timestamp': datetime.datetime.now().isoformat(),
             'CreatedAt': self._created_at,
         }
-        contents_list.append(series)
+        if self.mongo.search("titanScraping",series):
+            pass
+        else:
+            self.mongo.insert("titanScraping",series)
+            parent_id=content['_id']
+            parent_title=_replace(content['name'])
+            series_api_url='https://service-vod.clusters.pluto.tv/v3/vod/series/{}/seasons?advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=820bd17e-1326-4985-afbf-2a75398c0e4e&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=820bd17e-1326-4985-afbf-2a75398c0e4e&deviceLat=-39.0576&deviceLon=-67.5301&deviceMake=Firefox&deviceModel=web&deviceType=web&deviceVersion=89.0&marketingRegion=VE&serverSideAds=true&sessionID=1ddd9448-d514-11eb-b85e-0242ac110002&sid=1ddd9448-d514-11eb-b85e-0242ac110002&userId=&attributeV4=foo'.format(parent_id)
+            self.episodes_payload(series_api_url,parent_id,parent_title)
+        
+    
+    def episodes_payload(self, metaData, parentId, parentTitle):
+        response_episodes = self.session.get(metaData)
+        content=response_episodes.json()
+        for seasonValue in content['seasons']:
+            for epValue in seasonValue['episodes']:
+                seconds=epValue['duration']
+                minutes=seconds/60
+                duration= int(minutes)
+                episode = {
+                    'PlatformCode':self._platform_code,
+                    'ParentId': parentId,
+                    'ParentTitle': parentTitle,
+                    'Id': epValue['_id'] ,
+                    'Title':epValue['name'] ,
+                    'Episode':epValue['number'],
+                    'Season': epValue['season'],
+                    'Year': None,
+                    'Image':None ,
+                    'Duration': duration,
+                    'Deeplinks':{
+                        'Web':self.url ,
+                        'Android': None,
+                        'iOS':None ,
+                    },
+                    'Synopsis':epValue['description'],
+                    'Rating':epValue['rating'] ,
+                    'Provider':None ,
+                    'ExternalIds': None,
+                    'Genres': epValue['genre'],
+                    'Cast':None ,
+                    'Directors':None ,
+                    'Availability':None ,
+                    'Download':None ,
+                    'IsOriginal': None,
+                    'IsAdult': None,
+                    'Country': self.ott_site_country,
+                    'Packages': [{'Type': 'free-vod'}],
+                    'Timestamp': datetime.datetime.now().isoformat(),
+                    'CreatedAt': self._created_at,
+                }
+                if self.mongo.search("titanScrapingEpisodes",episode):
+                    pass
+                else:
+                    self.mongo.insert("titanScrapingEpisodes",episode)
