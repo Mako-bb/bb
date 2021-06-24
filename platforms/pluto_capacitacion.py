@@ -80,8 +80,13 @@ class PlutoCapacitacion():
         # 1) Obtener la API.
         # 2) BS4.
         # 3) Selenium.
+<<<<<<< HEAD
 
         url = self.api_url
+=======
+        numero =1
+        url = 'https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&deviceLat=-34.5106&deviceLon=-58.7536&deviceMake=Microsoft%2BEdge&deviceModel=web&deviceType=web&deviceVersion=91.0.864.54&marketingRegion=VE&serverSideAds=true'
+>>>>>>> 259e94cd5f8e7c55a4df2a20a456bcda76fa508f
         
         response = self.session.get(url)
         contents_metadata = response.json()        
