@@ -87,8 +87,11 @@ class PlutoNO():
         contents_metadata = response.json()        
         
         categories = contents_metadata["categories"]
-        
 
+        slug = []
+
+        
+        
         for categorie in categories:
             contents = categorie.get("items")
             for content in contents:
@@ -100,12 +103,54 @@ class PlutoNO():
                 rating = content.get("rating")
                 genres = content.get("genre")
                 covers = content["covers"]
-                for content in covers:
-                    image = content.get("url")
+                
+                
+                slug = content["slug"]
+                url_episodios = f'https://service-vod.clusters.pluto.tv/v3/vod/slugs/{slug}?advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=95b00792-ce58-4e87-b310-caaf6c8d8de4&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=95b00792-ce58-4e87-b310-caaf6c8d8de4&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Firefox&deviceModel=web&deviceType=web&deviceVersion=89.0&marketingRegion=VE&serverSideAds=true&sessionID=4987c7e3-d482-11eb-bee6-0242ac110002&sid=4987c7e3-d482-11eb-bee6-0242ac110002&userId=&attributeV4=foo'
+                response_episodios = self.session.get(url_episodios)
+                contents_metadata_episodios = response_episodios.json()
+                temporadas = contents_metadata_episodios["seasons"]
                 
 
+                for temporada in temporadas:
+                    episodes = temporada.get("episodes")
+                    for episode in episodes:
+                        id_episode = episode.get("_id")
+                        ParentId_episode = temporada.get("_id")
+                        ParentTitle_episode = temporada.get("name")
+                        Episode_episode = episode.get("number")
+                        Season_episode = episode.get("season")
+                        Title_episode = episode.get("name")
+                        Duration_episode = episode.get("duration")
+                        Genres_episode = episode.get("genre")
+                        Cover_episode = episode["covers"]
+                        for content_ep in Cover_episode:
+                            Image_episode = content_ep.get("url")
+
+
+                        payload_episodes = {
+                            "PlatformCode": "ar.pultotv",
+                            "Id": id_episode,
+                            "ParentId": ParentId_episode,
+                            "ParentTitle": ParentTitle_episode,
+                            "Episode": Episode_episode,
+                            "Season": Season_episode,
+                            "Title": Title_episode,
+                            "CleanTitle": _replace(Title_episode),
+                            "Duration": Duration_episode, #no pude ponerlo en segundos
+                            "Image": Image_episode,
+                            "Genres": Genres_episode,
+                            
+                        }
+                        print(payload_episodes)       
+
+
+                for content in covers:
+                    image = content.get("url")
+
+ 
                 payload_contenidos = {
-                    "PlatformCode": "algo", #no recuerdo que iba aca
+                    "PlatformCode": "ar.pultotv",
                     "Id": id,
                     "Title": title,
                     "CleanTitle": _replace(title),
@@ -117,4 +162,15 @@ class PlutoNO():
                     "Genres": genres,
                     
                 }
-                print(payload_contenidos) 
+                print(payload_contenidos)                 
+
+                
+        
+                
+                
+                    
+
+                                  
+                    
+        
+
