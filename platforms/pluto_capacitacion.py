@@ -105,9 +105,22 @@ class PlutoCapacitacion():
             payload = {
                 "Id": content["_id"],
                 "Title": content["name"],
-                "Type": "movie"
+                "Type": "serie"
                 # Lo pueden hacer completo.
             }
-            print(payload)
+            # Inserto payload:
             self.mongo.insert("titanScraping", payload)
             print("Insert")
+
+            # En caso de ser serie, inserto los capitulos.
+            if payload["Type"] == 'serie':
+                epi_payload = {
+                    "Id": "1",
+                    "ParentId": content["_id"],
+                    "Title": content["name"],
+                    "Type": "serie"
+                    # Lo pueden hacer completo.
+                }
+                print(payload)
+                self.mongo.insert("titanScrapingEpisodes", epi_payload)
+                print("Insert")
