@@ -36,7 +36,7 @@ from platforms.optimum_test import OptimumTest
 from platforms.amazon_login import AmazonLogin
 from platforms.abc import Abc
 from platforms.pluto_capacitacion import PlutoCapacitacion
-<<<<<<< HEAD
+
 #from platforms.pluto_ggarcia import Pluto_gg
 #from platforms.starz_mk import Starz_mk
 #from platforms.pluto_mv             import Pluto_mv
@@ -46,11 +46,11 @@ from platforms.pluto_capacitacion import PlutoCapacitacion
 #from platforms.darmattertv import DarkMattertv
 #from platforms.natgeotv import Natgeotv
 #from platforms.allblk_panda import Allblk_panda
-=======
+
 from platforms.darmattertv import DarkMattertv
-from platforms.natgeotv import Natgeotv
-from platforms.allblk_panda import Allblk_panda
->>>>>>> 4561408ad0e181577ee0932c7b6c7286ca763ac8
+#from platforms.natgeotv import Natgeotv
+#from platforms.allblk_panda import Allblk_panda
+
 
 
 # Fiore
@@ -72,8 +72,8 @@ from platforms.pluto_mi import PlutoMI
 #HBO
 from platforms.hbo_test import HBO_Test
 #Mati HBO
-from platforms.hbo_mi import HboMI
-from platforms.starz_mi import StarzMI
+#from platforms.hbo_mi import HboMI
+#from platforms.starz_mi import StarzMI
 
 
 # Pato from platform.pluto_pq import PlutoPQ

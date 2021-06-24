@@ -77,7 +77,6 @@ class PlutoAH():
 
         return query
     def _scraping(self, testing=False):
-        print("Axel Holmes")
         #1) API
         # 2) bs4
         #3)selenium
@@ -100,8 +99,11 @@ class PlutoAH():
                 "Genre": films['genre'],
                 "Rating": films['rating']
             }
+            self.mongo.insert("titanScraping", payload)
+            print("se inserto con exito")
             return payload
 
         for items in items_list:
             for films in items:
                 print(payloads_films(films))
+                
