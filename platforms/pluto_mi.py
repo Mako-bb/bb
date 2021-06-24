@@ -125,10 +125,11 @@ class PlutoMI():
             "Timestamp":datetime.datetime.now().isoformat(),
             "CreatedAt": self._created_at,
         }
-        if self.mongo.search("titanScraping",movie):
-            pass
-        else:
+        if self.mongo.search("titanScraping",movie)==False:
             self.mongo.insert("titanScraping",movie)
+        else:
+            pass
+            
 
     def series_payload(self, content):
         series = {
@@ -165,16 +166,15 @@ class PlutoMI():
             'Timestamp': datetime.datetime.now().isoformat(),
             'CreatedAt': self._created_at,
         }
-        if self.mongo.search("titanScraping",series):
-            pass
-        else:
+        if self.mongo.search("titanScraping",series)==False:
             self.mongo.insert("titanScraping",series)
             parent_id=content['_id']
             parent_title=_replace(content['name'])
             series_api_url='https://service-vod.clusters.pluto.tv/v3/vod/series/{}/seasons?advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=820bd17e-1326-4985-afbf-2a75398c0e4e&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=820bd17e-1326-4985-afbf-2a75398c0e4e&deviceLat=-39.0576&deviceLon=-67.5301&deviceMake=Firefox&deviceModel=web&deviceType=web&deviceVersion=89.0&marketingRegion=VE&serverSideAds=true&sessionID=1ddd9448-d514-11eb-b85e-0242ac110002&sid=1ddd9448-d514-11eb-b85e-0242ac110002&userId=&attributeV4=foo'.format(parent_id)
             self.episodes_payload(series_api_url,parent_id,parent_title)
-        
-    
+        else:
+            pass
+
     def episodes_payload(self, metaData, parentId, parentTitle):
         response_episodes = self.session.get(metaData)
         content=response_episodes.json()
