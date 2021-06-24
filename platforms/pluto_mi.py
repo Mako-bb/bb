@@ -87,23 +87,23 @@ class PlutoMI():
         response = self.session.get(url)
         json_data_pluto = response.json()
 
-        self.movies_list = []
-        self.series_list = []
+        movies_list = []
+        series_list = []
 
         for content in json_data_pluto["categories"]:
             for item in content["items"]:
-                self.movie_payload(item, self.movies_list) if item["type"] == 'movie' else self.series_payload(
-                    item, self.series_list)
+                self.movie_payload(item, movies_list) if item["type"] == 'movie' else self.series_payload(
+                    item, series_list)
         
         #log para debug si saca los datos ok
-        
+        '''
         for movie in self.movies_list:
             for title,value in movie.items():
                 print(title,value)
-
+        '''
 
     def movie_payload(self, content, contents_list):
-        self.movie = {
+        movie = {
             "PlatformCode": "ar.pultotv",  # No se de donde sacarlo lo hardcode
             "Id": content['_id'],
             "Title": content['name'],
@@ -138,10 +138,10 @@ class PlutoMI():
             "Timestamp":datetime.datetime.now().isoformat(),
             "CreatedAt": self._created_at,
         }
-        contents_list.append(self.movie)
+        contents_list.append(movie)
 
     def series_payload(self, content, contents_list):
-        self.series = {
+        series = {
             'PlatformCode': "ar.pultotv",  # No se de donde sacarlo lo hardcode
             'Id': content['_id'],
             'Title': content['name'],
@@ -178,4 +178,4 @@ class PlutoMI():
             'Timestamp': datetime.datetime.now().isoformat(),
             'CreatedAt': self._created_at,
         }
-        contents_list.append(self.series)
+        contents_list.append(series)
