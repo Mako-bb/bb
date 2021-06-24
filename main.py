@@ -51,6 +51,9 @@ from platforms.pluto_mi import PlutoMI
 
 #HBO
 from platforms.hbo_test import HBO_Test
+#Mati HBO
+from platforms.hbo_mi import HboMI
+from platforms.starz_mi import StarzMI
 
 
 logging.basicConfig(level=logging.INFO)
