@@ -176,11 +176,11 @@ class PlutoDM():
                 epi_list.append(seasons['episodes'])
 
             contador_episodio = 0
-            content_id_episodes = []
+            content_id_episodes = []#array vacío, aca se van cargando los ids para comparar luego
             for seas in epi_list:
                 for episodess in seas:
                     contador_episodio += 1
-                    payloads_episodios = {
+                    payloads_episodios = {#Falta cargarle mas datos a este payload
                     "PlatformCode": self._platform_code,
                     "Id": str(episodess['_id']),
                     "ParentId": films['_id'],
@@ -203,6 +203,7 @@ class PlutoDM():
 
         for cat in items_list:
             for films in cat:
+                #Si el id no está en el array se inserta en la bd y en la lista "contents_id"
                 if films['type'] == 'movie':
                     if not films['_id'] in content_ids:
                         self.mongo.insert("titanScraping",payloads_movies(films))
