@@ -139,10 +139,10 @@ class StarzMI():
             "Timestamp":datetime.datetime.now().isoformat(),
             "CreatedAt": self._created_at,
         }
-        if self.mongo.search("titanScraping",movie):
-            pass
-        else:
+        if self.mongo.search("titanScraping",movie)==False:
             self.mongo.insert("titanScraping",movie)
+        else:
+            pass
 
     def series_payload(self, content):
         ratingCode=content['ratingCode']

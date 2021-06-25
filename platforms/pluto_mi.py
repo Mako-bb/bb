@@ -215,7 +215,8 @@ class PlutoMI():
                     'Timestamp': datetime.datetime.now().isoformat(),
                     'CreatedAt': self._created_at,
                 }
-                if self.mongo.search("titanScrapingEpisodes",episode):
-                    pass
-                else:
+                if self.mongo.search("titanScrapingEpisodes",episode)==False:
                     self.mongo.insert("titanScrapingEpisodes",episode)
+                else:
+                    pass
+                    
