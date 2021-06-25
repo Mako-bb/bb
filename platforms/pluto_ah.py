@@ -99,11 +99,16 @@ class PlutoAH():
                 "Genre": films['genre'],
                 "Rating": films['rating']
             }
-            self.mongo.insert("titanScraping", payload)
-            print("se inserto con exito")
-            return payload
 
+            return payload
+        content_id=[]
         for items in items_list:
             for films in items:
-                print(payloads_films(films))
+                act=payloads_films(films)
+                if not act['Id'] in content_id:
+                    self.mongo.insert("titanScraping", act)
+                    print("se inserto con exito")
+                    content_id.append(act['Id'])
+                else:
+                    print("ya existe")
                 
