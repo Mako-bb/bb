@@ -176,7 +176,7 @@ class PlutoDM():
                 epi_list.append(seasons['episodes'])
 
             contador_episodio = 0
-            content_id_episodes = []#array vacío, aca se van cargando los ids para comparar luego
+
             for seas in epi_list:
                 for episodess in seas:
                     contador_episodio += 1
@@ -188,8 +188,9 @@ class PlutoDM():
                     "Episode": int(contador_episodio),
                     "Season": int(episodess['season'])
                     }
-                    if not episodess['_id'] in content_id_episodes:
-                        content_id_episodes.append(str(episodess['_id']))
+                    if self.mongo.search("titanScrapingepisodes",payloads_episodios):
+                        print('Este episode ya esta cargado en la db')
+                    else:
                         self.mongo.insert("titanScrapingepisodes",payloads_episodios)
 
         items_list = []#Creo lista
@@ -199,17 +200,18 @@ class PlutoDM():
             #append al array con todas las peliculas/Series de cada categoria
             items_list.append(categories['items'])
 
-        content_ids = []#Para no cargar cosas repetidas
 
         for cat in items_list:
             for films in cat:
                 #Si el id no está en el array se inserta en la bd y en la lista "contents_id"
                 if films['type'] == 'movie':
-                    if not films['_id'] in content_ids:
+                    if self.mongo.search("titanScraping",payloads_movies(films)):
+                        print('esta movie ya esya en la db')
+                    else:
                         self.mongo.insert("titanScraping",payloads_movies(films))
-                        content_ids.append(films['_id'])
                 elif films['type'] == 'series':
-                    if not films['_id'] in content_ids:
+                    if self.mongo.search("titanScraping",payloads_series(films)):
+                        print('esta serie ya esta en la db')
+                    else:
                         self.mongo.insert("titanScraping",payloads_series(films))
-                        content_ids.append(films['_id'])
                         episodes(films)
