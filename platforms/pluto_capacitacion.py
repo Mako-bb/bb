@@ -81,6 +81,25 @@ class PlutoCapacitacion():
         # 2) BS4.
         # 3) Selenium.
 
+        # Puequeños tips para BS4:
+        # from bs4                    import BeautifulSoup
+        # req = self.session.get('https://www.hbo.com/movies/catalog')
+        # print(req.status_code, req.url)
+
+        # soup = BeautifulSoup(req.text, 'html.parser')
+        
+        # contenedors = soup.find_all('div', {'class':'modules/cards/CatalogCard--description'})
+
+        # for tag in contenedors:
+        #     print(tag)
+        #     print(tag["href"])
+
+        # print(contenedor.attrs)
+
+        # print(contenedor.children.contents)
+        # print(" ")
+        # print(contenedor.parent.attrs)
+
         url = self.api_url
         
         response = self.session.get(url)
@@ -105,6 +124,7 @@ class PlutoCapacitacion():
             payload = {
                 "Id": content["_id"],
                 "Title": content["name"],
+                "PlatformCode": self._platform_code,
                 "Type": "serie"
                 # Lo pueden hacer completo.
             }
@@ -116,6 +136,7 @@ class PlutoCapacitacion():
             if payload["Type"] == 'serie':
                 epi_payload = {
                     "Id": "1",
+                    "PlatformCode": self._platform_code,                    
                     "ParentId": content["_id"],
                     "Title": content["name"],
                     "Type": "serie"
