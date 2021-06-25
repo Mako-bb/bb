@@ -24,10 +24,8 @@ class StarzMI():
         self.titanScraping = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodios = config(
         )['mongo']['collections']['episode']
-
         self.api_url = self._config['api_url']
         self.url=self._config['url']
-
         self.session = requests.session()
 
         if type == 'return':

@@ -14,6 +14,7 @@ from handle.mongo           import mongo
 from updates.upload         import Upload
 from handle.datamanager     import Datamanager
 from handle.replace         import _replace
+from selenium               import webdriver
 
 
 class HboMI():
@@ -46,82 +47,89 @@ class HboMI():
                 for lastContent in lastItem:
                     self._created_at = lastContent['CreatedAt']
             self._scraping()
+    
 
     def _scraping(self, testing = False):
-        
-        urls={
-            'docum':'https://www.hbo.com/documentaries/catalog',
-            'movies':'https://www.hbo.com/movies/catalog',
-            'series':'https://www.hbo.com/series/all-series',
-        }
-
-        docum_list=[]
-        movies_list=[]
-        series_list=[]
-        content_payload={}
-
-        for url,value in urls.items():
-            req = self.sesion.get(value)
-            soup = BeautifulSoup(req.text, 'html.parser')
-            conteiner = soup.find('div', {'class':'components/MovieGrid--container'})
-            if url == 'movies':
-                contents = conteiner.find_all('div', {'class':'modules/cards/CatalogCard--container modules/cards/MovieCatalogCard--container modules/cards/CatalogCard--notIE modules/cards/CatalogCard--desktop'})
-                for content in contents:
-                    title = content.find('p', {'class':'modules/cards/CatalogCard--title'}).text
-                    title_depurate=self.depurateTitle(title)
-                    deeplink = 'https://www.hbo.com/movies/{}'.format(title_depurate)
-                    req_info = self.sesion.get(deeplink)
-                    soup_info = BeautifulSoup(req_info.text, 'html.parser')
-                    element_superior = soup_info.find('div', {'class':'modules/InfoSlice--assetDetails'})
-                    childsList=element_superior.find_all('span',{'class':'components/AiringDetailsBlock--detailsText'})
-                    details=self.validateData(childsList,url)
-                    sinop = soup_info.find('div', {'class':'modules/Text--text modules/Text--headerHeavy components/RichText--richText'}).p.text
-                    content_payload={
-                        'title':title,
-                        'deepLink':deeplink,
-                        'summary':sinop,
-                        'details':details,
-                    }
-                    movies_list.append(content_payload)
-            elif url == 'series':
-                contents = conteiner.find_all('div', {'class':'modules/cards/CatalogCard--container modules/cards/SamplingCatalogCard--container modules/cards/CatalogCard--notIE modules/cards/CatalogCard--desktop'})
-                for content in contents:
-                    title = content.find('p', {'class':'modules/cards/CatalogCard--title'}).text
-                    title_depurate=self.depurateTitle(title)
-                    deeplink = 'https://www.hbo.com/{}'.format(title_depurate)
-                    req_info = self.sesion.get(deeplink)
-                    soup_info = BeautifulSoup(req_info.text, 'html.parser')
-                    element_superior = soup_info.find('div', {'class':'modules/InfoSlice--assetDetails'})
-                    childsList=element_superior.find_all('span')
-                    details=self.validateData(childsList,url)
-                    sinop = soup_info.find('div', {'class':'components/RichText--richText'}).p.text
-                    content_payload={
-                        'title':title,
-                        'deepLink':deeplink,
-                        'summary':sinop,
-                        'details':details,
-                    }
-                    series_list.append(content_payload)
-            else:
-                contents = conteiner.find_all('div', {'class':'modules/cards/CatalogCard--container modules/cards/DocumentaryCatalogCard--container modules/cards/CatalogCard--notIE modules/cards/CatalogCard--desktop'})
-                for content in contents:
-                    title = content.find('p', {'class':'modules/cards/CatalogCard--title'}).text
-                    title_depurate=self.depurateTitle(title)
-                    deeplink = 'https://www.hbo.com/documentaries/{}'.format(title_depurate)
-                    req_info = self.sesion.get(deeplink)
-                    soup_info = BeautifulSoup(req_info.text, 'html.parser')
-                    element_superior = soup_info.find('div', {'class':'modules/InfoSlice--assetDetails'})
-                    childsList=element_superior.find_all('span',{'class':'components/AiringDetailsBlock--detailsText'})
-                    details=self.validateData(childsList,url)
-                    sinop = soup_info.find('div', {'class':'modules/Text--text modules/Text--headerHeavy components/RichText--richText'}).p.i.text
-                    content_payload={
-                        'title':title,
-                        'deepLink':deeplink,
-                        'summary':sinop,
-                        'details':details,
-                    }
-                    docum_list.append(content_payload)
+        urls={'docums':'https://www.hbo.com/documentaries/catalog',
+                'movies':'https://www.hbo.com/movies/catalog',
+                'series':'https://www.hbo.com/series/all-series'}
+        self.getContents(urls)
     
+    def getContents(self,url_dict):
+        for key,val in url_dict.items():
+            source= self.sesion.get(val)
+            soup = BeautifulSoup(source.text, 'html.parser')
+            conteiner= soup.find('div', class_="components/MovieGrid--container")
+            if key=='docums':
+                docums=conteiner.find_all('div',
+                    {'class':'modules/cards/CatalogCard--container modules/cards/DocumentaryCatalogCard--container modules/cards/CatalogCard--notIE modules/cards/CatalogCard--desktop'})
+                self.documsPayloads(docums)
+            elif key=='movies':
+                movies = conteiner.find_all('div',
+                    {'class':'modules/cards/CatalogCard--container modules/cards/MovieCatalogCard--container modules/cards/CatalogCard--notIE modules/cards/CatalogCard--desktop'})
+                self.moviesPayloads(movies)
+            else:
+                series=conteiner.find_all('div',
+                    {'class':'modules/cards/CatalogCard--container modules/cards/SamplingCatalogCard--container modules/cards/CatalogCard--notIE modules/cards/CatalogCard--desktop'})
+                self.seriesPayloads(conteiner)
+    
+    
+    def documsPayloads(self,contents):
+        doc={}
+        for content in contents:
+            title = content.find('p', {'class':'modules/cards/CatalogCard--title'}).text
+            title_depurate=self.depurateTitle(title)
+            deeplink = 'https://www.hbo.com/documentaries/{}'.format(title_depurate)
+            req_info = self.sesion.get(deeplink)
+            soup_info = BeautifulSoup(req_info.text, 'html.parser')
+            sinop = soup_info.find('div', {'class':'modules/Text--text modules/Text--headerHeavy components/RichText--richText'})
+            print(title, deeplink,sinop)
+            #element_superior = soup_info.find('div', {'class':'modules/InfoSlice--assetDetails'})
+            #childsList=element_superior.find_all('span',{'class':'components/AiringDetailsBlock--detailsText'})
+            #details=self.validateData(childsList,url)  
+            #if self.mongo.search("titanScraping",doc)==False:
+            #    self.mongo.insert("titanScraping",doc)
+            #else:
+            #    pass
+    
+    def moviesPayloads(self,contents):
+        movie={}
+        for content in contents:
+            title = content.find('p', {'class':'modules/cards/CatalogCard--title'}).text
+            title_depurate=self.depurateTitle(title)
+            deeplink = 'https://www.hbo.com/movies/{}'.format(title_depurate)
+            req_info = self.sesion.get(deeplink)
+            soup_info = BeautifulSoup(req_info.text, 'html.parser')
+            sinop = soup_info.find('div', {'class':'modules/Text--text modules/Text--headerHeavy components/RichText--richText'})
+            print(title, deeplink,sinop)
+            #element_superior = soup_info.find('div', {'class':'modules/InfoSlice--assetDetails'})
+            #childsList=element_superior.find_all('span',{'class':'components/AiringDetailsBlock--detailsText'})
+            #details=self.validateData(childsList,url)
+            
+            #if self.mongo.search("titanScraping",movie)==False:
+            #    self.mongo.insert("titanScraping",movie)
+            #else:
+            #    pass
+    
+    def seriesPayloads(self,contents):
+        series={}
+        for content in contents:
+            title = content.find('p', {'class':'modules/cards/CatalogCard--title'}).text
+            title_depurate=self.depurateTitle(title)
+            deeplink = 'https://www.hbo.com/{}'.format(title_depurate)
+            req_info = self.sesion.get(deeplink)
+            soup_info = BeautifulSoup(req_info.text, 'html.parser')
+            sinop = soup_info.find('div', {'class':'components/RichText--richText'}).text
+            print(title, deeplink,sinop)
+            #element_superior = soup_info.find('div', {'class':'modules/InfoSlice--assetDetails'})
+            #childsList=element_superior.find_all('span')
+            #details=self.validateData(childsList,url)
+            #if self.mongo.search("titanScraping",series)==False:
+            #    self.mongo.insert("titanScraping",series)
+            #else:
+            #    pass
+
+
     def depurateTitle(self, title):
         chars=' *,./|&¬!"£$%^()_+{@:<>?[]}`=;¿'
         title=title.lower()#paso el titulo original a minusculas
@@ -141,73 +149,7 @@ class HboMI():
             else:
                 newTitle+=title[i]
         return newTitle
-        
+    '''    
     def validateData(self, descriptions_list,type_content):
-        details={}
-        '''
-        if type_content=='movies':
-            genre=''
-            rating=''
-            duration=''
-            year=''
-            for desc in descriptions_list:
-                if 'MIN' in desc.text or 'HR' in desc.text:
-                    duration = desc.text
-                elif len(desc.text) == 4:
-                    try:
-                        year = int(desc.text.strip())
-                    except:
-                        continue
-
-            if duration == '':
-                duration = None
-            else:
-                hours = ''
-                minutes = ''
-                if 'HR' in duration:
-                    hours = int(duration.split(' ')[0])
-                if 'MIN' in duration:
-                    if 'HR' in duration:
-                        minutes = int(duration.split(' ')[2])
-                    else:
-                        minutes = int(duration.split(' ')[0])
-                if hours == '':
-                    hours = 0
-                if minutes == '':
-                    minutes = 0
-                duration = hours * 60 + minutes
-
-            if year == '':
-                year = None
-            elif year < 1870 or year > datetime.now().year():
-                year = None
-            
-            details{
-                'genre':genre,
-                'rating':rating,
-                'duration':duration,
-                'year':year,
-            }
-        elif type_content=='series':
-            seasons=''
-            episodes=''
-            rating=''
-
-            details{
-                'seasons':seasons,
-                'episodes':episodes,
-                'rating':rating,                
-            }
-        else:
-            rating=''
-            duration=''
-            year=''
-
-            details{
-                'rating':rating,
-                'duration':duration,
-                'year':year,
-            }
-        '''
-        return details
-    
+        pass
+    '''
