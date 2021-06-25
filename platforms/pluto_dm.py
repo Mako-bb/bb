@@ -6,7 +6,6 @@ from handle.mongo           import mongo
 from updates.upload         import Upload
 from handle.payload         import Payload
 from handle.datamanager     import Datamanager
-# from time import sleep
 # import re
 
 class PlutoDM():
@@ -103,9 +102,28 @@ class PlutoDM():
                 "Year": "Null", #No encuentro esta info
                 "Duration": int(films['duration']/60000),
                 "ExternalIds": "Null",
+                "Deeplinks": {
+                #No encuentro este dato, de momento va "Null"
+                "Web": "Null",
+                "Android": "Null",
+                "iOS": "Null"
+                },
                 "Synopsis": films['description'],
-                "Genres": films['genre'],
-                "Rating": films['rating']
+                "Image": films['covers'][0]['url'],
+                "Rating": films['rating'],
+                "Provider": "Null",
+                "Genres": [films['genre']],
+                "Cast": "Null",#No encuentro esa info
+                "Directors": "Null",#No encuentro esa info
+                "Availability": "Null",#No encuentro esa info
+                "Download": "Null",#No encuentro esa info
+                "IsOriginal": "Null",#No encuentro esa info
+                "IsAdult": "Null",# Esto está hardcodedado, no se si hay que implementar algun algoritmo
+                "IsBranded": "Null",# No encuentro eta info
+                "Packages": [{'Type': 'free-vod'}],
+                "Country": ["ar"],#Revisar
+                "Timestamp": "Null",
+                "CreatedAt": self._created_at,
             }
             return payload
 
@@ -120,36 +138,59 @@ class PlutoDM():
                 "OriginalTitle": original_title(films),
                 "Type": films['type'],
                 "Year": None,
-            }
+                "ExternalIds": "Null",
+                "Deeplinks": {
+                "Web": "Null",#No encuentro este dato, de momento va "Null"
+                "Android": "Null",
+                "iOS": "Null"
+                },
+                "Synopsis": films['description'],
+                "Image": films['covers'][0]['url'],
+                "Rating": films['rating'],
+                "Provider": "Null",
+                "Genres": [films['genre']],
+                "Cast": "Null",#No encuentro esa info
+                "Directors": "Null",#No encuentro esa info
+                "Availability": "Null",#No encuentro esa info
+                "Download": "Null",#No encuentro esa info
+                "IsOriginal": "Null",#No encuentro esa info
+                "IsAdult": "Null",# Esto está hardcodedado, no se si hay que implementar algun algoritmo
+                "IsBranded": "Null",# No encuentro eta info
+                "Packages": [{'Type': 'free-vod'}],
+                "Country": ["ar"],#Revisar
+                "Timestamp": "Null",
+                "CreatedAt": self._created_at,
+                }
 
             return payload_series
 
         def episodes(films):
+            #Api de series con id de la serie en cuestion insertado
             url_series = "https://service-vod.clusters.pluto.tv/v3/vod/series/{}/seasons?advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=c636f54d-adcd-4b30-b2cd-02cf58d954f4&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=c636f54d-adcd-4b30-b2cd-02cf58d954f4&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.114&marketingRegion=VE&serverSideAds=true&sessionID=be85a5ba-d44b-11eb-8a41-0242ac110002&sid=be85a5ba-d44b-11eb-8a41-0242ac110002&userId=&attributeV4=foo".format(films['_id'])
             response2 = self.session.get(url_series)
             dictionary_seasons = response2.json()
             epi_list = []#Creo lista
             seasons_list = dictionary_seasons['seasons']
 
-            def payloads_episodes(episodes):
-                payloads_episodios = {
-                    "PlatformCode": self._platform_code,
-                    "Id": str(episodes['_id']),
-                    "ParentId": "Null",
-                    "ParentTitle": "Null",
-                    "Episode": contador_episodio,
-                    "Season": int(episodes['season'])
-                }
-
             for seasons in seasons_list:
                 epi_list.append(seasons['episodes'])
-            contador_episodio = 1
+
+            contador_episodio = 0
+            content_id_episodes = []
             for seas in epi_list:
-                for episodes in seas:
+                for episodess in seas:
                     contador_episodio += 1
-                    payloads_episodes(episodes)
-            
-            return payloads_episodes(episodes)
+                    payloads_episodios = {
+                    "PlatformCode": self._platform_code,
+                    "Id": str(episodess['_id']),
+                    "ParentId": films['_id'],
+                    "ParentTitle": str(films['name']),
+                    "Episode": int(contador_episodio),
+                    "Season": int(episodess['season'])
+                    }
+                    if not episodess['_id'] in content_id_episodes:
+                        content_id_episodes.append(str(episodess['_id']))
+                        self.mongo.insert("titanScrapingepisodes",payloads_episodios)
 
         items_list = []#Creo lista
         categories_list = dictionary['categories']
@@ -158,11 +199,16 @@ class PlutoDM():
             #append al array con todas las peliculas/Series de cada categoria
             items_list.append(categories['items'])
 
+        content_ids = []#Para no cargar cosas repetidas
+
         for cat in items_list:
             for films in cat:
                 if films['type'] == 'movie':
-                    print(payloads_movies(films))
+                    if not films['_id'] in content_ids:
+                        self.mongo.insert("titanScraping",payloads_movies(films))
+                        content_ids.append(films['_id'])
                 elif films['type'] == 'series':
-                    print(payloads_series(films))
-                else:
-                    print("es un documental")
+                    if not films['_id'] in content_ids:
+                        self.mongo.insert("titanScraping",payloads_series(films))
+                        content_ids.append(films['_id'])
+                        episodes(films)

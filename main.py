@@ -74,8 +74,8 @@ from platforms.hbo_test import HBO_Test
 from platforms.hbo_no import HBO_NO
 from platforms.hbo_fev import HBO_Fev
 #Mati HBO
-# from platforms.hbo_mi import HboMI
-# from platforms.starz_mi import StarzMI
+#from platforms.hbo_mi import HboMI
+from platforms.starz_mi import StarzMI
 
 
 logging.basicConfig(level=logging.INFO)
