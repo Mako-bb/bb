@@ -60,16 +60,19 @@ class HBO_Fev():
         #Dentro del contendor encontramos 448 contenidos (documentales)
         contenidos = contenedor.find_all('div', {'class':'modules/cards/CatalogCard--container modules/cards/DocumentaryCatalogCard--container modules/cards/CatalogCard--notIE modules/cards/CatalogCard--desktop'})
         print("cantidad de documentales:", len(contenidos))
-        print(contenidos) 
-        return contenidos
+        #print(contenidos)
+        for contenido in contenidos:
+            payloads = self.get_documentaries_payload(contenido)
+            self.payloads.append(payloads)
+        print(self.payloads)
+        return self.payloads
          
                     
     def get_name(self, contenidos):
         title_list = []
-        for documentaries in contenidos:
-            title = documentaries.find('p', {'class':'modules/cards/CatalogCard--title'})
-            title_list.append(title.text)
-            print (title)
+        title = contenidos.find('p', {'class':'modules/cards/CatalogCard--title'})
+        title_list.append(title.text)
+        print (title)
         return title_list
         print(title_list)
     
@@ -81,23 +84,23 @@ class HBO_Fev():
         return duration_list
         print(duration_list)
 
-    def documentaries_payload(self, contenidos, title_list, details_list):
-        title =  self.get_name(contenidos)
-        duration = self.get_duration(contenidos)
-        deeplink = self.get_deeplink(title_list)
-        cleanTitle = self.get_title_clean(title_list)
+    def get_documentaries_payload(self, contenido):
+        title =  self.get_name(contenido)
+        duration = self.get_duration(contenido)
+        deeplink = self.get_deeplink(contenido)
+        cleanTitle = self.get_title_clean(title)
         #yerar = self._get_year()
         #rating = self_get_rating()      
         
         payload = { 
             "PlatformCode": None, #self._platform_code, #Obligatorio 
             "Id": None, #['_id'], #Obligatorio
-            "Title": None, #['name'], #Obligatorio 
-            "CleanTitle": None, #_replace(item['name']), #Obligatorio 
+            "Title": title, #['name'], #Obligatorio 
+            "CleanTitle": cleanTitle, #_replace(item['name']), #Obligatorio 
             "OriginalTitle": None, #item['name'], 
             "Type": None, #item['type'], #Obligatorio 
             "Year": None, #None, #Important! 
-            "Duration": ['duration'],
+            "Duration": duration,
             "ExternalIds": None, #None,  #No estoy seguro de si es
             "Deeplinks": { 
             "Web": deeplink, #deeplink, #Obligatorio 
@@ -123,29 +126,31 @@ class HBO_Fev():
             "CreatedAt": None, #self._created_at, #Obligatorio
             }
         self.payloads.append(payload)
-    print (documentaries_payload)
+        return payload
         
    
-    def get_title_clean(self, title):        
-        title_cleared = title.lower() #mayusculas por minusculas
-        title_cleared = title_cleared.replace(' ', '-') #espacios por guiones
-        title_cleared = title_cleared.replace('&','and') #& por and
-        title_cleared = title_cleared.replace(':','')#: por nada
-        title_cleared = title_cleared.replace('9/11','september-11')#9/11 por september-11
-        title_cleared = title_cleared.replace('/','-')#/ por -
-        title_cleared = title_cleared.replace('.','')#. por nada
-        title_cleared = title_cleared.replace('(','')#( por nada
-        title_cleared = title_cleared.replace(')','')#) por nada
-        title_cleared = title_cleared.replace(')','')#) por nada
-        title_cleared = title_cleared.replace('!','')#! por nada
-        title_cleared = title_cleared.replace('¢','cents')#¢ por centavos
-        title_cleared = title_cleared.replace("'",'') #' por centavos
-        title_cleared = title_cleared.replace("’",'') # ’ por nada
-        title_cleared = title_cleared.replace('12th-and-delaware', '12th-and-delaware-doc') #tiene un doc al final
-        title_cleared = title_cleared.replace('mavis', 'mavis-doc')
-        title_cleared = title_cleared.replace('quinceaneras', 'quinceanera')
-        return title_cleared
-        #print(title_cleared)
+    def get_title_clean(self, title):
+        for title in title:
+                
+            title_cleared = title.lower() #mayusculas por minusculas
+            title_cleared = title_cleared.replace(' ', '-') #espacios por guiones
+            title_cleared = title_cleared.replace('&','and') #& por and
+            title_cleared = title_cleared.replace(':','')#: por nada
+            title_cleared = title_cleared.replace('9/11','september-11')#9/11 por september-11
+            title_cleared = title_cleared.replace('/','-')#/ por -
+            title_cleared = title_cleared.replace('.','')#. por nada
+            title_cleared = title_cleared.replace('(','')#( por nada
+            title_cleared = title_cleared.replace(')','')#) por nada
+            title_cleared = title_cleared.replace(')','')#) por nada
+            title_cleared = title_cleared.replace('!','')#! por nada
+            title_cleared = title_cleared.replace('¢','cents')#¢ por centavos
+            title_cleared = title_cleared.replace("'",'') #' por centavos
+            title_cleared = title_cleared.replace("’",'') # ’ por nada
+            title_cleared = title_cleared.replace('12th-and-delaware', '12th-and-delaware-doc') #tiene un doc al final
+            title_cleared = title_cleared.replace('mavis', 'mavis-doc')
+            title_cleared = title_cleared.replace('quinceaneras', 'quinceanera')
+            return title_cleared
+            #print(title_cleared)
      
     def get_duration (self, documentaries):
         duration = documentaries.find('p', {'class':'modules/cards/CatalogCard--details'})
