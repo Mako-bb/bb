@@ -77,6 +77,8 @@ from platforms.hbo_fev import HBO_Fev
 #from platforms.hbo_mi import HboMI
 from platforms.starz_mi import StarzMI
 
+from platforms.hallmarkmovies import HallMark
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
