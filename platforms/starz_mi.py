@@ -24,10 +24,8 @@ class StarzMI():
         self.titanScraping = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodios = config(
         )['mongo']['collections']['episode']
-
         self.api_url = self._config['api_url']
         self.url=self._config['url']
-
         self.session = requests.session()
 
         if type == 'return':
@@ -139,10 +137,10 @@ class StarzMI():
             "Timestamp":datetime.datetime.now().isoformat(),
             "CreatedAt": self._created_at,
         }
-        if self.mongo.search("titanScraping",movie):
-            pass
-        else:
+        if self.mongo.search("titanScraping",movie)==False:
             self.mongo.insert("titanScraping",movie)
+        else:
+            pass
 
     def series_payload(self, content):
         ratingCode=content['ratingCode']
