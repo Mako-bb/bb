@@ -102,9 +102,29 @@ class PlutoCapacitacion():
 
         url = self.api_url
         
+<<<<<<< HEAD
+        response = self.session.get(url) # Recorrer dict_of_pluto e imprimir todos los datos que se
+        # puedan de sus contenidos
+
+        # Ejemplo:
+        for content in dict_of_pluto:
+            print("ok")
+            # Imprimir los payloads:
+            payload = {
+                "Id": "01",
+                "Title": "Los simpsons",
+                "Type": "Serie"
+                # Lo pueden hacer completo.
+            }
+            print(payload)
+
+        dict_of_pluto = response.json()        
+        print([i.get("name") for i in dict_of_pluto["categories"]])
+=======
         response = self.session.get(url)
         contents_metadata = response.json()        
         # print([i.get("name") for i in dict_of_pluto["categories"]])
+>>>>>>> f09c23d18b18644c143866c740c4e72dfed5b0df
         
         # Recorrer dict_of_pluto e imprimir todos los datos que se
         # puedan de sus contenidos
