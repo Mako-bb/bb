@@ -168,7 +168,7 @@ class PlutoDM():
 
         #Filtra la metadata de todos los episodios de una serie en especifico y los inserta en la db
         def episodes(films):
-            #Api de series con id de la serie en cuestion insertado
+            #URL de api de series con el id de la serie correspondiente
             url_series = "https://service-vod.clusters.pluto.tv/v3/vod/series/{}/seasons?advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=c636f54d-adcd-4b30-b2cd-02cf58d954f4&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=c636f54d-adcd-4b30-b2cd-02cf58d954f4&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.114&marketingRegion=VE&serverSideAds=true&sessionID=be85a5ba-d44b-11eb-8a41-0242ac110002&sid=be85a5ba-d44b-11eb-8a41-0242ac110002&userId=&attributeV4=foo".format(films['_id'])
             response2 = self.session.get(url_series)
             dictionary_seasons = response2.json()
@@ -209,7 +209,7 @@ class PlutoDM():
             for films in cat:
                 '''
                 #Verifica si el contenido es pelicula o serie, y en ambos casos
-                verifica que dicho contenido no este en la DB
+                verifica que dicho contenido no este en la DB antes de insertar
                 '''
                 if films['type'] == 'movie':
                     if self.mongo.search("titanScraping",payloads_movies(films)):#Devuelve un booleano
