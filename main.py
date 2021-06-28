@@ -67,7 +67,7 @@ from platforms.pluto_no import PlutoNO
 from platforms.pluto_dm import PlutoDM #Darío
 from platforms.pluto_ah import PlutoAH
 #Matias
-#from platforms.pluto_mi import PlutoMI
+from platforms.pluto_mi import PlutoMI
 
 #HBO
 from platforms.hbo_test import HBO_Test
