@@ -56,22 +56,15 @@ from platforms.allblk_panda import Allblk_panda
 from platforms.pluto_dl import PlutoDL
 # Fede
 # Naza
-<<<<<<< HEAD
+
 # Dario
 from platforms.pluto_ah import PlutoAH
-# Pato
-=======
-from plattforms.pluto_dm import PlutoDM #Darío
+#Darío
+from platforms.pluto_dm import PlutoDM
 # Axel
 # Pato
-<<<<<<< HEAD
-from platform.pluto_pq import PlutoPQ
-=======
-from platforms.pluto_mi import PlutoMI
+from platforms.pluto_pq import PlutoPQ
 
-# Pato from platform.pluto_pq import PlutoPQ
->>>>>>> ded0aa5b559db15040522d6eede3421ad76254e7
->>>>>>> 5043c1f5d428c6ab3526af523682be1a58d53f9a
 # Matias
 
 
