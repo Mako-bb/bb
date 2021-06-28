@@ -244,7 +244,7 @@ class PlutoMI():
         content_title=_replace(content['name'])
         clean_title= self.depurate_title(content_title)
         if 'season' in content:
-            deeplink=self.url+'{}/{}/{}/{}/{}/{}'.format('series',clean_title,'seasons',content['season'],'episode',content['name'])
+            deeplink=self.url+'{}/{}/{}/{}/{}/{}'.format('series',clean_title,'seasons',content['season'],'episode',clean_title)
         else:
-            deeplink=self.url+'{}/{}'.format(content['type'],clean_title)
+            deeplink=self.url+'/{}/{}'.format('movies',clean_title)
         return deeplink
