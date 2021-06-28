@@ -13,6 +13,18 @@ from handle.payload import Payload
 
 class PlutoCapacitacion():
     """
+    Pluto es una ott de Estados Unidos que opera en todo el mundo.
+
+    DATOS IMPORTANTES:
+    - VPN: Si/No (Recomendación: Usar ExpressVPN).
+    - ¿Usa Selenium?: No.
+    - ¿Tiene API?: Si.
+    - ¿Usa BS4?: No.
+    - ¿Cuanto demoró la ultima vez? tiempo + fecha.
+    - ¿Cuanto contenidos trajo la ultima vez? cantidad + fecha.
+
+    OTROS COMENTARIOS:
+    Con esta plataforma pasa lo siguiente...
     """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self.ott_site_uid = ott_site_uid
@@ -47,7 +59,7 @@ class PlutoCapacitacion():
             self._scraping()
 
         if type == 'testing':
-            self._scraping(testing=True)
+            self._scraping(is_test=True)
 
     def query_field(self, collection, field=None):
         """Método que devuelve una lista de una columna específica
@@ -80,13 +92,15 @@ class PlutoCapacitacion():
             query = list(query)
 
         return query
-    def _scraping(self, testing=False):
+
+    def _scraping(self, is_test=False):
         # Pensando algoritmo:
         # 1) Método request (request)-> Validar todo.
         # 2) Método payload (get_payload)-> Para reutilizarlo.
         # 3) Método para traer los contenidos (get_contents)
 
         # Listas de ids scrapeados:
+        print(f"\nIniciando scraping de {self._platform_code}\n")
         self.scraped = self.query_field(self.titanScraping, field='Id')
         self.scraped_episodes = self.query_field(self.titanScrapingEpisodes, field='Id')
         print(f"{self.titanScraping} {len(self.scraped)}")
@@ -100,20 +114,27 @@ class PlutoCapacitacion():
         for n, content in enumerate(contents):
             print(f"\n----- Progreso ({n}/{len(contents)}) -----\n")
 
+            # Valido que no haya duplicados:
             if content["_id"] in self.scraped:
                 print("Ya ingresado")
             else:
                 self.scraped.append(content["_id"])    
                 payload = self.get_payload(content)
                 self.payloads.append(payload)
+                            
+                # Traigo los episodios en caso de ser serie:
+                if payload["Type"] == 'serie':
+                    self.get_episodes(payload)
 
-            
-            if payload["Type"] == 'serie':
-                self.get_episodes(payload)
+        if self.payloads:
+            self.mongo.insertMany(self.titanScraping, self.payloads)
+        if self.episodes_payloads:
+            self.mongo.insertMany(self.titanScrapingEpisodes, self.episodes_payloads)
 
-        self.mongo.insertMany(self.titanScraping, payloads)
-        self.mongo.insertMany(self.titanScrapingEpisodes, epi_payloads)
+        self.session.close()
+        Upload(self._platform_code, self._created_at, testing=is_test)
 
+        print("Scraping Finalizado")
 
     def get_contents(self):
         """Método para obtener contenidos en forma de dict,
