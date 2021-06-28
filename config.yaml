@@ -77,6 +77,9 @@ ott_sites:
   TruTV:
     countries:
       US: us.trutv
+  HallMark:
+    countries:
+      US: us.hallmark
   Pongalo:
     movie: 'movie'
     serie: 'serie'
@@ -404,6 +407,9 @@ ott_sites:
   PlutoFV: #Fede
     countries:
       AR: ar.pluto
+    url: https://pluto.tv/on-demand
+    api_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=a4f86dcf-ad48-4179-b6f3-15f26f190d16&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=a4f86dcf-ad48-4179-b6f3-15f26f190d16&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.114&marketingRegion=VE&serverSideAds=true&sessionID=90fbd984-d5d2-11eb-9721-0242ac110002&sid=90fbd984-d5d2-11eb-9721-0242ac110002&userId=&attributeV4=foo
+    season_api_url: https://service-vod.clusters.pluto.tv/v3/vod/series/
   PlutoNO: #Nazareno
     countries:
       AR: ar.pluto
