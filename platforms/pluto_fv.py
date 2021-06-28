@@ -1,12 +1,13 @@
 import time
 import requests
-from requests.models import Response
 from handle.replace         import _replace
 from common                 import config
 from handle.mongo           import mongo
 from updates.upload         import Upload
 from handle.payload         import Payload
 from handle.datamanager     import Datamanager
+from datetime import datetime
+from handle.payload import Payload
 # from time import sleep
 # import re
 
@@ -78,14 +79,14 @@ class PlutoFV():
 
         return query
 
-    def get_reques(self, _api_url):
+    def get_request(self, _api_url):
         """Metodo que hace reques a la api de Pluto TV y devuelve un diccionario con metadata en formato json"""
-        req = self.sesion.get(_api_url)
+        req = self.session.get(_api_url)
         response = req.json()
         print(req.status_code, req.url)
         return response
 
 
     def _scraping(self, testing=False):
-        request = self.get_reques(self._api_url)
-        print(request)
+        diccionario_pluto = self.get_request(self._api_url)
+        print(diccionario_pluto)

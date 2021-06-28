@@ -62,10 +62,14 @@ class HBO_Fev():
         print("cantidad de documentales:", len(contenidos))
         #print(contenidos)
         for contenido in contenidos:
-            payloads = self.get_documentaries_payload(contenido)
-            self.payloads.append(payloads)
-        print(self.payloads)
-        return self.payloads
+            payload = self.get_documentaries_payload(contenido)
+            self.payloads.append(payload)
+            #return self.payloads
+            print(payload)
+        #for payload in self.payloads:
+        if self.payloads:
+            self.mongo.insertMany(self.titanScraping, self.payloads)       
+        
          
                     
     def get_name(self, contenidos):
@@ -87,8 +91,8 @@ class HBO_Fev():
     def get_documentaries_payload(self, contenido):
         title =  self.get_name(contenido)
         duration = self.get_duration(contenido)
-        deeplink = self.get_deeplink(contenido)
         cleanTitle = self.get_title_clean(title)
+        deeplink = self.get_deeplink(cleanTitle)
         #yerar = self._get_year()
         #rating = self_get_rating()      
         
@@ -96,7 +100,7 @@ class HBO_Fev():
             "PlatformCode": None, #self._platform_code, #Obligatorio 
             "Id": None, #['_id'], #Obligatorio
             "Title": title, #['name'], #Obligatorio 
-            "CleanTitle": cleanTitle, #_replace(item['name']), #Obligatorio 
+            "CleanTitle": cleanTitle, #Obligatorio 
             "OriginalTitle": None, #item['name'], 
             "Type": None, #item['type'], #Obligatorio 
             "Year": None, #None, #Important! 
@@ -154,12 +158,13 @@ class HBO_Fev():
      
     def get_duration (self, documentaries):
         duration = documentaries.find('p', {'class':'modules/cards/CatalogCard--details'})
-        return duration
+        return duration.text
            
     def get_deeplink(self, title_cleared):
-        deeplink = 'https://www.hbo.com/documentaries/{}'.format(title_cleared)
+        deeplink_url = 'https://www.hbo.com/documentaries/{}'.format(title_cleared)
         deeplink_url_list = []
-        deeplink_url_list.append(deeplink)
+        deeplink_url_list.append(deeplink_url)
+        return deeplink_url, deeplink_url_list
        
     def get_details(self, deeplink_url_list):
         details_list = []
