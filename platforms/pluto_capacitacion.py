@@ -124,6 +124,8 @@ class PlutoCapacitacion():
 
                 # Traigo los episodios en caso de ser serie:
                 if payload["Type"] == 'serie':
+                    # TODO: Crear algoritmo para traer episodios y
+                    # almacenarlos sin duplicados en "self.episodes_payloads".
                     self.get_episodes(payload)
 
         if self.payloads:
@@ -278,5 +280,11 @@ class PlutoCapacitacion():
         else:
             return type_
     
-    def get_episodes(self, content_metadata):
-        pass
+    def get_episodes(self, content_metadata):        
+        # 1) Hacer consulta a los episodios scrapeados (self.scraped_episodes):
+        # self.episodes_payloads
+        # 2) Si no existen, agregar los episodios a self.episodes_payloads.
+        if "¿Existe ese episodio?" in self.scraped_episodes:
+            print("Ya ingresado")
+        else:
+            print("TRAER EPISODIO/S")
