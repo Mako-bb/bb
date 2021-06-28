@@ -121,7 +121,7 @@ class PlutoCapacitacion():
                 self.scraped.append(content["_id"])    
                 payload = self.get_payload(content)
                 self.payloads.append(payload)
-                            
+
                 # Traigo los episodios en caso de ser serie:
                 if payload["Type"] == 'serie':
                     self.get_episodes(payload)
@@ -188,7 +188,7 @@ class PlutoCapacitacion():
         payload['Id'] = content_dict["_id"]
         payload['Title'] = content_dict["name"]
         payload['OriginalTitle'] = None
-        payload['CleanTitle'] = None
+        payload['CleanTitle'] = _replace(content_dict["name"])
         payload['Duration'] = None
         payload['Type'] = self.get_type(content_dict["type"]) 
         payload['Year'] = None
@@ -207,7 +207,7 @@ class PlutoCapacitacion():
         payload['Seasons'] = None
         payload['IsBranded'] = None
         payload['IsAdult'] = None
-        payload['Packages'] = None
+        payload['Packages'] = [{"Type":"free-vod"}]
         payload['Country'] = None
         payload['Crew'] = None        
         payload['Timestamp'] = datetime.now().isoformat()
