@@ -1,5 +1,6 @@
 import time
 import requests
+from requests.models import Response
 from handle.replace         import _replace
 from common                 import config
 from handle.mongo           import mongo
@@ -9,7 +10,7 @@ from handle.datamanager     import Datamanager
 # from time import sleep
 # import re
 
-class PlutoCapacitacion():
+class PlutoFV():
     """
     """
     def __init__(self, ott_site_uid, ott_site_country, type):
@@ -17,14 +18,14 @@ class PlutoCapacitacion():
         self.ott_site_country = ott_site_country
         self._config = config()['ott_sites'][ott_site_uid]
         self._platform_code = self._config['countries'][ott_site_country]
-        # self._start_url             = self._config['start_url']
+        self._api_url             = self._config['api_url']
         self._created_at = time.strftime("%Y-%m-%d")
         self.mongo = mongo()
         self.titanPreScraping = config()['mongo']['collections']['prescraping']
         self.titanScraping = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
 
-        self.api_url = self._config['api_url']
+        #self.api_url = self._config['api_url']
 
         self.session = requests.session()
 
@@ -77,5 +78,14 @@ class PlutoCapacitacion():
 
         return query
 
+    def get_reques(self, _api_url):
+        """Metodo que hace reques a la api de Pluto TV y devuelve un diccionario con metadata en formato json"""
+        req = self.sesion.get(_api_url)
+        response = req.json()
+        print(req.status_code, req.url)
+        return response
+
+
     def _scraping(self, testing=False):
-        print("Fefo Velasco")
+        request = self.get_reques(self._api_url)
+        print(request)

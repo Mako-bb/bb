@@ -6,11 +6,25 @@ from handle.mongo           import mongo
 from updates.upload         import Upload
 from handle.payload         import Payload
 from handle.datamanager     import Datamanager
+from datetime import datetime
+from handle.payload import Payload
 # from time import sleep
 # import re
 
 class PlutoCapacitacion():
     """
+    Pluto es una ott de Estados Unidos que opera en todo el mundo.
+
+    DATOS IMPORTANTES:
+    - VPN: Si/No (Recomendación: Usar ExpressVPN).
+    - ¿Usa Selenium?: No.
+    - ¿Tiene API?: Si.
+    - ¿Usa BS4?: No.
+    - ¿Cuanto demoró la ultima vez? tiempo + fecha.
+    - ¿Cuanto contenidos trajo la ultima vez? cantidad + fecha.
+
+    OTROS COMENTARIOS:
+    Con esta plataforma pasa lo siguiente...
     """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self.ott_site_uid = ott_site_uid
@@ -22,8 +36,9 @@ class PlutoCapacitacion():
         self.mongo = mongo()
         self.titanPreScraping = config()['mongo']['collections']['prescraping']
         self.titanScraping = config()['mongo']['collections']['scraping']
-        self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
+        self.titanScrapingEpisodes = config()['mongo']['collections']['episode']
 
+        self.url = self._config['url']
         self.api_url = self._config['api_url']
 
         self.session = requests.session()
@@ -44,7 +59,8 @@ class PlutoCapacitacion():
             self._scraping()
 
         if type == 'testing':
-            self._scraping(testing=True)
+            self._scraping(is_test=True)
+
     def query_field(self, collection, field=None):
         """Método que devuelve una lista de una columna específica
         de la bbdd.
@@ -76,87 +92,199 @@ class PlutoCapacitacion():
             query = list(query)
 
         return query
-    def _scraping(self, testing=False):
-        print("ok")
 
+    def _scraping(self, is_test=False):
+        # Pensando algoritmo:
+        # 1) Método request (request)-> Validar todo.
+        # 2) Método payload (get_payload)-> Para reutilizarlo.
+        # 3) Método para traer los contenidos (get_contents)
 
-    def content_scraping(self, content):
-        content_id = content['_id']
+        # Listas de ids scrapeados:
+        print(f"\nIniciando scraping de {self._platform_code}\n")
+        self.scraped = self.query_field(self.titanScraping, field='Id')
+        self.scraped_episodes = self.query_field(self.titanScrapingEpisodes, field='Id')
+        print(f"{self.titanScraping} {len(self.scraped)}")
+        print(f"{self.titanScrapingEpisodes} {len(self.scraped_episodes)}")
 
-        if not content_id in self.scraped:
-            payload = self.get_payload(content)
-            if payload['Type'] == 'serie':
-                self.get_episodes(content)
-            if payload:
-                # 1) Almaceno el dict en la lista.
+        # Lista de contenidos a obtener (Almacenan dict):
+        self.payloads = []
+        self.episodes_payloads = []
+
+        contents = self.get_contents()
+        for n, content in enumerate(contents):
+            print(f"\n----- Progreso ({n}/{len(contents)}) -----\n")
+
+            # Valido que no haya duplicados:
+            if content["_id"] in self.scraped:
+                print("Ya ingresado")
+            else:
+                self.scraped.append(content["_id"])    
+                payload = self.get_payload(content)
                 self.payloads.append(payload)
-                # 2) Almaceno el id (str) en la lista.
-                self.scraped.append(content_id)
 
-    def get_episodes(self, content):
-        # TODO: Pensar la lógca de episodios.
-        self.scraped_episodes.append('Id')
-        self.episodes_payloads.append({})
+                # Traigo los episodios en caso de ser serie:
+                if payload["Type"] == 'serie':
+                    # TODO: Crear algoritmo para traer episodios y
+                    # almacenarlos sin duplicados en "self.episodes_payloads".
+                    self.get_episodes(payload)
 
-    def request(self, url, headers=None):
-        """Método para hacer y validar una petición a un servidor.
+        if self.payloads:
+            self.mongo.insertMany(self.titanScraping, self.payloads)
+        if self.episodes_payloads:
+            self.mongo.insertMany(self.titanScrapingEpisodes, self.episodes_payloads)
 
-        Args:
-            url (str): Url a la cual realizaremos la petición.
+        self.session.close()
+        Upload(self._platform_code, self._created_at, testing=is_test)
+
+        print("Scraping Finalizado")
+
+    def get_contents(self):
+        """Método para obtener contenidos en forma de dict,
+        almancenados en una lista.
 
         Returns:
-            obj: Retorna un objeto tipo requests.
+            list: Lista de contenidos.
         """
-        request_timeout = 5
+        print("\nObteniendo contenidos...\n")
+        contents = [] # Contenidos a devolver.
+        response = self.request(self.api_url)
+        contents_metadata = response.json()        
+        categories = contents_metadata["categories"]
+
+        for categorie in categories:
+            print(categorie.get("name"))
+            contents += categorie["items"]
+        return contents
+
+    def request(self, url):
+        '''
+        Método para hacer una petición
+        '''
+        requestsTimeout = 5
         while True:
             try:
-                # Request con header:
-                response = self.session.get(
-                    url,
-                    headers=headers,
-                    timeout=request_timeout
-                )
-                if response.status_code == 200:
-                    return response
-                else:
-                    raise Exception(f"ERROR: {response.status_code}")
+                response = self.session.get(url, timeout=requestsTimeout)
+                return response
             except requests.exceptions.ConnectionError:
                 print("Connection Error, Retrying")
-                time.sleep(request_timeout)
+                time.sleep(requestsTimeout)
                 continue
             except requests.exceptions.RequestException:
                 print('Waiting...')
-                time.sleep(request_timeout)
+                time.sleep(requestsTimeout)
                 continue
 
-    def get_contents(self):
-        """Método que trae los contenidos en forma de diccionario.
+    def get_payload(self, content_dict):
+        """Método para crear el payload. Para titanScraping.
+
+        Args:
+            content_metadata (dict): Indica la metadata del contenido.
 
         Returns:
-            list: Lista de diccionarios
+            dict: Retorna el payload.
         """
-        content_list = []
-        uri = self.api_url
-        response = self.request(uri)
-        dict_contents = response.json()
-        list_categories = dict_contents['categories']
-        for categories in list_categories:
-            content_list += categories['items']
-
-        return content_list
-
-    def get_payload(self, dict_metadata):
-        # from handle.payload import Payload
-        # payload = Payload()
-
         payload = {}
-        payload['Id'] = dict_metadata['_id']
-        payload['Title'] = dict_metadata['name']
-        payload['Type'] = dict_metadata['type']
-        payload['Synopsis'] = dict_metadata.get('description')
-        payload['Duration'] = self.get_duration(dict_metadata)
+
+        # Indica si el payload a completar es un episodio:        
+        payload['PlatformCode'] = self._platform_code
+        payload['Id'] = content_dict["_id"]
+        payload['Title'] = content_dict["name"]
+        payload['OriginalTitle'] = None
+        payload['CleanTitle'] = _replace(content_dict["name"])
+        payload['Duration'] = None
+        payload['Type'] = self.get_type(content_dict["type"]) 
+        payload['Year'] = None
+        payload['Deeplinks'] = self.get_deeplinks(content_dict)
+        payload['Playback'] = None
+        payload['Synopsis'] = None
+        payload['Image'] = None
+        payload['Rating'] = None
+        payload['Provider'] = None
+        payload['Genres'] = None
+        payload['Cast'] = None
+        payload['Directors'] = None
+        payload['Availability'] = None
+        payload['Download'] = None
+        payload['IsOriginal'] = None
+        payload['Seasons'] = None
+        payload['IsBranded'] = None
+        payload['IsAdult'] = None
+        payload['Packages'] = [{"Type":"free-vod"}]
+        payload['Country'] = None
+        payload['Crew'] = None        
+        payload['Timestamp'] = datetime.now().isoformat()
+        payload['CreatedAt'] = self._created_at
+
+        print(f"Url: {payload['Deeplinks']['Web']}")
+        print(f"{payload['Type']}:\t{payload['Title']}")
 
         return payload
 
-    #def get_duration(self, dict_metadata):
-    #    return int(dict_metadata['allotment'] // 60) or int(dict_metadata['duration'] // 60000)
+    def get_payload_episodes(self, content_dict):
+        """Método para crear el payload. Para titanScrapingEpisodes.
+
+        Args:
+            content_metadata (dict): Indica la metadata del contenido.
+
+        Returns:
+            dict: Retorna el payload.
+        """
+        payload = {}
+
+        # Indica si el payload a completar es un episodio:        
+        payload['PlatformCode'] = self._platform_code
+        payload['Id'] = content_dict["_id"]
+        payload['Title'] = content_dict["name"]
+        payload['Duration'] = self.get_duration(content_dict)
+
+        payload["ParentTitle"] = self.get_parent_title(content_dict)
+        payload["ParentId"] = self.get_parent_id(content_dict)
+        payload["Season"] = self.get_season(content_dict)
+        payload["Episode"] = self.get_episode(content_dict)
+
+        payload['Year'] = None
+        payload['Deeplinks'] = self.get_deeplinks(content_dict)
+        payload['Playback'] = None
+        payload['Synopsis'] = self.get_synopsis(content_dict)
+        payload['Image'] = self.get_image(content_dict)
+        payload['Rating'] = self.get_ratings(content_dict)
+        payload['Provider'] = None
+        payload['Genres'] = None
+        payload['Cast'] = self.get_cast(content_dict)
+        payload['Directors'] = self.get_directors(content_dict)
+        payload['Availability'] = None
+        payload['Download'] = None
+        payload['IsOriginal'] = None
+        payload['IsAdult'] = None
+        payload['Packages'] = self.get_packages(content_dict)
+        payload['Country'] = None
+        payload['Timestamp'] = datetime.now().isoformat()
+        payload['CreatedAt'] = self.created_at
+
+        print(f"Url: {payload['Deeplinks']['Web']}")
+        print(f"{payload['Type']}:\t{payload['Title']}")
+        
+        return payload
+
+    def get_deeplinks(self, metadata):
+        deeplinks = {
+                "Web": self.url + "prueba",
+                "Android": None,
+                "iOS": None,
+            }
+        return deeplinks
+
+    def get_type(self, type_):
+        if type_ == 'series': # Se puede solucionar con regex.
+            return 'serie'
+        else:
+            return type_
+    
+    def get_episodes(self, content_metadata):        
+        # 1) Hacer consulta a los episodios scrapeados (self.scraped_episodes):
+        # self.episodes_payloads
+        # 2) Si no existen, agregar los episodios a self.episodes_payloads.
+        if "¿Existe ese episodio?" in self.scraped_episodes:
+            print("Ya ingresado")
+        else:
+            print("TRAER EPISODIO/S")
