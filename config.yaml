@@ -409,7 +409,7 @@ ott_sites:
       AR: ar.pluto
     url: https://pluto.tv/on-demand
     api_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=a4f86dcf-ad48-4179-b6f3-15f26f190d16&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=a4f86dcf-ad48-4179-b6f3-15f26f190d16&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.114&marketingRegion=VE&serverSideAds=true&sessionID=90fbd984-d5d2-11eb-9721-0242ac110002&sid=90fbd984-d5d2-11eb-9721-0242ac110002&userId=&attributeV4=foo
-    season_api_url: https://service-vod.clusters.pluto.tv/v3/vod/series/
+    season_api_url: https://service-vod.clusters.pluto.tv/v3/vod/series/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=a4f86dcf-ad48-4179-b6f3-15f26f190d16&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=a4f86dcf-ad48-4179-b6f3-15f26f190d16&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.114&marketingRegion=VE&serverSideAds=true&sessionID=90fbd984-d5d2-11eb-9721-0242ac110002&sid=90fbd984-d5d2-11eb-9721-0242ac110002&userId=&attributeV4=foo
   PlutoNO: #Nazareno
     countries:
       AR: ar.pluto
@@ -431,7 +431,7 @@ ott_sites:
   PlutoMI: #Matias
     countries:
       AR: ar.pluto
-    url: https://www.pluto.com.ar/
+    url: https://www.pluto.com.ar/on-demand
     api_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&deviceLat=-34.5106&deviceLon=-58.7536&deviceMake=Microsoft%2BEdge&deviceModel=web&deviceType=web&deviceVersion=91.0.864.54&marketingRegion=VE&serverSideAds=true
   PlutoPQ: #Patricio
     countries:
