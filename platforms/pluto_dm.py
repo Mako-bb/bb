@@ -16,13 +16,17 @@ class PlutoDM():
     DATOS IMPORTANTES:
     - VPN: Si/No (Recomendación: Usar ExpressVPN).
     - ¿Usa Selenium?: No.
-    - ¿Tiene API?: Si.
+    - ¿Tiene API?: Si. Tiene 2, una general en donde se ven las series y peliculas,
+      y otra específica de las series, donde se obtienen los cap. de las mismas.
     - ¿Usa BS4?: No.
     - ¿Cuanto demoró la ultima vez? tiempo + fecha.
-    - ¿Cuanto contenidos trajo la ultima vez? cantidad + fecha.
+    - ¿Cuanto contenidos trajo la ultima vez?:
+        -Fecha: 29/6/2021
+        -Episodios: 19.990
+        -Peliculas/series: 1.524
 
     OTROS COMENTARIOS:
-    Con esta plataforma pasa lo siguiente...
+    ...
     """
 
     def __init__(self, ott_site_uid, ott_site_country, type):
@@ -146,8 +150,11 @@ class PlutoDM():
         self.session.close()
         Upload(self._platform_code, self._created_at, testing=True)
 
-
-
+    '''
+    Hace un request a la api_url "general" de las series/peliculas y devuelve
+    una lista con todas las categorías
+    
+    '''
     def get_content(self,url):
         response = self.session.get(url)#conexión a la url
         self.contents = []
@@ -160,15 +167,14 @@ class PlutoDM():
         
         return self.contents
 
-
-    #Filtra lo que necesito de cada pelicula
+    #Payload de peliculas y series
     def payloads(self,content):
         payload = {
             "PlatformCode": str(self._platform_code),
             "Id": str(content['_id']),
             "Title": str(content['name']),
             "CleanTitle": _replace(content['name']),
-            "OriginalTitle": self.original_title(content),
+            "OriginalTitle": None,
             "Type": str(self.get_type(content['type'])),
             "Year": None,
             "Duration": self.get_duration(content),
@@ -241,8 +247,10 @@ class PlutoDM():
         else:
             return int(content['duration']/60000)
 
-
-    #Método que toma el "slug title" y lo transforma para obtener el originalTitle(revisar)
+    '''
+    Método que toma el "slug title" y lo transforma para obtener el originalTitle,
+    de momento no funciona correctamente, así que dejo "None"
+    '''
     def original_title(self,films):
 
         lista_slug = films['slug'].split('-')
@@ -256,7 +264,7 @@ class PlutoDM():
     
     '''
     Metodo que accede a la api de las series con la id de la serie que se esta scrapeando
-    y obtiene una lista con las temporadas de cada una.
+    y obtiene una lista con las temporadas de la misma.
 
     args:
         -content(el contenido de la serie)
@@ -277,7 +285,7 @@ class PlutoDM():
 
         return self.seas_list
 
-    
+    #Payload de episodios
     def payloads_episode(self, content, episodes, contador_episodio):
         payload_epi = {
             "PlatformCode": str(self._platform_code),

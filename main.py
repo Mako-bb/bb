@@ -76,6 +76,8 @@ from platforms.hbo_fev import HBO_Fev
 #Mati HBO
 from platforms.hbo_mi import HboMI
 from platforms.starz_mi import StarzMI
+#Starz Darío
+from platforms.starz_dm import StarzDM
 
 from platforms.hallmarkmovies import HallMark
 
