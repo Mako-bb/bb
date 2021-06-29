@@ -1,3 +1,4 @@
+import threading
 import time
 import requests
 from handle.replace         import _replace
@@ -8,6 +9,7 @@ from handle.payload         import Payload
 from handle.datamanager     import Datamanager
 # from time import sleep
 # import re
+
 
 class PlutoPQ():
     """
@@ -24,7 +26,8 @@ class PlutoPQ():
         self.titanScraping = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
 
-        self.api_url = self._config['api_url']
+        self.all_titles_url = self._config['all_titles_url']
+        self.all_episodes_url = self._config['all_episodes_url']
 
         self.session = requests.session()
 
@@ -76,6 +79,86 @@ class PlutoPQ():
             query = list(query)
 
         return query
-
+    
+    
     def _scraping(self, testing=False):
-        print("Patricio Quattrini")
+        url_episodes = self.all_episodes_url
+        url_titles = self.all_titles_url    
+        all_titles = {}
+        all_episodes = {}
+        res = self.request(url_titles)
+       
+      
+        for cat in res["categories"]:
+            for item in cat["items"]:         
+                
+                if not all_titles.get(item["_id"]):
+                    all_titles.setdefault(item["slug"], True)
+                    payload = {
+                        "Id": item["_id"],
+                        "Title": item["name"],
+                        "Rating": item["rating"],
+                        "PlatformCode": self._platform_code
+                    }
+                    self.mongo.insert("titanScraping", payload)
+                    if item["type"] == "series":
+                        
+                        response_episodes = self.session.get(url_episodes+item["slug"])
+                        res_episodes = response_episodes.json()
+                                           
+                        self.get_episodes(res_episodes, all_episodes, item["_id"], item["slug"])
+
+
+    def get_episodes(self, res_episodes, all_episodes, id_title, slug):
+        try:
+            for season in res_episodes["seasons"]:
+                for episode in season["episodes"]:
+                    if not all_episodes.get(episode["_id"]):
+                        all_episodes.setdefault(episode["_id"], True)
+                        payload_series = {
+                            "Id": episode["_id"],
+                            "Id_title": id_title,
+                            "Title": episode["name"],
+                            "Description": episode["description"],
+                            "Season": episode["season"],
+                            "Episode": episode["number"]
+                        }
+                        self.mongo.insert("titanScrapingEpisodes", payload_series)
+        except:
+            print(slug)  
+
+    def request(self, url):
+            '''
+            Método para hacer una petición
+            '''
+            requestsTimeout = 5
+            while True:
+                try:
+                    response = self.session.get(url, timeout=requestsTimeout)
+                    return response.json()
+                except requests.exceptions.ConnectionError:
+                    print("Connection Error, Retrying")
+                    time.sleep(requestsTimeout)
+                    continue
+                except requests.exceptions.RequestException:
+                    print('Waiting...')
+                    time.sleep(requestsTimeout)
+                    continue
+
+    def get_contents(self):
+            """Método para obtener contenidos en forma de dict,
+            almancenados en una lista.
+
+            Returns:
+                list: Lista de contenidos.
+            """
+            print("\nObteniendo contenidos...\n")
+            contents = [] # Contenidos a devolver.
+            response = self.request(self.api_url)
+            contents_metadata = response.json()        
+            categories = contents_metadata["categories"]
+
+            for categorie in categories:
+                print(categorie.get("name"))
+                contents += categorie["items"]
+            return contents

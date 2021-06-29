@@ -134,7 +134,7 @@ class PlutoCapacitacion():
             self.mongo.insertMany(self.titanScrapingEpisodes, self.episodes_payloads)
 
         self.session.close()
-        Upload(self._platform_code, self._created_at, testing=is_test)
+        Upload(self._platform_code, self._created_at, testing=True)
 
         print("Scraping Finalizado")
 
@@ -147,7 +147,7 @@ class PlutoCapacitacion():
         """
         print("\nObteniendo contenidos...\n")
         contents = [] # Contenidos a devolver.
-        response = self.request(self.api_url)
+        response = self.request(self.api_url) 
         contents_metadata = response.json()        
         categories = contents_metadata["categories"]
 
@@ -284,7 +284,7 @@ class PlutoCapacitacion():
         # 1) Hacer consulta a los episodios scrapeados (self.scraped_episodes):
         # self.episodes_payloads
         # 2) Si no existen, agregar los episodios a self.episodes_payloads.
-        if "¿Existe ese episodio?" in self.scraped_episodes:
+        if content_metadata["_id"] in self.scraped_episodes:
             print("Ya ingresado")
         else:
             print("TRAER EPISODIO/S")

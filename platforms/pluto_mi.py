@@ -93,10 +93,8 @@ class PlutoMI():
                 self.scraped.append(content[key_search])    
                 newPayload = self.get_payload(content)
                 self.payloads.append(newPayload)
-                print('\n---Contenido ingresado---\n')
-                print(content['name']+':'+ content['type'])
             else:
-                print('\nContenido ya existe.\n')
+                pass
 
         self.insert_payloads_close(self.payloads,self.episodes_payloads)
             
@@ -120,10 +118,8 @@ class PlutoMI():
     def insert_payloads_close(self,payloads,epi_payloads):    
         if payloads:
             self.mongo.insertMany(self.titanScraping, payloads)
-            print('\nSe cargaron nuevos registros de peliculas y series\n')
         if epi_payloads:
             self.mongo.insertMany(self.titanScrapingEpisodes, epi_payloads)
-            print('\nSe cargaron nuevos registros de peliculas y series\n')
         self.session.close()
         Upload(self._platform_code, self._created_at, testing=True)
     
@@ -174,7 +170,7 @@ class PlutoMI():
                 "IsAdult": None,
                 "IsBranded": None,
                 "Packages": [{'Type': 'free-vod'}],
-                "Country": ["AR"],#self.ott_site_country,
+                "Country": [self.ott_site_country],
                 "Timestamp":datetime.datetime.now().isoformat(),
                 "CreatedAt": self._created_at,
         }
@@ -217,17 +213,15 @@ class PlutoMI():
                         'Download':None ,
                         'IsOriginal': None,
                         'IsAdult': None,
-                        'Country': ["AR"],#self.ott_site_country,
+                        'Country': [self.ott_site_country],
                         'Packages': [{'Type': 'free-vod'}],
                         'Timestamp': datetime.datetime.now().isoformat(),
                         'CreatedAt': self._created_at,
                     }
                     self.scraped_episodes.append(epValue[key_search])    
                     self.episodes_payloads.append(episode)
-                    print('\n---Contenido ingresado---\n')
-                    print('{}: Season - {} - Episode {}'.format(epValue['name'],epValue['season'],epValue['number']))
                 else:
-                    print('\nContenido ya existe.\n')
+                    pass
 
     def depurate_title(self, title):
         chars=' *,./|&¬!"£$%^()_+{@:<>?[]}`=;¿'
@@ -240,7 +234,7 @@ class PlutoMI():
             title=title.replace("'","")
         return title
     
-    def get_deepLinks(self,url,content):
+    def get_deepLinks(self,content):
         content_title=_replace(content['name'])
         clean_title= self.depurate_title(content_title)
         if 'season' in content:

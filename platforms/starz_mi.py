@@ -8,7 +8,7 @@ from handle.payload import Payload
 from handle.datamanager import Datamanager
 import datetime
 # from time import sleep
-# import re
+import re
 
 
 class StarzMI():
@@ -22,10 +22,11 @@ class StarzMI():
         self.mongo = mongo()
         self.titanPreScraping = config()['mongo']['collections']['prescraping']
         self.titanScraping = config()['mongo']['collections']['scraping']
-        self.titanScrapingEpisodios = config(
-        )['mongo']['collections']['episode']
+        self.titanScrapingEpisodes = config()['mongo']['collections']['episode']
+
         self.api_url = self._config['api_url']
         self.url=self._config['url']
+
         self.session = requests.session()
 
         if type == 'return':
@@ -79,175 +80,208 @@ class StarzMI():
         return query
 
     def _scraping(self, testing = False):
-        api_url=self.api_url
-        content_response = requests.get(api_url)
-        content_json = content_response.json()
-        content_data = content_json['playContentArray']['playContents']
+        self.scraped = self.query_field(self.titanScraping, field='Id')
+        self.scraped_episodes = self.query_field(self.titanScrapingEpisodes, field='Id')
+        self.payloads = []
+        self.episodes_payloads = []
+        contents=self.get_contents()
+        key_movies_series='contentId' #es la key del id como viene del dictionario del contenido
+        key_episodes='Id' #es la key del id del payload del episodio
+        for content in contents:
+            isSeries=False
+            if self.isDuplicate(self.scraped,content[key_movies_series])==False:
+                if content['contentType'] == 'Series with Season':
+                    isSeries=True
+                    self.epis_payload(content)
+                self.scraped.append(content[key_movies_series])    
+                new_payload = self.get_payload(content, isSeries)
+                self.payloads.append(new_payload)
+            else:
+                pass
 
-        for content in content_data:
-            self.series_payload(content) if content["contentType"] == 'Series with Season' else self.movie_payload(content)
-
-    def movie_payload(self, content):
-        seconds=content['runtime']
-        minutes=seconds/60
-        duration= int(minutes)
-        ratingCode=content['ratingCode']
-        ratingSys=content['ratingSystem']
-        rating=ratingSys.join(ratingCode)
-        genres = []
-        directors = []
-        cast=[]
-        for genre in content['genres']:
-            genres.append(genre['description'])
-        for credit in content['credits']:
-            for rols in credit['keyedRoles']:
-                if rols['key'] == 'D':
-                    directors.append(credit['name']) 
-                elif rols['key'] == 'C':
-                        cast.append(credit['name']) 
-        movie = {
-            "PlatformCode": self._platform_code,
-            "Id": content['contentId'],
-            "Title": content['title'],
-            "CleanTitle": _replace(content['title']),
-            "OriginalTitle": content['properCaseTitle'],
-            "Type": content['contentType'],
-            "Year": content['releaseYear'],
-            "Duration": duration,
-            "ExternalIds": None,
-            "Deeplinks": {
-                "Web": self.url,
-                "Android": None,
-                "iOS": None,
-            },
-            "Synopsis": content['logLine'],
-            "Image": None,
-            "Rating": rating,
-            "Provider": content['studio'],
-            "Genres": genres,
-            "Cast": cast,
-            "Directors": directors,
-            "Availability": None,
-            "Download": content['downloadable'],
-            "IsOriginal":content['original'],
-            "IsAdult": None,
-            "IsBranded": None,
-            "Packages": [{'Type':'subscription-vod'}],
-            "Country": ["AR"],
-            "Timestamp":datetime.datetime.now().isoformat(),
-            "CreatedAt": self._created_at,
-        }
-        if self.mongo.search("titanScraping",movie)==False:
-            self.mongo.insert("titanScraping",movie)
+        self.insert_payloads_close(self.payloads,self.episodes_payloads)
+    
+    def get_contents(self):
+        url_api = self.api_url
+        contents=[]
+        response = self.session.get(url_api)
+        json_data=response.json()
+        for content in json_data['playContentArray']['playContents']:
+            contents.append(content)
+        return contents
+    
+    def isDuplicate(self, scraped_list, key_search):
+        isDup=False
+        if key_search in scraped_list:
+            isDup = True
+        return isDup
+    
+    def insert_payloads_close(self,payloads,epi_payloads):    
+        if payloads:
+            self.mongo.insertMany(self.titanScraping, payloads)
+        if epi_payloads:
+            self.mongo.insertMany(self.titanScrapingEpisodes, epi_payloads)
+        self.session.close()
+        Upload(self._platform_code, self._created_at, testing=True)
+    
+    def get_payload(self, content, seriesBool):
+        payload = self.generic_payload(content)
+        if seriesBool:
+            payload['Year'] = self.get_year_int(content['minReleaseYear'])
+            payload['Seasons'] = len(content['childContent'])
+            payload['Playback'] = None
         else:
-            pass
-
-    def series_payload(self, content):
-        ratingCode=content['ratingCode']
-        ratingSys=content['ratingSystem']
-        rating=ratingSys.join(ratingCode)
-        genres = []
-        directors = []
-        cast=[]
-        parent_title=content['title']
-        parent_id=content['contentId']
-        for genre in content['genres']:
-            genres.append(genre['description'])
-        for credit in content['credits']:
-            for rols in credit['keyedRoles']:
-                if rols['key'] == 'D':
-                    directors.append(credit['name']) 
-                elif rols['key'] == 'C':
-                        cast.append(credit['name']) 
-        series = {
+            payload['Year'] =  self.get_year_int(content['releaseYear'])
+            payload['Duration'] = self.get_duration(content)
+            payload['Download'] = content['downloadable']
+        return payload
+    
+    def generic_payload(self,content):
+        payload = {
             'PlatformCode': self._platform_code,
-            'Id': content['contentId'],
+            'Id': self.get_id_str(content),
             'Title': content['title'],
             'OriginalTitle': content['properCaseTitle'],
             'CleanTitle': _replace(content['title']),
-            'Type': content['contentType'],
-            'Year': content['minReleaseYear'],
+            'Type': self.get_type(content),
+            'Year': None,
             'Duration': None,
             'Deeplinks': {
-                "Web": self.url,
+                "Web": self.get_deepLinks(content),
                 'Android': None,
                 'iOS': None,
             },
-            'Seasons': len(content['childContent']),
-            'Playback': None,
             'Synopsis': content['logLine'],
             'Image': None,
-            'Rating': rating,
-            'Provider': content['studio'],
+            'Rating': self.get_rating(content),
+            'Provider': [content['studio']],
             'ExternalIds': None,
-            'Genres': genres,
-            'Cast': cast,
-            'Directors': directors,
+            'Genres': self.get_genres(content),
+            'Cast': self.get_crew(content)[0],
+            'Directors': self.get_crew(content)[1],
             'Availability': None,
             'Download': None,
             'IsOriginal': content['original'],
             'IsBranded': None,
             'IsAdult': None,
             "Packages": [{'Type':'subscription-vod'}],
-            'Country': ["AR"],
+            'Country': [self.ott_site_country],
             'Timestamp': datetime.datetime.now().isoformat(),
             'CreatedAt': self._created_at,
         }
-        if self.mongo.search("titanScraping",series)==False:
-            self.mongo.insert("titanScraping",series)
-            self.episodes_payload(content,parent_id,parent_title)
-        else:
-            pass
-    
-    def episodes_payload(self, content, parentId, parentTitle):
-        counter=0
+        return payload
+
+    def epis_payload(self,content):
         for seasonValue in content['childContent']:
             for epValue in seasonValue['childContent']:
-                nonTrailer_num=epValue['order']
-                if nonTrailer_num >0:
-                    counter+=1
-                    seconds=epValue['runtime']
-                    minutes=seconds/60
-                    duration= int(minutes)
-                    ratingCode=content['ratingCode']
-                    ratingSys=content['ratingSystem']
-                    rating=ratingSys.join(ratingCode)
-                    genres=[]
-                    for genre in epValue['genres']:
-                        genres.append(genre['description'])
-                    episode = {
-                        'PlatformCode':self._platform_code,
-                        'ParentId': parentId,
-                        'ParentTitle': parentTitle,
-                        'Id': epValue['contentId'] ,
-                        'Title':epValue['title'] ,
-                        'Episode':counter,
-                        'Season': seasonValue['order'],
-                        'Year': epValue['releaseYear'],
-                        'Image':None ,
-                        'Duration': duration,
-                        'Deeplinks':{
-                            'Web':self.url ,
-                            'Android': None,
-                            'iOS':None ,
-                        },
-                        'Synopsis':epValue['logLine'],
-                        'Rating':rating ,
-                        'Provider':epValue['studio'],
-                        'ExternalIds': None,
-                        'Genres': genres,
-                        'Cast':None,
-                        'Directors':None,
-                        'Availability':None,
-                        'Download': None,
-                        'IsOriginal': epValue['original'],
-                        'IsAdult': None,
-                        'Country': self.ott_site_country,
-                        'Packages': [{'Type':'subscription-vod'}],
-                        'Timestamp': datetime.datetime.now().isoformat(),
-                        'CreatedAt': self._created_at,
-                    }
-                    if self.mongo.search("titanScrapingEpisodes",episode)==False:
-                        self.mongo.insert("titanScrapingEpisodes",episode)
+                if self.isTrailer(epValue['order']):
+                    if not self.isDuplicate(self.scraped_episodes,epValue['contentId']):
+                        episode = {
+                            'PlatformCode':self._platform_code,
+                            'ParentId': self.get_str_parent_id(epValue),
+                            'ParentTitle': epValue['seriesName'],
+                            'Id': self.get_id_str(epValue),
+                            'Title':epValue['title'] ,
+                            'Episode':epValue['order'],
+                            'Season': seasonValue['order'],
+                            'Year': self.get_year_int(epValue['releaseYear']),
+                            'Image':None ,
+                            'Duration': self.get_duration(epValue),
+                            'Deeplinks':{
+                                'Web':self.get_deepLinks(epValue),
+                                'Android': None,
+                                'iOS':None ,
+                            },
+                            'Synopsis':epValue['logLine'],
+                            'Rating':self.get_rating(epValue) ,
+                            'Provider':[epValue['studio']],
+                            'ExternalIds': None,
+                            'Genres': self.get_genres(epValue),
+                            'Cast':None,
+                            'Directors':None,
+                            'Availability':None,
+                            'Download': None,
+                            'IsOriginal': epValue['original'],
+                            'IsAdult': None,
+                            'Country': [self.ott_site_country],
+                            'Packages': [{'Type':'subscription-vod'}],
+                            'Timestamp': datetime.datetime.now().isoformat(),
+                            'CreatedAt': self._created_at,
+                        }
+                        self.episodes_payloads.append(episode)
+                        self.scraped_episodes.append(episode['Id'])
+                    else:pass
+                else: pass
+
+    def get_rating(self,content):
+        ratingCode=content['ratingCode']
+        ratingSys=content['ratingSystem']
+        rating=ratingSys.join(ratingCode)
+        return rating
+
+    def get_genres(self,content):
+        genres=[]
+        for genre in content['genres']:
+            genres.append(genre['description'])
+        return genres
+
+    def get_type(self,content):
+        if content['contentType']=='Movie':
+            return'movie'
+        else:
+            return'serie'
+    
+    def get_id_str(self,content):
+        return str(content['contentId'])
+
+    def get_year_int(self,year):
+        return int(year)
+
+    def get_crew(self,content):
+        crew=[]
+        cast=[]
+        directors=[]
+        for credit in content['credits']:
+            for rols in credit['keyedRoles']:
+                if rols['key'] == 'D':
+                    directors.append(credit['name']) 
+                elif rols['key'] == 'C':
+                        cast.append(credit['name'])
                 else:
-                    pass
+                    pass                  
+        crew.append(cast)
+        crew.append(directors)
+        return crew
+            
+    def get_duration(self,content):
+        seconds=content['runtime']
+        minutes=seconds/60
+        duration= int(minutes)
+        return duration
+
+    def isTrailer(self,num):
+        return bool(num)
+    
+    def get_str_parent_id(self,content):
+        parent_id=str(content['topContentId'])
+        return parent_id
+
+    def depurate_title(self, title):
+        chars=' *,./|&¬!"£$%^()_+{@:<>?[]}`=;¿'
+        title=title.lower()#paso el titulo original a minusculas
+        if '-' in title:#primero elimino los guiones que vengan con el titulo original
+            title=title.replace('-'," ")
+        for c in chars:#luego elimino el resto de los caracteres especiales
+            title=title.replace(c,'-')
+        if "'" in title:#elimino los apostrofes simples que quedan fuera de la lista de caracteres especiales, este paso quizas se pueda evitar de otro modo.
+            title=title.replace("'","")
+        return title
+    
+    def get_deepLinks(self,content):
+        content_title=_replace(content['title'])
+        clean_title= self.depurate_title(content_title)
+        if content['contentType']=='Movie':
+            deeplink=self.url+'/{}/{}'.format('movies',clean_title)
+        else:
+            deeplink=self.url+'/{}/{}/{}'.format('series',clean_title,content['contentId'])
+        return deeplink
