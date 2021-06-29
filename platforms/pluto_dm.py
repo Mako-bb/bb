@@ -115,12 +115,15 @@ class PlutoDM():
                     self.payloads_list.append(self.payloads(films))
 
                     if films['type'] == 'series':
+
                         self.contador_episodio = 0
+
                         for seas in self.get_content_season(films,self.season_api_url):
                             for episodes in seas:
                                 if episodes['_id'] in self.scrapedEpisodes:
                                     print('capitulo ya ingresado')
                                 else:
+
                                     self.contador_episodio += 1
                                     self.scrapedEpisodes.append(episodes['_id'])
                                     self.payloads_episodes_list.append(self.payloads_episode(films, episodes, self.contador_episodio))
