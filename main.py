@@ -57,18 +57,6 @@ from platforms.darmattertv import DarkMattertv
 #from platforms.pluto_dl import PlutoDL
 # Fede
 # Naza
-<<<<<<< HEAD
-
-# Dario
-from platforms.pluto_ah import PlutoAH
-#Darío
-from platforms.pluto_dm import PlutoDM
-# Axel
-# Pato
-from platforms.pluto_pq import PlutoPQ
-
-# Matias
-=======
 # Dario
 from platforms.pluto_ah import PlutoAH
 # Pato
@@ -90,7 +78,6 @@ from platforms.hbo_mi import HboMI
 from platforms.starz_mi import StarzMI
 
 from platforms.hallmarkmovies import HallMark
->>>>>>> 383a58e463598602cbea10eb2a46eb186e0a5420
 
 
 logging.basicConfig(level=logging.INFO)

@@ -86,9 +86,9 @@ class PlutoPQ():
         url_titles = self.all_titles_url    
         all_titles = {}
         all_episodes = {}
-        response = self.session.get(url_titles)
-        res = response.json()
-        #executer = ThreadPoolExecutor(max_workers=20)
+        res = self.request(url_titles)
+       
+      
         for cat in res["categories"]:
             for item in cat["items"]:         
                 
@@ -105,8 +105,7 @@ class PlutoPQ():
                         
                         response_episodes = self.session.get(url_episodes+item["slug"])
                         res_episodes = response_episodes.json()
-                        #executer.submit(self.get_episodes, res_episodes, all_episodes, item["_id"], item["slug"])
-                        
+                                           
                         self.get_episodes(res_episodes, all_episodes, item["_id"], item["slug"])
 
 
@@ -128,13 +127,38 @@ class PlutoPQ():
         except:
             print(slug)  
 
+    def request(self, url):
+            '''
+            Método para hacer una petición
+            '''
+            requestsTimeout = 5
+            while True:
+                try:
+                    response = self.session.get(url, timeout=requestsTimeout)
+                    return response.json()
+                except requests.exceptions.ConnectionError:
+                    print("Connection Error, Retrying")
+                    time.sleep(requestsTimeout)
+                    continue
+                except requests.exceptions.RequestException:
+                    print('Waiting...')
+                    time.sleep(requestsTimeout)
+                    continue
 
-#19,694 episodes
-#con None hilos 152.44045281410217
-#con 10 hilos 163.54908108711243
-#con 20 hilos 145.26501035690308
-#sin hilos 154.00749516487122
+    def get_contents(self):
+            """Método para obtener contenidos en forma de dict,
+            almancenados en una lista.
 
+            Returns:
+                list: Lista de contenidos.
+            """
+            print("\nObteniendo contenidos...\n")
+            contents = [] # Contenidos a devolver.
+            response = self.request(self.api_url)
+            contents_metadata = response.json()        
+            categories = contents_metadata["categories"]
 
-        
-        
+            for categorie in categories:
+                print(categorie.get("name"))
+                contents += categorie["items"]
+            return contents

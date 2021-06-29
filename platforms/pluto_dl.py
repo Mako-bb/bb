@@ -24,11 +24,7 @@ class PlutoDL():
         self.titanScraping = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
 
-<<<<<<< HEAD
-        #self.api_url = self._config['api_url']
-=======
         # self.api_url = self._config['api_url']
->>>>>>> 383a58e463598602cbea10eb2a46eb186e0a5420
 
         self.session = requests.session()
 
