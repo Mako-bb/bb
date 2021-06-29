@@ -19,7 +19,7 @@ class PlutoFV():
         self.ott_site_country = ott_site_country
         self._config = config()['ott_sites'][ott_site_uid]
         self._platform_code = self._config['countries'][ott_site_country]
-        self._api_url             = self._config['api_url']
+        self.api_url             = self._config['api_url']
         self._created_at = time.strftime("%Y-%m-%d")
         self.mongo = mongo()
         self.titanPreScraping = config()['mongo']['collections']['prescraping']
@@ -79,14 +79,43 @@ class PlutoFV():
 
         return query
 
-    def get_request(self, _api_url):
-        """Metodo que hace reques a la api de Pluto TV y devuelve un diccionario con metadata en formato json"""
-        req = self.session.get(_api_url)
-        response = req.json()
-        print(req.status_code, req.url)
-        return response
-
-
-    def _scraping(self, testing=False):
-        diccionario_pluto = self.get_request(self._api_url)
+    def _scraping(self, testing=True):
+        diccionario_pluto = self.get_contents(self.api_url)
         print(diccionario_pluto)
+        print("Scraping Finalizado")
+
+
+    def get_contents(self, api_url):
+        """Metodo que hace reques a la api de Pluto TV y devuelve un diccionario con metadata en formato json"""
+        print("\nObteniendo contenidos...\n")
+        contents = [] # Contenidos a devolver.
+        response = self.request(self.api_url)
+        contents_metadata = response.json()        
+        categories = contents_metadata["categories"]
+
+        for categorie in categories:
+            print(categorie.get("name"))
+            contents += categorie["items"]
+        return contents       
+        #req = self.session.get(api_url)
+        #response = req.json()
+        #print(req.status_code, req.url)
+        #return response
+
+    def request(self, url):
+        '''
+        Método para hacer una petición
+        '''
+        requestsTimeout = 5
+        while True:
+            try:
+                response = self.session.get(url, timeout=requestsTimeout)
+                return response
+            except requests.exceptions.ConnectionError:
+                print("Connection Error, Retrying")
+                time.sleep(requestsTimeout)
+                continue
+            except requests.exceptions.RequestException:
+                print('Waiting...')
+                time.sleep(requestsTimeout)
+                continue
