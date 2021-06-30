@@ -124,8 +124,6 @@ class PlutoCapacitacion():
 
                 # Traigo los episodios en caso de ser serie:
                 if payload["Type"] == 'serie':
-                    # TODO: Crear algoritmo para traer episodios y
-                    # almacenarlos sin duplicados en "self.episodes_payloads".
                     self.get_episodes(payload)
 
         if self.payloads:

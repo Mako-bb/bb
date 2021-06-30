@@ -1,3 +1,4 @@
+from logging import getLogRecordFactory
 import threading
 import time
 import requests
@@ -7,6 +8,7 @@ from handle.mongo           import mongo
 from updates.upload         import Upload
 from handle.payload         import Payload
 from handle.datamanager     import Datamanager
+from datetime               import datetime
 # from time import sleep
 # import re
 
@@ -24,10 +26,11 @@ class PlutoPQ():
         self.mongo = mongo()
         self.titanPreScraping = config()['mongo']['collections']['prescraping']
         self.titanScraping = config()['mongo']['collections']['scraping']
-        self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
+        self.titanScrapingEpisodes = config()['mongo']['collections']['episode']
 
         self.all_titles_url = self._config['all_titles_url']
         self.all_episodes_url = self._config['all_episodes_url']
+        self.all_episodes_url2 = self._config['all_episodes_url2']
 
         self.session = requests.session()
 
@@ -82,51 +85,54 @@ class PlutoPQ():
     
     
     def _scraping(self, testing=False):
-        url_episodes = self.all_episodes_url
-        url_titles = self.all_titles_url    
-        all_titles = {}
-        all_episodes = {}
-        res = self.request(url_titles)
-       
-      
-        for cat in res["categories"]:
-            for item in cat["items"]:         
-                
-                if not all_titles.get(item["_id"]):
-                    all_titles.setdefault(item["slug"], True)
-                    payload = {
-                        "Id": item["_id"],
-                        "Title": item["name"],
-                        "Rating": item["rating"],
-                        "PlatformCode": self._platform_code
-                    }
-                    self.mongo.insert("titanScraping", payload)
-                    if item["type"] == "series":
-                        
-                        response_episodes = self.session.get(url_episodes+item["slug"])
-                        res_episodes = response_episodes.json()
-                                           
-                        self.get_episodes(res_episodes, all_episodes, item["_id"], item["slug"])
+        
+        self.payloads = []
+        self.episodes_payloads = []        
+        
+        self.scraped = self.query_field(self.titanScraping, field='Id')
+        self.scraped_episodes = self.query_field(self.titanScrapingEpisodes, field='Id')
+        
+        all_titles = self.get_contents()
+        for title in all_titles:
+            if title["_id"] in self.scraped:
+                pass
+            else:
+                self.scraped.append(title["_id"])    
+                payload = self.get_payload(title)
+                self.payloads.append(payload)
+
+                if title["type"] == "series":
+                    self.episodes_payloads = self.get_episodes(title)
+
+     
+        if self.payloads:
+            self.mongo.insertMany(self.titanScraping, self.payloads)
+        if self.episodes_payloads:
+            self.mongo.insertMany(self.titanScrapingEpisodes, self.episodes_payloads)
+        self.session.close()
+        Upload(self._platform_code, self._created_at, testing=True)
 
 
-    def get_episodes(self, res_episodes, all_episodes, id_title, slug):
+    def get_episodes(self, content):
+        episode_payload = []
+        url = self.all_episodes_url2.format(content['_id'])
+        res_episodes = self.request(url)
+        scraped_episodes = []
         try:
             for season in res_episodes["seasons"]:
                 for episode in season["episodes"]:
-                    if not all_episodes.get(episode["_id"]):
-                        all_episodes.setdefault(episode["_id"], True)
-                        payload_series = {
-                            "Id": episode["_id"],
-                            "Id_title": id_title,
-                            "Title": episode["name"],
-                            "Description": episode["description"],
-                            "Season": episode["season"],
-                            "Episode": episode["number"]
-                        }
-                        self.mongo.insert("titanScrapingEpisodes", payload_series)
+                    if episode["_id"] in scraped_episodes:
+                        pass
+                    else:
+                        self.scraped_episodes.append(episode["_id"])    
+                        episode_payload = self.get_payload_episodes(episode, res_episodes)
+                        self.episodes_payloads.append(episode_payload)
+                        print("agregado")
+            return self.episodes_payloads
         except:
-            print(slug)  
-
+            print(content["name"])
+        
+    
     def request(self, url):
             '''
             Método para hacer una petición
@@ -154,11 +160,100 @@ class PlutoPQ():
             """
             print("\nObteniendo contenidos...\n")
             contents = [] # Contenidos a devolver.
-            response = self.request(self.api_url)
-            contents_metadata = response.json()        
+            contents_metadata = self.request(self.all_titles_url)
             categories = contents_metadata["categories"]
 
             for categorie in categories:
-                print(categorie.get("name"))
                 contents += categorie["items"]
             return contents
+
+    def get_payload(self, content_dict):
+            """Método para crear el payload. Para titanScraping.
+
+            Args:
+                content_metadata (dict): Indica la metadata del contenido.
+
+            Returns:
+                dict: Retorna el payload.
+            """
+            payload = {}
+
+            # Indica si el payload a completar es un episodio:        
+            payload['PlatformCode'] = self._platform_code
+            payload['Id'] = content_dict["_id"]
+            payload['Title'] = content_dict["name"]
+            payload['OriginalTitle'] = None
+            payload['CleanTitle'] = _replace(content_dict["name"])
+            payload['Duration'] = None
+            payload['Type'] = "serie" if content_dict["type"] == "series" else "movie" 
+            payload['Year'] = None
+            payload['Deeplinks'] = self.get_deeplinks(content_dict)
+            payload['Playback'] = None
+            payload['Synopsis'] = None
+            payload['Image'] = None
+            payload['Rating'] = None
+            payload['Provider'] = None
+            payload['Genres'] = None
+            payload['Cast'] = None
+            payload['Directors'] = None
+            payload['Availability'] = None
+            payload['Download'] = None
+            payload['IsOriginal'] = None
+            payload['Seasons'] = None
+            payload['IsBranded'] = None
+            payload['IsAdult'] = None
+            payload['Packages'] = [{"Type":"free-vod"}]
+            payload['Country'] = None
+            payload['Crew'] = None        
+            payload['Timestamp'] = datetime.now().isoformat()
+            payload['CreatedAt'] = self._created_at
+           
+            return payload
+    
+    def get_deeplinks(self, metadata):
+        deeplinks = {
+                "Web": self.all_titles_url + "prueba",
+                "Android": None,
+                "iOS": None,
+            }
+        return deeplinks
+    
+    def get_payload_episodes(self, content_dict, content_perent):
+        """Método para crear el payload. Para titanScrapingEpisodes.
+
+        Args:
+            content_metadata (dict): Indica la metadata del contenido.
+
+        Returns:
+            dict: Retorna el payload.
+        """
+        payload = {}
+
+        # Indica si el payload a completar es un episodio:        
+        payload['PlatformCode'] = self._platform_code
+        payload['Id'] = content_dict["_id"]
+        payload['Title'] = content_dict["name"]
+        payload['Duration'] = content_dict["duration"]
+        payload["ParentTitle"] = content_perent["name"]
+        payload["ParentId"] = content_perent["_id"]
+        payload["Season"] = content_dict["season"]
+        payload["Episode"] = content_dict["number"]
+        payload['Year'] = None
+        payload['Deeplinks'] = self.get_deeplinks(content_dict)
+        payload['Playback'] = None
+        payload['Synopsis'] = content_dict["description"]
+        payload['Image'] = None
+        payload['Rating'] = content_dict["rating"]
+        payload['Provider'] = None
+        payload['Genres'] = None
+        payload['Cast'] = None
+        payload['Directors'] = None
+        payload['Availability'] = None
+        payload['Download'] = None
+        payload['IsOriginal'] = None
+        payload['IsAdult'] = None
+        payload['Packages'] = [{"Type":"free-vod"}]
+        payload['Country'] = None
+        payload['Timestamp'] = datetime.now().isoformat()
+        payload['CreatedAt'] = self._created_at
+        return payload
