@@ -126,17 +126,14 @@ class PlutoDM():
 
                     if films['type'] == 'series':
 
-                        self.contador_episodio = 0
-
                         for seas in self.get_content_season(films,self.season_api_url):
                             for episodes in seas:
                                 if episodes['_id'] in self.scrapedEpisodes: 
                                     print('capitulo ya ingresado')
                                 else:
 
-                                    self.contador_episodio += 1
                                     self.scrapedEpisodes.append(episodes['_id'])
-                                    self.payloads_episodes_list.append(self.payloads_episode(films, episodes, self.contador_episodio))
+                                    self.payloads_episodes_list.append(self.payloads_episode(films, episodes))
 
         '''
         Si a las listas "payloads_list" y "payloads_episodes_list" tienen contenido,
@@ -192,18 +189,26 @@ class PlutoDM():
             "Cast": None,
             "Directors": None,
             "Availability": None,
-            "Download": False,
-            "IsOriginal": False,
-            "IsAdult": False,
-            "IsBranded": False,
-            "Packages": [{'Type': 'free-vod'}],
-            "Country": [self.ott_site_country],
+            "Download": None,
+            "IsOriginal": None,
+            "IsAdult": None,
+            "IsBranded": None,
+            "Packages": self.get_packages(),
+            "Country": None,
             "Timestamp": str(datetime.datetime.now().isoformat()),
             "CreatedAt": str(self._created_at),
             }
         
         return payload
 
+    def get_packages(self):
+
+        '''
+        Esto va hardcodeado, porque no hay de donde obtener esta info
+        '''
+        package = [{'Type': 'free-vod'}]
+
+        return package
 
     def get_images(self, content_, is_episode=False):
         images = []
@@ -225,25 +230,30 @@ class PlutoDM():
 
 
     def get_deeplinks(self, content, is_episode=False):
+        #Verifica si es pelicula
         if content['type'] == 'movie':
 
-            deeplink = self.url + 'movies' + '/' + content['slug'] + '/' + 'details' + '/'
-
+            deeplink = self.url + 'movies' + '/' + content['slug']
+        #Verifica si es un episodio
         elif content['type'] == 'series' and is_episode:
 
-            deeplink = self.url + 'series' + '/' + content['slug'] + '/' + 'season' + '/' + str(is_episode['season']) + '/' + 'episode' + '/' + is_episode['slug'] + '/'
-
+            deeplink = self.url + 'series' + '/' + content['slug'] + '/' + 'seasons' + '/' + str(is_episode['season']) + '/' + 'episode' + '/' + is_episode['slug']
+        #Si es serie...:
         else:
 
-            deeplink = self.url + 'series' + '/' + content['slug'] + '/' + 'details' + '/'
+            deeplink = self.url + 'series' + '/' + content['slug'] + '/' + 'details'
 
         return deeplink
 
 
-    def get_duration(self,content):
+    def get_duration(self,content, is_episode=False):
 
-        if content['type'] == 'series':
+        if content['type'] == 'series' and is_episode:
+            return int(is_episode['duration']/60000)
+
+        elif content['type'] == 'series':
             return None
+        
         else:
             return int(content['duration']/60000)
 
@@ -284,21 +294,29 @@ class PlutoDM():
             self.seas_list.append(seasons['episodes'])
 
         return self.seas_list
-
+    
+    def get_episodes(self,episode__):
+        if episode__['number'] == 0:
+            numb = int(1)
+        else:
+            numb = int(episode__['number'])
+        
+        return numb
+        
     #Payload de episodios
-    def payloads_episode(self, content, episodes, contador_episodio):
+    def payloads_episode(self, content, episodes):
         payload_epi = {
             "PlatformCode": str(self._platform_code),
             "Id": str(episodes['_id']),
             "ParentId": str(content['_id']),
             "ParentTitle": str(content['name']),
-            "Episode": int(contador_episodio),
+            "Episode": self.get_episodes(episodes),
             "Season": int(episodes['season']),
             "Crew": None,
             "Title": str(episodes['name']),
             "OriginalTitle": None,
             "Year": None,
-            "Duration": int(episodes['duration']/60000),
+            "Duration": self.get_duration(content,episodes),
             "ExternalIds": None,
             "Deeplinks": {
             "Web": str(self.get_deeplinks(content, is_episode=episodes)),
@@ -313,12 +331,12 @@ class PlutoDM():
             "Cast": None,
             "Directors": None,
             "Availability": None,
-            "Download": False,
-            "IsOriginal": False,
-            "IsAdult": False,
-            "IsBranded": False,
-            "Packages": [{'Type': 'free-vod'}],
-            "Country": [self.ott_site_country],
+            "Download": None,
+            "IsOriginal": None,
+            "IsAdult": None,
+            "IsBranded": None,
+            "Packages": self.get_packages(),
+            "Country": None,
             "Timestamp": str(datetime.datetime.now().isoformat()),
             "CreatedAt": str(self._created_at),
             }

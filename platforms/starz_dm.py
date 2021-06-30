@@ -40,7 +40,6 @@ class StarzDM():
 
         self.url = self._config['url']
         self.api_url = self._config['api_url']
-        self.content_api_url = self._config['content_api_url']
 
 
         self.session = requests.session()
@@ -96,4 +95,34 @@ class StarzDM():
 
 
     def _scraping(self, testing=False):
-        print('Funciona')
+        self.scraped = self.query_field(self.titanScraping, field='Id')
+        self.scraped_episodes = self.query_field(self.titanScrapingEpisodes, field='Id')
+
+        self.payloads = []
+        self.episodes_payloads = []
+        
+        all_items = self.get_content(self.api_url)
+        
+        for item in all_items:
+            pass
+            
+
+
+
+
+    def get_content(self,url):
+        response = self.session.get(url)#conexión a la url
+        dictionary = response.json()#ordeno la información obtenida en formato JSON
+
+        self.contents = []
+
+        items_dicc = dictionary['playContentArray']
+
+        for item in items_dicc['playContents']:
+
+            if item in self.contents:
+                print('repetido')
+            else:
+                self.contents.append(item)
+
+        return self.contents
