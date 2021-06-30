@@ -56,7 +56,6 @@ class HBO_Fev():
         #Sopa de la página principal con todos los documentales
         soup = BeautifulSoup(req.text, 'html.parser')
         contenedor = soup.find('div', {'class':'components/MovieGrid--container'})
-        #print (contenedor)
         #Dentro del contendor encontramos 448 contenidos (documentales)
         contenidos = contenedor.find_all('div', {'class':'modules/cards/CatalogCard--container modules/cards/DocumentaryCatalogCard--container modules/cards/CatalogCard--notIE modules/cards/CatalogCard--desktop'})
         print("cantidad de documentales:", len(contenidos))
@@ -67,8 +66,10 @@ class HBO_Fev():
             #return self.payloads
             print(payload)
         #for payload in self.payloads:
+        #self.payloads = [{"a" : "b"}, {"c" : "D"}]
         if self.payloads:
-            self.mongo.insertMany(self.titanScraping, self.payloads)       
+            self.mongo.insertMany(self.titanScraping, self.payloads)
+        print("final")       
         
          
                     
@@ -78,16 +79,7 @@ class HBO_Fev():
         title_list.append(title.text)
         print (title)
         return title_list
-        print(title_list)
     
-    def get_duration(self, contenidos):
-        duration_list = []          
-        for documentaries in contenidos:
-            duration = documentaries.find('p', {'class':'modules/cards/CatalogCard--details'})
-            duration_list.append(duration.text)
-        return duration_list
-        print(duration_list)
-
     def get_documentaries_payload(self, contenido):
         title =  self.get_name(contenido)
         duration = self.get_duration(contenido)
@@ -97,8 +89,8 @@ class HBO_Fev():
         #rating = self_get_rating()      
         
         payload = { 
-            "PlatformCode": None, #self._platform_code, #Obligatorio 
-            "Id": None, #['_id'], #Obligatorio
+            "PlatformCode": self._platform_code, #Obligatorio 
+            "Id": ['_id'], #Obligatorio
             "Title": title, #['name'], #Obligatorio 
             "CleanTitle": cleanTitle, #Obligatorio 
             "OriginalTitle": None, #item['name'], 
@@ -123,7 +115,6 @@ class HBO_Fev():
             "IsOriginal": None, #Important! 
             "IsAdult": None, #Important! 
             "IsBranded": None, #Important! (ver link explicativo)
-            "Packages": 'Free', #Obligatorio 
             "Packages": [{'Type':'free-vod'}],
             "Country": None, 
             "Timestamp": None, #datetime.now().isoformat(), #Obligatorio 
@@ -164,7 +155,7 @@ class HBO_Fev():
         deeplink_url = 'https://www.hbo.com/documentaries/{}'.format(title_cleared)
         deeplink_url_list = []
         deeplink_url_list.append(deeplink_url)
-        return deeplink_url, deeplink_url_list
+        return deeplink_url_list , #deeplink_url 
        
     def get_details(self, deeplink_url_list):
         details_list = []

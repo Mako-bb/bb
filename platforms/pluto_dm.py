@@ -16,13 +16,17 @@ class PlutoDM():
     DATOS IMPORTANTES:
     - VPN: Si/No (Recomendación: Usar ExpressVPN).
     - ¿Usa Selenium?: No.
-    - ¿Tiene API?: Si.
+    - ¿Tiene API?: Si. Tiene 2, una general en donde se ven las series y peliculas,
+      y otra específica de las series, donde se obtienen los cap. de las mismas.
     - ¿Usa BS4?: No.
     - ¿Cuanto demoró la ultima vez? tiempo + fecha.
-    - ¿Cuanto contenidos trajo la ultima vez? cantidad + fecha.
+    - ¿Cuanto contenidos trajo la ultima vez?:
+        -Fecha: 29/6/2021
+        -Episodios: 19.990
+        -Peliculas/series: 1.524
 
     OTROS COMENTARIOS:
-    Con esta plataforma pasa lo siguiente...
+    ...
     """
 
     def __init__(self, ott_site_uid, ott_site_country, type):
@@ -103,10 +107,16 @@ class PlutoDM():
         self.payloads_episodes_list = []
 
         contents = self.get_content(self.api_url)
+
         for content in contents:
             for films in content:
                 '''
-                verifica que el contenido contenido no este en la DB antes de insertar
+                verifica que el contenido contenido no este en la DB antes de insertar,
+                si el contenido no esá en la DB hace un append a la lista "self.scraped"
+                con la id de este contenido nuevo, rellena el payload y lo almacena en "payloads_list".
+
+                Si el contenido es una serie, se busca insertar los episodios en la db.
+                Se sigue el mismo proceso explicado anteriormente
                 '''
                 if films["_id"] in self.scraped:
                     print("Ya ingresado")
@@ -120,7 +130,7 @@ class PlutoDM():
 
                         for seas in self.get_content_season(films,self.season_api_url):
                             for episodes in seas:
-                                if episodes['_id'] in self.scrapedEpisodes:
+                                if episodes['_id'] in self.scrapedEpisodes: 
                                     print('capitulo ya ingresado')
                                 else:
 
@@ -128,15 +138,23 @@ class PlutoDM():
                                     self.scrapedEpisodes.append(episodes['_id'])
                                     self.payloads_episodes_list.append(self.payloads_episode(films, episodes, self.contador_episodio))
 
-        
+        '''
+        Si a las listas "payloads_list" y "payloads_episodes_list" tienen contenido,
+        entonces se insertan a la DB
+        '''
         if self.payloads_list: #Devuelve booleano, si no se insertó nada en la lista devuelve False
             self.mongo.insertMany(self.titanScraping, self.payloads_list)
         if self.payloads_episodes_list:#Devuelve booleano, si no se insertó nada en la lista devuelve False
             self.mongo.insertMany(self.titanScrapingEpisodes, self.payloads_episodes_list)
         
+        self.session.close()
+        Upload(self._platform_code, self._created_at, testing=True)
 
-
-
+    '''
+    Hace un request a la api_url "general" de las series/peliculas y devuelve
+    una lista con todas las categorías
+    
+    '''
     def get_content(self,url):
         response = self.session.get(url)#conexión a la url
         self.contents = []
@@ -149,50 +167,90 @@ class PlutoDM():
         
         return self.contents
 
-
-    #Filtra lo que necesito de cada pelicula
+    #Payload de peliculas y series
     def payloads(self,content):
         payload = {
-            "PlatformCode": self._platform_code,
-            "Id": content['_id'],
-            "Title": content['name'],
-            "OriginalTitle": self.original_title(content),
-            "Type": content['type'],
+            "PlatformCode": str(self._platform_code),
+            "Id": str(content['_id']),
+            "Title": str(content['name']),
+            "CleanTitle": _replace(content['name']),
+            "OriginalTitle": None,
+            "Type": str(self.get_type(content['type'])),
             "Year": None,
             "Duration": self.get_duration(content),
             "ExternalIds": None,
             "Deeplinks": {
-            "Web": None,
+            "Web": str(self.get_deeplinks(content)),
             "Android": None,
             "iOS": None
             },
-            "Synopsis": content['description'],
-            "Image": content['covers'][0]['url'],
-            "Rating": content['rating'],
+            "Synopsis": str(content['description']),
+            "Image": self.get_images(content),
+            "Rating": str(content['rating']),
             "Provider": None,
             "Genres": [content['genre']],
             "Cast": None,
             "Directors": None,
             "Availability": None,
-            "Download": None,
-            "IsOriginal": None,
-            "IsAdult": None,
-            "IsBranded": None,
+            "Download": False,
+            "IsOriginal": False,
+            "IsAdult": False,
+            "IsBranded": False,
             "Packages": [{'Type': 'free-vod'}],
-            "Country": self.ott_site_country,
-            "Timestamp": datetime.datetime.now().isoformat(),
-            "CreatedAt": self._created_at,
+            "Country": [self.ott_site_country],
+            "Timestamp": str(datetime.datetime.now().isoformat()),
+            "CreatedAt": str(self._created_at),
             }
         
         return payload
 
+
+    def get_images(self, content_, is_episode=False):
+        images = []
+        if is_episode:
+            for cover in is_episode['covers']:
+                images.append(cover['url'])
+        else:
+            for cover in content_['covers']:
+                images.append(cover['url'])
+
+        return images
+
+
+    def get_type(self, typee):
+        if typee == 'series':
+            return 'serie'
+        else:
+            return typee
+
+
+    def get_deeplinks(self, content, is_episode=False):
+        if content['type'] == 'movie':
+
+            deeplink = self.url + 'movies' + '/' + content['slug'] + '/' + 'details' + '/'
+
+        elif content['type'] == 'series' and is_episode:
+
+            deeplink = self.url + 'series' + '/' + content['slug'] + '/' + 'season' + '/' + str(is_episode['season']) + '/' + 'episode' + '/' + is_episode['slug'] + '/'
+
+        else:
+
+            deeplink = self.url + 'series' + '/' + content['slug'] + '/' + 'details' + '/'
+
+        return deeplink
+
+
     def get_duration(self,content):
+
         if content['type'] == 'series':
             return None
         else:
             return int(content['duration']/60000)
 
-    #Método que toma el "slug title" y lo transforma para obtener el originalTitle(revisar)
+    '''
+    Método que toma el "slug title" y lo transforma para obtener el originalTitle,
+    de momento no funciona correctamente, así que dejo "None"
+    '''
     def original_title(self,films):
 
         lista_slug = films['slug'].split('-')
@@ -203,8 +261,18 @@ class PlutoDM():
         lista_slug = ' '.join([str(elem) for elem in lista_slug])
 
         return lista_slug
+    
+    '''
+    Metodo que accede a la api de las series con la id de la serie que se esta scrapeando
+    y obtiene una lista con las temporadas de la misma.
 
+    args:
+        -content(el contenido de la serie)
+        -url(la url de la api de series)
 
+    return:
+        -Devuelve una lista con las temporadas de la serie
+    '''
     def get_content_season(self,content,url):
         response2 = self.session.get(url.format(content['_id']))
         dictionary_seasons = response2.json()
@@ -217,17 +285,42 @@ class PlutoDM():
 
         return self.seas_list
 
-    
+    #Payload de episodios
     def payloads_episode(self, content, episodes, contador_episodio):
         payload_epi = {
-            "PlatformCode": self._platform_code,
+            "PlatformCode": str(self._platform_code),
             "Id": str(episodes['_id']),
-            "ParentId": content['_id'],
+            "ParentId": str(content['_id']),
             "ParentTitle": str(content['name']),
             "Episode": int(contador_episodio),
-            "Season": int(episodes['season'])
+            "Season": int(episodes['season']),
+            "Crew": None,
+            "Title": str(episodes['name']),
+            "OriginalTitle": None,
+            "Year": None,
+            "Duration": int(episodes['duration']/60000),
+            "ExternalIds": None,
+            "Deeplinks": {
+            "Web": str(self.get_deeplinks(content, is_episode=episodes)),
+            "Android": None,
+            "iOS": None
+            },
+            "Synopsis": str(episodes['description']),
+            "Image": self.get_images(content, is_episode=episodes),
+            "Rating": str(episodes['rating']),
+            "Provider": None,
+            "Genres": [episodes['genre']],
+            "Cast": None,
+            "Directors": None,
+            "Availability": None,
+            "Download": False,
+            "IsOriginal": False,
+            "IsAdult": False,
+            "IsBranded": False,
+            "Packages": [{'Type': 'free-vod'}],
+            "Country": [self.ott_site_country],
+            "Timestamp": str(datetime.datetime.now().isoformat()),
+            "CreatedAt": str(self._created_at),
             }
-        
-        return payload_epi
 
-    
+        return payload_epi

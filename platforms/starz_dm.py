@@ -6,27 +6,42 @@ from handle.mongo           import mongo
 from updates.upload         import Upload
 from handle.payload         import Payload
 from handle.datamanager     import Datamanager
-from datetime import datetime
-from handle.payload import Payload
-# from time import sleep
+import datetime
 # import re
 
-class PlutoFV():
+class StarzDM():
     """
+    Pluto es una ott de Estados Unidos que opera en todo el mundo.
+
+    DATOS IMPORTANTES:
+    - VPN: Si/No (Recomendación: Usar ExpressVPN).
+    - ¿Usa Selenium?: No.
+    - ¿Tiene API?: Si. Tiene 2, una general en donde se ven las series y peliculas,
+      y otra específica de cada contenido, donde se obtienen los detalles de los mismos.
+    - ¿Usa BS4?: No.
+    - ¿Cuanto demoró la ultima vez? tiempo + fecha.
+    - ¿Cuanto contenidos trajo la ultima vez?:
+
+    OTROS COMENTARIOS:
+    ...
     """
+
     def __init__(self, ott_site_uid, ott_site_country, type):
         self.ott_site_uid = ott_site_uid
         self.ott_site_country = ott_site_country
         self._config = config()['ott_sites'][ott_site_uid]
         self._platform_code = self._config['countries'][ott_site_country]
-        self.api_url             = self._config['api_url']
+        # self._start_url             = self._config['start_url']
         self._created_at = time.strftime("%Y-%m-%d")
         self.mongo = mongo()
         self.titanPreScraping = config()['mongo']['collections']['prescraping']
         self.titanScraping = config()['mongo']['collections']['scraping']
-        self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
+        self.titanScrapingEpisodes = config()['mongo']['collections']['episode']
 
-        #self.api_url = self._config['api_url']
+        self.url = self._config['url']
+        self.api_url = self._config['api_url']
+        self.content_api_url = self._config['content_api_url']
+
 
         self.session = requests.session()
 
@@ -79,43 +94,6 @@ class PlutoFV():
 
         return query
 
-    def _scraping(self, testing=True):
-        diccionario_pluto = self.get_contents(self.api_url)
-        print(diccionario_pluto)
-        print("Scraping Finalizado")
 
-
-    def get_contents(self, api_url):
-        """Metodo que hace reques a la api de Pluto TV y devuelve un diccionario con metadata en formato json"""
-        print("\nObteniendo contenidos...\n")
-        contents = [] # Contenidos a devolver.
-        response = self.request(self.api_url)
-        contents_metadata = response.json()        
-        categories = contents_metadata["categories"]
-
-        for categorie in categories:
-            print(categorie.get("name"))
-            contents += categorie["items"]
-        return contents       
-        #req = self.session.get(api_url)
-        #response = req.json()
-        #print(req.status_code, req.url)
-        #return response
-
-    def request(self, url):
-        '''
-        Método para hacer una petición
-        '''
-        requestsTimeout = 5
-        while True:
-            try:
-                response = self.session.get(url, timeout=requestsTimeout)
-                return response
-            except requests.exceptions.ConnectionError:
-                print("Connection Error, Retrying")
-                time.sleep(requestsTimeout)
-                continue
-            except requests.exceptions.RequestException:
-                print('Waiting...')
-                time.sleep(requestsTimeout)
-                continue
+    def _scraping(self, testing=False):
+        print('Funciona')
