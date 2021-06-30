@@ -9,6 +9,7 @@ from handle.datamanager import Datamanager
 import datetime
 # from time import sleep
 import re
+#import hashlib
 
 
 class PlutoMI():
@@ -125,11 +126,8 @@ class PlutoMI():
     
     def get_payload(self, content):
         payload = self.generic_payload(content)
-        if content['type']=='movies':
-            seconds=content['duration']
-            minutes=seconds/60
-            duration= int(minutes)
-            payload['Duration']=duration
+        if content['type']=='movie':
+            payload['Duration']=self.get_duration(content)
         elif content['type']=='series':
             payload['Type']= 'serie'
             payload['Seasons']= len(content['seasonsNumbers'])
@@ -137,8 +135,9 @@ class PlutoMI():
             payload['Duration']=None
             parent_id=content['_id']
             parent_title=content['name']
+            parent_slug=content['slug']
             series_api='https://service-vod.clusters.pluto.tv/v3/vod/series/{}/seasons?advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=820bd17e-1326-4985-afbf-2a75398c0e4e&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=820bd17e-1326-4985-afbf-2a75398c0e4e&deviceLat=-39.0576&deviceLon=-67.5301&deviceMake=Firefox&deviceModel=web&deviceType=web&deviceVersion=89.0&marketingRegion=VE&serverSideAds=true&sessionID=1ddd9448-d514-11eb-b85e-0242ac110002&sid=1ddd9448-d514-11eb-b85e-0242ac110002&userId=&attributeV4=foo'.format(parent_id)
-            self.episodes_payload(series_api,parent_id,parent_title)
+            self.episodes_payload(series_api,parent_id,parent_title,parent_slug)
         return payload
 
     def generic_payload(self, content):
@@ -153,15 +152,15 @@ class PlutoMI():
                 "Duration": None,
                 "ExternalIds": None,
                 "Deeplinks": {
-                    "Web": self.get_deepLinks(self.url,content),
+                    "Web": self.get_deepLinks(content,False, None),
                     "Android": None,
                     "iOS": None,
                 },
                 "Synopsis": content['summary'],
-                'Image': None,
+                'Image': self.get_images(content),
                 "Rating": content['rating'],
                 "Provider": None,
-                "Genres": [content['genre']],
+                "Genres": self.get_genres(content),
                 "Cast": None,
                 "Directors": None,
                 "Availability": None,
@@ -177,15 +176,13 @@ class PlutoMI():
         return genericPl
     
 
-    def episodes_payload(self,series_api,parent_id,parent_title):
-        response_episodes = self.session.get(series_api).json()
+    def episodes_payload(self,series_api,parent_id,parent_title, parent_slug):
+        response_episodes = self.session.get(series_api)
+        data=response_episodes.json()
         key_search='_id'
-        for seasonValue in response_episodes['seasons']:
+        for seasonValue in data['seasons']:
             for epValue in seasonValue['episodes']:
                 if self.isDuplicate(self.scraped_episodes,epValue[key_search])==False:
-                    seconds=epValue['duration']
-                    minutes=seconds/60
-                    duration= int(minutes) 
                     episode = {
                         'PlatformCode':self._platform_code,
                         'ParentId': parent_id,
@@ -195,10 +192,10 @@ class PlutoMI():
                         'Episode':epValue['number'],
                         'Season': epValue['season'],
                         'Year': None,
-                        'Image':None ,
-                        'Duration': duration,
+                        'Image':self.get_images(epValue),
+                        'Duration': self.get_duration(epValue),
                         'Deeplinks':{
-                            'Web':self.get_deepLinks(self.url,epValue),
+                            'Web':self.get_deepLinks(epValue,True,parent_slug),
                             'Android': None,
                             'iOS':None ,
                         },
@@ -206,7 +203,7 @@ class PlutoMI():
                         'Rating':epValue['rating'] ,
                         'Provider':None ,
                         'ExternalIds': None,
-                        'Genres': [epValue['genre']],
+                        'Genres': self.get_genres(epValue),
                         'Cast':None ,
                         'Directors':None ,
                         'Availability':None ,
@@ -233,12 +230,44 @@ class PlutoMI():
         if "'" in title:#elimino los apostrofes simples que quedan fuera de la lista de caracteres especiales, este paso quizas se pueda evitar de otro modo.
             title=title.replace("'","")
         return title
-    
-    def get_deepLinks(self,content):
-        content_title=_replace(content['name'])
-        clean_title= self.depurate_title(content_title)
-        if 'season' in content:
-            deeplink=self.url+'{}/{}/{}/{}/{}/{}'.format('series',clean_title,'seasons',content['season'],'episode',clean_title)
+
+    def get_deepLinks(self, content, isEpisode, parent_name):
+        if content['type'] == 'movie':
+            deeplink = self.url + 'movies' + '/' + content['slug']
+        elif isEpisode:
+            deeplink = self.url + 'series' + '/' + parent_name + '/' + 'season' + '/' + str(content['season']) + '/' + 'episode' + '/' + content['slug']
+        elif content['type'] == 'series':
+            deeplink = self.url + 'series' + '/' + content['slug'] + '/' + 'details' + '/'
         else:
-            deeplink=self.url+'/{}/{}'.format('movies',clean_title)
+            deeplink=self.url
         return deeplink
+    
+    def get_images(self,content):
+        covers = content['covers']
+        list_imgages=[]
+        for cover in covers:
+            list_imgages.append(cover['url'])
+        return list_imgages
+
+    def get_genres(self,content):
+        genres=content['genre']
+        split_genres=[]
+        search_for='&-'
+        for char in search_for:
+            if char in genres:
+                split_genres+=genres.split(char)
+            else:
+                split_genres+=genres
+        return split_genres
+    
+    def get_duration(self, content):
+        miliseconds=int(content['duration'])
+        minutes=miliseconds//60000
+        return minutes
+
+    '''
+    def hash_id_content(self,content):
+        duration=0
+        dato = content['name']+str(duration)
+        id = hashlib.md5(dato).encode("UTF-8")).hexdigest()
+    '''

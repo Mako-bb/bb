@@ -382,10 +382,16 @@ ott_sites:
   StarzDM:  #Starz Darío
     countries:
       AR: ar.starz
-    url: https://www.starz.com/ar/es/
+    url: https://www.starz.com/ar/es
     api_url: https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/blocks?playContents=map&lang=es-419&pages=BROWSE,HOME,MOVIES,PLAYLIST,SEARCH,SEARCH%20RESULTS,SERIES&includes=contentId,contentType,title,product,seriesName,seasonNumber,free,comingSoon,newContent,topContentId,properCaseTitle,categoryKeys,runtime,popularity,original,firstEpisodeRuntime,releaseYear,images,minReleaseYear,maxReleaseYear,episodeCount,detail
     content_api_url: https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/contentcontent?lang=es-419&contentIds=
   
+  StarzMI:  #Starz Mati
+    countries:
+      AR: ar.starz
+    url: https://www.starz.com/es/es/
+    api_url: http://playdata.starz.com/metadata-service/play/partner/Web_ES/v8/content
+
   PlutoCapacitacion: # PRUEBA
     countries:
       AR: ar.pluto
@@ -438,7 +444,7 @@ ott_sites:
   PlutoMI: #Matias
     countries:
       AR: ar.pluto
-    url: https://www.pluto.com.ar/on-demand
+    url: https://pluto.tv/es/on-demand/
     api_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&deviceLat=-34.5106&deviceLon=-58.7536&deviceMake=Microsoft%2BEdge&deviceModel=web&deviceType=web&deviceVersion=91.0.864.54&marketingRegion=VE&serverSideAds=true
   PlutoPQ: #Patricio
     countries:
