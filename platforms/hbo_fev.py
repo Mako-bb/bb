@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from collections import namedtuple
 import json
+from re import T
 import time
 from pymongo.collation import validate_collation_or_none
 import requests
@@ -16,6 +17,8 @@ from handle.mongo           import mongo
 from updates.upload         import Upload
 from handle.datamanager     import Datamanager
 from handle.replace         import _replace
+import hashlib
+
 
 class HBO_Fev():
     def __init__(self, ott_site_uid, ott_site_country, type):
@@ -85,12 +88,13 @@ class HBO_Fev():
         duration = self.get_duration(contenido)
         cleanTitle = self.get_title_clean(title)
         deeplink = self.get_deeplink(cleanTitle)
+        #id = self.get_id(title)
         #yerar = self._get_year()
         #rating = self_get_rating()      
         
         payload = { 
             "PlatformCode": self._platform_code, #Obligatorio 
-            "Id": ['_id'], #Obligatorio
+            "Id": "_id", #Obligatorio
             "Title": title, #['name'], #Obligatorio 
             "CleanTitle": cleanTitle, #Obligatorio 
             "OriginalTitle": None, #item['name'], 
@@ -155,7 +159,14 @@ class HBO_Fev():
         deeplink_url = 'https://www.hbo.com/documentaries/{}'.format(title_cleared)
         deeplink_url_list = []
         deeplink_url_list.append(deeplink_url)
-        return deeplink_url_list , #deeplink_url 
+        return deeplink_url_list , #deeplink_url
+
+    #def get_id(self, title):
+        #id_list = []
+        #dato = title.strip()
+        #id_ = hashlib.md5(title).encode("UTF-8").hexdigest()
+        #id_list.append(id_)
+        #return id_list 
        
     def get_details(self, deeplink_url_list):
         details_list = []
@@ -169,6 +180,7 @@ class HBO_Fev():
                 
             except:
                 print("deeplink roto: ")
+
     
     #url_ejemplo = "https://www.hbo.com/documentaries/wig"
     #req_ejemplo = self.sesion.get(url_ejemplo)

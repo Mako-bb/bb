@@ -1,5 +1,6 @@
 import time
 import requests
+from yaml.tokens import FlowMappingStartToken
 from handle.replace import _replace
 from common import config
 from handle.mongo import mongo
@@ -141,13 +142,13 @@ class StarzMI():
             'PlatformCode': self._platform_code,
             'Id': self.get_id_str(content),
             'Title': content['title'],
-            'OriginalTitle': content['properCaseTitle'],
+            'OriginalTitle': content['titleSort'],
             'CleanTitle': _replace(content['title']),
             'Type': self.get_type(content),
             'Year': None,
             'Duration': None,
             'Deeplinks': {
-                "Web": self.get_deepLinks(content),
+                "Web": self.get_deepLinks(content,None,None),
                 'Android': None,
                 'iOS': None,
             },
@@ -176,19 +177,20 @@ class StarzMI():
             for epValue in seasonValue['childContent']:
                 if self.isTrailer(epValue['order']):
                     if not self.isDuplicate(self.scraped_episodes,epValue['contentId']):
+                        episode_num = self.get_episode_num(seasonValue['order'],epValue['order'])
                         episode = {
                             'PlatformCode':self._platform_code,
                             'ParentId': self.get_str_parent_id(epValue),
                             'ParentTitle': epValue['seriesName'],
                             'Id': self.get_id_str(epValue),
                             'Title':epValue['title'] ,
-                            'Episode':epValue['order'],
+                            'Episode':episode_num,
                             'Season': seasonValue['order'],
                             'Year': self.get_year_int(epValue['releaseYear']),
                             'Image':None ,
                             'Duration': self.get_duration(epValue),
                             'Deeplinks':{
-                                'Web':self.get_deepLinks(epValue),
+                                'Web':self.get_deepLinks(epValue,epValue['seriesName'],episode_num),
                                 'Android': None,
                                 'iOS':None ,
                             },
@@ -221,9 +223,18 @@ class StarzMI():
 
     def get_genres(self,content):
         genres=[]
+        split_genres=[]
+        search_for='&-'
         for genre in content['genres']:
             genres.append(genre['description'])
-        return genres
+        for char in search_for:
+            for genre in genres:
+                if char in genre:
+                    split_genres+= genre.split(char)
+                else:
+                    split_genres=genres
+
+        return split_genres
 
     def get_type(self,content):
         if content['contentType']=='Movie':
@@ -259,6 +270,11 @@ class StarzMI():
         duration= int(minutes)
         return duration
 
+    def get_episode_num(self,season,episode):
+        season_mult=season*100
+        episode_clean = episode-season_mult
+        return episode_clean
+
     def isTrailer(self,num):
         return bool(num)
     
@@ -277,11 +293,17 @@ class StarzMI():
             title=title.replace("'","")
         return title
     
-    def get_deepLinks(self,content):
-        content_title=_replace(content['title'])
+    def get_deepLinks(self,content,parent,episode_num):
+        content_title=_replace(content['properCaseTitle'])
         clean_title= self.depurate_title(content_title)
-        if content['contentType']=='Movie':
-            deeplink=self.url+'/{}/{}'.format('movies',clean_title)
+        if content['contentType']=='Episode':
+            content_title=_replace(parent)
+            clean_title= self.depurate_title(content_title)
+            deeplink=self.url+'{}/{}/{}-{}/{}-{}/{}'.format('series',clean_title,'season',str(content['seasonNumber']),'episode',str(episode_num),content['contentId'])
+        elif content['contentType']=='Movie':
+            deeplink=self.url+'{}/{}-{}'.format('movies',clean_title,content['contentId'])
+        elif content['contentType']=='Series with Season':
+            deeplink=self.url+'{}/{}/{}'.format('series',clean_title,content['contentId'])
         else:
-            deeplink=self.url+'/{}/{}/{}'.format('series',clean_title,content['contentId'])
+            deeplink=self.url
         return deeplink
