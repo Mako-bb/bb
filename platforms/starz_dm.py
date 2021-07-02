@@ -112,7 +112,7 @@ class StarzDM():
 
                 '''
                 if item['contentType'] == 'Series with Season':
-                    season = self.get_season(item)
+                    season = self.get_episodes(item)
                     if episodes['contentId'] in self.scraped_episodes:
                         print('capitulo ya ingresado')
                     else:
@@ -121,10 +121,12 @@ class StarzDM():
                 '''
 
 
-    def payload(self,item_):
+    def payload(self,item_, is_season=False, is_episode=False):
         payload = {
             "PlatformCode": str(self._platform_code),
             "Id": str(item_['contentId']),
+            "Seasons": self.get_seasons(item_),
+            "crew": None,
             "Title": str(item_['title']),
             "CleanTitle": _replace(item_['title']),
             "OriginalTitle": None,
@@ -143,24 +145,99 @@ class StarzDM():
             "Provider": None,
             "Genres": self.get_genres(item_),
             "Cast": self.get_cast(item_),
-            "Directors": None,
+            "Directors": self.get_directors(item_),
             "Availability": None,
-            "Download": None,
-            "IsOriginal": None,
+            "Download": self.get_download(item_),
+            "IsOriginal": item_['original'],
             "IsAdult": None,
             "IsBranded": None,
-            "Packages": None,
+            "Packages": self.get_packages(),
             "Country": None,
             "Timestamp": str(datetime.datetime.now().isoformat()),
             "CreatedAt": str(self._created_at),
             }
         return payload
 
+
+    def get_download(self,item):
+        '''
+        Si el contenido es serie:
+        la informacion en la api para ver si se puede descargar o no
+        está en cada episodio(los cuales son True siempre),
+        por ende dejo "True" hardcodeado por defecto si el contenido es serie.
+        '''
+        if item['contentType'] == 'Series with Season':
+            return True
+        
+        else:#Si es movie o episodio
+            return item['downloadable']
+
+
+    def get_seasons(self,item):
+        seasons = []
+
+        if item['contentType'] == 'Movie':
+            return None
+        
+        else:
+            for season in item['childContent']:
+                seasons.append(self.payload_season(item,season))
+
+        return seasons
+
+
+
+    def payload_season(self,item,seas):
+        payload_seasons = {
+            "Id": str(seas['contentId']), 
+            "Synopsis": seas['logLine'], 
+            "Title": seas['title'],
+            "Deeplink": None,
+            "Number": seas['order'], 
+            "Year": seas['minReleaseYear'], 
+            "Image": None,#La api no brinda esta info
+            "Directors": self.get_directors(item), 
+            "Cast": self.get_cast(item,is_season=seas), 
+            "Episodes": seas['episodeCount'],
+            "IsOriginal": seas['original']
+        }
+
+        return payload_seasons
+
+
+
+    def get_packages(self):
+        
+        '''
+        Esto va hardcodeado, porque no hay de donde obtener esta info
+        '''
+        package = [{'Type': 'tv-everywhere'},{'type': 'subscription-vod'}]
+
+        return package
+
+
     def get_genres(self,item):
         genres = []
         for genre in item['genres']:
             genres.append(genre['description'])
         return genres
+
+
+    def get_directors(self,item):
+        '''
+        la información certera de los directores se encuentra en cada episodio,
+        por lo que el total de directores de la serie es el conjunto de directores
+        de cada episodio
+        '''
+        directors = []
+        if item['contentType'] == 'Series with Season':
+            return directors
+        else:
+            for director in item['directors']:  
+                directors.append(director['fullName'])
+
+        return directors
+
 
     def get_release_year(self, item):
 
@@ -190,10 +267,33 @@ class StarzDM():
         return self.contents
 
 
-    def get_cast(self,item):
-        pass
+    def get_cast(self,item, is_season=False):
+        '''Toma el cast completo, sin diferenciar el rol de cada persona
+            Cuando la season todavía no salió, no tiene la keyword "credits", asi
+            que devuelvo "None" en ese caso
+        '''
+        cast_season = []
+        cast = []
+        if is_season:
+            try:
+                credits = is_season['credits']
 
-    def get_deeplinks(self, item, is_episode=False):
+                for credit in is_season['credits']:
+                    cast_season.append(credit['name'])
+                return cast_season
+
+            except:
+
+                return cast_season
+        else:
+
+            for cast_ in item['credits']:   
+                cast.append(cast_['name'])
+
+            return cast
+
+
+    def get_deeplinks(self, item, is_episode=False, is_Season=False):
         #Verifica si es pelicula
         if item['contentType'] == 'movie':
 
@@ -210,7 +310,6 @@ class StarzDM():
             deeplink = self.url + 'series' + '/' + item['title'].replace(':','').replace(' ','-') + '/' + str(item['contentId'])
         
         return deeplink
-
 
 
     def get_duration(self,item, is_episode=False):
