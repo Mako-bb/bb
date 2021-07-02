@@ -98,16 +98,78 @@ class StarzDM():
         self.scraped = self.query_field(self.titanScraping, field='Id')
         self.scraped_episodes = self.query_field(self.titanScrapingEpisodes, field='Id')
 
-        self.payloads = []
+        self.payloads_list = []
         self.episodes_payloads = []
         
         all_items = self.get_content(self.api_url)
         
         for item in all_items:
-            pass
-            
+            if item["contentId"] in self.scraped:
+                    print("Ya ingresado")
+            else:
+                self.scraped.append(item['contentId'])
+                self.payloads_list.append(self.payload(item))
+
+                '''
+                if item['contentType'] == 'Series with Season':
+                    season = self.get_season(item)
+                    if episodes['contentId'] in self.scraped_episodes:
+                        print('capitulo ya ingresado')
+                    else:
+                        self.scrapedEpisodes.append(episodes['_id'])
+                        self.payloads_episodes_list.append(self.payloads_episode(item, episodes))
+                '''
 
 
+    def payload(self,item_):
+        payload = {
+            "PlatformCode": str(self._platform_code),
+            "Id": str(item_['contentId']),
+            "Title": str(item_['title']),
+            "CleanTitle": _replace(item_['title']),
+            "OriginalTitle": None,
+            "Type": str(self.get_type(item_['contentType'])),
+            "Year": self.get_release_year(item_),
+            "Duration": self.get_duration(item_),
+            "ExternalIds": None,
+            "Deeplinks": {
+            "Web": str(self.get_deeplinks(item_)),
+            "Android": None,
+            "iOS": None
+            },
+            "Synopsis": str(item_['logLine']),
+            "Image": None,
+            "Rating": str(item_['ratingCode']),
+            "Provider": None,
+            "Genres": self.get_genres(item_),
+            "Cast": self.get_cast(item_),
+            "Directors": None,
+            "Availability": None,
+            "Download": None,
+            "IsOriginal": None,
+            "IsAdult": None,
+            "IsBranded": None,
+            "Packages": None,
+            "Country": None,
+            "Timestamp": str(datetime.datetime.now().isoformat()),
+            "CreatedAt": str(self._created_at),
+            }
+        return payload
+
+    def get_genres(self,item):
+        genres = []
+        for genre in item['genres']:
+            genres.append(genre['description'])
+        return genres
+
+    def get_release_year(self, item):
+
+        if item['contentType'] == 'Series with Season':
+
+            return int(item['minReleaseYear'])
+        else:
+
+            return int(item['releaseYear'])
 
 
     def get_content(self,url):
@@ -126,3 +188,45 @@ class StarzDM():
                 self.contents.append(item)
 
         return self.contents
+
+
+    def get_cast(self,item):
+        pass
+
+    def get_deeplinks(self, item, is_episode=False):
+        #Verifica si es pelicula
+        if item['contentType'] == 'movie':
+
+            deeplink = self.url + 'movies' + '/' + item['title'].replace(':','').replace(' ','-') + '-' + item['contentId']
+        
+        #Verifica si es un episodio
+        elif item['contentType'] == 'series' and is_episode:
+            pass
+            #deeplink = self.url + 'series' + '/' + item['title'].replace(':','').replace(' ','-') + '/' + 'season-'+is_episode['seasonNumber'] + '/' + 'episode-'+contador_episodio + '/'+is_episode['contentId']
+        
+        #Si es serie...:
+        else:
+
+            deeplink = self.url + 'series' + '/' + item['title'].replace(':','').replace(' ','-') + '/' + str(item['contentId'])
+        
+        return deeplink
+
+
+
+    def get_duration(self,item, is_episode=False):
+
+        if item['contentType'] == 'Series with Season' and is_episode:
+            return int(is_episode['runtine']/60)
+
+        elif item['contentType'] == 'Series with Season':
+            return None
+        
+        else:
+            return int(item['runtime']/60)
+
+
+    def get_type(self, typee):
+        if typee == 'Series with Season':
+            return 'serie'
+        else:
+            return typee
