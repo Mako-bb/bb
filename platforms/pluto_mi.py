@@ -160,7 +160,7 @@ class PlutoMI():
                 'Image': self.get_images(content),
                 "Rating": content['rating'],
                 "Provider": None,
-                "Genres": self.get_genres(content),
+                "Genres": self.get_genres(content), ################# REVISAR
                 "Cast": None,
                 "Directors": None,
                 "Availability": None,
@@ -182,7 +182,7 @@ class PlutoMI():
         key_search='_id'
         for seasonValue in data['seasons']:
             for epValue in seasonValue['episodes']:
-                if self.isDuplicate(self.scraped_episodes,epValue[key_search])==False:
+                if (self.isDuplicate(self.scraped_episodes,epValue[key_search])==False) and (epValue['number'] > 0) :
                     episode = {
                         'PlatformCode':self._platform_code,
                         'ParentId': parent_id,
@@ -252,12 +252,12 @@ class PlutoMI():
     def get_genres(self,content):
         genres=content['genre']
         split_genres=[]
-        search_for='&-'
-        for char in search_for:
-            if char in genres:
-                split_genres+=genres.split(char)
+        search_for='&/-_|'
+        for c in search_for:
+            if c in genres:
+                split_genres+=genres.split(c)
             else:
-                split_genres+=genres
+                split_genres.append(genres)
         return split_genres
     
     def get_duration(self, content):

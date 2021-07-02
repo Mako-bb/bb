@@ -224,16 +224,21 @@ class StarzMI():
     def get_genres(self,content):
         genres=[]
         split_genres=[]
-        search_for='&-'
+        ok=True
+        search_for='&/-_|'
         for genre in content['genres']:
             genres.append(genre['description'])
-        for char in search_for:
-            for genre in genres:
-                if char in genre:
-                    split_genres+= genre.split(char)
-                else:
-                    split_genres=genres
 
+        for gen in genres:
+            ok=True
+            for c in search_for:
+                if c in gen:
+                    split_genres+=gen.split(c)
+                    ok = False
+                else:
+                    pass
+            if ok:
+                split_genres.append(gen)
         return split_genres
 
     def get_type(self,content):
