@@ -111,12 +111,18 @@ class PlutoMI():
         return contents
 
     def isDuplicate(self, scraped_list, key_search):
+        '''
+            Metodo para validar elementos duplicados segun valor(key) pasado por parametro en una lista de scrapeados.
+        '''
         isDup=False
         if key_search in scraped_list:
             isDup = True
         return isDup
     
-    def insert_payloads_close(self,payloads,epi_payloads):    
+    def insert_payloads_close(self,payloads,epi_payloads):
+        '''
+            El metodo checkea que las listas contengan elementos para ser subidos y corre el Upload en testing.
+        '''    
         if payloads:
             self.mongo.insertMany(self.titanScraping, payloads)
         if epi_payloads:
@@ -125,6 +131,10 @@ class PlutoMI():
         Upload(self._platform_code, self._created_at, testing=True)
     
     def get_payload(self, content):
+        '''
+            Valida el tipo de contenido y modifica los campos del diccionario general recibido por
+            self.generic_payload segun sea necesario.
+        '''
         payload = self.generic_payload(content)
         if content['type']=='movie':
             payload['Duration']=self.get_duration(content)
@@ -141,6 +151,10 @@ class PlutoMI():
         return payload
 
     def generic_payload(self, content):
+        '''
+            El metodo genera un payload general que reutiliza los campos que se pueden
+            para peliculas o series.
+        '''
         genericPl={
                 "PlatformCode": self._platform_code,
                 "Id": content['_id'],
@@ -175,14 +189,19 @@ class PlutoMI():
         }
         return genericPl
     
-
     def episodes_payload(self,series_api,parent_id,parent_title, parent_slug):
+        '''
+            El metodo recibe una api especifica para los episodios.
+            Primero valida que el episodio no este cargado ya en lista de scrapeados segun id,
+            luego valida que el episodio no sea de valor 0 para eliminar trailers, finalmente carga un
+            payload especifico para episodios.
+        '''
         response_episodes = self.session.get(series_api)
         data=response_episodes.json()
         key_search='_id'
         for seasonValue in data['seasons']:
             for epValue in seasonValue['episodes']:
-                if (self.isDuplicate(self.scraped_episodes,epValue[key_search])==False) and (epValue['number'] > 0) :
+                if not self.isDuplicate(self.scraped_episodes,epValue[key_search]) and self.isNotTrailer(epValue['number']):
                     episode = {
                         'PlatformCode':self._platform_code,
                         'ParentId': parent_id,
@@ -221,6 +240,10 @@ class PlutoMI():
                     pass
 
     def depurate_title(self, title):
+        '''
+            Limpia el titulo pasandolo a minusculas y eliminando caracteres
+            especiales que pudiera tener.
+        '''
         chars=' *,./|&¬!"£$%^()_+{@:<>?[]}`=;¿'
         title=title.lower()#paso el titulo original a minusculas
         if '-' in title:#primero elimino los guiones que vengan con el titulo original
@@ -232,6 +255,11 @@ class PlutoMI():
         return title
 
     def get_deepLinks(self, content, isEpisode, parent_name):
+        '''
+            Armado de deeplinks particulares segun el tipo de contenido. Los valores isEpisode y parent_name
+            solo seran usados para generar el deeplink de episodios, de otro caso se pasan como None y el if
+            hace la validacion.
+        '''
         if content['type'] == 'movie':
             deeplink = self.url + 'movies' + '/' + content['slug']
         elif isEpisode:
@@ -250,22 +278,40 @@ class PlutoMI():
         return list_imgages
 
     def get_genres(self,content):
-        genres=content['genre']
-        split_genres=[]
-        search_for='&/-_|'
-        for c in search_for:
-            if c in genres:
-                split_genres+=genres.split(c)
-            else:
-                split_genres.append(genres)
-        return split_genres
+        '''
+            Limpia los caracteres especiales de mas que pueda tener el genero como se recibe el dato.
+            Primero lo pasa a minusculas, luego valida si el genero pertenece a sci-fi, ya que
+            en este caso no corresponde eliminar el caracter "-", finalmente devuelve una lista.
+        '''
+        genres=[]
+        genre=content['genre'].lower()
+        chars='&/-_|'
+        ok=True
+        for c in chars:
+            if c in genre:
+                ok=False
+                if (c=='-') and ('sci'in genre):
+                    pass
+                else:
+                    genres+=genre.split(c) 
+        if ok:
+            genres.append(genre)   
+        return genres
     
     def get_duration(self, content):
+        '''
+            El dato de la duracion viene expresado en milisegundos y se pasa a minutos.
+        '''
         miliseconds=int(content['duration'])
         minutes=miliseconds//60000
         return minutes
-
+    def isNotTrailer(self,num):
+        '''
+            Si el numero de episodio es 0 devuelve false y filtra los trailers.
+        '''
+        return bool(num)
     '''
+    #Metodo de ejemplo que paso Juan para tener en cuenta.
     def hash_id_content(self,content):
         duration=0
         dato = content['name']+str(duration)
