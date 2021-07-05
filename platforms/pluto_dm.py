@@ -272,9 +272,10 @@ class PlutoDM():
 
         return lista_slug
     
+
     '''
-    Metodo que accede a la api de las series con la id de la serie que se esta scrapeando
-    y obtiene una lista con las temporadas de la misma.
+    Metodo que accede a la api de las series con la id de la serie que se esta scrapeando.
+    Devuelve una lista con las temporadas de la misma.
 
     args:
         -content(el contenido de la serie)
@@ -295,6 +296,7 @@ class PlutoDM():
 
         return self.seas_list
     
+
     def get_episodes(self,episode__):
         if episode__['number'] == 0:
             numb = int(1)
@@ -302,7 +304,8 @@ class PlutoDM():
             numb = int(episode__['number'])
         
         return numb
-        
+
+
     #Payload de episodios
     def payloads_episode(self, content, episodes):
         payload_epi = {
