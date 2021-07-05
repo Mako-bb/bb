@@ -21,11 +21,11 @@ class PlutoMI():
     - ¿Usa Selenium?: No.
     - ¿Tiene API?: Si.
     - ¿Usa BS4?: No.
-    - ¿Cuanto demoró la ultima vez?. 154.09201574325562 seconds
-    - ¿Cuanto contenidos trajo la ultima vez? titanScraping: total 1502, titanScrapingEpisodes: total 20166, CreatedAt: 2021-07-05 .
+    - ¿Cuanto demoró la ultima vez?. 299.88685607910156 seconds
+    - ¿Cuanto contenidos trajo la ultima vez? titanScraping: total 1502, titanScrapingEpisodes: total 20170, CreatedAt: 2021-07-05 .
 
     OTROS COMENTARIOS:
-    Suelen variar los contenidos obtenidos de una ejecucion a la siguiente.
+    Suelen variar los contenidos obtenidos de episodes de una ejecucion a la siguiente.
     """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self.ott_site_uid = ott_site_uid
@@ -158,13 +158,13 @@ class PlutoMI():
             payload['Duration']=self.get_duration(content)
         elif content['type']=='series':
             payload['Type']= 'serie'
-            payload['Seasons']= len(content['seasonsNumbers'])
             payload['Playback']=None
             payload['Duration']=None
             parent_id=content['_id']
             parent_title=content['name']
             parent_slug=content['slug']
             series_api='https://service-vod.clusters.pluto.tv/v3/vod/series/{}/seasons?advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=820bd17e-1326-4985-afbf-2a75398c0e4e&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=820bd17e-1326-4985-afbf-2a75398c0e4e&deviceLat=-39.0576&deviceLon=-67.5301&deviceMake=Firefox&deviceModel=web&deviceType=web&deviceVersion=89.0&marketingRegion=VE&serverSideAds=true&sessionID=1ddd9448-d514-11eb-b85e-0242ac110002&sid=1ddd9448-d514-11eb-b85e-0242ac110002&userId=&attributeV4=foo'.format(parent_id)
+            payload['Seasons'] = self.season_payload(series_api)
             self.episodes_payload(series_api,parent_id,parent_title,parent_slug)
         return payload
 
@@ -328,6 +328,28 @@ class PlutoMI():
             Si el numero de episodio es 0 devuelve false y filtra los trailers.
         '''
         return bool(num)
+
+    def season_payload(self,api_series):
+        response_seasons = self.session.get(api_series)
+        data=response_seasons.json()
+        seasons=data['seasons']
+        seasons_list=[]
+        for season in seasons:
+            s={
+                "Id": None, 
+                "Synopsis": None, 
+                "Title": None,
+                "Deeplink": None, 
+                "Number": season['number'], 
+                "Year": None, 
+                "Image": None, 
+                "Directors": None, 
+                "Cast": None, 
+                "Episodes": len(season['episodes']), 
+                "IsOriginal": None 
+            }
+            seasons_list.append(s)
+        return seasons_list
     '''
     #Metodo de ejemplo que paso Juan para tener en cuenta.
     def hash_id_content(self,content):
