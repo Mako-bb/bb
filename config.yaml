@@ -387,8 +387,8 @@ ott_sites:
   StarzMI:  #Starz Mati
     countries:
       AR: ar.starz
-    url: https://www.starz.com/es/es/
-    api_url: http://playdata.starz.com/metadata-service/play/partner/Web_ES/v8/content
+    url: https://www.starz.com/ar/es/
+    api_url: http://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/content
   PlutoCapacitacion: # PRUEBA
     countries:
       AR: ar.pluto

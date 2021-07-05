@@ -219,7 +219,7 @@ class PlutoMI():
         key_search='_id'
         for seasonValue in data['seasons']:
             for epValue in seasonValue['episodes']:
-                if not self.isDuplicate(self.scraped_episodes,epValue[key_search]) and self.isNotTrailer(epValue['number']):
+                if (self.isDuplicate(self.scraped_episodes,epValue[key_search]) == False) and (self.isNotTrailer(epValue['number'])== False):
                     episode = {
                         'PlatformCode':self._platform_code,
                         'ParentId': parent_id,
@@ -326,8 +326,13 @@ class PlutoMI():
     def isNotTrailer(self,num):
         '''
             Si el numero de episodio es 0 devuelve false y filtra los trailers.
+            return bool(num)
         '''
-        return bool(num)
+        isTrailer=False
+        if num < 1:
+            isTrailer=True
+        return isTrailer
+        
 
     def season_payload(self,api_series):
         response_seasons = self.session.get(api_series)
