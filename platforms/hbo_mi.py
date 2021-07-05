@@ -132,11 +132,11 @@ class HboMI():
                 newTitle+=title[i]
         return newTitle
     
-    def generic_payload(self,id,crew,title,originalTitle,type_,year,duration,externalIds,deeplinks,
+    def generic_payload(self,id_,crew,title,originalTitle,type_,year,duration,externalIds,deeplinks,
             synopsis, image, rating, genres, cast, directors, availability, download, isoriginal, isadult, isbranded):
-        payload_contenidos = { 
+        payload = { 
             "PlatformCode": self._platform_code, #Obligatorio 
-            "Id": id, #Obligatorio
+            "Id": id_, #Obligatorio
             "Crew": crew,
             "Title": title, #Obligatorio 
             "CleanTitle": _replace(title), #Obligatorio 
@@ -148,7 +148,7 @@ class HboMI():
             "Deeplinks": deeplinks, 
             "Synopsis": synopsis, 
             "Image": image, 
-            "Rating": rating, #Important!  "Provider": "list", 
+            "Rating": rating, #Important!  "Provider": , 
             "Genres": genres, #Important! 
             "Cast": cast, #Important! 
             "Directors": directors, #Important! 
@@ -162,43 +162,41 @@ class HboMI():
             "Timestamp": datetime.datetime.now().isoformat(), #Obligatorio 
             "CreatedAt": self._created_at, #Obligatorio
         }
-        return payload_contenidos
-    def payload_episodios(self):
-        episode = { 
-            "PlatformCode": "str", #Obligatorio 
-            "Id": "str", #Obligatorio
-            "ParentId": "str", #Obligatorio #Unicamente en Episodios
-            "ParentTitle": "str", #Unicamente en Episodios 
-            "Episode": "int", #Obligatorio #Unicamente en Episodios 
-            "Season": "int", #Obligatorio #Unicamente en Episodios
-            "Crew": 'str',
-            "Title": "str", #Obligatorio 
-            "OriginalTitle": "str", 
-            "Year": "int", #Important! 
-            "Duration": "int", 
-            "ExternalIds": "list",
-            "Deeplinks": { 
-            "Web": "str", #Obligatorio 
-            "Android": "str", 
-            "iOS": "str", 
-            }, 
-            "Synopsis": "str", 
-            "Image": "list", 
-            "Rating": "str", #Important! 
-            "Provider": "list", 
-            "Genres": "list", #Important! 
-            "Cast": "list", #Important! 
-            "Directors": "list", #Important! 
-            "Availability": "str", #Important! 
-            "Download": "bool", 
-            "IsOriginal": "bool", #Important! 
-            "IsAdult": "bool", #Important! 
-            "IsBranded": "bool", #Important! (ver link explicativo) "Packages": "list", #Obligatorio 
-            "Country": "list", 
-            "Timestamp": "str", #Obligatorio 
-            "CreatedAt": "str", #Obligatorio
+        return payload
+
+    def payload_episodes(self,id_,parentId,parentTitle,episode_num,season,crew,title,originalTitle,year,duration,externalIds,deeplinks,
+            synopsis, image, rating, provider, genres, cast, directors, availability, download, isoriginal, isadult, isbranded):
+        payload = { 
+            "PlatformCode": self._platform_code, #Obligatorio 
+            "Id": id_, #Obligatorio
+            "ParentId": parentId, #Obligatorio #Unicamente en Episodios
+            "ParentTitle":parentTitle , #Unicamente en Episodios 
+            "Episode": episode_num, #Obligatorio #Unicamente en Episodios 
+            "Season":season , #Obligatorio #Unicamente en Episodios
+            "Crew": crew,
+            "Title":title , #Obligatorio 
+            "OriginalTitle": originalTitle, 
+            "Year": year, #Important! 
+            "Duration": duration, 
+            "ExternalIds":externalIds ,
+            "Deeplinks": deeplinks,
+            "Synopsis": synopsis, 
+            "Image":image , 
+            "Rating":rating , #Important! 
+            "Provider": provider, 
+            "Genres": genres, #Important! 
+            "Cast": cast, #Important! 
+            "Directors": directors, #Important! 
+            "Availability": availability, #Important! 
+            "Download": download, 
+            "IsOriginal": isoriginal, #Important! 
+            "IsAdult": isadult, #Important! 
+            "IsBranded": isbranded, #Important! 
+            "Country": [self.ott_site_country], 
+            "Timestamp": datetime.datetime.now().isoformat(), #Obligatorio 
+            "CreatedAt": self._created_at, #Obligatorio
         }
-        return episode
+        return payload
 
     def get_packages(self):
         '''
