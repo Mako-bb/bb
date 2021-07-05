@@ -10,9 +10,23 @@ import datetime
 # from time import sleep
 import re
 #import hashlib
-
+start_time = time.time()
 
 class PlutoMI():
+    """
+    Pluto es una ott de Estados Unidos que opera en todo el mundo.
+
+    DATOS IMPORTANTES:
+    - VPN: No
+    - ¿Usa Selenium?: No.
+    - ¿Tiene API?: Si.
+    - ¿Usa BS4?: No.
+    - ¿Cuanto demoró la ultima vez?. 154.09201574325562 seconds
+    - ¿Cuanto contenidos trajo la ultima vez? titanScraping: total 1502, titanScrapingEpisodes: total 20166, CreatedAt: 2021-07-05 .
+
+    OTROS COMENTARIOS:
+    Suelen variar los contenidos obtenidos de una ejecucion a la siguiente.
+    """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self.ott_site_uid = ott_site_uid
         self.ott_site_country = ott_site_country
@@ -81,6 +95,10 @@ class PlutoMI():
         return query
 
     def _scraping(self, testing=False):
+        # Pensando algoritmo:
+        # 1) Método request (request)-> Validar todo.
+        # 2) Método payload (get_payload)-> Para reutilizarlo.
+        # 3) Método para traer los contenidos (get_contents)
         
         self.scraped = self.query_field(self.titanScraping, field='Id')
         self.scraped_episodes = self.query_field(self.titanScrapingEpisodes, field='Id')
@@ -98,7 +116,7 @@ class PlutoMI():
                 pass
 
         self.insert_payloads_close(self.payloads,self.episodes_payloads)
-            
+        print("--- %s seconds ---" % (time.time() - start_time))   
 
     def get_contents(self):
         url_api = self.api_url
