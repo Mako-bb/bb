@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import time
+import datetime
 import requests
 import hashlib
 import platform
@@ -19,6 +20,7 @@ from selenium               import webdriver
 
 class HboMI():
     def __init__(self, ott_site_uid, ott_site_country, type):
+        self.ott_site_country = ott_site_country
         self._config                = config()['ott_sites'][ott_site_uid]
         self._created_at            = time.strftime("%Y-%m-%d")
         self.mongo                  = mongo()
@@ -50,6 +52,8 @@ class HboMI():
     
 
     def _scraping(self, testing = False):
+        self.payloads = []
+        self.episodes_payloads = []
         urls={'docums':'https://www.hbo.com/documentaries/catalog',
                 'movies':'https://www.hbo.com/movies/catalog',
                 'series':'https://www.hbo.com/series/all-series'}
@@ -75,63 +79,41 @@ class HboMI():
     
     
     def documsPayloads(self,contents):
-        doc={}
-        for content in contents:
-            title = content.find('p', {'class':'modules/cards/CatalogCard--title'}).text
-            title_depurate=self.depurateTitle(title)
-            deeplink = 'https://www.hbo.com/documentaries/{}'.format(title_depurate)
-            req_info = self.sesion.get(deeplink)
-            soup_info = BeautifulSoup(req_info.text, 'html.parser')
-            sinop = soup_info.find('div', {'class':'modules/Text--text modules/Text--headerHeavy components/RichText--richText'})
-            print(title, deeplink,sinop)
-            #element_superior = soup_info.find('div', {'class':'modules/InfoSlice--assetDetails'})
-            #childsList=element_superior.find_all('span',{'class':'components/AiringDetailsBlock--detailsText'})
-            #details=self.validateData(childsList,url)  
-            #if self.mongo.search("titanScraping",doc)==False:
-            #    self.mongo.insert("titanScraping",doc)
-            #else:
-            #    pass
+        pass
     
     def moviesPayloads(self,contents):
-        movie={}
         for content in contents:
             title = content.find('p', {'class':'modules/cards/CatalogCard--title'}).text
             title_depurate=self.depurateTitle(title)
             deeplink = 'https://www.hbo.com/movies/{}'.format(title_depurate)
+            deeplinksDict={
+                "Web": deeplink,
+                'Android': None,
+                'iOS': None,
+            }
             req_info = self.sesion.get(deeplink)
             soup_info = BeautifulSoup(req_info.text, 'html.parser')
+            image_conteiner=soup_info.find('svg', {'id':'blurredBackground'})
+            image_url=image_conteiner.find('image')['href']
+            details_container=soup_info.find('div', {'class':'modules/InfoSlice--assetDetails'})
+            childsList=details_container.find_all('span',{'class':'components/AiringDetailsBlock--detailsText'})
+            genres=''
+            rating=''
+            duration=''
+            year=''
+            type_='movie'
             sinop = soup_info.find('div', {'class':'modules/Text--text modules/Text--headerHeavy components/RichText--richText'})
-            print(title, deeplink,sinop)
-            #element_superior = soup_info.find('div', {'class':'modules/InfoSlice--assetDetails'})
-            #childsList=element_superior.find_all('span',{'class':'components/AiringDetailsBlock--detailsText'})
-            #details=self.validateData(childsList,url)
-            
-            #if self.mongo.search("titanScraping",movie)==False:
-            #    self.mongo.insert("titanScraping",movie)
-            #else:
-            #    pass
+            payload = self.generic_payload()
+            packages=self.get_packages()
+            self.payloads.append(self.generic_payload(None,None,title,None,type_,year,duration,None,deeplinksDict,sinop,image_url,rating,genres,None,None,None,None,None,None,None))
+
     
     def seriesPayloads(self,contents):
-        series={}
-        for content in contents:
-            title = content.find('p', {'class':'modules/cards/CatalogCard--title'}).text
-            title_depurate=self.depurateTitle(title)
-            deeplink = 'https://www.hbo.com/{}'.format(title_depurate)
-            req_info = self.sesion.get(deeplink)
-            soup_info = BeautifulSoup(req_info.text, 'html.parser')
-            sinop = soup_info.find('div', {'class':'components/RichText--richText'}).text
-            print(title, deeplink,sinop)
-            #element_superior = soup_info.find('div', {'class':'modules/InfoSlice--assetDetails'})
-            #childsList=element_superior.find_all('span')
-            #details=self.validateData(childsList,url)
-            #if self.mongo.search("titanScraping",series)==False:
-            #    self.mongo.insert("titanScraping",series)
-            #else:
-            #    pass
+        pass
 
 
     def depurateTitle(self, title):
-        chars=' *,./|&¬!"£$%^()_+{@:<>?[]}`=;¿'
+        chars=' *,./\|&¬!"£$%^()_+{@:<>?[]}`=;¿'
         title=title.lower()#paso el titulo original a minusculas
         newTitle=''
         if '-' in title:#primero elimino los guiones que vengan con el titulo original
@@ -149,6 +131,78 @@ class HboMI():
             else:
                 newTitle+=title[i]
         return newTitle
+    
+    def generic_payload(self,id_,crew,title,originalTitle,type_,year,duration,externalIds,deeplinks,
+            synopsis, image, rating, genres, cast, directors, availability, download, isoriginal, isadult, isbranded):
+        payload = { 
+            "PlatformCode": self._platform_code, #Obligatorio 
+            "Id": id_, #Obligatorio
+            "Crew": crew,
+            "Title": title, #Obligatorio 
+            "CleanTitle": _replace(title), #Obligatorio 
+            "OriginalTitle": originalTitle, 
+            "Type": type_, #Obligatorio #movie o serie 
+            "Year": year, #Important! 1870 a año actual 
+            "Duration": duration, 
+            "ExternalIds": externalIds,
+            "Deeplinks": deeplinks, 
+            "Synopsis": synopsis, 
+            "Image": image, 
+            "Rating": rating, #Important!  "Provider": , 
+            "Genres": genres, #Important! 
+            "Cast": cast, #Important! 
+            "Directors": directors, #Important! 
+            "Availability": availability, #Important! 
+            "Download": download, 
+            "IsOriginal": isoriginal, #Important! 
+            "IsAdult": isadult, #Important! 
+            "IsBranded": isbranded, #Important! (ver link explicativo)
+            "Packages": self.get_packages(), #Obligatorio 
+            "Country": [self.ott_site_country], 
+            "Timestamp": datetime.datetime.now().isoformat(), #Obligatorio 
+            "CreatedAt": self._created_at, #Obligatorio
+        }
+        return payload
+
+    def payload_episodes(self,id_,parentId,parentTitle,episode_num,season,crew,title,originalTitle,year,duration,externalIds,deeplinks,
+            synopsis, image, rating, provider, genres, cast, directors, availability, download, isoriginal, isadult, isbranded):
+        payload = { 
+            "PlatformCode": self._platform_code, #Obligatorio 
+            "Id": id_, #Obligatorio
+            "ParentId": parentId, #Obligatorio #Unicamente en Episodios
+            "ParentTitle":parentTitle , #Unicamente en Episodios 
+            "Episode": episode_num, #Obligatorio #Unicamente en Episodios 
+            "Season":season , #Obligatorio #Unicamente en Episodios
+            "Crew": crew,
+            "Title":title , #Obligatorio 
+            "OriginalTitle": originalTitle, 
+            "Year": year, #Important! 
+            "Duration": duration, 
+            "ExternalIds":externalIds ,
+            "Deeplinks": deeplinks,
+            "Synopsis": synopsis, 
+            "Image":image , 
+            "Rating":rating , #Important! 
+            "Provider": provider, 
+            "Genres": genres, #Important! 
+            "Cast": cast, #Important! 
+            "Directors": directors, #Important! 
+            "Availability": availability, #Important! 
+            "Download": download, 
+            "IsOriginal": isoriginal, #Important! 
+            "IsAdult": isadult, #Important! 
+            "IsBranded": isbranded, #Important! 
+            "Country": [self.ott_site_country], 
+            "Timestamp": datetime.datetime.now().isoformat(), #Obligatorio 
+            "CreatedAt": self._created_at, #Obligatorio
+        }
+        return payload
+
+    def get_packages(self):
+        '''
+            Se hardcodea el package hasta averiguar como conseguirlo apropiadamente.
+        '''
+        return [{'Type':'subscription-vod'}]
     '''    
     def validateData(self, descriptions_list,type_content):
         pass

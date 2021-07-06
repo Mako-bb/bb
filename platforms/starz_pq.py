@@ -83,42 +83,100 @@ class StarzPQ():
     
     # NO DIGAN COMO PROGRAMO :(
     def _scraping(self, testing=False):
-        self.scraped = [] #self.query_field(self.titanScraping, field='Id')
-        self.scraped_episodes = [] #self.query_field(self.titanScrapingEpisodes, field='Id')
+        self.scraped = self.query_field(self.titanScraping, field='Id')
+        self.scraped_episodes = self.query_field(self.titanScrapingEpisodes, field='Id')
 
+        payloads = []
         payloads_episodes = []
-        payloads = self.get_content(payloads_episodes)#Hago todo en la misma funcion, busco los datos de las peliculas (return) y las episodios de las series (payloads_episodes)
+        self.get_content(payloads, payloads_episodes)#Hago todo en la misma funcion, busco los datos de las peliculas (return) y las episodios de las series (payloads_episodes)
 
         if payloads:
             self.mongo.insertMany(self.titanScraping, payloads)
-        
+        if payloads_episodes:
+            self.mongo.insertMany(self.titanScrapingEpisodes, payloads_episodes)
+
+        self.session.close()
         Upload(self._platform_code, self._created_at, testing=True)
     
-    def get_content(self, payloads_episodes): 
-        payloads = []
+    def get_content(self, payloads, payloads_episodes): 
+        
         res_all_titles = self.request(self.all_titles_url) #Traigo el json con todos los datos
-
         for content in res_all_titles["playContentArray"]["playContents"]:
-
-            if not content["contentId"] in self.scraped: #Consulto si esta en la bbdd
+            if not str(content["contentId"]) in self.scraped: #Consulto si esta en la bbdd
                 self.scraped.append(content["contentId"])
                 payload = self.get_payload(content)
+                if payload["Type"] == "serie":
+                    payload["Seasons"] = self.get_seasons(content) #Tomo la info de las series, pero no de los episodios. Asi completo payloads
+                    self.get_payload_episodes(content, payloads_episodes) #tomo la info de los episodios para completar payloads_episodes
                 payloads.append(payload)
-                if payload["Type"] == "series":
-                    payload["Seasons"] = self.get_seasons(content)                    
-                    self.get_payload_episodes(content["childContent"], payloads_episodes)
-        
-        return payloads
 
-    def get_payload_episodes(self, seasons, payloads_episodes):
+    def get_payload_episodes(self, content, payloads_episodes):
+        seasons = content["childContent"]
         for season in seasons:
-            i = 1 #los episodios no estan numerados
+            i = 1 #los episodios no estan numerados asi que toca a mano
             for episode in season["childContent"]:
-                if not episode["contentId"] in self.scraped_episodes:
-                    self.scraped_episodes.append(episode["contentId"])
-                    payloads_episode = self.get_payload(episode)
-                    payloads_episodes.append(payloads_episode)
+                if not str(episode["contentId"]) in self.scraped_episodes:
+                    duration_episode = episode["runtime"]//60
+                    ###chequeo que el episodio no sea un trailer###
+                    if duration_episode > 5:
+                        self.scraped_episodes.append(episode["contentId"])
+                        payload_episode = self.get_payload_episode(episode)
+                        ######Asigno la info del padre acá ya que episode solo tiene la info de el mismo#####
+                        payload_episode["ParentId"] = str(content["contentId"])
+                        payload_episode["ParentTitle"] = season["title"]
+                        payload_episode["Episode"] = i
+                        payload_episode["Season"] = season["order"]
+                        payloads_episodes.append(payload_episode)
+                    i += 1
 
+
+    def get_payload_episode(self, content_dict):
+        
+        """Método para crear el payload de episodios. Para titanScrapingEpisodes.
+
+            Args:
+                content_metadata (dict): Indica la metadata del contenido.
+
+            Returns:
+                dict: Retorna el payload.
+        """
+        payload_episodios = { 
+            
+            "PlatformCode": self._platform_code, #Obligatorio 
+            "Id": str(content_dict["contentId"]), #Obligatorio 
+            "ParentId": None, #Obligatorio #Unicamente en Episodios
+            "ParentTitle": None, #Unicamente en Episodios 
+            "Episode": None, #Obligatorio #Unicamente en Episodios 
+            "Season": None, #Obligatorio #Unicamente en Episodios
+            "Crew": self.get_crew(content_dict),
+            "Title": content_dict["title"], #Obligatorio 
+            "OriginalTitle": content_dict["titleSort"], 
+            "Year": self.get_year(content_dict), #Important! 
+            "Duration": self.get_duration(content_dict), 
+            "ExternalIds": [], 
+            "Deeplinks": { 
+                "Web": self.get_deeplinks_series(content_dict), #Obligatorio 
+                "Android": "", 
+                "iOS": "", 
+            }, 
+            "Synopsis": content_dict["logLine"], 
+            "Image": self.get_image(content_dict["contentId"]), 
+            "Rating": content_dict["ratingCode"], #Important! 
+            "Provider": [content_dict["studio"]], 
+            "Genres": self.get_genres(content_dict["genres"]), #Important! 
+            "Cast": self.get_cast(content_dict), #Important! 
+            "Directors": self.get_directors(content_dict), #Important! 
+            "Availability": content_dict["endDate"], #Important! 
+            "Download": self.get_download(content_dict), 
+            "IsOriginal": content_dict["original"], #Important! 
+            "IsAdult": None, #Important! 
+            "IsBranded": None, #Important! (ver link explicativo) "Packages": "list", #Obligatorio 
+            "Packages": [{"Type":"subscription-vod"}],
+            "Country": [], 
+            "Timestamp": datetime.now().isoformat(), #Obligatorio 
+            "CreatedAt": self._created_at, #Obligatorio
+        }
+        return payload_episodios
 
     def get_payload(self, content_dict):
         """Método para crear el payload. Para titanScraping.
@@ -133,12 +191,7 @@ class StarzPQ():
             "PlatformCode": self._platform_code,   #Obligatorio 
             "Id": str(content_dict["contentId"]),  #Obligatorio
             "Seasons": [], #Lo hago aparte
-            "Crew": [ #Importante
-                {
-                "Role": None, 
-                "Name": None
-                },
-            ],
+            "Crew": self.get_crew(content_dict),
             "Title": content_dict["title"], #Obligatorio 
             "CleanTitle": _replace(content_dict["title"]), #Obligatorio 
             "OriginalTitle": content_dict["titleSort"], 
@@ -147,7 +200,7 @@ class StarzPQ():
             "Duration": self.get_duration(content_dict), #en minutos 
             "ExternalIds": [], #consultar
             "Deeplinks": { 
-                "Web": self.get_deeplinks(content_dict), #Obligatorio 
+                "Web": self.get_deeplinks_movie(content_dict), #Obligatorio 
                 "Android": None, 
                 "iOS": None, 
             }, 
@@ -155,9 +208,10 @@ class StarzPQ():
             "Image": self.get_image(content_dict["contentId"]), 
             "Rating": content_dict["ratingCode"], #Important!  "Provider": "list", 
             "Genres": self.get_genres(content_dict["genres"]), #Important! 
+            "Provider": [content_dict["studio"]],
             "Cast": self.get_cast(content_dict), #Important! 
             "Directors": self.get_directors(content_dict), #Important! 
-            "Availability": "str", #Important! 
+            "Availability": self.get_availability(content_dict), #Important! 
             "Download": self.get_download(content_dict), 
             "IsOriginal": content_dict["original"], #Important! 
             "IsAdult": None, #Important! 
@@ -180,9 +234,9 @@ class StarzPQ():
                 "Deeplink": "str",                                      #Importante
                 "Number": season["order"],                                        #Importante
                 "Year": season["minReleaseYear"],                                          #Importante
-                "Image": "list", 
+                "Image": self.get_image(season), 
                 "Directors": self.get_directors(season),                                    #Importante
-                "Cast": self.get_cast(season),                                         #Importante
+                "Cast": self.get_cast(season["contentId"]),                                         #Importante
                 "Episodes": season["episodeCount"],                                       #Importante
                 "IsOriginal": season["original"] 
                 }
@@ -191,22 +245,25 @@ class StarzPQ():
     
     ############################## FUNCIONES PARA PAYLOAD #######################################
     def get_duration(self, content):
-        if content["contentType"] == "Movie":
+        if content["contentType"] == "Movie" or content["contentType"] == "Episode":
             return content["runtime"]//60
         else:
             return None
-    
+
     def get_type(self, type_):
         if type_ == "Movie":
             return "movie"
         else:
             return "serie"
 
-    def get_deeplinks(self, content): #armo la url con el titulo en minusculas y con - en cada espacio. Luego le agrego el id
+    def get_deeplinks_movie(self, content): #armo la url con el titulo en minusculas y con - en cada espacio. Luego le agrego el id
         title = (content["titleSort"].replace(" ","-")).lower()
-        url = title+"-"+str(content["contentId"])
+        url ="https://www.starz.com/es/es/movies/"+title+"-"+str(content["contentId"])
         return url
     
+    def get_deeplinks_series(self, content):
+        return "https://www.starz.com/es/es/play/"+str(content["contentId"])
+
     def get_year(self, content):
         res = None
         try:
@@ -253,8 +310,47 @@ class StarzPQ():
         except:
             pass
         return res
+    def get_crew(self, content):
+        res = []
+        try:
+            credits = content["credits"]
+            for credit in credits:
+                if credit["keyedRoles"][0] != "actor":
+                    c = {
+                        "Role": credit["keyedRoles"], 
+                        "Name": credit["name"]
+                        }
+            res.append(c)
+        except:
+            pass
+        return res
+    
+    def get_availability(self, content):
+        try:
+            return content["endDate"]
+        except:
+            return None
     ########################################################################################################
-
+    def request(self, url):
+        '''
+        Método para hacer una petición
+        '''
+        requestsTimeout = 5
+        while True:
+            try:
+                response = self.session.get(url, timeout=requestsTimeout)
+                return response.json()
+            except requests.exceptions.ConnectionError:
+                print("Connection Error, Retrying")
+                time.sleep(requestsTimeout)
+                continue
+            except requests.exceptions.RequestException:
+                print('Waiting...')
+                time.sleep(requestsTimeout)
+                continue
+    
+    
+    
     def cosas():
         payload_contenidos = { 
                                                       #Obligatorio
@@ -332,23 +428,6 @@ class StarzPQ():
             "CreatedAt": "str", #Obligatorio
         }
         
-    def request(self, url):
-        '''
-        Método para hacer una petición
-        '''
-        requestsTimeout = 5
-        while True:
-            try:
-                response = self.session.get(url, timeout=requestsTimeout)
-                return response.json()
-            except requests.exceptions.ConnectionError:
-                print("Connection Error, Retrying")
-                time.sleep(requestsTimeout)
-                continue
-            except requests.exceptions.RequestException:
-                print('Waiting...')
-                time.sleep(requestsTimeout)
-                continue
     
 
         

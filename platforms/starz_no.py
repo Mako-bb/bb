@@ -11,7 +11,7 @@ from handle.payload import Payload
 
 
 
-class PlutoNO():
+class StarzNO():
     """
     Pluto es una ott de Estados Unidos que opera en todo el mundo.
 
@@ -39,9 +39,9 @@ class PlutoNO():
         self.titanScrapingEpisodes = config()['mongo']['collections']['episode']   
         
 
-        self.url = self._config['url']
+        #self.url = self._config['url']
         self.api_url = self._config['api_url']
-        self.season_api_url = self._config['season_api_url']
+       # self.season_api_url = self._config['season_api_url']
 
         self.session = requests.session()
 
@@ -95,6 +95,102 @@ class PlutoNO():
 
         return query
 
+    def _scraping(self, testing=False):
+
+        
+        url = 'https://playdata.starz.com/metadata-service/play/partner/Web_ES/v8/blocks?playContents=map&lang=es-ES&pages=MOVIES,SERIES&includes=contentId,title,contentType,releaseYear,runtime,logLine,image,ratingCode,genres,actors,directors,original,countryOfOrigin,seriesName,seasonNumber,episodeCount,details'
+        
+        response = self.session.get(url)
+
+        contents_metadata = response.json()        
+        
+        contents = contents_metadata['blocks'][2]
+
+        slug = []
+
+        
+        
+        for content in contents:
+          for content in contents:
+              id = content.get("contentId")
+              title = content.get("title")
+              type = content.get("contentType")
+              synopsis = content.get("summary")
+              duration = content.get("runtime")
+              rating = content.get("rating")
+              genres = content.get("genre")
+              covers = content["covers"]
+              slug = content["slug"]
+              for content in covers:
+                  image = content.get("url")
+                  pass
+
+
+              payload_contenidos = {
+                  "PlatformCode": "ar.pultotv",
+                  "Id": id,
+                  "Title": title,
+                  "CleanTitle": _replace(title),
+                  "Type": type,
+                  "Duration": duration, #no pude ponerlo en segundos
+                  "Synopsis" : synopsis,
+                  "Image": image,
+                  "Rating": rating,
+                  "Genres": genres,
+                  
+              }
+              print(payload_contenidos)                 
+
+              self.mongo.insert("titanScraping", payload_contenidos)
+              
+              
+              
+              url_episodios = f'https://service-vod.clusters.pluto.tv/v3/vod/slugs/{slug}?advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=95b00792-ce58-4e87-b310-caaf6c8d8de4&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=95b00792-ce58-4e87-b310-caaf6c8d8de4&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Firefox&deviceModel=web&deviceType=web&deviceVersion=89.0&marketingRegion=VE&serverSideAds=true&sessionID=4987c7e3-d482-11eb-bee6-0242ac110002&sid=4987c7e3-d482-11eb-bee6-0242ac110002&userId=&attributeV4=foo'
+              response_episodios = self.session.get(url_episodios)
+              contents_metadata_episodios = response_episodios.json()
+              temporadas = contents_metadata_episodios["seasons"]
+              
+
+              for temporada in temporadas:
+                  episodes = temporada.get("episodes")
+                  for episode in episodes:
+                      id_episode = episode.get("_id")
+                      ParentId_episode = id
+                      ParentTitle_episode = title
+                      Episode_episode = episode.get("number")
+                      Season_episode = episode.get("season")
+                      Title_episode = episode.get("name")
+                      Duration_episode = episode.get("duration")
+                      Rating_episode = episode.get("rating")
+                      Genres_episode = episode.get("genre")
+                      Cover_episode = episode["covers"]
+                      for content_ep in Cover_episode:
+                          Image_episode = content_ep.get("url")
+
+                      if type == "series":
+                          payload_episodes = {
+                              "PlatformCode": "ar.pultotv",
+                              "Id": id_episode,
+                              "ParentId": ParentId_episode,
+                              "ParentTitle": ParentTitle_episode,
+                              "Episode": Episode_episode,
+                              "Season": Season_episode,
+                              "Title": Title_episode,
+                              "CleanTitle": _replace(Title_episode),
+                              "Duration": Duration_episode, #no pude ponerlo en segundos
+                              "Image": Image_episode,
+                              "Rating": Rating_episode,
+                              "Genres": Genres_episode,
+                              
+                          }
+                          print(payload_episodes)       
+                          self.mongo.insert("titanScrapingEpisodes", payload_episodes)
+
+            
+                      
+
+              
+
     def _scraping(self, is_test=False):
         # Pensando algoritmo:
         # 1) Método request (request)-> Validar todo.
@@ -117,10 +213,10 @@ class PlutoNO():
             print(f"\n----- Progreso ({n}/{len(contents)}) -----\n")
 
             # Valido que no haya duplicados:
-            if content["_id"] in self.scraped:
+            if content["contentId"] in self.scraped:
                 print("Ya ingresado")
             else:
-                self.scraped.append(content["_id"])    
+                self.scraped.append(content["contentId"])    
                 payload = self.get_payload(content)
                 self.payloads.append(payload)
 
@@ -129,10 +225,10 @@ class PlutoNO():
                     try:
                         for contenidos in self.get_seasons(content, self.season_api_url):
                             for episode in contenidos:
-                                if episode["_id"] in self.scraped_episodes:
+                                if episode["contentId"] in self.scraped_episodes:
                                     print("Ya ingresado")
                                 else:
-                                    self.scraped_episodes.append(episode["_id"])
+                                    self.scraped_episodes.append(episode["contentId"])
                                     self.episodes_payloads.append(self.get_payload_episodes(content, episode))
                     except:
                         pass
@@ -159,24 +255,28 @@ class PlutoNO():
         """
         print("\nObteniendo contenidos...\n")
         contents = [] # Contenidos a devolver.
-        response = self.request(self.api_url)
+        response = self.session.get(self.api_url)
         contents_metadata = response.json()        
-        categories = contents_metadata["categories"]
+        categories = contents_metadata['blocks'][2]['playContentsById']
 
-        for categorie in categories:
-            print(categorie.get("name"))
-            contents += categorie["items"]
+        for item in categories:
+            all_content = categories[str(item)]
+            contents.append(all_content)
         return contents
 
-    def get_seasons(self, content, slug):
+    def get_seasons(self):
         episodes = []
-        response_2 = self.request(self.season_api_url.format(content["slug"]))
-        content = response_2.json()
+        response = self.session.get(self.api_url)
+        contents_metadata = response.json()        
+        categories = contents_metadata['blocks'][2]['playContentsById']
+        
+        for item in categories:
+            all_content = categories[str(item)]
         try:
-            seasons = content['seasons']
+            seasons = all_content['childContent']
 
-            for season in seasons:
-                episodes.append(season['episodes'])
+            
+            episodes.append(seasons)
             
             return episodes
         except:
@@ -213,30 +313,30 @@ class PlutoNO():
 
         # Indica si el payload a completar es un episodio:        
         payload['PlatformCode'] = self._platform_code
-        payload['Id'] = content_dict["_id"]
-        payload['Title'] = content_dict["name"]
+        payload['Id'] = content_dict["contentId"]
+        payload['Title'] = content_dict["title"]
         payload['OriginalTitle'] = None
-        payload['CleanTitle'] = _replace(content_dict["name"])
+        payload['CleanTitle'] = _replace(content_dict["title"])
         payload['Duration'] = self.get_duration(content_dict)
-        payload['Type'] = self.get_type(content_dict["type"]) 
-        payload['Year'] = None
+        payload['Type'] = self.get_type(content_dict["contentType"]) 
+        payload['Year'] = content_dict["releaseYear"]
         payload['Deeplinks'] = self.get_deeplinks(content_dict)
         payload['Playback'] = None
-        payload['Synopsis'] = content_dict["summary"]
-        payload['Image'] = self.get_images(content_dict)
-        payload['Rating'] = content_dict["rating"]
+        payload['Synopsis'] = content_dict["logLine"]
+        payload['Image'] = None
+        payload['Rating'] = content_dict["ratingCode"]
         payload['Provider'] = None
-        payload['Genres'] = content_dict["genre"]
-        payload['Cast'] = None
-        payload['Directors'] = None
+        payload['Genres'] = self.get_genres(content_dict)
+        payload['Cast'] = self.get_cast(content_dict)
+        payload['Directors'] = self.get_directors(content_dict)
         payload['Availability'] = None
         payload['Download'] = None
-        payload['IsOriginal'] = None
+        payload['IsOriginal'] = content_dict["original"]
         payload['IsBranded'] = None
         payload['IsAdult'] = None
-        payload['Packages'] = [{"Type":"free-vod"}]
-        payload['Country'] = None
-        payload['Crew'] = None        
+        payload['Packages'] = [{"Type":"subscription-vod"}]
+        payload['Country'] = content_dict["countryOfOrigin"]
+        payload['Crew'] = self.get_cast(content_dict)        
         payload['Timestamp'] = datetime.now().isoformat()
         payload['CreatedAt'] = self._created_at
 
@@ -308,7 +408,7 @@ class PlutoNO():
 
 
     def get_type(self, type_):
-        if type_ == 'series': # Se puede solucionar con regex.
+        if type_ == 'Series with Season': # Se puede solucionar con regex.
             return 'serie'
         else:
             return type_
@@ -322,16 +422,7 @@ class PlutoNO():
     #     else:
     #         print("TRAER EPISODIO/S")
             
-    def get_images(self, content_dict):
-        """
-        generamos un hermoso script para traer las url de las covers de las peliculas/series.
-
-        (entiendo que es un script super obvio, pero para tomar la costumbre, jajaja).
-        """
-
-        for cover in content_dict["covers"]: 
-            images = cover.get("url")
-            return images            
+      
 
     def get_duration(self, content_dict, is_episode=False):
         """
@@ -342,7 +433,7 @@ class PlutoNO():
         if content_dict["type"] == 'series' and is_episode == False:
             pass
         if content_dict["type"] == 'series' and is_episode == True:
-            return int(content_dict["duration"]/60000)
+            return int(content_dict["runtime"]/60)
         if content_dict["type"] == 'movie':
-            return int(content_dict["duration"]/60000)
-        
+            return int(content_dict["runtime"]/60)
+              
