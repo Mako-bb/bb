@@ -201,16 +201,16 @@ class PlutoFV():
         uri = 'https://service-vod.clusters.pluto.tv/v3/vod/series/' + str(item['_id']) + '/seasons?advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=381c83d6-6a14-44b9-897a-c4b9f0bc021a&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=381c83d6-6a14-44b9-897a-c4b9f0bc021a&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.124&marketingRegion=VE&serverSideAds=true&sessionID=d0fb398c-db3a-11eb-8941-0242ac110002&sid=d0fb398c-db3a-11eb-8941-0242ac110002&userId=&attributeV4=foo'
         uri_req = self.request(uri)
         items = uri_req.json() 
-        seasons = items['seasons']
-        deeplink = self.get_deeplink(item, item['type'], 'number') 
+        seasons = items['seasons'] 
         self.totalSeasons = 0
         for season in seasons:
             self.totalSeasons += 1
+            #deeplink_season = self.get_deeplink(item, item['type'], 'numeber')
             season_payload = {
                 "Id": items['_id'], #Importante
                 "Synopsis": items['summary'], #Importante
                 "Title": items['name'], #Importante, E.J. The Wallking Dead: Season 1
-                "Deeplink": deeplink, #Importante
+                "Deeplink": None, #deeplink_season, #Importante
                 "Number": season['number'], #Importante
                 "Year": None, #Importante
                 "Image": None, 
@@ -219,6 +219,51 @@ class PlutoFV():
                 "Episodes": len(season['episodes']), #Importante
                 "IsOriginal": None 
             },
+            season_return.append(season_payload)
+            self.episodios = 0
+            for episode in season['episodes']:
+                duration = self.get_duration(episode)
+                #deeplink = self.get_deeplink(episode, 'episode', season)
+                image = self.get_image(episode, 'episode')
+                episode_payload = { 
+                    "PlatformCode": self._platform_code, #Obligatorio 
+                    "Id": episode['_id'], #Obligatorio
+                    "ParentId": id, #Obligatorio #Unicamente en Episodios
+                    "ParentTitle": None, #Unicamente en Episodios 
+                    "Episode": episode['number'] if episode['number'] != 0 else None, #Obligatorio #Unicamente en Episodios 
+                    "Season": episode['season'], #Obligatorio #Unicamente en Episodios
+                    "Title": episode['name'], #Obligatorio o 
+                    "OriginalTitle": episode['name'], 
+                    "Type": episode['type'], #Obligatorio 
+                    "Year": None, #Important! 
+                    "Duration": duration,
+                    "ExternalIds": None,
+                    "Deeplinks": { 
+                    "Web": None, #Obligatorio 
+                    "Android": None, 
+                    "iOS": None, 
+                    }, 
+                    "Synopsis": episode['description'], 
+                    "Image": [image], 
+                    "Rating": episode['rating'], #Important! 
+                    "Provider": None, 
+                    "Genres": [episode['genre']], #Important! 
+                    "Directors": None, #Important! 
+                    "Availability": None, #Important! 
+                    "Download": None, 
+                    "IsOriginal": None, #Important! 
+                    "IsAdult": None, #Important! 
+                    "IsBranded": None, #Important! (ver link explicativo)
+                    "Packages": [{'Type':'free-vod'}], #Obligatorio 
+                    "Country": None, 
+                    "Timestamp": datetime.now().isoformat(), #Obligatorio 
+                    "CreatedAt": self._created_at, #Obligatorio
+                    }
+                self.episodes_payloads.append(episode_payload)
+                self.episodios += 1
+        ('Temporadas: ' + str(self.totalSeasons))
+        print('Episodios: ' + str(self.episodios))
+        return season_return
 
     def movie_payload(self, item):
         deeplink = self.get_deeplink(item, item['type'])
