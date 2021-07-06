@@ -62,6 +62,12 @@ ott_sites:
   HBO_Fev:
     countries:
       US: us.hbo_fev
+  HboDM:
+    countries:
+      US: us.hbo
+    url: https://www.hbo.com/
+    url_movies: https://www.hbo.com/movies/catalog
+    url_series: https://www.hbo.com/series/all-series
   FlixFling:
     countries:
       US: us.flixfling
