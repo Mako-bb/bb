@@ -23,7 +23,7 @@ class StarzMI():
         - ¿Usa Selenium?: No.
         - ¿Tiene API?: Si.
         - ¿Usa BS4?: No.
-        - ¿Cuanto demoró la ultima vez?. 0.7686223983764648 seconds
+        - ¿Cuanto demoró la ultima vez?. 0.7531681060791016 seconds
         - ¿Cuanto contenidos trajo la ultima vez? titanScraping: 184, titanScrapingEpisodes: 970, CreatedAt: 2021-07-05 .
 
         OTROS COMENTARIOS:
@@ -160,7 +160,7 @@ class StarzMI():
         payload = self.generic_payload(content)
         if seriesBool:
             payload['Year'] = self.get_year_int(content['minReleaseYear'])
-            payload['Seasons'] = len(content['childContent'])
+            payload['Seasons'] = self.season_payload(content)
             payload['Playback'] = None
         else:
             payload['Year'] =  self.get_year_int(content['releaseYear'])
@@ -176,6 +176,7 @@ class StarzMI():
         payload = {
             'PlatformCode': self._platform_code,
             'Id': self.get_id_str(content),
+            'Crew':self.get_crew(content)[2],
             'Title': content['title'],
             'OriginalTitle': content['titleSort'],
             'CleanTitle': _replace(content['title']),
@@ -218,7 +219,7 @@ class StarzMI():
             for epValue in seasonValue['childContent']:
                 episode_duration = self.get_duration(epValue)
                 episode_num = self.get_episode_num(seasonValue['order'],epValue['order'])
-                if self.isDuplicate(self.scraped_episodes,epValue['contentId'])==False and self.isNotTrailer(episode_duration)==False:
+                if (self.isDuplicate(self.scraped_episodes,epValue['contentId']) == False) and (self.isNotTrailer(episode_duration) == False):
                     episode = {
                         'PlatformCode':self._platform_code,
                         'ParentId': self.get_str_parent_id(epValue),
@@ -255,6 +256,27 @@ class StarzMI():
                     self.scraped_episodes.append(episode['Id'])
                 else:pass
 
+    def season_payload(self,content):
+        seasons=content['childContent']
+        seasons_list=[]
+        for season in seasons:
+            s={
+                "Id": season['contentId'], 
+                "Synopsis": season['logLine'], 
+                "Title": season['title'],
+                "Deeplink": None, 
+                "Number": season['order'], 
+                "Year": season['minReleaseYear'], 
+                "Image": None, 
+                "Directors": self.get_crew(season)[1], 
+                "Cast": self.get_crew(season)[0], 
+                "Episodes": season['episodeCount'], 
+                "IsOriginal": season['original'] 
+            }
+            seasons_list.append(s)
+        return seasons_list
+
+    
     def get_rating(self,content):
         '''
             El rating en esta plataforma viene dividido por codigo y sistema,
@@ -302,20 +324,29 @@ class StarzMI():
         return int(year)
 
     def get_crew(self,content):
-        crew=[]
-        cast=[]
         directors=[]
-        for credit in content['credits']:
-            for rols in credit['keyedRoles']:
-                if rols['key'] == 'D':
-                    directors.append(credit['name']) 
-                elif rols['key'] == 'C':
-                        cast.append(credit['name'])
-                else:
-                    pass                  
-        crew.append(cast)
-        crew.append(directors)
-        return crew
+        cast=[]
+        crew=[]
+        all=[]
+        #En algun contenido de seasons rompe al tratar de acceder a credits, probablemente el dato falta, por eso el try catch.
+        try:
+            for credit in content['credits']:
+                for rols in credit['keyedRoles']:
+                    if rols['key'] == 'D':
+                        directors.append(credit['name']) 
+                    elif rols['key'] == 'C':
+                            cast.append(credit['name'])
+                    else:
+                        other={}
+                        other['Role'] = rols['name']
+                        other['Name'] = credit['name']
+                        crew.append(other)
+        except:
+            pass
+        all.append(cast)
+        all.append(directors)
+        all.append(crew)
+        return all
             
     def get_duration(self,content):
         '''
