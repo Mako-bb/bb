@@ -333,14 +333,16 @@ class PlutoNO():
             images = cover.get("url")
             return images            
 
-    def get_duration(self, content_dict):
+    def get_duration(self, content_dict, is_episode=False):
         """
         Verificamos si es una serie, en el caso de que lo sea, dejamos la celda en Null;
         Si es una pelicula, colocamos la duración (habría que ponerla en segundos).
         """
                 
-        if content_dict["type"] == 'series':
+        if content_dict["type"] == 'series' and is_episode == False:
             pass
-        else:
-            return content_dict["duration"]
+        if content_dict["type"] == 'series' and is_episode == True:
+            return int(content_dict["duration"]/60000)
+        if content_dict["type"] == 'movie':
+            return int(content_dict["duration"]/60000)
         

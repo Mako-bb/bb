@@ -458,3 +458,7 @@ ott_sites:
       AR: ar.starz
     url: https://www.starz.com/ar/es/
     all_titles_url: https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/content
+
+  StarzNO: #Naza
+    countries:
+      AR: ar.starz
