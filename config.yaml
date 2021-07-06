@@ -62,12 +62,18 @@ ott_sites:
   HBO_Fev:
     countries:
       US: us.hbo_fev
+<<<<<<< HEAD
   HboDM:
     countries:
       US: us.hbo
     url: https://www.hbo.com/
     url_movies: https://www.hbo.com/movies/catalog
     url_series: https://www.hbo.com/series/all-series
+=======
+  HboMI:
+    countries:
+      US: us.hbo_mi
+>>>>>>> b963d2a68a40983eaef60002f0357f21fe7f270d
   FlixFling:
     countries:
       US: us.flixfling
@@ -468,4 +474,4 @@ ott_sites:
   StarzNO: #Naza
     countries:
       AR: ar.starz
-    api_url: https://playdata.starz.com/metadata-service/play/partner/Web_ES/v8/blocks?playContents=map&lang=es-ES&pages=MOVIES,SERIES&includes=contentId,title,contentType,releaseYear,runtime,logLine,image,ratingCode,genres,actors,directors,original,countryOfOrigin,seriesName,seasonNumber,episodeCount,details
+    api_url: https://playdata.starz.com/metadata-service/play/partner/Web_ES/v8/blocks?playContents=map&lang=es-ES&pages=MOVIES,SERIES&includes=contentId,title,contentType,releaseYear,runtime,logLine,image,ratingCode,genres,actors,directors,original,countryOfOrigin,seriesName,seasonNumber,episodeCount,childContent,details

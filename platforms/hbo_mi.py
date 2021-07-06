@@ -16,9 +16,32 @@ from updates.upload         import Upload
 from handle.datamanager     import Datamanager
 from handle.replace         import _replace
 from selenium               import webdriver
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+
 
 
 class HboMI():
+    """
+    HBO es una ott de Estados Unidos que opera en todo el mundo.
+
+    DATOS IMPORTANTES:
+    - VPN: No
+    - ¿Usa Selenium?: Si.
+    - ¿Tiene API?: No.
+    - ¿Usa BS4?: Si.
+    - ¿Cuanto demoró la ultima vez?.
+    - ¿Cuanto contenidos trajo la ultima vez?.
+
+    OTROS COMENTARIOS:
+    Saco con BS4 unicamente el title y los datos para generar el deeplink. Una vez se tiene el deeplink es necesario usar Selenium
+    para cargarlo y completar el resto de los datos.
+    Al cargarse el deeplink de algunos contenidos no estan disponibles y ofrecen redirigir a HBOMAX.
+    """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self.ott_site_country = ott_site_country
         self._config                = config()['ott_sites'][ott_site_uid]
@@ -53,36 +76,26 @@ class HboMI():
 
     def _scraping(self, testing = False):
         self.payloads = []
+
         self.episodes_payloads = []
-        urls={'docums':'https://www.hbo.com/documentaries/catalog',
-                'movies':'https://www.hbo.com/movies/catalog',
-                'series':'https://www.hbo.com/series/all-series'}
-        self.getContents(urls)
-    
-    def getContents(self,url_dict):
-        for key,val in url_dict.items():
-            source= self.sesion.get(val)
-            soup = BeautifulSoup(source.text, 'html.parser')
-            conteiner= soup.find('div', class_="components/MovieGrid--container")
-            if key=='docums':
-                docums=conteiner.find_all('div',
-                    {'class':'modules/cards/CatalogCard--container modules/cards/DocumentaryCatalogCard--container modules/cards/CatalogCard--notIE modules/cards/CatalogCard--desktop'})
-                self.documsPayloads(docums)
-            elif key=='movies':
-                movies = conteiner.find_all('div',
-                    {'class':'modules/cards/CatalogCard--container modules/cards/MovieCatalogCard--container modules/cards/CatalogCard--notIE modules/cards/CatalogCard--desktop'})
-                self.moviesPayloads(movies)
-            else:
-                series=conteiner.find_all('div',
-                    {'class':'modules/cards/CatalogCard--container modules/cards/SamplingCatalogCard--container modules/cards/CatalogCard--notIE modules/cards/CatalogCard--desktop'})
-                self.seriesPayloads(conteiner)
-    
-    
-    def documsPayloads(self,contents):
-        pass
-    
-    def moviesPayloads(self,contents):
+        self.moviesPayloads()
+        #urls={'docums':'https://www.hbo.com/documentaries/catalog',
+        #        'movies':'https://www.hbo.com/movies/catalog',
+        #        'series':'https://www.hbo.com/series/all-series'}
+
+    def moviesPayloads(self):
+        PATH = 'C:\Program Files\chromedriver.exe'
+        driver = webdriver.Chrome(PATH)
+        req = self.sesion.get('https://www.hbo.com/movies/catalog')
+        soup = BeautifulSoup(req.text, 'html.parser')
+        conteiner= soup.find('div', class_="components/MovieGrid--container")
+        contents=conteiner.find_all('div',{'class':'modules/cards/CatalogCard--container modules/cards/MovieCatalogCard--container modules/cards/CatalogCard--notIE modules/cards/CatalogCard--desktop'})
+        counter=0
         for content in contents:
+            image_list=[]
+            status=True
+            if counter==10:
+                return 1
             title = content.find('p', {'class':'modules/cards/CatalogCard--title'}).text
             title_depurate=self.depurateTitle(title)
             deeplink = 'https://www.hbo.com/movies/{}'.format(title_depurate)
@@ -91,45 +104,61 @@ class HboMI():
                 'Android': None,
                 'iOS': None,
             }
-            req_info = self.sesion.get(deeplink)
-            soup_info = BeautifulSoup(req_info.text, 'html.parser')
-            image_conteiner=soup_info.find('svg', {'id':'blurredBackground'})
-            image_url=image_conteiner.find('image')['href']
-            details_container=soup_info.find('div', {'class':'modules/InfoSlice--assetDetails'})
-            childsList=details_container.find_all('span',{'class':'components/AiringDetailsBlock--detailsText'})
-            genres=''
-            rating=''
-            duration=''
-            year=''
-            type_='movie'
-            sinop = soup_info.find('div', {'class':'modules/Text--text modules/Text--headerHeavy components/RichText--richText'})
-            payload = self.generic_payload()
-            packages=self.get_packages()
-            self.payloads.append(self.generic_payload(None,None,title,None,type_,year,duration,None,deeplinksDict,sinop,image_url,rating,genres,None,None,None,None,None,None,None))
+            try:
+                driver.get(deeplink)
+                time.sleep(20)
+                html=driver.page_source
+                soup_info = BeautifulSoup(html, 'html.parser')
+            except:
+                status=False
+            if status:
+                details = soup_info.find('div', {'class':'components/AiringDetailsBlock--airingDetailsBlock'})
+                childs = details.find_all('span', attrs={'class':'components/AiringDetailsBlock--detailsText'})
+                image_conteiner=soup_info.find('div', {'class':'components/HeroImage--heroImageContainer'})
+                image=image_conteiner.find('image')
+                imgage_url=image['xlink:href']
+                if '/content/dam' in imgage_url:
+                    imgage_url= 'https://www.hbo.com'+imgage_url
+                image_list.append(imgage_url)
+                self.get_details(childs)
+                type_='movie'
+                packages=self.get_packages()
+                #self.payloads.append(self.generic_payload(None,None,title,None,type_,year,duration,None,deeplinksDict,sinop,image_list,rating,genres,None,None,None,None,None,None,None))
+            else:
+                pass
+            counter+=1
 
-    
     def seriesPayloads(self,contents):
+        #conteiner.find_all('div',{'class':'modules/cards/CatalogCard--container modules/cards/SamplingCatalogCard--container modules/cards/CatalogCard--notIE modules/cards/CatalogCard--desktop'})
         pass
 
+    def documsPayloads(self,contents):
+        #conteiner.find_all('div',{'class':'modules/cards/CatalogCard--container modules/cards/DocumentaryCatalogCard--container modules/cards/CatalogCard--notIE modules/cards/CatalogCard--desktop'})
+        pass
 
     def depurateTitle(self, title):
-        chars=' *,./\|&¬!"£$%^()_+{@:<>?[]}`=;¿'
-        title=title.lower()#paso el titulo original a minusculas
-        newTitle=''
-        if '-' in title:#primero elimino los guiones que vengan con el titulo original
-            title=title.replace('-'," ")
-        for c in chars:#luego elimino el resto de los caracteres especiales
-            title=title.replace(c,'-')
-        if "'" in title:#elimino los apostrofes simples que quedan fuera de la lista de caracteres especiales, este paso quizas se pueda evitar de otro modo.
-            title=title.replace("'","")
-        for i in range(len(title)):#por ultimo elimino los dobles guiones medios que puedan llegar a quedar y almaceno el titulo final depurado en la variable nueva
-            if i>0: 
-                if newTitle[0]=='-':
-                    newTitle=''
+        title = title.lower()
+        chars = ' *.,!/\|¬"£$%^_+{@<>:;¿?[]()}`='
+        special1 = "'"
+        special2 = '&'
+        newTitle = '' 
+        if special1 in title:
+            title = title.replace(special1,'')
+        if special2 in title:
+            title = title.replace(special2,'and')
+        if '-' in title:
+            title = title.replace('-'," ")
+        for c in chars:
+            title = title.replace(c,'-')
+        for i in range(len(title)):
             if title[i - 1] =='-' and title[i]=='-':
-                newTitle+=""
+                newTitle += ""
             else:
-                newTitle+=title[i]
+                newTitle += title[i]
+        if newTitle[-1]=='-':
+            newTitle = newTitle[:-1]
+        if newTitle[0]=='-':
+            newTitle = newTitle[1:]
         return newTitle
     
     def generic_payload(self,id_,crew,title,originalTitle,type_,year,duration,externalIds,deeplinks,
@@ -203,7 +232,11 @@ class HboMI():
             Se hardcodea el package hasta averiguar como conseguirlo apropiadamente.
         '''
         return [{'Type':'subscription-vod'}]
-    '''    
-    def validateData(self, descriptions_list,type_content):
+
+    def get_details(self, content_details):
+        #genres=''
+        #rating=''
+        #duration=''
+        #year=''        
+        #sinop = soup_info.find('div', {'class':'modules/Text--text modules/Text--headerHeavy components/RichText--richText'})
         pass
-    '''
