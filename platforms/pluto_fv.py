@@ -204,13 +204,14 @@ class PlutoFV():
         seasons = items['seasons'] 
         self.totalSeasons = 0
         for season in seasons:
+            deeplink_season = self.get_deeplink(item, item['slug'], season['number'])
             self.totalSeasons += 1
-            #deeplink_season = self.get_deeplink(item, item['type'], 'numeber')
+            title_season = str(items['name']) + ": Season " + str(season['number'])
             season_payload = {
                 "Id": items['_id'], #Importante
                 "Synopsis": items['summary'], #Importante
-                "Title": items['name'], #Importante, E.J. The Wallking Dead: Season 1
-                "Deeplink": None, #deeplink_season, #Importante
+                "Title": title_season, #Importante, E.J. The Wallking Dead: Season 1
+                "Deeplink": deeplink_season, #Importante
                 "Number": season['number'], #Importante
                 "Year": None, #Importante
                 "Image": None, 
@@ -223,13 +224,13 @@ class PlutoFV():
             self.episodios = 0
             for episode in season['episodes']:
                 duration = self.get_duration(episode)
-                #deeplink = self.get_deeplink(episode, 'episode', season)
+                deeplink = self.get_deeplink(item, episode['type'], season=season, episode=episode)
                 image = self.get_image(episode, 'episode')
                 episode_payload = { 
                     "PlatformCode": self._platform_code, #Obligatorio 
                     "Id": episode['_id'], #Obligatorio
-                    "ParentId": id, #Obligatorio #Unicamente en Episodios
-                    "ParentTitle": None, #Unicamente en Episodios 
+                    "ParentId": item['_id'], #Obligatorio #Unicamente en Episodios
+                    "ParentTitle": item['name'], #Unicamente en Episodios 
                     "Episode": episode['number'] if episode['number'] != 0 else None, #Obligatorio #Unicamente en Episodios 
                     "Season": episode['season'], #Obligatorio #Unicamente en Episodios
                     "Title": episode['name'], #Obligatorio o 
@@ -239,15 +240,15 @@ class PlutoFV():
                     "Duration": duration,
                     "ExternalIds": None,
                     "Deeplinks": { 
-                    "Web": None, #Obligatorio 
+                    "Web": deeplink, #Obligatorio 
                     "Android": None, 
                     "iOS": None, 
                     }, 
                     "Synopsis": episode['description'], 
-                    "Image": [image], 
+                    "Image": image, 
                     "Rating": episode['rating'], #Important! 
                     "Provider": None, 
-                    "Genres": [episode['genre']], #Important! 
+                    "Genres": episode['genre'], #Important! 
                     "Directors": None, #Important! 
                     "Availability": None, #Important! 
                     "Download": None, 
@@ -304,15 +305,15 @@ class PlutoFV():
             }
         self.payloads.append(payload)
 
-    def get_deeplink(self, item, type, season = None):
+    def get_deeplink(self, item, type, season=None, episode=None):
         if type == 'movie':
             deeplink = 'https://pluto.tv/es/on-demand/movies/' + str(item['slug']) + '/details'
         elif type == 'serie':
             deeplink = 'https://pluto.tv/es/on-demand/series/' + str(item['slug']) + '/details'
-        #elif type == 'episode': #revisar!!!!!!!!!!!!!!!!!!!!
-            #deeplink = 'https://pluto.tv/es/on-demand/series/' + str(item['slug']) + '/details/season/' + str(season) + '/episode/' + str(item['slug'])
-        elif type == 'season':
-            deeplink = 'https://pluto.tv/es/on-demand/series/' + str(item['slug']) + '/details/season/' + str('number')
+        elif type == 'episode':
+            deeplink = 'https://pluto.tv/es/on-demand/series/' + str(item['slug']) + '/season/' + str(season['number']) + '/episode/' + str(episode['slug'])
+        else:
+            deeplink = 'https://pluto.tv/es/on-demand/series/' + str(item['slug']) + '/details/seasons/' + str(season)
         return deeplink
 
     def get_image(self, item, type):
