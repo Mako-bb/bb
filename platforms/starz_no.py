@@ -222,16 +222,16 @@ class StarzNO():
 
                 # Traigo los episodios en caso de ser serie: # Preguntar mañana el tema de que si ya está la id, no corre lo otro.
                 if payload["Type"] == 'serie':
-                    try:
-                        for contenidos in self.get_seasons(content, self.season_api_url):
+                   # try:
+                        for contenidos in self.get_seasons(content, self.api_url):
                             for episode in contenidos:
                                 if episode["contentId"] in self.scraped_episodes:
                                     print("Ya ingresado")
                                 else:
                                     self.scraped_episodes.append(episode["contentId"])
                                     self.episodes_payloads.append(self.get_payload_episodes(content, episode))
-                    except:
-                        pass
+                  #  except:
+                    #    pass
 
 
 
@@ -264,19 +264,17 @@ class StarzNO():
             contents.append(all_content)
         return contents
 
-    def get_seasons(self):
+    def get_seasons(self, content, slug):
         episodes = []
         response = self.session.get(self.api_url)
         contents_metadata = response.json()        
         categories = contents_metadata['blocks'][2]['playContentsById']
         
-        for item in categories:
-            all_content = categories[str(item)]
+        
         try:
-            seasons = all_content['childContent']
-
-            
-            episodes.append(seasons)
+            if content['childContent']:
+                seasons = content['childContent']
+                episodes.append(seasons)
             
             return episodes
         except:
@@ -319,8 +317,8 @@ class StarzNO():
         payload['CleanTitle'] = _replace(content_dict["title"])
         payload['Duration'] = self.get_duration(content_dict)
         payload['Type'] = self.get_type(content_dict["contentType"]) 
-        payload['Year'] = content_dict["releaseYear"]
-        payload['Deeplinks'] = self.get_deeplinks(content_dict)
+        payload['Year'] = self.get_year(content_dict)
+        payload['Deeplinks'] = None #self.get_deeplinks(content_dict)
         payload['Playback'] = None
         payload['Synopsis'] = content_dict["logLine"]
         payload['Image'] = None
@@ -335,12 +333,15 @@ class StarzNO():
         payload['IsBranded'] = None
         payload['IsAdult'] = None
         payload['Packages'] = [{"Type":"subscription-vod"}]
-        payload['Country'] = content_dict["countryOfOrigin"]
-        payload['Crew'] = self.get_cast(content_dict)        
+        payload['Country'] = self.get_country(content_dict)
+        payload['Crew'] = None #self.get_crew(content_dict)        
         payload['Timestamp'] = datetime.now().isoformat()
         payload['CreatedAt'] = self._created_at
 
-        print(f"Url: {payload['Deeplinks']['Web']}")
+        #Tengo que crear (o mejorar) el get de:
+        #Deeplinks, crew
+
+        #print(f"Url: {payload['Deeplinks']['Web']}")
         print(f"{payload['Type']}:\t{payload['Title']}")
 
         return payload
@@ -391,16 +392,16 @@ class StarzNO():
 
     def get_deeplinks(self, content_dict):
         url = "https://pluto.tv/on-demand"
-        if content_dict["type"] == 'movie':
+        if content_dict["contentType"] == 'movie':
             deeplinks = {
-                    "Web": url + "/" + content_dict["type"] + "s" + "/" + content_dict["slug"],
+                    "Web": url + "/" + content_dict["contentType"] + "s" + "/" + content_dict["slug"],
                     "Android": None,
                     "iOS": None,
                 }
             return deeplinks
         else:
             deeplinks = {
-                    "Web": url + "/" + content_dict["type"] + "/" + content_dict["slug"],
+                    "Web": url + "/" + content_dict["contentType"] + "/" + content_dict["slug"],
                     "Android": None,
                     "iOS": None,
                 }
@@ -412,16 +413,7 @@ class StarzNO():
             return 'serie'
         else:
             return type_
-    
-    # def get_episodes(self, content_dict):        
-    #     # 1) Hacer consulta a los episodios scrapeados (self.scraped_episodes):
-    #     # self.episodes_payloads
-    #     # 2) Si no existen, agregar los episodios a self.episodes_payloads.
-    #     if "¿Existe ese episodio?" in self.scraped_episodes:
-    #         print("Ya ingresado")
-    #     else:
-    #         print("TRAER EPISODIO/S")
-            
+                
       
 
     def get_duration(self, content_dict, is_episode=False):
@@ -430,10 +422,50 @@ class StarzNO():
         Si es una pelicula, colocamos la duración (habría que ponerla en segundos).
         """
                 
-        if content_dict["type"] == 'series' and is_episode == False:
+        if content_dict["contentType"] == 'series' and is_episode == False:
             pass
-        if content_dict["type"] == 'series' and is_episode == True:
+        if content_dict["contentType"] == 'series' and is_episode == True:
             return int(content_dict["runtime"]/60)
-        if content_dict["type"] == 'movie':
+        if content_dict["contentType"] == 'movie':
             return int(content_dict["runtime"]/60)
-              
+
+
+    def get_genres(self, content_dict):
+        for item in content_dict["genres"]:
+            all_genres = str(item)
+            
+            return all_genres
+
+    
+    def get_cast(self, content_dict):
+        try:
+            for item in content_dict["actors"]:
+                all_cast = str(item)
+                
+                return all_cast
+        except:
+            pass        
+
+    def get_directors(self, content_dict):
+        try:
+            for item in content_dict["directors"]:
+                all_directors = str(item)
+                
+                return all_directors
+        except:
+            pass
+
+
+    def get_year(self, content_dict):
+        try:
+            year = content_dict["releaseYear"]
+            return year
+        except:
+            pass    
+
+    def get_country(self, content_dict):
+        try:
+            country = content_dict["countryOfOrigin"]
+            return country
+        except:
+            pass    
