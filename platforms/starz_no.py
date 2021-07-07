@@ -332,7 +332,7 @@ class StarzNO():
         payload['Duration'] = self.get_duration(content_dict)
         payload['Type'] = self.get_type(content_dict["contentType"]) 
         payload['Year'] = self.get_year(content_dict)
-        payload['Deeplinks'] = None #self.get_deeplinks(content_dict)
+        payload['Deeplinks'] = self.get_deeplinks(content_dict)
         payload['Playback'] = None
         payload['Synopsis'] = content_dict["logLine"]
         payload['Image'] = None
@@ -353,9 +353,9 @@ class StarzNO():
         payload['CreatedAt'] = self._created_at
 
         #Tengo que crear (o mejorar) el get de:
-        #Deeplinks, crew
+        #crew
 
-        #print(f"Url: {payload['Deeplinks']['Web']}")
+        
         print(f"{payload['Type']}:\t{payload['Title']}")
 
         return payload
@@ -374,14 +374,14 @@ class StarzNO():
         # Indica si el payload a completar es un episodio:        
         episode_payloads['PlatformCode'] = self._platform_code
         episode_payloads['Id'] = episode_dict["contentId"]
-        episode_payloads['Title'] = episode_dict["title"]
+        episode_payloads['Title'] = self.get_title_episodes(content_dict, episode_dict)
         episode_payloads['Duration'] = self.get_duration(episode_dict)
         episode_payloads["ParentTitle"] = content_dict["title"]
         episode_payloads["ParentId"] = content_dict["contentId"]
         episode_payloads["Season"] = episode_dict["seasonNumber"]
         episode_payloads["Episode"] = None
         episode_payloads['Year'] = self.get_year(episode_dict)
-        episode_payloads['Deeplinks'] = None #self.get_deeplinks(content_dict)
+        episode_payloads['Deeplinks'] = self.get_deeplinks_episodes(content_dict, season_dict ,episode_dict)
         episode_payloads['Playback'] = None
         episode_payloads['Synopsis'] = episode_dict["logLine"]
         episode_payloads['Image'] = None 
@@ -399,52 +399,72 @@ class StarzNO():
         episode_payloads['Timestamp'] = datetime.now().isoformat()
         episode_payloads['CreatedAt'] = self._created_at
 
-        #'print(f"Url: {episode_payloads['Deeplinks']['Web']}")
+        
         print(f"{episode_payloads['Id']}:\t{episode_payloads['Title']}")
         
         return episode_payloads
 
     def get_deeplinks(self, content_dict):
-        url = "https://pluto.tv/on-demand"
-        if content_dict["contentType"] == 'movie':
-            deeplinks = {
-                    "Web": url + "/" + content_dict["contentType"] + "s" + "/" + content_dict["slug"],
-                    "Android": None,
-                    "iOS": None,
-                }
-            return deeplinks
-        else:
-            deeplinks = {
-                    "Web": url + "/" + content_dict["contentType"] + "/" + content_dict["slug"],
-                    "Android": None,
-                    "iOS": None,
-                }
-            return deeplinks
+        """
+        Cree una función para traer los deeplinks, pero, como no puedo conseguir el dato de los episodios,
+        el deeplink de episodios no estaría funcionando.
 
+        Los separe en dos modulos distintos por un tema de argumentos.
+        """
+        url = "https://www.starz.com/us/en/"
+        if content_dict["contentType"] == 'Movie':
+            deeplinks = {
+                    "Web": url + content_dict["contentType"] + "s" + "/" + content_dict["title"].replace(" ", "-") + "-" + str(content_dict["contentId"]),
+                    "Android": None,
+                    "iOS": None,
+                }
+            return deeplinks
+        if content_dict["contentType"] == 'Series with Season':
+            deeplinks = {
+                    "Web": url + "/" + content_dict["contentType"] + "/" + _replace(content_dict["title"]) + "/" + str(content_dict["contentId"]),
+                    "Android": None,
+                    "iOS": None,
+                }
+            return deeplinks
+    def get_deeplinks_episodes(self, content_dict, season_dict , episode_dict):
+
+        url = "https://www.starz.com/us/en/"
+
+        if content_dict["contentType"] == 'Series with Season':
+            deeplinks = {
+                    "Web": url + content_dict["contentType"] + "s" + "/" + content_dict["title"].replace(" ", "-") + "/" + "season-" + str(episode_dict["seasonNumber"]) + "/" + "episode-" + "1" + str(episode_dict["contentId"]),
+                    "Android": None,
+                    "iOS": None,
+                }
+            return deeplinks
 
     def get_type(self, type_):
-        if type_ == 'Series with Season': # Se puede solucionar con regex.
+        if type_ == 'Series with Season': 
             return 'serie'
         else:
             return type_
                 
       
 
-    def get_duration(self, content_dict, is_episode=False):
+    def get_duration(self, content_dict):
         """
         Verificamos si es una serie, en el caso de que lo sea, dejamos la celda en Null;
-        Si es una pelicula, colocamos la duración (habría que ponerla en segundos).
+        Si es una pelicula, colocamos la duración.
         """
                 
-        if content_dict["contentType"] == 'series' and is_episode == False:
+        if content_dict["contentType"] == 'Series with Season':
             pass
-        if content_dict["contentType"] == 'series' and is_episode == True:
+        if content_dict["contentType"] == 'Episode':
             return int(content_dict["runtime"]/60)
-        if content_dict["contentType"] == 'movie':
+        if content_dict["contentType"] == 'Movie':
             return int(content_dict["runtime"]/60)
 
 
     def get_genres(self, content_dict):
+        """
+        Cree una función para traer los generos, se hace un bucle, se retiran caracteres innecesarios y
+        se agrega a una lista
+        """
         genres = []
         for item in content_dict["genres"]:
             content = str(item)
@@ -456,6 +476,10 @@ class StarzNO():
 
     
     def get_cast(self, content_dict):
+        """
+        Cree una función para traer los actores (Cast), se hace un bucle, se retiran caracteres innecesarios y
+        se agrega a una lista
+        """
         try:
             cast = []
             for item in content_dict["actors"]:
@@ -469,6 +493,10 @@ class StarzNO():
             pass        
 
     def get_directors(self, content_dict):
+        """
+        Cree una función para traer los directores, se hace un bucle, se retiran caracteres innecesarios y
+        se agrega a una lista
+        """
         try:
             directors = []
             for item in content_dict["directors"]:
@@ -495,3 +523,11 @@ class StarzNO():
             return country
         except:
             pass    
+
+    
+    def get_title_episodes(self, content_dict, episode_dict):
+        title = episode_dict["title"]
+        if "Tráiler" in title or episode_dict["runtime"]/60 < 10:
+            pass
+        else:
+            return title
