@@ -378,28 +378,28 @@ class StarzNO():
         episode_payloads['Duration'] = self.get_duration(episode_dict)
         episode_payloads["ParentTitle"] = content_dict["title"]
         episode_payloads["ParentId"] = content_dict["contentId"]
-        #episode_payloads["Season"] = episode_dict["season"]
-        episode_payloads["Episode"] = episode_dict["number"]
-        episode_payloads['Year'] = None
-        episode_payloads['Deeplinks'] = self.get_deeplinks(content_dict)
+        episode_payloads["Season"] = episode_dict["seasonNumber"]
+        episode_payloads["Episode"] = None
+        episode_payloads['Year'] = self.get_year(episode_dict)
+        episode_payloads['Deeplinks'] = None #self.get_deeplinks(content_dict)
         episode_payloads['Playback'] = None
-        episode_payloads['Synopsis'] = None
-        episode_payloads['Image'] = self.get_images(episode_dict)
-        episode_payloads['Rating'] = episode_dict["rating"]
+        episode_payloads['Synopsis'] = episode_dict["logLine"]
+        episode_payloads['Image'] = None 
+        episode_payloads['Rating'] = episode_dict["ratingCode"]
         episode_payloads['Provider'] = None
-        episode_payloads['Genres'] = episode_dict["genre"]
-        episode_payloads['Cast'] = None
-        episode_payloads['Directors'] = None
+        episode_payloads['Genres'] = self.get_genres(episode_dict)
+        episode_payloads['Cast'] = self.get_cast(episode_dict)
+        episode_payloads['Directors'] = self.get_directors(episode_dict)
         episode_payloads['Availability'] = None
         episode_payloads['Download'] = None
         episode_payloads['IsOriginal'] = None
         episode_payloads['IsAdult'] = None
-        episode_payloads['Packages'] = [{'Type': 'free-vod'}]
-        episode_payloads['Country'] = None
+        episode_payloads['Packages'] = [{'Type': 'subscription-vod'}]
+        episode_payloads['Country'] = self.get_country(episode_dict)
         episode_payloads['Timestamp'] = datetime.now().isoformat()
-        episode_payloads['CreatedAt'] = None
+        episode_payloads['CreatedAt'] = self._created_at
 
-        print(f"Url: {episode_payloads['Deeplinks']['Web']}")
+        #'print(f"Url: {episode_payloads['Deeplinks']['Web']}")
         print(f"{episode_payloads['Id']}:\t{episode_payloads['Title']}")
         
         return episode_payloads
@@ -445,27 +445,39 @@ class StarzNO():
 
 
     def get_genres(self, content_dict):
+        genres = []
         for item in content_dict["genres"]:
-            all_genres = str(item)
+            content = str(item)
+            genre_replace = content.replace("description': ", "")
+            genre_strip = genre_replace.strip("'}{")
+            genres.append(genre_strip)
             
-            return all_genres
+        return genres
 
     
     def get_cast(self, content_dict):
         try:
+            cast = []
             for item in content_dict["actors"]:
-                all_cast = str(item)
-                
-                return all_cast
+                content = str(item)
+                actor_split = content.split(": '")
+                actor = actor_split[1].strip("'}]")
+                cast.append(actor)
+
+            return cast
         except:
             pass        
 
     def get_directors(self, content_dict):
         try:
+            directors = []
             for item in content_dict["directors"]:
-                all_directors = str(item)
+                content = str(item)
+                director_split = content.split(": '")
+                director = director_split[1].strip("'}]")
+                directors.append(director)
                 
-                return all_directors
+            return directors
         except:
             pass
 
