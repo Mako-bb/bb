@@ -452,9 +452,17 @@ ott_sites:
     all_episodes_url2: https://service-vod.clusters.pluto.tv/v3/vod/series/{}/seasons?advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=c636f54d-adcd-4b30-b2cd-02cf58d954f4&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=c636f54d-adcd-4b30-b2cd-02cf58d954f4&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.114&marketingRegion=VE&serverSideAds=true&sessionID=be85a5ba-d44b-11eb-8a41-0242ac110002&sid=be85a5ba-d44b-11eb-8a41-0242ac110002&userId=&attributeV4=foo
     all_episodes_url: https://service-vod.clusters.pluto.tv/v3/vod/slugs/
     all_titles_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=087a349a-f41e-4d03-8213-2d8330d86e68&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=087a349a-f41e-4d03-8213-2d8330d86e68&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.114&marketingRegion=VE&serverSideAds=true&sessionID=f76850cd-d39e-11eb-9515-0242ac110002&sid=f76850cd-d39e-11eb-9515-0242ac110002&userId=&attributeV4=foo     
-
   StarzPQ: #Patricio
     countries:
       AR: ar.starz
     url: https://www.starz.com/ar/es/
     all_titles_url: https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/content
+  HBOPQ: #Patricio
+    countries:
+      AR: ar.hbo
+    url: https://www.hbo.com/
+    all_movies: https://www.hbo.com/movies/catalog
+    info_movie: https://www.hbo.com/movies/
+    all_documentaries: https://www.hbo.com/documentaries/catalog
+    all_series: https://www.hbo.com/series/all-series
+    
