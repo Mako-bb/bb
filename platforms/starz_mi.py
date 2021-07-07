@@ -219,7 +219,7 @@ class StarzMI():
             for epValue in seasonValue['childContent']:
                 episode_duration = self.get_duration(epValue)
                 episode_num = self.get_episode_num(seasonValue['order'],epValue['order'])
-                if self.isDuplicate(self.scraped_episodes,epValue['contentId'])==False and self.isNotTrailer(episode_duration)==False:
+                if (self.isDuplicate(self.scraped_episodes,epValue['contentId']) == False) and (self.isNotTrailer(episode_duration) == False):
                     episode = {
                         'PlatformCode':self._platform_code,
                         'ParentId': self.get_str_parent_id(epValue),

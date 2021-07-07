@@ -19,7 +19,7 @@ class PlutoDM():
     - ¿Tiene API?: Si. Tiene 2, una general en donde se ven las series y peliculas,
       y otra específica de las series, donde se obtienen los cap. de las mismas.
     - ¿Usa BS4?: No.
-    - ¿Cuanto demoró la ultima vez? tiempo + fecha.
+    - ¿Cuanto demoró la ultima vez? 184.65199732780457 segundos, el 6/7/2021.
     - ¿Cuanto contenidos trajo la ultima vez?:
         -Fecha: 29/6/2021
         -Episodios: 19.990
@@ -30,6 +30,9 @@ class PlutoDM():
     """
 
     def __init__(self, ott_site_uid, ott_site_country, type):
+
+        self.initial_time = time.time()
+
         self.ott_site_uid = ott_site_uid
         self.ott_site_country = ott_site_country
         self._config = config()['ott_sites'][ott_site_uid]
@@ -147,6 +150,10 @@ class PlutoDM():
         self.session.close()
         Upload(self._platform_code, self._created_at, testing=True)
 
+        end_time = time.time()
+        time_execute = end_time - self.initial_time
+        print('el tiempo de ejecución es de: '+ str(time_execute) + ' segundos.')
+
     '''
     Hace un request a la api_url "general" de las series/peliculas y devuelve
     una lista con todas las categorías
@@ -169,7 +176,7 @@ class PlutoDM():
         payload = {
             "PlatformCode": str(self._platform_code),
             "Id": str(content['_id']),
-            "Title": str(content['name']),
+            "Title": self.get_title(content),
             "CleanTitle": _replace(content['name']),
             "OriginalTitle": None,
             "Type": str(self.get_type(content['type'])),
@@ -185,7 +192,7 @@ class PlutoDM():
             "Image": self.get_images(content),
             "Rating": str(content['rating']),
             "Provider": None,
-            "Genres": [content['genre']],
+            "Genres": self.get_genres(content),#[content['genre']],
             "Cast": None,
             "Directors": None,
             "Availability": None,
@@ -201,6 +208,48 @@ class PlutoDM():
         
         return payload
 
+    def get_title(self, content, is_episode=False):
+
+        if content['type'] == 'series' or content['type'] == 'movie':
+            if ' (' in content['name']:
+                name_list = content['name'].split(' (')
+                name_list.pop()
+                name_list = ' '.join([str(elem) for elem in name_list])
+                print(name_list)
+
+                return name_list
+            else:
+                return content['name']
+            
+        elif is_episode:
+            if ' (' in is_episode['name']:
+                name_list = is_episode['name'].split(' (')
+                name_list.pop()
+                name_list = ' '.join([str(elem) for elem in name_list])
+                print(name_list)
+
+                return name_list
+            else:
+                return content['name']
+
+        else:
+            return content['genre']
+
+
+    def get_genres(self, content, is_episode=False):
+
+        if content['type'] == 'series' or content['type'] == 'movie':
+            if '&' in content['genre']:
+                return content['genre'].split(' & ')
+        
+        elif is_episode:
+            if '&' in is_episode['genre']:
+                return is_episode['genre'].split(' & ')
+        
+        else:
+            return content['genre']
+        
+
     def get_packages(self):
 
         '''
@@ -214,10 +263,16 @@ class PlutoDM():
         images = []
         if is_episode:
             for cover in is_episode['covers']:
-                images.append(cover['url'])
+                if '/poster.jpg' in cover['url']:
+                    pass
+                else:
+                    images.append(cover['url'])
         else:
             for cover in content_['covers']:
-                images.append(cover['url'])
+                if '/poster.jpg' in cover['url']:
+                    pass
+                else:
+                    images.append(cover['url'])
 
         return images
 
@@ -257,12 +312,12 @@ class PlutoDM():
         else:
             return int(content['duration']/60000)
 
-    '''
-    Método que toma el "slug title" y lo transforma para obtener el originalTitle,
-    de momento no funciona correctamente, así que dejo "None"
-    '''
-    def original_title(self,films):
 
+    def original_title(self,films):
+        '''
+        Método que toma el "slug title" y lo transforma para obtener el originalTitle,
+        de momento no funciona correctamente, así que dejo "None"
+        '''
         lista_slug = films['slug'].split('-')
         no_deseados = ['1','2','ptv1','ptv3','latam']
         for indeseado in no_deseados:
@@ -330,7 +385,7 @@ class PlutoDM():
             "Image": self.get_images(content, is_episode=episodes),
             "Rating": str(episodes['rating']),
             "Provider": None,
-            "Genres": [episodes['genre']],
+            "Genres": self.get_genres(content, is_episode=episodes),
             "Cast": None,
             "Directors": None,
             "Availability": None,

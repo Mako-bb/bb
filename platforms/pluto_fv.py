@@ -160,11 +160,11 @@ class PlutoFV():
         image = self.get_image(item, 'serie')
         deeplink = self.get_deeplink(item, 'serie')
         print('Serie: ' + item['name'])
-        seasons = self.get_contents(self, item, item['_id'])
+        seasons = self.get_seasons(item)
         serie_payload = {
             "PlatformCode": self._platform_code, #Obligatorio 
             "Id": item['_id'], #Obligatorio
-            "Seasons": item['seasonsNumbers'],
+            "Seasons": seasons,
             "Title": item['name'], #Obligatorio 
             "CleanTitle": _replace(item['name']), #Obligatorio 
             "OriginalTitle": item['name'], 
@@ -196,19 +196,41 @@ class PlutoFV():
         }
         self.payloads.append(serie_payload)
 
-
-    def get_esisode_payload(self, item, _id):
-        uri = f"https://service-vod.clusters.pluto.tv/v3/vod/series/{_id}//seasons?advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=381c83d6-6a14-44b9-897a-c4b9f0bc021a&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=381c83d6-6a14-44b9-897a-c4b9f0bc021a&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.124&marketingRegion=VE&serverSideAds=true&sessionID=d0fb398c-db3a-11eb-8941-0242ac110002&sid=d0fb398c-db3a-11eb-8941-0242ac110002&userId=&attributeV4=foo"
-        
-        for episode in serie:
-                image = self.get_image(episode, 'episode')
+    def get_seasons(self, item):
+        season_return = []
+        uri = 'https://service-vod.clusters.pluto.tv/v3/vod/series/' + str(item['_id']) + '/seasons?advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=381c83d6-6a14-44b9-897a-c4b9f0bc021a&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=381c83d6-6a14-44b9-897a-c4b9f0bc021a&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.124&marketingRegion=VE&serverSideAds=true&sessionID=d0fb398c-db3a-11eb-8941-0242ac110002&sid=d0fb398c-db3a-11eb-8941-0242ac110002&userId=&attributeV4=foo'
+        uri_req = self.request(uri)
+        items = uri_req.json() 
+        seasons = items['seasons'] 
+        self.totalSeasons = 0
+        for season in seasons:
+            deeplink_season = self.get_deeplink(item, item['slug'], season['number'])
+            self.totalSeasons += 1
+            title_season = str(items['name']) + ": Season " + str(season['number'])
+            season_payload = {
+                "Id": items['_id'], #Importante
+                "Synopsis": items['summary'], #Importante
+                "Title": title_season, #Importante, E.J. The Wallking Dead: Season 1
+                "Deeplink": deeplink_season, #Importante
+                "Number": season['number'], #Importante
+                "Year": None, #Importante
+                "Image": None, 
+                "Directors": None, #Importante
+                "Cast": None, #Importante
+                "Episodes": len(season['episodes']), #Importante
+                "IsOriginal": None 
+            },
+            season_return.append(season_payload)
+            self.episodios = 0
+            for episode in season['episodes']:
                 duration = self.get_duration(episode)
-                deeplink = self.get_deeplink(episode,  item['type'])
+                deeplink = self.get_deeplink(item, episode['type'], season=season, episode=episode)
+                image = self.get_image(episode, 'episode')
                 episode_payload = { 
                     "PlatformCode": self._platform_code, #Obligatorio 
                     "Id": episode['_id'], #Obligatorio
-                    "ParentId": id, #Obligatorio #Unicamente en Episodios
-                    "ParentTitle": parentTitle, #Unicamente en Episodios 
+                    "ParentId": item['_id'], #Obligatorio #Unicamente en Episodios
+                    "ParentTitle": item['name'], #Unicamente en Episodios 
                     "Episode": episode['number'] if episode['number'] != 0 else None, #Obligatorio #Unicamente en Episodios 
                     "Season": episode['season'], #Obligatorio #Unicamente en Episodios
                     "Title": episode['name'], #Obligatorio o 
@@ -216,9 +238,9 @@ class PlutoFV():
                     "Type": episode['type'], #Obligatorio 
                     "Year": None, #Important! 
                     "Duration": duration,
-                    "ExternalIds": deeplink,
+                    "ExternalIds": None,
                     "Deeplinks": { 
-                    "Web": None, #deeplink, #Obligatorio 
+                    "Web": deeplink, #Obligatorio 
                     "Android": None, 
                     "iOS": None, 
                     }, 
@@ -239,7 +261,11 @@ class PlutoFV():
                     "CreatedAt": self._created_at, #Obligatorio
                     }
                 self.episodes_payloads.append(episode_payload)
-  
+                self.episodios += 1
+        ('Temporadas: ' + str(self.totalSeasons))
+        print('Episodios: ' + str(self.episodios))
+        return season_return
+
     def movie_payload(self, item):
         deeplink = self.get_deeplink(item, item['type'])
         duration = self.get_duration(item)
@@ -254,7 +280,7 @@ class PlutoFV():
             "Type": item['type'], #Obligatorio 
             "Year": None, #Important! 
             "Duration": duration,
-            "ExternalIds": None,  #No estoy seguro de si es
+            "ExternalIds": None, 
             "Deeplinks": { 
             "Web": deeplink, #Obligatorio 
             "Android": None, 
@@ -279,15 +305,15 @@ class PlutoFV():
             }
         self.payloads.append(payload)
 
-    def get_deeplink(self, item, type):
+    def get_deeplink(self, item, type, season=None, episode=None):
         if type == 'movie':
             deeplink = 'https://pluto.tv/es/on-demand/movies/' + str(item['slug']) + '/details'
         elif type == 'serie':
             deeplink = 'https://pluto.tv/es/on-demand/series/' + str(item['slug']) + '/details'
-        elif type == 'episode': #revisar!!!!!!!!!!!!!!!!!!!!
-            deeplink = 'https://pluto.tv/es/on-demand/series/' + str(item['slug']) + '/details/season/' + str(season) + '/episode/' + str(item['slug'])
-        #elif type == 'season':
-            #deeplink = 'https://pluto.tv/es/on-demand/series/' + str(item['slug']) + '/details/season/' + str(season)
+        elif type == 'episode':
+            deeplink = 'https://pluto.tv/es/on-demand/series/' + str(item['slug']) + '/season/' + str(season['number']) + '/episode/' + str(episode['slug'])
+        else:
+            deeplink = 'https://pluto.tv/es/on-demand/series/' + str(item['slug']) + '/details/seasons/' + str(season)
         return deeplink
 
     def get_image(self, item, type):

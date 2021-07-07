@@ -11,22 +11,25 @@ import datetime
 
 class StarzDM():
     """
-    Pluto es una ott de Estados Unidos que opera en todo el mundo.
+    Starz es una ott de Estados Unidos que opera en todo el mundo.
 
     DATOS IMPORTANTES:
     - VPN: Si/No (Recomendación: Usar ExpressVPN).
     - ¿Usa Selenium?: No.
-    - ¿Tiene API?: Si. Tiene 2, una general en donde se ven las series y peliculas,
-      y otra específica de cada contenido, donde se obtienen los detalles de los mismos.
+    - ¿Tiene API?: Si. Tiene 2, en una se obtienen los contenidos, y en otra las imágenes de los mismos.
     - ¿Usa BS4?: No.
-    - ¿Cuanto demoró la ultima vez? tiempo + fecha.
-    - ¿Cuanto contenidos trajo la ultima vez?:
+    - La última vez 0.811063289642334 segundos(tieniendo la DB vacía), el 5/7/2021.
+    - La ultima vez trajo:
+        201 peliculas/series y 1023 episodios.
 
     OTROS COMENTARIOS:
     ...
     """
 
     def __init__(self, ott_site_uid, ott_site_country, type):
+
+        self.initial_time = time.time()
+
         self.ott_site_uid = ott_site_uid
         self.ott_site_country = ott_site_country
         self._config = config()['ott_sites'][ott_site_uid]
@@ -101,10 +104,11 @@ class StarzDM():
         self.payloads_list = []
         self.episodes_payloads = []
         all_items = self.get_content(self.api_url)
-        
+        no_insert = 'Tráiler'
+
         for item in all_items:
             if str(item["contentId"]) in self.scraped:
-                    print("Ya ingresado")
+                print("Ya ingresado")
             else:
                 self.scraped.append(item['contentId'])
                 self.payloads_list.append(self.payload(item))
@@ -115,11 +119,11 @@ class StarzDM():
                         contador_episodes = 0
 
                         for episode in season['childContent']:
-                            contador_episodes += 1
 
-                            if int(episode['contentId']) in self.scraped_episodes or episode['order'] == 0:
+                            if int(episode['contentId']) in self.scraped_episodes or episode['order'] == 0 or no_insert in episode['title']:
                                 print('capitulo ya ingresado, o es un trailer')
                             else:
+                                contador_episodes += 1
                                 self.scraped_episodes.append(episode['contentId'])
                                 self.episodes_payloads.append(self.payload_episodes(item, episode, contador_episodes))
 
@@ -132,18 +136,17 @@ class StarzDM():
         self.session.close()
         Upload(self._platform_code, self._created_at, testing=True)
 
+        end_time = time.time()
+        time_execute = end_time - self.initial_time
+        print('el tiempo de ejecución es de: '+ str(time_execute) + ' segundos.')
+
 
     def payload(self,item_, is_season=False, is_episode=False):
         payload = {
             "PlatformCode": str(self._platform_code),
             "Id": str(item_['contentId']),
             "Seasons": self.get_seasons(item_),
-            "Crew": [
-                {
-            "Role": None,
-            "Name": None
-                },
-            ],
+            "Crew": self.get_crew(item_),
             "Title": str(item_['title']),
             "CleanTitle": _replace(str(item_['title'])),
             "OriginalTitle": None,
@@ -174,7 +177,8 @@ class StarzDM():
             "CreatedAt": str(self._created_at),
             }
         return payload
-    
+
+
     def get_episodes(self,item):
         episodes = []
         for season in item['childContent']:
@@ -194,22 +198,17 @@ class StarzDM():
         "ParentTitle": str(item['title']),
         "Episode": int(contador),
         "Season": episode['seasonNumber'],
-        "Crew": [
-        {
-        "Role": None,
-        "Name": None
-        },
-        ],
-        "Title": episode['title'],
+        "Crew": self.get_crew(item, episode),
+        "Title": episode['properCaseTitle'],
         "OriginalTitle": None, 
         "Year": int(episode['releaseYear']),
         "Duration": self.get_duration(item, is_episode=episode), 
         "ExternalIds": None,
         "Deeplinks": { 
         "Web": str(self.get_deeplinks(item, is_episode=episode, contador=contador)), 
-        "Android": None, 
-        "iOS": None, 
-        }, 
+        "Android": None,
+        "iOS": None,
+        },
         "Synopsis": episode['logLine'], 
         "Image": None, 
         "Rating": str(episode['ratingCode']),
@@ -222,35 +221,12 @@ class StarzDM():
         "IsOriginal": bool(episode['original']),
         "IsAdult": None,
         "IsBranded": None,
-        "Packages": [{'Type':'subscription-vod'}],#self.get_packages(),
+        "Packages": self.get_packages(),
         "Country": None,
         "Timestamp": str(datetime.datetime.now().isoformat()),
         "CreatedAt": str(self._created_at),
         }
         return payload_episode_
-
-    def get_numb_episode(self, item, episode):
-        '''
-        En la api no esta el numero exacto de episodio, pero si tiene un campo("order")
-        que dá un numero de 3 digitos, este siempre empieza con el numero de temporada
-        y continua con el numero de episodio.
-        Por ej: "101", hace referencia al episodio 01 de la temporada 1.
-        Este método va a devolver los ultimos dos digitos.
-        La unica desventaja posible de este método es que si una season tiene más de
-        99 capitulos no los va a leer correctamante.
-        '''
-        digits = []
-        for ch in str(episode['order']):
-            digits.append(ch)
-
-        digits.pop(0)
-
-        if digits[0] == '0':
-            digits.pop(0)
-        
-        digits = ''.join([str(elem) for elem in digits])
-
-        return int(digits)
 
     def get_image(self,item):
 
@@ -352,7 +328,7 @@ class StarzDM():
                 directors.append(director['fullName'])
         
         else:
-            for director in item['directors']:  
+            for director in item['directors']:
                 directors.append(director['fullName'])
 
         return directors
@@ -391,55 +367,108 @@ class StarzDM():
         return self.contents
 
 
-    def get_cast(self,item, is_season=False, is_episode=False):
-        '''Toma el cast completo, sin diferenciar el rol de cada persona.
-            Cuando la season todavía no salió, no tiene la keyword "credits", asi
-            que devuelvo [] en ese caso.
+    def get_crew(self,item, is_season=False, is_episode=False):
         '''
+        Guarda en un diccionario la gente del cast que no son actores ni directores,
+        en el caso de que una persona cumpla más de un rol, se insertan en una lista.
+        '''
+        crew_episode = {}
+        crew = {}
+        crew['Name'] = []
+        crew['Role'] = []
+        crew_episode['Name'] = []
+        crew_episode['Role'] = []
+
+        if is_episode:
+            for credit in is_episode['credits']:
+                for role in credit['keyedRoles']:
+
+                    if role['name'] == 'Escritor' or role['name'] == 'Productor':
+                        crew_episode['Role'].append(role['name'])
+                        crew_episode['Name'].append(credit['name'])
+
+                    else:
+                        pass
+
+            return crew_episode
+
+        else:#Si es movie o serie
+
+            for credit_ in item['credits']:   
+                for role in credit_['keyedRoles']:
+                    if role['name'] == 'Escritor' or role['name'] == 'Productor':
+                        crew['Role'].append(role['name'])
+                        crew['Name'].append(credit_['name'])
+                    else:
+                        pass
+
+            return crew
+
+
+    def get_cast(self,item, is_season=False, is_episode=False):
+        ''' Toma el cast completo, sacando a Escritores y productores.'''
         cast_season = []
         cast_episode = []
         cast = []
+
         if is_season:
             try:
                 credits = is_season['credits']
                 for credit in is_season['credits']:
-                    cast_season.append(credit['name'])
+                    for role in credit['keyedRoles']:
+                        if role['name'] == 'Escritor' or role['name'] == 'Productor':
+                            pass
+                        else:
+                            cast_season.append(credit['name'])
+                
                 return cast_season
             except:
                 return cast_season
 
         elif is_episode:
             for credit in is_episode['credits']:
-                cast_episode.append(credit['name'])
+                for role in credit['keyedRoles']:
+
+                    if role['name'] == 'Escritor' or role['name'] == 'Productor':
+                        pass
+
+                    else:
+                        cast_episode.append(credit['name'])
+
             return cast_episode
 
         else:
 
             for cast_ in item['credits']:   
-                cast.append(cast_['name'])
+                for role in cast_['keyedRoles']:
+                    if role['name'] == 'Escritor' or role['name'] == 'Productor':
+                        pass
+                    else:
+                        cast.append(cast_['name'])
 
             return cast
-        
+
+
     def get_deeplinks(self, item, is_episode=False, is_season=False, contador=False):
         #Verifica si es pelicula
         if item['contentType'] == 'Movie':
 
-            deeplink = self.url + 'movies' + '/' + item['title'].replace(':','').replace(' ','-') + '-' + str(item['contentId'])
+            deeplink = self.url + 'movies' + '/' + item['title'].lower().replace(':','').replace('?','').replace('¿','').replace(' ','-') + '-' + str(item['contentId'])
 
         #Verifica si es season
         elif item['contentType'] == 'Series with Season' and is_season:
             
-            deeplink = self.url + 'series' + '/' + item['title'].replace(':','').replace(' ','-') + '/' + 'season-'+str(is_season['order']) + '/' + str(is_season['contentId'])
+            deeplink = self.url + 'series' + '/' + item['title'].lower().replace(':','').replace('?','').replace('¿','').replace(' ','-') + '/' + 'season-'+str(is_season['order']) + '/' + str(is_season['contentId'])
         
         #Verifica si es un episodio
         elif is_episode:
 
-            deeplink = self.url + 'series' + '/' + item['title'].replace(':','').replace(' ','-') + '/' + 'season-'+str(is_episode['seasonNumber']) + '/' + 'episode-'+str(contador)+ '/' + str(is_episode['contentId'])
+            deeplink = self.url + 'series' + '/' + item['title'].lower().replace(':','').replace('?','').replace('¿','').replace(' ','-') + '/' + 'season-'+str(is_episode['seasonNumber']) + '/' + 'episode-'+str(contador)+ '/' + str(is_episode['contentId'])
 
         #Si es serie...:
         else:
 
-            deeplink = self.url + 'series' + '/' + item['title'].replace(':','').replace(' ','-') + '/' + str(item['contentId'])
+            deeplink = self.url + 'series' + '/' + item['title'].lower().replace(':','').replace('?','').replace('¿','').replace(' ','-') + '/' + str(item['contentId'])
         
         return deeplink
 
