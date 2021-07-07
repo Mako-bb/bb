@@ -472,3 +472,9 @@ ott_sites:
     countries:
       AR: ar.starz
     api_url: https://playdata.starz.com/metadata-service/play/partner/Web_ES/v8/blocks?playContents=map&lang=es-ES&pages=MOVIES,SERIES&includes=contentId,title,contentType,releaseYear,runtime,logLine,image,ratingCode,genres,actors,directors,original,countryOfOrigin,seriesName,seasonNumber,episodeCount,childContent,details
+  
+  StarzFEV: #Federico
+    countries:
+      AR: ar.starz
+    url: https://www.starz.com/ar/es/
+    api_url: 

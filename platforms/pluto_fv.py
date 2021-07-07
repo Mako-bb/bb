@@ -164,7 +164,7 @@ class PlutoFV():
         serie_payload = {
             "PlatformCode": self._platform_code, #Obligatorio 
             "Id": item['_id'], #Obligatorio
-            "Seasons": item['seasonsNumbers'],
+            "Seasons": seasons,
             "Title": item['name'], #Obligatorio 
             "CleanTitle": _replace(item['name']), #Obligatorio 
             "OriginalTitle": item['name'], 
@@ -245,10 +245,10 @@ class PlutoFV():
                     "iOS": None, 
                     }, 
                     "Synopsis": episode['description'], 
-                    "Image": image, 
+                    "Image": [image], 
                     "Rating": episode['rating'], #Important! 
                     "Provider": None, 
-                    "Genres": episode['genre'], #Important! 
+                    "Genres": [episode['genre']], #Important! 
                     "Directors": None, #Important! 
                     "Availability": None, #Important! 
                     "Download": None, 
