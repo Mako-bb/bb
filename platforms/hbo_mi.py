@@ -11,7 +11,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from common import config
 from bs4 import BeautifulSoup, element
-from datetime import datetime, timedelta
+import datetime
 from handle.mongo import mongo
 from updates.upload import Upload
 from handle.datamanager import Datamanager
@@ -78,6 +78,12 @@ class HboMI():
         self.payloads = []
         self.episodes_payloads = []
         self.moviesPayloads()
+        '''
+        for payload in self.payloads:
+            for key,val in payload.items():
+                print(key,val)
+                print('-----------')
+        '''
         # urls={'docums':'https://www.hbo.com/documentaries/catalog',
         #        'movies':'https://www.hbo.com/movies/catalog',
         #        'series':'https://www.hbo.com/series/all-series'}
@@ -94,7 +100,7 @@ class HboMI():
         counter = 0
         for content in contents:
             self.image_list = []
-            self.details_dict = {}
+            self.details_dict = self.init_dict()
             status = True
             if counter == 5:
                 return 1
@@ -116,10 +122,11 @@ class HboMI():
                 status = False
             if status:
                 self.get_details(soup_info)
+                self.get_sinopsis(soup_info)
                 self.get_image(soup_info)
                 packages = self.get_packages()
                 type_ = 'movie'
-                # self.payloads.append(self.generic_payload(None,None,title,None,type_,year,duration,None,deeplinksDict,sinop,image_list,rating,genres,None,None,None,None,None,None,None))
+                self.payloads.append(self.generic_payload(None,None,title,None,type_,self.details_dict['year'],self.details_dict['duration'],None,deeplinksDict,self.details_dict['sinopsis'],self.image_list,self.details_dict['rating'],self.details_dict['genres'],None,None,None,None,None,None,None))
             else:
                 print('No valid deeplink')
             counter += 1
@@ -245,15 +252,10 @@ class HboMI():
                 clean_child = child.text
                 if '|' in clean_child:
                     clean_child = clean_child.split('|')[0]
-                    clean_child = clean_child.lower().strip()
-                    self.validate_key(clean_child)
+                clean_child = clean_child.lower().strip()
+                self.validate_key(clean_child)
         except:
-            self.details_dict['genres'] = None
-            self.details_dict['rating'] = None
-            self.details_dict['duration'] = None
-            self.details_dict['year'] = None
-            self.details_dict['sinopsis'] = None
-        # return details
+            pass
     
     def get_image(self, content):
         '''
@@ -275,42 +277,73 @@ class HboMI():
     def get_genres(self,content):
         '''
             Limpia los caracteres especiales de mas que pueda tener el genero como se recibe el dato.
-            Primero lo pasa a minusculas, luego valida si el genero pertenece a sci-fi, ya que
-            en este caso no corresponde eliminar el caracter "-", finalmente devuelve una lista.
+            Primero valida si el genero pertenece a sci-fi, ya que en este caso no corresponde eliminar el caracter "-",
+            finalmente elimina los espacios en blanco de los objetos de la lista.
         '''
         genres=[]
-        genre=content['genre'].lower()
         chars='&/-_|,'
         ok=True
         for c in chars:
-            if c in genre:
+            if c in content:
                 ok=False
-                if (c=='-') and ('sci'in genre):
+                if (c=='-') and ('sci'in content):
                     pass
                 else:
-                    genres+=genre.split(c) 
+                    genres+=content.split(c)
         if ok:
-            genres.append(genre)   
+            genres.append(content)
+        genres = [x.strip(' ') for x in genres]
         return genres
     
     def validate_key(self, value):
-        if 'hr' or 'min' in value:
+        key = ''
+        if (value.isnumeric()) and (len(value) == 4):
+            self.details_dict['year'] = int(value)
+        elif 'hr' in value or 'min' in value:
             duration = self.get_duration(value)
             self.details_dict['duration'] = duration
-        elif value.isnumeric() and len(value) == 4:
-            self.details_dict['year'] = int(value)
-        elif (len(value) > 2) and ('.' or '-' not in value):
+        elif len(value) > 2 and ('.' not in value and '-' not in value) or 'sci-fi' in value:
             genres = self.get_genres(value)
             self.details_dict['genres'] = genres
-        elif '.' not in value and value != 'hd':
-            self.details_dict['rating'] = value
-        else:
+        elif '.' in value or value == 'hd':
+            '''
+            aca se guardan los valores de calidad de video (HD) y formato de sonido (5.1)
+            en un futuro si estos datos se necesitan se puede hacer una validacion mejor para captar
+            distintas resoluciones y formatos de sonido, no solo hd y 5.1. 
+            '''
             pass
+        else:
+            self.details_dict['rating'] = value
 
     def get_duration(self,value):
-        #duration=0
-        '''
-        Este metodo va a limpiar el dato de duracion y lo va a pasar a minutos int.
-        '''
-        pass
-        #return duration
+        horas = 0
+        minutos = 0
+        clean_value = value.split(' ')
+        if 'hr' in clean_value:
+            horas = int(clean_value[0])
+        if 'min' in clean_value:
+            if 'hr' in clean_value:
+                minutos = int(clean_value[2])
+            else:
+                minutos = int(clean_value[0])
+        duration = horas * 60 + minutos
+        return duration
+    
+    def get_sinopsis(self, content):
+        try:
+            sinopsis_container = content.find('div', {'class': 'modules/Text--text modules/Text--headerHeavy components/RichText--richText'})
+            p_tag = sinopsis_container.find('p')
+            sinopsis_text = p_tag.text
+            self.details_dict['sinopsis'] = sinopsis_text
+        except:
+            pass
+    
+    def init_dict(self):
+        dict = {
+            'genres' : None,
+            'rating' : None,
+            'duration' : None,
+            'year' : None,
+            'sinopsis' : None
+        }
+        return dict
