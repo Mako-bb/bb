@@ -18,7 +18,7 @@ class StarzDM():
     - ¿Usa Selenium?: No.
     - ¿Tiene API?: Si. Tiene 2, en una se obtienen los contenidos, y en otra las imágenes de los mismos.
     - ¿Usa BS4?: No.
-    - La última vez demoró: 0.811063289642334 segundos(tieniendo la DB vacía), el 5/7/2021.
+    - La última vez 0.811063289642334 segundos(tieniendo la DB vacía), el 5/7/2021.
     - La ultima vez trajo:
         201 peliculas/series y 1023 episodios.
 
@@ -177,7 +177,8 @@ class StarzDM():
             "CreatedAt": str(self._created_at),
             }
         return payload
-    
+
+
     def get_episodes(self,item):
         episodes = []
         for season in item['childContent']:
