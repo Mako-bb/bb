@@ -62,6 +62,7 @@ from platforms.pluto_ah import PlutoAH
 # Pato
 from platforms.pluto_pq import PlutoPQ
 from platforms.starz_pq import StarzPQ
+from platforms.hbo_pq import HBOPQ
 from platforms.pluto_fiov import PlutoFioV
 from platforms.pluto_dl import PlutoDL
 from platforms.pluto_fv import PlutoFV
