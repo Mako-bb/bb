@@ -84,6 +84,9 @@ from platforms.starz_mi import StarzMI
 from platforms.starz_dm import StarzDM
 #Starz Naza
 from platforms.starz_no import StarzNO
+#Starz Fede
+from platforms.starz_fev import StarzFEV
+
 
 
 from platforms.hallmarkmovies import HallMark
