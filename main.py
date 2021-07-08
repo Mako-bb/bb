@@ -62,6 +62,7 @@ from platforms.pluto_ah import PlutoAH
 # Pato
 from platforms.pluto_pq import PlutoPQ
 from platforms.starz_pq import StarzPQ
+from platforms.hbo_pq import HBOPQ
 from platforms.pluto_fiov import PlutoFioV
 from platforms.pluto_dl import PlutoDL
 from platforms.pluto_fv import PlutoFV
@@ -84,6 +85,9 @@ from platforms.starz_mi import StarzMI
 from platforms.starz_dm import StarzDM
 #Starz Naza
 from platforms.starz_no import StarzNO
+#Starz Fede
+from platforms.starz_fev import StarzFEV
+
 
 
 from platforms.hallmarkmovies import HallMark
