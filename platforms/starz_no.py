@@ -401,8 +401,10 @@ class StarzNO():
 
         
         print(f"{episode_payloads['Id']}:\t{episode_payloads['Title']}")
-        
-        return episode_payloads
+        if episode_payloads['Title'] == None:
+            return {"nulo": "nulo"}
+        else:
+            return episode_payloads
 
     def get_deeplinks(self, content_dict):
         """
@@ -471,7 +473,6 @@ class StarzNO():
             genre_replace = content.replace("description': ", "")
             genre_strip = genre_replace.strip("'}{")
             genres.append(genre_strip)
-            
         return genres
 
     
