@@ -31,15 +31,35 @@ class HboMI():
     DATOS IMPORTANTES:
     - VPN: No
     - ¿Usa Selenium?: Si.
-    - ¿Tiene API?: No.
+    - ¿Tiene API?: Si. (Hay API pero sigo la consigna original de scrapear con BS4)
     - ¿Usa BS4?: Si.
     - ¿Cuanto demoró la ultima vez?.
     - ¿Cuanto contenidos trajo la ultima vez?.
 
     OTROS COMENTARIOS:
-    Saco con BS4 unicamente el title y los datos para generar el deeplink. Una vez se tiene el deeplink es necesario usar Selenium
-    para cargarlo y completar el resto de los datos.
-    Al cargarse el deeplink de algunos contenidos no estan disponibles y ofrecen redirigir a HBOMAX.
+    Se scrapea BS4 unicamente el title del catalogo de contenidos y se generan los deeplink. Una vez se tiene el deeplink es necesario usar Selenium
+    para cargar esa url y completar el resto de los datos ya que hay contenido dinamico. Hay deeplinks de contenido sin datos.
+    Usando BS4 quedan muchos campos del payload sin completar, el id es uno de ellos. Podria manejarse con bash¿?
+    Los datos que si se pueden completar son:
+    title
+    cleanTitle
+    image
+    deeplinks
+    genres
+    rating
+    duration
+    year
+    package
+    type
+    sinopsis
+    Timestamp
+    country
+    createdAt
+    PlatformCode
+    seasons *(series only)
+    episodes *(series only)
+    cast *(series only)
+    crew *(series only)
     """
 
     def __init__(self, ott_site_uid, ott_site_country, type):
@@ -77,17 +97,15 @@ class HboMI():
     def _scraping(self, testing=False):
         self.payloads = []
         self.episodes_payloads = []
-        self.moviesPayloads()
+        #self.moviesPayloads()
+        self.seriesPayloads()
         '''
         for payload in self.payloads:
             for key,val in payload.items():
                 print(key,val)
                 print('-----------')
         '''
-        # urls={'docums':'https://www.hbo.com/documentaries/catalog',
-        #        'movies':'https://www.hbo.com/movies/catalog',
-        #        'series':'https://www.hbo.com/series/all-series'}
-
+    '''
     def moviesPayloads(self):
         PATH = 'C:\Program Files\chromedriver.exe'
         driver = webdriver.Chrome(PATH)
@@ -107,7 +125,49 @@ class HboMI():
             title = content.find(
                 'p', {'class': 'modules/cards/CatalogCard--title'}).text
             title_depurate = self.depurateTitle(title)
-            deeplink = 'https://www.hbo.com/movies/{}'.format(title_depurate)
+            deeplink = 'https://www.hbo.com/movies/{}'.format(title_depurate) ###Esto se puede modularizar para conseguir deeplinks segun si el type por parametro es serie o movie
+            deeplinksDict = {
+                "Web": deeplink,
+                'Android': None,
+                'iOS': None,
+            }
+            try:
+                self.driver.get(deeplink)
+                time.sleep(20)
+                html = self.driver.page_source
+                soup_info = BeautifulSoup(html, 'html.parser')
+            except:
+                status = False
+            if status:
+                self.get_details(soup_info)
+                self.get_sinopsis(soup_info)
+                self.get_image(soup_info)
+                packages = self.get_packages()
+                type_ = 'movie'
+                self.payloads.append(self.generic_payload(None,self.details_dict['crew'],title,None,type_,self.details_dict['year'],self.details_dict['duration'],None,deeplinksDict,self.details_dict['sinopsis'],self.image_list,self.details_dict['rating'],self.details_dict['genres'],self.details_dict['cast'],self.details_dict['directors'],None,None,None,None,None))
+            else:
+                print('No valid deeplink')
+            counter += 1
+    '''
+    def seriesPayloads(self):
+        PATH = 'C:\Program Files\chromedriver.exe'
+        driver = webdriver.Chrome(PATH)
+        req = self.sesion.get('https://www.hbo.com/series/all-series')
+        soup = BeautifulSoup(req.text, 'html.parser')
+        conteiner = soup.find(
+            'div', {'class': 'components/MovieGrid--container'})
+        contents = conteiner.find_all('div',{'class':'modules/cards/CatalogCard--container modules/cards/SamplingCatalogCard--container modules/cards/CatalogCard--notIE modules/cards/CatalogCard--desktop'})
+        counter=0
+        for content in contents:
+            self.image_list = []
+            self.details_dict = self.init_dict()
+            status = True
+            if counter==6:
+                return 1
+            title = content.find('p', {'class': 'modules/cards/CatalogCard--title'}).text
+            title_depurate = self.depurateTitle(title)
+            print(' ---- ',title,' ---- ')
+            deeplink = 'https://www.hbo.com/{}'.format(title_depurate) ###Esto se puede modularizar para conseguir deeplinks segun si el type por parametro es serie o movie
             deeplinksDict = {
                 "Web": deeplink,
                 'Android': None,
@@ -121,19 +181,33 @@ class HboMI():
             except:
                 status = False
             if status:
-                self.get_details(soup_info)
-                self.get_sinopsis(soup_info)
-                self.get_image(soup_info)
+                self.get_series_details(soup_info)
+                self.get_sinopsis_series(soup_info)
+                '''
+                if self.details_dict['seasons']:
+                    seasons_deeplinks = self.get_seasons_deeplinks(self.details_dict['seasons'],self.details_dict['title'])
+                    for season in seasons_deeplinks:
+                        status=True
+                        try:
+                            driver.get(season)
+                            time.sleep(20)
+                            html = driver.page_source
+                            soup_season = BeautifulSoup(html, 'html.parser')
+                        except:
+                            status = False
+                        if status:
+                            self.get_series_image(soup_season)
+                else:
+                    pass
+                '''
                 packages = self.get_packages()
-                type_ = 'movie'
-                self.payloads.append(self.generic_payload(None,None,title,None,type_,self.details_dict['year'],self.details_dict['duration'],None,deeplinksDict,self.details_dict['sinopsis'],self.image_list,self.details_dict['rating'],self.details_dict['genres'],None,None,None,None,None,None,None))
+                type_ = 'serie'
+                #self.payloads.append(self.generic_payload(None,self.details_dict['crew'],title,None,type_,self.details_dict['year'],self.details_dict['duration'],None,deeplinksDict,self.details_dict['sinopsis'],self.image_list,self.details_dict['rating'],self.details_dict['genres'],self.details_dict['cast'],self.details_dict['directors'],None,None,None,None,None))
             else:
                 print('No valid deeplink')
             counter += 1
 
-    def seriesPayloads(self, contents):
-        #conteiner.find_all('div',{'class':'modules/cards/CatalogCard--container modules/cards/SamplingCatalogCard--container modules/cards/CatalogCard--notIE modules/cards/CatalogCard--desktop'})
-        pass
+
 
     def documsPayloads(self, contents):
         #conteiner.find_all('div',{'class':'modules/cards/CatalogCard--container modules/cards/DocumentaryCatalogCard--container modules/cards/CatalogCard--notIE modules/cards/CatalogCard--desktop'})
@@ -238,10 +312,10 @@ class HboMI():
 
     def get_details(self, content):
         '''
-            Los campos de genres, rating, duration, year y sinopsis vienen juntos en un contenedor,
+            Los campos de genres, rating, duration, year vienen juntos en un contenedor,
             este metodo valida que el contenedor exista, ya que en algunos casos no viene (contenidos de hbomax).
-            Luego saca los childs y limpia los separadores. Finalmente ejecuta un metodo que va a revisar a que campo corresponde
-            cada child y lo asigna.
+            Luego saca los childs y limpia los separadores. Finalmente ejecuta el metodo validate_key que va a revisar a que campo corresponde
+            cada child y lo asigna en el diccionario self.details_dict que sirve para llenar el payload final.
         '''
         try:
             details = content.find(
@@ -256,6 +330,26 @@ class HboMI():
                 self.validate_key(clean_child)
         except:
             pass
+    
+    def get_series_details(self, content):
+        try:
+            details = content.find(
+                'div', {'class': 'modules/InfoSlice--customInfo'})
+            try:
+                childs = details.find_all(
+                    'span', attrs={'class': None})
+                for child in childs:
+                    clean_child = child.text
+                    if '|' in clean_child:
+                        clean_child = clean_child.split('|')[0]
+                    clean_child = clean_child.lower()
+                    self.validate_series_key(clean_child)
+            except:
+                other_child = details.text
+                self.validate_series_key(other_child)
+        except:
+            print('No childs here!')
+            print('')
     
     def get_image(self, content):
         '''
@@ -273,6 +367,23 @@ class HboMI():
         except:
             self.image_list = None
 
+    def get_series_image(self, season):
+        try:
+            section = season.find(
+                'section', {'class': 'components/WrapperContent--wrapperContent components/WrapperContent--fadeIn'})
+            image_container = section.find(
+                'div', {'class': 'components/CardImage--imageContainer'})
+            imgage = image_container.find('img')
+            imgage_url = imgage['src']
+            if '/content/dam' in imgage_url:
+                imgage_url = 'https://www.hbo.com'+imgage_url
+            print(imgage_url)
+            #self.image_list.append(imgage_url)
+        except:
+            self.image_list = None
+
+    def get_seasons_deeplinks(self,season_num,season_title):
+        pass
 
     def get_genres(self,content):
         '''
@@ -296,7 +407,6 @@ class HboMI():
         return genres
     
     def validate_key(self, value):
-        key = ''
         if (value.isnumeric()) and (len(value) == 4):
             self.details_dict['year'] = int(value)
         elif 'hr' in value or 'min' in value:
@@ -314,6 +424,26 @@ class HboMI():
             pass
         else:
             self.details_dict['rating'] = value
+
+    def validate_series_key(self,value):
+        section=None
+        if 'miniseries' in value:
+            value = value.split('-')[0]
+            value.strip()
+            value = int(value) 
+            section = 'episodes:'
+        elif 'season' in value:
+            value = value.split(' ')[0]
+            value = int(value)
+            section = 'seasons:'
+        elif 'episode' in value:
+            value = value.split(' ')[0]
+            value = int(value)
+            section = 'episodes:'
+        else:
+            section = 'rating:'
+        print(section,value)
+        
 
     def get_duration(self,value):
         horas = 0
@@ -337,6 +467,22 @@ class HboMI():
             self.details_dict['sinopsis'] = sinopsis_text
         except:
             pass
+
+    def get_sinopsis_series(self, content):
+        try:
+            sinopsis_container = content.find('div', {'class': 'components/RichText--richText'})
+            try:
+                p_tag = sinopsis_container.find('p')
+                sinopsis_text = p_tag.text
+                print(sinopsis_text)
+                #self.details_dict['sinopsis'] = sinopsis_text
+            except:
+                sinopsis_text = sinopsis_container.text
+                print(sinopsis_text)
+                #self.details_dict['sinopsis'] = sinopsis_text
+        except:
+            print('No sinopsis here!')
+            pass
     
     def init_dict(self):
         dict = {
@@ -344,6 +490,11 @@ class HboMI():
             'rating' : None,
             'duration' : None,
             'year' : None,
-            'sinopsis' : None
+            'sinopsis' : None,
+            'seasons' : None,
+            'episodes' : None,
+            'cast' : None,
+            'directors': None,
+            'crew': None,
         }
         return dict
