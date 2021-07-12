@@ -66,6 +66,8 @@ ott_sites:
     countries:
       US: us.hbo
     url: https://www.hbo.com/
+    api_mv_url: https://proxy-v4.cms.hbo.com/v1/schedule/programs?productIds={}
+    api_series_url: https://proxy-v4.cms.hbo.com/v1/schedule/programs?seriesIds={}
     url_movies: https://www.hbo.com/movies/catalog
     url_series: https://www.hbo.com/series/all-series
   HboMI:
@@ -409,6 +411,12 @@ ott_sites:
       AR: ar.darkmatter
     start_url: https://www.darkmattertv.com/?
     api_url: https://api-ott.darkmattertv.com/getreferencedobjects?&auth_token=27e87908-8537-4350-8775-eec416fa12a4&banners=0&connection=wifi&device_type=desktop&for_user=0&image_format=poster&image_width=213&is_af_request=0&language=es&max=18&parent_id={}&parent_type=collection&partner=internal&platform=web&timestamp=1623685147&use_device_width_widescreen=1&version=11.0
+  
+  Iviru:
+    countries:
+      RU: ru.iviru
+    url: https://www.ivi.tv/
+    api_collections_url: https://api.ivi.ru/mobileapi/collections/v5/?app_version=870&from=0&to=100
 
   Natgeotv:
     countries:
@@ -461,7 +469,6 @@ ott_sites:
     all_episodes_url2: https://service-vod.clusters.pluto.tv/v3/vod/series/{}/seasons?advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=c636f54d-adcd-4b30-b2cd-02cf58d954f4&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=c636f54d-adcd-4b30-b2cd-02cf58d954f4&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.114&marketingRegion=VE&serverSideAds=true&sessionID=be85a5ba-d44b-11eb-8a41-0242ac110002&sid=be85a5ba-d44b-11eb-8a41-0242ac110002&userId=&attributeV4=foo
     all_episodes_url: https://service-vod.clusters.pluto.tv/v3/vod/slugs/
     all_titles_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=087a349a-f41e-4d03-8213-2d8330d86e68&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=087a349a-f41e-4d03-8213-2d8330d86e68&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.114&marketingRegion=VE&serverSideAds=true&sessionID=f76850cd-d39e-11eb-9515-0242ac110002&sid=f76850cd-d39e-11eb-9515-0242ac110002&userId=&attributeV4=foo     
-
   StarzPQ: #Patricio
     countries:
       AR: ar.starz
@@ -478,3 +485,33 @@ ott_sites:
       AR: ar.starz
     url: https://www.starz.com/ar/es/
     api_url: https://playdata.starz.com/metadata-service/play/partner/Web_ES/v8/blocks?playContents=map&lang=es-ES&pages=BROWSE,HOME,MOVIES,PLAYLIST,SEARCH,SEARCH%20RESULTS,SERIES&includes=contentId,contentType,title,product,seriesName,seasonNumber,free,comingSoon,newContent,topContentId,properCaseTitle,categoryKeys,runtime,popularity,original,firstEpisodeRuntime,releaseYear,images,minReleaseYear,maxReleaseYear,episodeCount,detail
+
+<<<<<<< HEAD
+  VicePFD: #Pato, Fede, Darío
+    countries:
+      US: us.vice
+    url: https://video.vice.com/en_us/shows
+    api_shows: https://video.vice.com/api/v1/shows?locale=en_us&page={}&per_page=50
+    api_videos: https://video.vice.com/api/v1/videos?locale=en_us&show_id={}&video_type=full_length&sort=episode_display_mode&per_page=25&page=1
+
+HBOPQ: #Patricio
+    countries:
+      AR: ar.hbo
+    url: https://www.hbo.com/
+    all_movies: https://www.hbo.com/movies/catalog
+    info_movie: https://www.hbo.com/movies/
+    all_documentaries: https://www.hbo.com/documentaries/catalog
+    all_series: https://www.hbo.com/series/all-series
+    
+=======
+  HBOPQ: #Patricio
+      countries:
+        AR: ar.hbo
+      url: https://www.hbo.com/
+      all_movies: https://www.hbo.com/movies/catalog
+      info_movie: https://www.hbo.com/movies/
+      all_documentaries: https://www.hbo.com/documentaries/catalog
+      all_series: https://www.hbo.com/series/all-series
+
+  
+>>>>>>> 6b83259ae04cde0a70eb915581d72b85d0e17bff
