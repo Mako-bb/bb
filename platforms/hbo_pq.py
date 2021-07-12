@@ -51,6 +51,7 @@ class HBOPQ():
 
         if type == 'testing':
             self._scraping(testing=True)
+    
     def query_field(self, collection, field=None):
         """Método que devuelve una lista de una columna específica
         de la bbdd.
@@ -86,54 +87,107 @@ class HBOPQ():
     # NO DIGAN COMO PROGRAMO :(
     def _scraping(self, testing=False):
         
-        #res = self.request("https://proxy-v4.cms.hbo.com/v1/schedule/")
-      
+        self.payloads = []
         response = self.request(self.all_movies_url)
         soup = BeautifulSoup(response.content, "html.parser")
-        all_movies_titles = soup.find_all("p", class_="modules/cards/CatalogCard--title")
-        print("Traje "+str(len(all_movies_titles))+" peliculas")
+        all_movies_title = soup.find_all("p", class_="modules/cards/CatalogCard--title")
+        print("Traje "+str(len(all_movies_title))+" peliculas")
+       
         ini = time.time()
-        self.get_info_movie(all_movies_titles)
+        self.preparing_to_look_for_info(all_movies_title)
         fin = time.time()
         print(fin - ini)
         self.session.close()
-   
-    def get_info_movie(self, list_movies_titles):
+    
+    #preparing_to_look_for_info toma cada title y lo limpia para acceder al la pagina individual. Ej: https://www.hbo.com/movies/13-going-on-30
+    #En processes pongo cada thread que va a tener el trabajo de buscar la info con get_info.
+    def preparing_to_look_for_info(self, list_movies_title):
         processes = []
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with ThreadPoolExecutor(max_workers=8) as executor:
             i = 0
-            for title in list_movies_titles:
-                processes.append(executor.submit(self.get_payload, title))
-                if i == 100:
+            for title in list_movies_title:
+                title_ok = self.clean_title(title.text)
+                processes.append(executor.submit(self.get_info, title_ok))
+                if i == 10:
                     break
                 i += 1            
-
-    def get_payload(self, title):
-        title_ok = self.clean_title(title)
-        url = self.info_movie_url+title_ok
+    
+    #get_info toma la info de cada contenito en su pag individual.
+    def get_info(self, title):
+        url = self.info_movie_url+title.replace(" ", "-")
         res = self.request(url)
         if res.status_code != 404:
             try:
                 soup = BeautifulSoup(res.content, "html.parser")
-                noScript = soup.find("noscript", id="react-data")
-                jjson = json.loads(noScript["data-state"])
-                print(jjson["bands"][1]["data"]["infoSlice"]["streamingId"]["id"])
-                
+                payload = self.get_payload(soup)
+                #Aca voy a tener que poner algo para las series
+                self.payloads.append(payload)         
             except:
                 pass
         else:
             print("ERROR")
 
+    
+    def get_payload(self, soup):
+        """Método para crear el payload. Para titanScraping.
+
+        Args:
+            soup (objeto de bs4): donde esta contenita la info que necesito.
+
+        Returns:
+            dict: Retorna el payload.
+        """
+        title = soup.find("a", class_="bands/MainNavigation--logoName")
+        
+        
+        payload = {}
+        payload = { 
+            "PlatformCode": self._platform_code,   #Obligatorio 
+            "Id": None,  #Obligatorio
+            "Seasons": None, #Lo hago aparte
+            "Crew": None,
+            "Title": None, #Obligatorio 
+            "CleanTitle": None, #Obligatorio 
+            "OriginalTitle": None, 
+            "Type": None, #Obligatorio #movie o serie 
+            "Year": None, #Important! 1870 a año actual 
+            "Duration": "", #en minutos 
+            "ExternalIds": None, #consultar
+            "Deeplinks": { 
+                "Web": None, #Obligatorio 
+                "Android": None, 
+                "iOS": None, 
+            }, 
+            "Synopsis": None, 
+            "Image": None, 
+            "Rating": None, #Important!  "Provider": "list", 
+            "Genres": None, #Important! 
+            "Provider": None,
+            "Cast": None, #Important! 
+            "Directors": None, #Important! 
+            "Availability": None, #Important! 
+            "Download": None, 
+            "IsOriginal": None, #Important! 
+            "IsAdult": None, #Important! 
+            "IsBranded": None, #Important! (ver link explicativo)
+            "Packages": [{"Type":"subscription-vod"}], #Obligatorio 
+            "Country": None, 
+            "Timestamp": datetime.now().isoformat(), #Obligatorio 
+            "CreatedAt": self._created_at, #Obligatorio
+        }
+
+        return payload
+
+    
     def clean_title(self, title):
-       #Método para acomodar el title, sacando / o * y agregandole los - en cada espacio
+       #Método para acomodar el title, sacando / , * , &
        valid_chars = [" ", "&","/"]
        new_string = ''.join(char for char in title if char.isalnum() or char in valid_chars)
        new_string = new_string.lower()
        new_string = new_string.replace("  ", " ")
-       new_string = new_string.replace("/","-").replace("&","and").replace(" ", "-")
+       new_string = new_string.replace("/","-").replace("&","and")
        return new_string
-    
-    
+         
     def request(self, url):
         '''
         Método para hacer una petición
@@ -151,3 +205,45 @@ class HBOPQ():
                 print('Waiting...')
                 time.sleep(requestsTimeout)
                 continue
+    
+    """
+        Sale con la API, me costo tanto encontrarla que no quiero borrarla je
+        
+        res = self.request(self.all_movies_url)
+        soup = BeautifulSoup(res.content, "html.parser")
+        noScript = soup.find("noscript", id="react-data")
+        noScript_json = json.loads(noScript["data-state"])
+        i = 0
+        pepe = []
+        try:
+            for id in noScript_json["bands"][1]["data"]["entries"]:
+                print(id["streamingId"]["id"])
+   
+                
+                i += 1
+        except:
+            pepe.append(i)
+        """
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

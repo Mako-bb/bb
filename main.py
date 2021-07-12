@@ -60,6 +60,7 @@ from platforms.darmattertv import DarkMattertv
 # Dario
 from platforms.pluto_ah import PlutoAH
 # Pato
+from platforms.vice_pq import VicePQ
 from platforms.pluto_pq import PlutoPQ
 from platforms.starz_pq import StarzPQ
 from platforms.hbo_pq import HBOPQ
@@ -88,6 +89,8 @@ from platforms.starz_no import StarzNO
 #Starz Fede
 from platforms.starz_fev import StarzFEV
 
+#Vice: Fede, Pato, Darío
+from platforms.vice_pfd import VicePFD
 
 
 from platforms.hallmarkmovies import HallMark
