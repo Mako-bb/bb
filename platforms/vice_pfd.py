@@ -184,6 +184,7 @@ class VicePFD():
 
         if dictionary_videos:
             return show
+            
         else:
             print('Este show no pasó la verificación')
             return False
