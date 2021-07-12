@@ -486,6 +486,12 @@ ott_sites:
     url: https://www.starz.com/ar/es/
     api_url: https://playdata.starz.com/metadata-service/play/partner/Web_ES/v8/blocks?playContents=map&lang=es-ES&pages=BROWSE,HOME,MOVIES,PLAYLIST,SEARCH,SEARCH%20RESULTS,SERIES&includes=contentId,contentType,title,product,seriesName,seasonNumber,free,comingSoon,newContent,topContentId,properCaseTitle,categoryKeys,runtime,popularity,original,firstEpisodeRuntime,releaseYear,images,minReleaseYear,maxReleaseYear,episodeCount,detail
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 567ab347a59c477a1fd94c69bf7c127187dd1139
   VicePFD: #Pato, Fede, Darío
     countries:
       US: us.vice
@@ -493,6 +499,7 @@ ott_sites:
     api_shows: https://video.vice.com/api/v1/shows?locale=en_us&page={}&per_page=50
     api_videos: https://video.vice.com/api/v1/videos?locale=en_us&show_id={}&video_type=full_length&sort=episode_display_mode&per_page=25&page=1
 
+<<<<<<< HEAD
   HBOPQ: #Patricio
       countries:
         AR: ar.hbo
@@ -502,6 +509,19 @@ ott_sites:
       all_documentaries: https://www.hbo.com/documentaries/catalog
       all_series: https://www.hbo.com/series/all-series
       
+=======
+HBOPQ: #Patricio
+    countries:
+      AR: ar.hbo
+    url: https://www.hbo.com/
+    all_movies: https://www.hbo.com/movies/catalog
+    info_movie: https://www.hbo.com/movies/
+    all_documentaries: https://www.hbo.com/documentaries/catalog
+    all_series: https://www.hbo.com/series/all-series
+    
+=======
+>>>>>>> ee781e3373c18fa4ff5fff4378351a3b254f71cf
+>>>>>>> 567ab347a59c477a1fd94c69bf7c127187dd1139
   HBOPQ: #Patricio
       countries:
         AR: ar.hbo
@@ -510,5 +530,20 @@ ott_sites:
       info_movie: https://www.hbo.com/movies/
       all_documentaries: https://www.hbo.com/documentaries/catalog
       all_series: https://www.hbo.com/series/all-series
+<<<<<<< HEAD
+  
+  VicePQ: #Patricio
+      countries:
+        AR: en_us.vice
+      url:  https://www.viceland.com/ 
+      all_shows: https://video.vice.com/api/v1/shows?locale=en_us&page=1&per_page=50
+      all_episodes_per_shows: https://video.vice.com/api/v1/videos?locale=en_us&show_id=5f527d2dadb68f5cd21833d3&video_type=full_length&sort=episode_display_mode&per_page=24&page=1
+    
+=======
 
   
+<<<<<<< HEAD
+=======
+>>>>>>> 6b83259ae04cde0a70eb915581d72b85d0e17bff
+>>>>>>> ee781e3373c18fa4ff5fff4378351a3b254f71cf
+>>>>>>> 567ab347a59c477a1fd94c69bf7c127187dd1139
