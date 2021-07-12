@@ -11,7 +11,7 @@ from handle.mongo           import mongo
 from updates.upload         import Upload
 from handle.payload         import Payload
 from handle.datamanager     import Datamanager
-import datetime
+from datetime               import datetime
 
 class VicePFD():
     """
@@ -109,27 +109,102 @@ class VicePFD():
 
 
     def _scraping(self, testing=False):
-        self.scraped = self.query_field(self.titanScraping, field='Id')
-        self.scraped_episodes = self.query_field(self.titanScrapingEpisodes, field='Id')
+        self.scraped = []#self.query_field(self.titanScraping, field='Id')
+        self.scraped_episodes = []#self.query_field(self.titanScrapingEpisodes, field='Id')
 
-        self.payloads_list = []#Payloads de shows
-        self.videos_payloads = []#Payloads de videos
+        self.payloads = []#Payloads de shows
+        self.payloads_episodes = []#Payloads de videos
+        
+        pages_shows = self.get_content(None)
 
-        pages_shows = self.get_content(self.api_shows_url)
-
-        self.shows_validated = []#Shows validados!
-
+        i = 0 
         for page in pages_shows:#Por cada pagina en la lista
             for show in page:#Por cada show en cada página
-                '''
-                Si el show está validado, lo inserta en la lista "shows_validated".
-                '''
-                verifica = self.show_verification(show)
-                if verifica:
-                    self.shows_validated.append(verifica)
+                """
+                Para cada Show verifico que tengan videos y los agrego a self.payloads
+                """
+                self.show_verification(show)
+                i += 1
+                if i == 3:
+                    break
+            break
+                    
+    
+    def show_verification(self, show):
+        '''
+        Este método valida si los shows tienen contenido y los agrega
+        '''
 
+        '''Hago request a la API de videos con la id del show, si devuelve NULL no pasa la verificación.'''
+        request_videos = self.get_req(self.api_videos_url.format(id=show['id'], page=1))#Request
+        dictionary_videos = request_videos.json()
 
-    def get_content(self, url):
+        if dictionary_videos:
+            self.payloads.append(self.get_payload(show))
+            #aca agrego las seasons de payloads, consultar
+            self.payloads_episodes.append(self.get_info_episodes(show["id"]))
+        else:
+            print('Este show no pasó la verificación '+show['title'])
+
+    def get_info_episodes(self, id):
+        
+        """Método para crear el payload de episodios. Para titanScrapingEpisodes.
+
+            Args:
+                episode (dict): Indica la metadata del contenido.
+
+            Returns:
+                dict: Retorna el payload.
+        """
+        pages = self.get_content(id)
+        for page in pages:
+            for episode in page:
+                self.get_payload_episode(episode)
+
+    def get_payload_episode(self, episode):
+        pass
+
+    def get_payload(self, show):
+        
+        payload = {}
+        payload = { 
+            "PlatformCode": self._platform_code,   #Obligatorio 
+            "Id": show["id"],  #Obligatorio
+            "Seasons": None, #Lo hago aparte
+            "Crew": None,
+            "Title": show["title"], #Obligatorio 
+            "CleanTitle": _replace(show["title"]), #Obligatorio 
+            "OriginalTitle": _replace(show["title"]), 
+            "Type": "serie", #Obligatorio #movie o serie 
+            "Year": None, #Important! 1870 a año actual 
+            "Duration": None, #en minutos 
+            "ExternalIds": None,
+            "Deeplinks": { 
+                "Web": self.get_deeplinks(show), #Obligatorio 
+                "Android": None, 
+                "iOS": None, 
+            }, 
+            "Synopsis": show["dek"], 
+            "Image": self.get_image(show), 
+            "Rating": None, #Important!  "Provider": "list", 
+            "Genres": None, #Important! 
+            "Provider": None,
+            "Cast": None, #Important! 
+            "Directors": None, #Important! 
+            "Availability": None, #Important! 
+            "Download": None, 
+            "IsOriginal": None, #Important! 
+            "IsAdult": None, #Important! 
+            "IsBranded": None, #Important! (ver link explicativo)
+            "Packages": [{"Type":"subscription-vod"}], #Obligatorio 
+            "Country": None, 
+            "Timestamp": datetime.now().isoformat(), #Obligatorio 
+            "CreatedAt": self._created_at, #Obligatorio
+        }
+
+        return payload
+
+    def get_content(self, id):
         '''
         La API de shows es muy extensa, por este motivo está dividida en páginas.
         Este método recorre esas páginas(hasta que devuelva NULL)
@@ -137,11 +212,13 @@ class VicePFD():
 
         Devuelve una lista con cada página y sus respectivos shows.
         '''
-        contador = 1#Contador de páginas
+        url = self.api_shows_url
+        url_videos = self.api_videos_url
+        contador = 1 #Contador de páginas
         dictionary_list = []
 
         while True:
-                request = self.get_req(url.format(contador))
+                request = self.get_req(url.format(contador) if id == None else url_videos.format(id=id, page=contador))
                 dictionary = request.json()
 
                 if dictionary:#Si dictionary "obtuvo" contenido, lo inserta en la lista
@@ -153,6 +230,18 @@ class VicePFD():
         return dictionary_list
 
 
+    ###################FUNCIONES PARA RELLENAR EL PAYLOAD#######################
+    def get_deeplinks(self, show):
+        url = "https://video.vice.com/en_us/show/"+show["slug"]
+        return url
+    
+    def get_image(self, show):
+        try:
+            url = "https://video-images.vice.com/shows/" + str(show["id"])+"/"+ show["card"]["filename"]
+            return [url]
+        except:
+            return None    
+    ############################################################################
     def get_req(self, url):
         '''
         Método para hacer una petición
