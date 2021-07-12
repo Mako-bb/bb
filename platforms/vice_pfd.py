@@ -157,7 +157,6 @@ class VicePFD():
                 dict: Retorna el payload.
         """
         pages = self.get_content(id)
-        print(len(pages))
         for page in pages:
             for episode in page:
                 self.get_payload_episode(episode)
@@ -175,7 +174,7 @@ class VicePFD():
             "Crew": None,
             "Title": show["title"], #Obligatorio 
             "CleanTitle": _replace(show["title"]), #Obligatorio 
-            "OriginalTitle": _replace(show["slug"]), 
+            "OriginalTitle": _replace(show["title"]), 
             "Type": "serie", #Obligatorio #movie o serie 
             "Year": None, #Important! 1870 a año actual 
             "Duration": None, #en minutos 
