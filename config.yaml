@@ -478,12 +478,19 @@ ott_sites:
     url: https://www.starz.com/ar/es/
     api_url: https://playdata.starz.com/metadata-service/play/partner/Web_ES/v8/blocks?playContents=map&lang=es-ES&pages=BROWSE,HOME,MOVIES,PLAYLIST,SEARCH,SEARCH%20RESULTS,SERIES&includes=contentId,contentType,title,product,seriesName,seasonNumber,free,comingSoon,newContent,topContentId,properCaseTitle,categoryKeys,runtime,popularity,original,firstEpisodeRuntime,releaseYear,images,minReleaseYear,maxReleaseYear,episodeCount,detail
 
-HBOPQ: #Patricio
-    countries:
-      AR: ar.hbo
-    url: https://www.hbo.com/
-    all_movies: https://www.hbo.com/movies/catalog
-    info_movie: https://www.hbo.com/movies/
-    all_documentaries: https://www.hbo.com/documentaries/catalog
-    all_series: https://www.hbo.com/series/all-series
+  HBOPQ: #Patricio
+      countries:
+        AR: ar.hbo
+      url: https://www.hbo.com/
+      all_movies: https://www.hbo.com/movies/catalog
+      info_movie: https://www.hbo.com/movies/
+      all_documentaries: https://www.hbo.com/documentaries/catalog
+      all_series: https://www.hbo.com/series/all-series
+  
+  VicePQ: #Patricio
+      countries:
+        AR: en_us.vice
+      url:  https://www.viceland.com/ 
+      all_shows: https://video.vice.com/api/v1/shows?locale=en_us&page=1&per_page=50
+      all_episodes_per_shows: https://video.vice.com/api/v1/videos?locale=en_us&show_id=5f527d2dadb68f5cd21833d3&video_type=full_length&sort=episode_display_mode&per_page=24&page=1
     
