@@ -88,6 +88,8 @@ from platforms.starz_no import StarzNO
 #Starz Fede
 from platforms.starz_fev import StarzFEV
 
+#Vice: Fede, Pato, Darío
+from platforms.vice_pfd import VicePFD
 
 
 from platforms.hallmarkmovies import HallMark

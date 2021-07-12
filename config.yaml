@@ -480,6 +480,13 @@ ott_sites:
     url: https://www.starz.com/ar/es/
     api_url: https://playdata.starz.com/metadata-service/play/partner/Web_ES/v8/blocks?playContents=map&lang=es-ES&pages=BROWSE,HOME,MOVIES,PLAYLIST,SEARCH,SEARCH%20RESULTS,SERIES&includes=contentId,contentType,title,product,seriesName,seasonNumber,free,comingSoon,newContent,topContentId,properCaseTitle,categoryKeys,runtime,popularity,original,firstEpisodeRuntime,releaseYear,images,minReleaseYear,maxReleaseYear,episodeCount,detail
 
+  VicePFD: #Pato, Fede, Darío
+    countries:
+      US: us.vice
+    url: https://video.vice.com/en_us/shows
+    api_shows: https://video.vice.com/api/v1/shows?locale=en_us&page={}&per_page=50
+    api_videos: https://video.vice.com/api/v1/videos?locale=en_us&show_id={}&video_type=full_length&sort=episode_display_mode&per_page=25&page=1
+
 HBOPQ: #Patricio
     countries:
       AR: ar.hbo
