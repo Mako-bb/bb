@@ -423,7 +423,7 @@ class StarzNO():
             return deeplinks
         if content_dict["contentType"] == 'Series with Season':
             deeplinks = {
-                    "Web": url + "/" + content_dict["contentType"] + "/" + _replace(content_dict["title"]) + "/" + str(content_dict["contentId"]),
+                    "Web": url + "series" + "/" + content_dict["title"].replace(" ", "-") + "/" + str(content_dict["contentId"]),
                     "Android": None,
                     "iOS": None,
                 }
