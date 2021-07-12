@@ -225,7 +225,7 @@ class PlutoFV():
             for episode in season['episodes']:
                 duration = self.get_duration(episode)
                 deeplink = self.get_deeplink(item, episode['type'], season=season, episode=episode)
-                image = self.get_image(episode, 'episode')
+                #image = self.get_image(episode, 'episode')
                 episode_payload = { 
                     "PlatformCode": self._platform_code, #Obligatorio 
                     "Id": episode['_id'], #Obligatorio
@@ -245,7 +245,7 @@ class PlutoFV():
                     "iOS": None, 
                     }, 
                     "Synopsis": episode['description'], 
-                    "Image": [image], 
+                    "Image": episode['covers'], 
                     "Rating": episode['rating'], #Important! 
                     "Provider": None, 
                     "Genres": [episode['genre']], #Important! 
@@ -312,13 +312,13 @@ class PlutoFV():
             deeplink = 'https://pluto.tv/es/on-demand/series/' + str(item['slug']) + '/details'
         elif type == 'episode':
             deeplink = 'https://pluto.tv/es/on-demand/series/' + str(item['slug']) + '/season/' + str(season['number']) + '/episode/' + str(episode['slug'])
-        else:
+        else: #deeplink para seasons
             deeplink = 'https://pluto.tv/es/on-demand/series/' + str(item['slug']) + '/details/seasons/' + str(season)
         return deeplink
 
     def get_image(self, item, type):
         if type == 'movie':
-            image = 'https://images.pluto.tv/series/' + str(item['_id']) + '/poster.jpg'
+            image = 'https://images.pluto.tv/episodes/' + str(item['_id']) + '/poster.jpg'
         elif type == 'serie':
             image = 'https://images.pluto.tv/series/' + str(item['_id']) + '/poster.jpg' 
         elif type == 'episode':
