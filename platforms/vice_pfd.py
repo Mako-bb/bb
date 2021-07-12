@@ -177,7 +177,6 @@ class VicePFD():
         Este método valida si los shows tienen contenido. Si es así
         los devuelve.
         '''
-        shows_validated = []#Shows validados!
 
         '''Hago request a la API de videos con la id del show, si devuelve NULL no pasa la verificación.'''
         request_videos = self.get_req(self.api_videos_url.format(show['id']))#Request
