@@ -66,6 +66,8 @@ ott_sites:
     countries:
       US: us.hbo
     url: https://www.hbo.com/
+    api_mv_url: https://proxy-v4.cms.hbo.com/v1/schedule/programs?productIds={}
+    api_series_url: https://proxy-v4.cms.hbo.com/v1/schedule/programs?seriesIds={}
     url_movies: https://www.hbo.com/movies/catalog
     url_series: https://www.hbo.com/series/all-series
   HboMI:
