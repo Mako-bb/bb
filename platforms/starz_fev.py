@@ -159,33 +159,36 @@ class StarzFEV():
                 continue
 
     def movie_payload(self, playContentsById):
+        uri_cotenidos = self.get_uri(playContentsById)
+        duration = self.get_duration(playContentsById)
+        deeplink = self.get_deeplink(playContentsById, playContentsById['contentType'])
 
         print('Movie: ' + playContentsById['title'])
         payload = { 
             "PlatformCode": self._platform_code, #Obligatorio 
-            "Id": playContentsById['contentId'], #Obligatorio
+            "Id": int(playContentsById['contentId']), #Obligatorio
             "Title": playContentsById['title'], #Obligatorio 
             "CleanTitle": _replace(playContentsById['title']), #Obligatorio 
             "OriginalTitle": playContentsById['title'], 
             "Type": playContentsById['contentType'], #Obligatorio 
-            "Year": playContentsById['releaseYear'], #Important! 
-            "Duration": playContentsById['runtime'],
+            "Year": int(playContentsById['releaseYear']), #Important! 
+            "Duration": int(duration),
             "ExternalIds": None, 
             "Deeplinks": { 
-            "Web": None, #Obligatorio 
+            "Web": deeplink, #Obligatorio 
             "Android": None, 
             "iOS": None, 
             }, 
-            "Synopsis": None, 
+            "Synopsis": uri_cotenidos['logLine'], 
             "Image": None,
-            "Rating": None, #Important! 
+            "Rating": uri_cotenidos['ratingName'], #Important! 
             "Provider": None,
             "Genres": None, #Important!
             "Cast": None, 
             "Directors": None, #Important! 
             "Availability": None, #Important! 
             "Download": None, 
-            "IsOriginal": None, #Important! 
+            "IsOriginal":playContentsById['original'] , #Important! 
             "IsAdult": None, #Important! 
             "IsBranded": None, #Important! (ver link explicativo)
             "Packages": [{'Type':'free-vod'}],
@@ -196,11 +199,12 @@ class StarzFEV():
         self.payloads.append(payload)
 
     def serie_payload(self, playContentsById):
+        seasons = self.get_seasons(playContentsById)
 
         serie_payload = {
             "PlatformCode": self._platform_code, #Obligatorio 
             "Id":  playContentsById['contentId'], #Obligatorio
-            "Seasons": None,
+            "Seasons": seasons,
             "Title": playContentsById['title'], #Obligatorio 
             "CleanTitle": _replace(playContentsById['title']), #Obligatorio 
             "OriginalTitle": playContentsById['title'], 
@@ -232,6 +236,32 @@ class StarzFEV():
             }
         self.payloads.append(serie_payload)
 
+    def get_seasons(self, playContentsById):
+        season_return = []
+
     def get_uri (self, playContentsById):
+        #Mediante el uri accedemos a los metadatos faltantes en la api. Cada contenido (serie o pelicula) tiene su uri.
         uri = 'https://playdata.starz.com/metadata-service/play/partner/Web_ES/v8/content?lang=es-ES&contentIds=' + str(playContentsById['contentId']) + '&includes=title,logLine,contentType,contentId,ratingName,properCaseTitle,topContentId,releaseYear,runtime,images,credits,episodeCount,seasonNumber,childContent,order'
-        return uri
+        uri_req = self.request(uri)
+        uri_contenidos = uri_req.json()
+        uri_contenidos = uri_contenidos['playContentArray']
+        uri_contenidos = uri_contenidos['playContents']
+        uri_contenidos = uri_contenidos[0]
+        return uri_contenidos
+
+    def get_duration (self, playContentsById):
+        duration = playContentsById['runtime']/60
+        return duration
+
+    def get_deeplink(self, playContentsById, contentType ):
+        if contentType == 'Movie':
+            slug = self.get_slug(playContentsById)
+            deeplink = 'https://www.starz.com/es/es/movies/' + str(slug) + "-" + str(playContentsById['contentId']) 
+        else:
+            print("no se pudo obtener el deeplink")
+        return deeplink
+
+    def get_slug(self, playContentsById):
+        title = playContentsById['title']
+        slug = title.replace(' ', '-')
+        return slug
