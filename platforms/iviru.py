@@ -9,6 +9,7 @@ from handle.mongo import mongo
 from updates.upload import Upload
 from handle.payload import Payload
 from handle.datamanager import Datamanager
+from bs4 import BeautifulSoup
 import datetime
 # from time import sleep
 import re
@@ -116,12 +117,28 @@ class Iviru():
         self.get_content_data()
 
         print('movies:', len(self.movies))
-        print('series:', len(self.series))
+        print('series:', len(self.series)) #Rari, pasa todo por episodios
         print('episodes:', len(self.episodes))
         
         self.check_other()
         self.check_trailers(self.movies)
         self.check_trailers(self.episodes)
+
+        #log para ver que trae episodios, mas rari, episodios sueltos, seasons incompletas.
+        for episode in self.episodes:
+            print(episode['id'])
+            try:
+                print('Episode: ',episode['episode'])
+            except:
+                pass   
+            try:
+                print('Season: ',episode['season'])
+            except:
+                pass
+            try:
+                print('Serie: ',episode['compilation_title'])
+            except:
+                pass
 
         # self.insert_payloads_close(self.payloads,self.episodes_payloads)
         print("--- %s seconds ---" % (time.time() - start_time))
@@ -156,16 +173,20 @@ class Iviru():
             Segun la key categories si es distinta de 1 (este contenido corresponde a canciones OST), el valor 14 corresponde a peliculas y si es 15 a series 
             (mas especificamente a episodios, por como organiza el contenido la pagina. No hay un contenido padre de serie sino un contenido por cada episodio). 
         '''
+        self.contents_ids.sort()
+        self.contents_ids = list(set(self.contents_ids))
         for id in self.contents_ids:
             content_api = 'https://api.ivi.ru/mobileapi/videoinfo/v6/?id={}'.format(
                 str(id))
             response = self.session.get(content_api)
             json_data = response.json()
-            try:
+            if 'error' not in json_data :
                 content = json_data['result']
                 self.get_type(content)
-            except:
-                print('CONTENIDO VACIO EN LA PAGINA ID ',id)
+            else:
+                pass
+
+               
 
     def check_other(self):
         '''
@@ -281,31 +302,21 @@ class Iviru():
 
     def get_type(self, content):
         """
-        Metodo para definir el tipo de contenido.
-        Como no hay un apartado especifico en la api que traiga el dato,
-        vamos a utilizar la existencia del content["episode"] para compro-
-        bar el tipo.
-
-        Se podría verificar que el 'padre' del archivo con el cual estemos
-        trabajando tenga el content["episode"] para chequear si es un episodio
-        o una pelicula.
         """
-        try:
-            content_type = content['categories']
-            if 1 not in content_type:
+        content_type = content['categories']
+        if content_type:
+            if 1 in content_type:
+                pass
+            else:
                 if 14 in content_type:
                     self.movies.append(content)
                 elif 15 in content_type:
-                    if content['seasons']:
-                        self.series.append(content)
-                    else:
+                    if content['object_type']=='video':
                         self.episodes.append(content)
-                else:
-                    self.other.append(content)
-            else:
-                print('ACA SE DESCARTA UN OST')
-        except:
-            print('CONTENIDO SIN CATEGORIA, NO SE VA A REGISTRAR. ID ', content['id'])
+                    else:
+                         self.series.append(content)
+        else:
+            pass
 
     def get_Deeplinks(self, content):
         Deeplinks = {
@@ -440,14 +451,42 @@ class Iviru():
         así que seguramente se va a poder sacar por bs4.
         
         """
-        pass
+        deeplink = self.get_Deeplinks + "/" + "person"
+
+        request = self.sesion.get(deeplink)
+
+        soup = BeautifulSoup(request.text, 'html.parser')
+              
+        actores_contenidos = soup.find('div', {'class':'gallery movieDetails__gallery', 'data-test':"actors_actors_block"})
+       
+        actores = []
+
+        for item in actores_contenidos:
+            nombre = actores_contenidos.find('div', {'class':"slimPosterBlock__title"})
+            apellido = actores_contenidos.find('div', {'class':"slimPosterBlock__secondTitle"})
+            actores.append(nombre, apellido)
+            print(actores)
+        
+        return actores
 
     def get_directors(self, content):
-        """
-        idem a lo de cast.
-        """
+        deeplink = self.get_Deeplinks + "/" + "person"
 
-        pass
+        request = self.sesion.get(deeplink)
+
+        soup = BeautifulSoup(request.text, 'html.parser')
+
+        directores_contenidos = soup.find('div', {'class':'gallery movieDetails__gallery', 'data-test':"actors_directors_block"})
+
+        directores = []
+
+        for item in directores_contenidos:
+            nombre = directores_contenidos.find('div', {'class':"slimPosterBlock__title"})
+            apellido = directores_contenidos.find('div', {'class':"slimPosterBlock__secondTitle"})
+            directores.append(nombre, apellido)
+            print(directores)
+
+        return directores
 
     def get_availability(self, content):
         """
@@ -482,7 +521,7 @@ class Iviru():
         """
 
         try:
-            download = content["allow_download"]
+            original = None #aca estaba repetido el metodo download
             return download
         except:
             pass         
