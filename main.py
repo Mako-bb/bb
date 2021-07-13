@@ -60,7 +60,6 @@ from platforms.darmattertv import DarkMattertv
 # Dario
 from platforms.pluto_ah import PlutoAH
 # Pato
-from platforms.vice_pq import VicePQ
 from platforms.pluto_pq import PlutoPQ
 from platforms.starz_pq import StarzPQ
 from platforms.hbo_pq import HBOPQ
@@ -77,6 +76,7 @@ from platforms.pluto_mi import PlutoMI
 from platforms.hbo_test import HBO_Test
 from platforms.hbo_no import HBO_NO
 from platforms.hbo_fev import HBO_Fev
+from platforms.hbo_fiov import HBO_Fiov
 #HBO Darío
 from platforms.hbo_dm import HboDM
 #Mati HBO
@@ -91,9 +91,16 @@ from platforms.starz_fev import StarzFEV
 
 #Vice: Fede, Pato, Darío
 from platforms.vice_pfd import VicePFD
+#Iviru Naza y Mati
+from platforms.iviru import Iviru
 
+#HistoryVault: Damián y Fio
+from platforms.historyVault import historyV
 
 from platforms.hallmarkmovies import HallMark
+
+
+
 
 
 logging.basicConfig(level=logging.INFO)
