@@ -94,8 +94,13 @@ from platforms.vice_pfd import VicePFD
 #Iviru Naza y Mati
 from platforms.iviru import Iviru
 
+#HistoryVault: Damián y Fio
+from platforms.historyVault import historyV
 
 from platforms.hallmarkmovies import HallMark
+
+
+
 
 
 logging.basicConfig(level=logging.INFO)
