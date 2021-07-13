@@ -259,21 +259,3 @@ class VicePFD():
                 print('Waiting...')
                 time.sleep(requestsTimeout)
                 continue
-
-
-    def show_verification(self, show):
-        '''
-        Este método valida si los shows tienen contenido. Si es así
-        los devuelve.
-        '''
-
-        '''Hago request a la API de videos con la id del show, si devuelve NULL no pasa la verificación.'''
-        request_videos = self.get_req(self.api_videos_url.format(show['id']))#Request
-        dictionary_videos = request_videos.json()
-
-        if dictionary_videos:
-            return show
-            
-        else:
-            print('Este show no pasó la verificación')
-            return False
