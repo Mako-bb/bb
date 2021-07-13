@@ -114,13 +114,12 @@ class Iviru():
         self.get_collections()
         self.get_contents()
         self.get_content_data()
-        self.check_other()
 
         print('movies:', len(self.movies))
         print('series:', len(self.series))
         print('episodes:', len(self.episodes))
-        print('other:', len(self.other))
-
+        
+        self.check_other()
         self.check_trailers(self.movies)
         self.check_trailers(self.episodes)
 
@@ -164,32 +163,18 @@ class Iviru():
             json_data = response.json()
             try:
                 content = json_data['result']
-                content_type = content['categories']
-                if 1 not in content_type:
-                    if 14 in content_type:
-                        self.movies.append(content)
-                    elif 15 in content_type:
-                        if 'episode' in content:
-                            self.episodes.append(content)
-                    else:
-                        self.other.append(content)
-                else:
-                    pass
+                self.get_type(content)
             except:
-                pass
+                print('CONTENIDO VACIO EN LA PAGINA ID ',id)
 
     def check_other(self):
         '''
-            Este metodo es necesario porque la pagina etiqueta algunos contenidos con categorias mas generales que movie o series,
-            por ejemplo Animados, y este contenido puede ser tanto una movie como una serie. El metodo valida esto mediante la key episode
-            y lo agrega a la lista correspondiente.
         '''
-        for other in self.other:
-            if 'episode' in other:
-                self.episodes.append(other)
-            else:
-                self.movies.append(other)
-        self.other.clear()
+        if self.other:
+            for other in self.other:
+                print(other['id'])
+        else:
+            print('lista other vacia')
 
     def check_trailers(self, content_list):
         '''
@@ -227,6 +212,117 @@ class Iviru():
         self.session.close()
         Upload(self._platform_code, self._created_at, testing=True)
 
+    def get_payload(self):
+        '''
+        '''
+        if self.movies:
+            for movie in self.movies:
+                if not self.isDuplicate(self.scraped,movie['id']):
+                    payload = self.generic_payload(movie,'movie')
+                    self.payloads.append(payload)
+                    self.scraped.append(movie['id'])
+        
+        if self.series:
+            for serie in self.series:
+                if not self.isDuplicate(self.scraped,serie['id']):
+                    payload = self.generic_payload(serie,'serie')
+                    self.payloads.append(payload)
+                    self.scraped.append(serie['id'])
+
+        if self.episodes:
+            for episode in self.episodes:
+                if not self.isDuplicate(self.scraped_episodes,episode['id']):
+                    payload = self.episode_payload(episode)
+                    self.episodes_payloads.append(payload)
+                    self.scraped_episodes.append(episode['id'])
+    
+    def generic_payload(self,content,content_type):
+        '''
+            Aca voy a validar el argumento content_type si es serie o movie, dependiendo del type
+            va a completar los campos segun corresponda en el payload. Ej. if content_type == serie, agregar
+            el par key-value 'Seasons':content['seasons'],... etc.
+
+        '''
+        if content_type == 'serie':
+            pass
+        else:
+            pass
+        
+        payload = {
+            'PlatformCode': self._platform_code,
+            'Id': self.get_id(content),
+            'Crew': self.get_crew(content),
+            'Title': self.get_title(content),
+            'OriginalTitle': None,
+            'CleanTitle': self.get_clean_title(content),
+            'Type': content_type,
+            'Year': self.get_year(content),
+            'Duration': self.get_duration(content),
+            'Deeplinks': self.get_Deeplinks(content),
+            'Synopsis': self.get_synopsis(content),
+            'Image': self.get_image(content),
+            'Rating': self.get_rating(content),
+            'Provider': self.get_provider(content),
+            'ExternalIds': self.get_external_ids(content),
+            'Genres': self.get_genres(content),
+            'Cast': self.get_cast(content),
+            'Directors': self.get_directors(content),
+            'Availability': self.get_availability(content),
+            'Download': self.get_download(content),
+            'IsOriginal': self.get_isOriginal(content),
+            'IsBranded':self.get_isBranded(content),
+            'IsAdult': self.get_isAdult(content),
+            "Packages": self.get_package(content),
+            'Country': [self.ott_site_country],
+            'Timestamp': datetime.datetime.now().isoformat(),
+            'CreatedAt': self._created_at,
+        }
+        return payload
+
+    def get_type(self, content):
+        """
+        Metodo para definir el tipo de contenido.
+        Como no hay un apartado especifico en la api que traiga el dato,
+        vamos a utilizar la existencia del content["episode"] para compro-
+        bar el tipo.
+
+        Se podría verificar que el 'padre' del archivo con el cual estemos
+        trabajando tenga el content["episode"] para chequear si es un episodio
+        o una pelicula.
+        """
+        try:
+            content_type = content['categories']
+            if 1 not in content_type:
+                if 14 in content_type:
+                    self.movies.append(content)
+                elif 15 in content_type:
+                    if content['seasons']:
+                        self.series.append(content)
+                    else:
+                        self.episodes.append(content)
+                else:
+                    self.other.append(content)
+            else:
+                print('ACA SE DESCARTA UN OST')
+        except:
+            print('CONTENIDO SIN CATEGORIA, NO SE VA A REGISTRAR. ID ', content['id'])
+
+    def get_Deeplinks(self, content):
+        Deeplinks = {
+            "Web": None,
+            "Android": None,
+            "Ios": None,
+        }      
+        if content["share_link"]:
+            Deeplinks["Web"] = content["share_link"]
+        else:
+            available = content['available_in_countries']
+            if available:
+                Deeplinks["Web"] = 'https://www.ivi.tv/watch/{}'.format(content["id"]),
+            else:
+                pass
+        return Deeplinks
+
     def get_id(self, content):
         try:
             id = int(content["id"])
@@ -252,31 +348,14 @@ class Iviru():
         except:
             pass
 
-    def get_type(self, content):
-        """
-        Metodo para definir el tipo de contenido.
-        Como no hay un apartado especifico en la api que traiga el dato,
-        vamos a utilizar la existencia del content["episode"] para compro-
-        bar el tipo.
-
-        Se podría verificar que el 'padre' del archivo con el cual estemos
-        trabajando tenga el content["episode"] para chequear si es un episodio
-        o una pelicula.
-        """
-        try:
-            if content["episode"] == True:
-                type = "serie"
-                return type
-            if content["episode"] == False:
-                type = "movie"
-                return type
-        except:
-            pass
 
     def get_year(self, content):
         try:
             year = int(content["year"])
-            return year
+            if year < 2022:
+                return year
+            else:
+                pass
         except:
             pass
 
@@ -303,17 +382,6 @@ class Iviru():
         except:
             pass
 
-    def get_Deeplinks(self, content):
-        try:
-            Deeplinks = {
-                "Web": content["share_link"],
-                "Android": None,
-                "Ios": None,
-            },
-            return Deeplinks
-        except:
-            pass
-
     def get_synopsis(self, content):
         try:
             synopsis = content["synopsis"]
@@ -329,20 +397,24 @@ class Iviru():
         """
         try:
             image = {
-                "ImagenesPromocionales": [content["promo_images"]["url"] for content["promo_images"]["url"] in content["promo_images"]],
-                "Posters": [content["poster_originals"]["path"] for content["poster_originals"]["path"] in content["poster_originals"]],
-                "Miniaturas": [content["thumbnails"]["path"] for content["thumbnails"]["path"] in content["thumbnails"]],
-            }
+                "ImagenesPromocionales": [content["promo_images"]["url"] for content["promo_images"]["url"] in content["promo_images"] if content["promo_images"]],
+                "Posters": [content["poster_originals"]["path"] for content["poster_originals"]["path"] in content["poster_originals"] if content["poster_originals"]],
+                "Miniaturas": [content["thumbnails"]["path"] for content["thumbnails"]["path"] in content["thumbnails"] if content["thumbnails"]],
+                "MiniaturasOriginales": [content["thumb_originals"]["path"] for content["thumb_originals"]["path"] in content["thumb_originals"] if content["thumb_originals"]],
+            }   
             return image
         except:
             pass
 
-    def get_rating(self):
+    def get_rating(self, content):
         """
-        Metodo para los ratings.
-        Por parte de la pagina no hay un sistema de calificacion por edad.
+        Metodo para traer los generos.        
         """
-        return None
+        try:
+            genres = content["restrict"]
+            return genres
+        except:
+            pass
 
     def get_provider(self):
         """
@@ -360,4 +432,69 @@ class Iviru():
 
         """
 
+        pass
+    
+    def get_cast(self, content):
+        """
+        Por api no parece darlo, pero en el link de cada contenido, hay un apartado de cast "url + /person"
+        así que seguramente se va a poder sacar por bs4.
+        
+        """
+        pass
+
+    def get_directors(self, content):
+        """
+        idem a lo de cast.
+        """
+
+        pass
+
+    def get_availability(self, content):
+        """
+        Metodo para chequear la disponibilidad.    
+        Devuelve una lista con los paises en los cual está disponible el contenido.    
+        """
+
+        try:
+            availability = content["available_in_countries"]
+            return availability
+        except:
+            pass
+
+
+    def get_download(self, content):
+        """
+        Metodo para ver si se puede descargar.
+        Devuelve un booleano        
+        """
+
+        try:
+            download = content["allow_download"]
+            return download
+        except:
+            pass    
+
+    def get_isOriginal(self, content):
+        """
+        Metodo para ver si es original de la página.
+        
+        Devuelve un booleano        
+        """
+
+        try:
+            download = content["allow_download"]
+            return download
+        except:
+            pass         
+
+    def get_isBranded(self,content):
+        pass
+
+    def get_isAdult(self,content):
+        pass
+
+    def get_package(self,content):
+        pass
+
+    def get_crew(self,content):
         pass
