@@ -9,6 +9,7 @@ from handle.mongo import mongo
 from updates.upload import Upload
 from handle.payload import Payload
 from handle.datamanager import Datamanager
+from bs4 import BeautifulSoup
 import datetime
 # from time import sleep
 import re
@@ -24,7 +25,7 @@ class Iviru():
         - VPN: No
         - ¿Usa Selenium?: No.
         - ¿Tiene API?: Si.
-        - ¿Usa BS4?: No.
+        - ¿Usa BS4?: Si.
         - ¿Cuanto demoró la ultima vez?. NA
         - ¿Cuanto contenidos trajo la ultima vez? NA.
 
@@ -440,14 +441,43 @@ class Iviru():
         así que seguramente se va a poder sacar por bs4.
         
         """
-        pass
+        deeplink = self.get_Deeplinks + "/" + "person"
+
+        request = self.sesion.get(deeplink)
+
+        soup = BeautifulSoup(request.text, 'html.parser')
+              
+        actores_contenidos = soup.find('div', {'class':'gallery movieDetails__gallery', 'data-test':"actors_actors_block"})
+       
+        actores = []
+
+        for item in actores_contenidos:
+            nombre = actores_contenidos.find('div', {'class':"slimPosterBlock__title"})
+            apellido = actores_contenidos.find('div', {'class':"slimPosterBlock__secondTitle"})
+            actores.append(nombre, apellido)
+            print(actores)
+        
+        return actores
 
     def get_directors(self, content):
-        """
-        idem a lo de cast.
-        """
 
-        pass
+        deeplink = self.get_Deeplinks + "/" + "person"
+
+        request = self.sesion.get(deeplink)
+
+        soup = BeautifulSoup(request.text, 'html.parser')
+
+        directores_contenidos = soup.find('div', {'class':'gallery movieDetails__gallery', 'data-test':"actors_directors_block"})
+
+        directores = []
+
+        for item in directores_contenidos:
+            nombre = directores_contenidos.find('div', {'class':"slimPosterBlock__title"})
+            apellido = directores_contenidos.find('div', {'class':"slimPosterBlock__secondTitle"})
+            directores.append(nombre, apellido)
+            print(directores)
+
+        return directores
 
     def get_availability(self, content):
         """
