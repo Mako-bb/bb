@@ -91,6 +91,8 @@ from platforms.starz_fev import StarzFEV
 
 #Vice: Fede, Pato, Darío
 from platforms.vice_pfd import VicePFD
+#Iviru Naza y Mati
+from platforms.iviru import Iviru
 
 
 from platforms.hallmarkmovies import HallMark

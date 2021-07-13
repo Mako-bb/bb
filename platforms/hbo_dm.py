@@ -149,7 +149,7 @@ class HboDM():
                 response_content = self.get_req(self.api_mv_url, is_api=data_id)
                 dictionary = response_content.json()
 
-            return dictionary
+            return dictionary['programs']
 
         except:
             pass
@@ -159,9 +159,9 @@ class HboDM():
             "PlatformCode": str(self._platform_code),
             "Id": str(content['productId']),
             "Seasons": None,
-            "Crew": self.get_crew(content),
+            "Crew": None,#self.get_crew(content),
             "Title": self.get_title(content),
-            "CleanTitle": _replace(self.get_title(content)),
+            "CleanTitle": _replace(content['title']),
             "OriginalTitle": None,
             "Type": str(content['categories'][0]),
             "Year": self.get_year(content),
@@ -173,12 +173,12 @@ class HboDM():
             "iOS": None
             },
             "Synopsis": self.get_synopsis(content, slug),
-            "Image": self.get_images(content),
+            "Image": self.get_images(content, slug),
             "Rating": str(content['mpaa']),
             "Provider": None,
             "Genres": self.get_genres(content),
             "Cast": self.get_cast,
-            "Directors": self.get_directors(self, content),
+            "Directors": self.get_directors(content),
             "Availability": None,
             "Download": None,
             "IsOriginal": None,#No encuentro este dato en la API
@@ -189,7 +189,10 @@ class HboDM():
             "Timestamp": str(datetime.datetime.now().isoformat()),
             "CreatedAt": str(self._created_at),
             }
+        return payload
 
+    def get_packages(self):
+        return [{'Type':'subscription-vod'}]
 
     def get_directors(self, content):
         directors = []
@@ -200,7 +203,7 @@ class HboDM():
 
     def get_cast(self, content, is_episode=False):
         cast = []
-        if content['categories'][0] == 'movies':
+        if content['categories'][0] == 'Movies':
             for cast in content['castCrew']:
                 if cast['role'] == 'Writer' or cast['role'] == 'Producer':
                     pass
@@ -217,7 +220,7 @@ class HboDM():
         return genres
 
     def get_images(self, content, slug, is_episode=False):
-        if content['categories'][0] == 'movies':
+        if content['categories'][0] == 'Movies':
 
             request = self.get_req(self.url + 'movies' + '/', is_slug=slug)
             soupp = BeautifulSoup(request.text, 'html.parser')
@@ -244,7 +247,7 @@ class HboDM():
             return image
 
     def get_synopsis(self, content, slug, is_episode=False):
-        if content['categories'][0] == 'movies':
+        if content['categories'][0] == 'Movies':
             synop = _replace(content['summary'])
             return synop
 
@@ -260,7 +263,7 @@ class HboDM():
 
     def get_deeplinks(self,content, slug, is_episode=False):
 
-        if content['categories'][0] == 'movies':
+        if content['categories'][0] == 'Movies':
             deeplink = self.url + content['pageUrl']
             return deeplink
 
@@ -272,30 +275,30 @@ class HboDM():
 
     def get_year(self,content, is_episode=False):
 
-        if content['categories'][0] == 'movies':
+        if content['categories'][0] == 'Movies':
             date = content['publishDate']
             date.split('-')
 
-            return int(date[0])
+            return date[0]
 
-        elif content['categories'][0] == 'series':
+        else:
             return None
 
     def get_duration(self,content, is_episode=False):
-        if content['categories'][0] == 'movies':
+        if content['categories'][0] == 'Movies':
             return content['duration']
         elif content['categories'][0] == 'series':
             return None
 
 
     def get_title(self, content, is_episode=False):
-        if content['categories'][0] == 'movies':
+        if content['categories'][0] == 'Movies':
             title = content['title']
-            return title
+            return str(title)
 
         elif content['categories'][0] == 'series':
             serie_title = content['series']['title']
-            return serie_title
+            return str(serie_title)
 
     def get_mv_slug_titles(self, url_mv, is_episode=False):
         '''

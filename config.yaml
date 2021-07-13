@@ -491,13 +491,19 @@ ott_sites:
       US: us.vice
     url: https://video.vice.com/en_us/shows
     api_shows: https://video.vice.com/api/v1/shows?locale=en_us&page={}&per_page=50
-    api_videos: https://video.vice.com/api/v1/videos?locale=en_us&show_id={}&video_type=full_length&sort=episode_display_mode&per_page=25&page=1
+    api_videos: https://video.vice.com/api/v1/videos?locale=en_us&show_id={id}&video_type=full_length&sort=episode_display_mode&per_page=25&page={page}
 
   HBOPQ: #Patricio
-    countries:
-      AR: ar.hbo
-    url: https://www.hbo.com/
-    all_movies: https://www.hbo.com/movies/catalog
-    info_movie: https://www.hbo.com/movies/
-    all_documentaries: https://www.hbo.com/documentaries/catalog
-    all_series: https://www.hbo.com/series/all-series
+      countries:
+        AR: ar.hbo
+      url: https://www.hbo.com/
+      all_movies: https://www.hbo.com/movies/catalog
+      info_movie: https://www.hbo.com/movies/
+      all_documentaries: https://www.hbo.com/documentaries/catalog
+      all_series: https://www.hbo.com/series/all-series
+  VicePQ: #Patricio
+      countries:
+        AR: en_us.vice
+      url:  https://www.viceland.com/ 
+      all_shows: https://video.vice.com/api/v1/shows?locale=en_us&page=1&per_page=50
+      all_episodes_per_shows: https://video.vice.com/api/v1/videos?locale=en_us&show_id=5f527d2dadb68f5cd21833d3&video_type=full_length&sort=episode_display_mode&per_page=24&page=1
