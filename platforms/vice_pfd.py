@@ -115,7 +115,7 @@ class VicePFD():
         self.payloads = []#Payloads de shows
         self.payloads_episodes = []#Payloads de videos
         
-        pages_shows = self.get_content(None)
+        pages_shows = self.get_content()
 
         i = 0 
         for page in pages_shows:#Por cada pagina en la lista
@@ -162,7 +162,43 @@ class VicePFD():
                 self.get_payload_episode(episode)
 
     def get_payload_episode(self, episode):
-        pass
+        duration = self.get_duration(episode)
+        episode_payload = { 
+                    "PlatformCode": self._platform_code, #Obligatorio 
+                    "Id": episode['id'], #Obligatorio
+                    "ParentId": None, #Obligatorio #Unicamente en Episodios
+                    "ParentTitle": None, #Unicamente en Episodios 
+                    "Episode": None, #Obligatorio #Unicamente en Episodios 
+                    "Season": None, #Obligatorio #Unicamente en Episodios
+                    "Title": episode['title'], #Obligatorio o 
+                    "OriginalTitle": episode['title'], 
+                    "Type":None, #Obligatorio 
+                    "Year": episode['title'], #Important! 
+                    "Duration": None,
+                    "ExternalIds": None,
+                    "Deeplinks": { 
+                    "Web": None, #Obligatorio 
+                    "Android": None, 
+                    "iOS": None, 
+                    }, 
+                    "Synopsis": None, 
+                    "Image": None, 
+                    "Rating": None, #Important! 
+                    "Provider": None, 
+                    "Genres":None, #Important! 
+                    "Directors": None, #Important! 
+                    "Availability": None, #Important! 
+                    "Download": None, 
+                    "IsOriginal": None, #Important! 
+                    "IsAdult": None, #Important! 
+                    "IsBranded": None, #Important! (ver link explicativo)
+                    "Packages": [{'Type':'free-vod'}], #Obligatorio 
+                    "Country": None, 
+                    "Timestamp": datetime.now().isoformat(), #Obligatorio 
+                    "CreatedAt": self._created_at, #Obligatorio
+                    }
+                
+        return episode_payload
 
     def get_payload(self, show):
         
@@ -204,7 +240,7 @@ class VicePFD():
 
         return payload
 
-    def get_content(self, id):
+    def get_content(self, id = None):
         '''
         La API de shows es muy extensa, por este motivo está dividida en páginas.
         Este método recorre esas páginas(hasta que devuelva NULL)
@@ -259,3 +295,8 @@ class VicePFD():
                 print('Waiting...')
                 time.sleep(requestsTimeout)
                 continue
+
+    def get_duration(self, episode):
+        duration = episode['duration']/60
+        return duration
+        
