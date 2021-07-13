@@ -100,18 +100,18 @@ class StarzFEV():
         print(f"{self.titanScraping} {len(self.scraped)}")
         print(f"{self.titanScrapingEpisodios} {len(self.scraped_episodes)}")
         contents = self.get_contents()
-        for n, item in enumerate(contents):
+        for n, content in enumerate(contents):
             print(f"\n----- Progreso ({n}/{len(contents)}) -----\n")            
-            if item['_id'] in self.scraped:
-                # Que no avance, el _id está repetido.
-                print(item['name'] + ' ya esta scrapeado!')
+            if content['contentId'] in self.scraped:
+                # Que no avance, el contentId está repetido.
+                print(content['title'] + ' ya esta scrapeado!')
                 continue
             else:   
-                self.scraped.append(item['_id'])
-                if (item['type']) == 'movie':
-                    self.movie_payload(item)
-                elif (item['type']) == 'series':
-                    self.serie_payload(item)
+                self.scraped.append(content['contentId'])
+                if (content['contentType']) == 'Movie':
+                    self.movie_payload(content)
+                elif (content['contentType']) == 'Series with Season':
+                    self.serie_payload(content)
         # Validar tipo de datos de mongo:
         if self.payloads:
             self.mongo.insertMany(self.titanScraping, self.payloads)
@@ -128,16 +128,18 @@ class StarzFEV():
     def get_contents(self):
         """Metodo que hace reques a la api de StarZ y devuelve un diccionario con metadata en formato json"""
         print("\nObteniendo contenidos...\n")
-        contents = [] # Contenidos a devolver.
+        contents_byid = [] # Contenidos a devolver.
         response = self.request(self.api_url)
-        contents_metadata = response.json()        
-        categories = contents_metadata["categories"]
+        api_contents = response.json()        
+        blocks = api_contents['blocks']
+        contenidos_api = blocks[-1] #nos quedamos con el último elemento de la lista que es el de los contenidos
+        contents_dic = contenidos_api['playContentsById']
+        print(contents_dic)
 
-        for categorie in categories:
-            print(categorie.get("name"))
-            contents += categorie["items"]
-        return contents
-
+        for clave, valor in contents_dic.items():
+            contents_byid.append(valor)
+        return contents_byid
+        
     def request(self, url):
         '''
         Método para hacer una petición
@@ -155,3 +157,111 @@ class StarzFEV():
                 print('Waiting...')
                 time.sleep(requestsTimeout)
                 continue
+
+    def movie_payload(self, playContentsById):
+        uri_cotenidos = self.get_uri(playContentsById)
+        duration = self.get_duration(playContentsById)
+        deeplink = self.get_deeplink(playContentsById, playContentsById['contentType'])
+
+        print('Movie: ' + playContentsById['title'])
+        payload = { 
+            "PlatformCode": self._platform_code, #Obligatorio 
+            "Id": int(playContentsById['contentId']), #Obligatorio
+            "Title": playContentsById['title'], #Obligatorio 
+            "CleanTitle": _replace(playContentsById['title']), #Obligatorio 
+            "OriginalTitle": playContentsById['title'], 
+            "Type": playContentsById['contentType'], #Obligatorio 
+            "Year": int(playContentsById['releaseYear']), #Important! 
+            "Duration": int(duration),
+            "ExternalIds": None, 
+            "Deeplinks": { 
+            "Web": deeplink, #Obligatorio 
+            "Android": None, 
+            "iOS": None, 
+            }, 
+            "Synopsis": uri_cotenidos['logLine'], 
+            "Image": None,
+            "Rating": uri_cotenidos['ratingName'], #Important! 
+            "Provider": None,
+            "Genres": None, #Important!
+            "Cast": None, 
+            "Directors": None, #Important! 
+            "Availability": None, #Important! 
+            "Download": None, 
+            "IsOriginal":playContentsById['original'] , #Important! 
+            "IsAdult": None, #Important! 
+            "IsBranded": None, #Important! (ver link explicativo)
+            "Packages": [{'Type':'free-vod'}],
+            "Country": None, 
+            "Timestamp": datetime.now().isoformat(), #Obligatorio 
+            "CreatedAt": self._created_at, #Obligatorio
+            }
+        self.payloads.append(payload)
+
+    def serie_payload(self, playContentsById):
+        seasons = self.get_seasons(playContentsById)
+
+        serie_payload = {
+            "PlatformCode": self._platform_code, #Obligatorio 
+            "Id":  playContentsById['contentId'], #Obligatorio
+            "Seasons": seasons,
+            "Title": playContentsById['title'], #Obligatorio 
+            "CleanTitle": _replace(playContentsById['title']), #Obligatorio 
+            "OriginalTitle": playContentsById['title'], 
+            "Type": playContentsById['contentType'], #Obligatorio 
+            "Year": playContentsById['minReleaseYear'], #Important! 
+            "Duration": playContentsById['minReleaseYear'], 
+            "ExternalIds": None, 
+            "Deeplinks": { 
+            "Web": None, #Obligatorio 
+            "Android": None, 
+            "iOS": None, 
+            }, 
+            "Synopsis": None, 
+            "Image": None, 
+            "Rating": None, #Important! 
+            "Provider": None, 
+            "Genres": None, #Important!  
+            "Cast": None, 
+            "Directors": None, #Important! 
+            "Availability": None, #Important! 
+            "Download": None, 
+            "IsOriginal": None, #Important! 
+            "IsAdult": None, #Important! 
+            "IsBranded": None, #Important! (ver link explicativo)
+            "Packages": [{'Type':'free-vod'}],
+            "Country": None, 
+            "Timestamp": datetime.now().isoformat(), #Obligatorio 
+            "CreatedAt": self._created_at #Obligatorio
+            }
+        self.payloads.append(serie_payload)
+
+    def get_seasons(self, playContentsById):
+        season_return = []
+
+    def get_uri (self, playContentsById):
+        #Mediante el uri accedemos a los metadatos faltantes en la api. Cada contenido (serie o pelicula) tiene su uri.
+        uri = 'https://playdata.starz.com/metadata-service/play/partner/Web_ES/v8/content?lang=es-ES&contentIds=' + str(playContentsById['contentId']) + '&includes=title,logLine,contentType,contentId,ratingName,properCaseTitle,topContentId,releaseYear,runtime,images,credits,episodeCount,seasonNumber,childContent,order'
+        uri_req = self.request(uri)
+        uri_contenidos = uri_req.json()
+        uri_contenidos = uri_contenidos['playContentArray']
+        uri_contenidos = uri_contenidos['playContents']
+        uri_contenidos = uri_contenidos[0]
+        return uri_contenidos
+
+    def get_duration (self, playContentsById):
+        duration = playContentsById['runtime']/60
+        return duration
+
+    def get_deeplink(self, playContentsById, contentType ):
+        if contentType == 'Movie':
+            slug = self.get_slug(playContentsById)
+            deeplink = 'https://www.starz.com/es/es/movies/' + str(slug) + "-" + str(playContentsById['contentId']) 
+        else:
+            print("no se pudo obtener el deeplink")
+        return deeplink
+
+    def get_slug(self, playContentsById):
+        title = playContentsById['title']
+        slug = title.replace(' ', '-')
+        return slug

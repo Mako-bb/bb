@@ -491,7 +491,7 @@ ott_sites:
       US: us.vice
     url: https://video.vice.com/en_us/shows
     api_shows: https://video.vice.com/api/v1/shows?locale=en_us&page={}&per_page=50
-    api_videos: https://video.vice.com/api/v1/videos?locale=en_us&show_id={}&video_type=full_length&sort=episode_display_mode&per_page=25&page=1
+    api_videos: https://video.vice.com/api/v1/videos?locale=en_us&show_id={id}&video_type=full_length&sort=episode_display_mode&per_page=25&page={page}
 
   HBOPQ: #Patricio
       countries:
