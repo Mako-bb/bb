@@ -110,10 +110,12 @@ class Iviru():
         self.movies = []
         self.series = []
         self.episodes = []
-        self.other = []
+        self.movies_series_ids = []
+        self.episodes_ids = []
 
         self.get_collections()
         self.get_contents()
+<<<<<<< HEAD
         self.get_content_data()
 
 
@@ -141,6 +143,13 @@ class Iviru():
             except:
                 pass
 
+=======
+        #self.get_episodes(episode_id)
+        print(len(self.movies_series_ids))
+        print(len(self.movies))
+        print(len(self.series))
+ 
+>>>>>>> 2271fd769dabc48e96b88550d1668a8da23005dd
         # self.insert_payloads_close(self.payloads,self.episodes_payloads)
         print("--- %s seconds ---" % (time.time() - start_time))
 
@@ -166,6 +175,7 @@ class Iviru():
             json_data = response.json()
             json_data = json_data['result']
             for content in json_data:
+<<<<<<< HEAD
                 self.contents_ids.append(content['id'])
 
     def get_content_data(self):
@@ -215,6 +225,25 @@ class Iviru():
             else:
                 print('----CONTENIDO SIN DURACION----')
                 print(content['id'])
+=======
+                if not self.isDuplicate(self.movies_series_ids, content['id']):
+                    if content['object_type'] == 'compilation':
+                        self.series.append(content)
+                    elif content['object_type'] == 'video':
+                        if content['duration_minutes'] > 4:
+                            self.movies.append(content)
+                    self.movies_series_ids.append(content['id'])      
+
+    def get_episodes(self, content_id):
+        episode_api = 'https://api.ivi.ru/mobileapi/videoinfo/v6/?id={}'.format(str(content_id))
+        response = self.session.get(episode_api)
+        json_data = response.json()
+        if 'error' not in json_data :
+            episode = json_data['result']
+            if not self.isDuplicate(self.episodes_ids, episode['id']):
+                self.episodes.append(episode)
+                self.episodes_ids.append(episode['id'])
+>>>>>>> 2271fd769dabc48e96b88550d1668a8da23005dd
 
     def isDuplicate(self, scraped_list, key_search):
         '''
@@ -303,6 +332,7 @@ class Iviru():
         }
         return payload
 
+<<<<<<< HEAD
     def get_type(self, content):
         """
         """
@@ -322,6 +352,8 @@ class Iviru():
                         pass
         else:
             pass
+=======
+>>>>>>> 2271fd769dabc48e96b88550d1668a8da23005dd
 
     def get_Deeplinks(self, content):
         Deeplinks = {
