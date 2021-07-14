@@ -25,7 +25,7 @@ class Iviru():
         - VPN: No
         - ¿Usa Selenium?: No.
         - ¿Tiene API?: Si.
-        - ¿Usa BS4?: Si.
+        - ¿Usa BS4?: No.
         - ¿Cuanto demoró la ultima vez?. NA
         - ¿Cuanto contenidos trajo la ultima vez? NA.
 
@@ -207,17 +207,17 @@ class Iviru():
                     self.episodes_payloads.append(payload)
                     self.scraped_episodes.append(episode['id'])
     
-    def generic_payload(self,content):
+    def generic_payload(self,content,content_type):
         '''
             Aca voy a validar el argumento content_type si es serie o movie, dependiendo del type
             va a completar los campos segun corresponda en el payload. Ej. if content_type == serie, agregar
             el par key-value 'Seasons':content['seasons'],... etc.
 
-        # '''
-        # if content_type == 'serie':
-        #     pass
-        # else:
-        #     pass
+        '''
+        if content_type == 'serie':
+            pass
+        else:
+            pass
         
         payload = {
             'PlatformCode': self._platform_code,
@@ -226,7 +226,7 @@ class Iviru():
             'Title': self.get_title(content),
             'OriginalTitle': None,
             'CleanTitle': self.get_clean_title(content),
-            # 'Type': content_type,
+            'Type': content_type,
             'Year': self.get_year(content),
             'Duration': self.get_duration(content),
             'Deeplinks': self.get_Deeplinks(content),
@@ -339,26 +339,16 @@ class Iviru():
         Como vimos que habian posters, miniaturas e imagenes de promo, intentamos traerlas 
         con un for que deberia funcionar.
         """
-
-        Image = {
-        "ImagenesPromocionales": None,
-        "Posters": None,
-        "Miniaturas": None,
-        "MiniaturasOriginales": None,
-        }   
-
-
-        if content["promo_images"]:
-            Image["ImagenesPromocionales"] = [content["url"] for content in content["promo_images"]]
-        if content["poster_originals"]:
-            Image["Posters"] = [content["path"] for content["path"] in content["poster_originals"]]
-        if content["thumbnails"]:
-            Image["Miniaturas"] = [content["path"] for content["path"] in content["thumbnails"]]
-        if content["thumb_originals"]:
-            Image["MinitaurasOriginales"] = [content["path"] for content["path"] in content["thumb_originals"]]
-        else:
+        try:
+            image = {
+                "ImagenesPromocionales": [content["promo_images"]["url"] for content["promo_images"]["url"] in content["promo_images"] if content["promo_images"]],
+                "Posters": [content["poster_originals"]["path"] for content["poster_originals"]["path"] in content["poster_originals"] if content["poster_originals"]],
+                "Miniaturas": [content["thumbnails"]["path"] for content["thumbnails"]["path"] in content["thumbnails"] if content["thumbnails"]],
+                "MiniaturasOriginales": [content["thumb_originals"]["path"] for content["thumb_originals"]["path"] in content["thumb_originals"] if content["thumb_originals"]],
+            }   
+            return image
+        except:
             pass
-        return Image
 
     def get_rating(self, content):
         """
@@ -370,7 +360,7 @@ class Iviru():
         except:
             pass
 
-    def get_provider(self, content):
+    def get_provider(self):
         """
         Metodo para los provider.
         Por parte de la pagina no hay algo relacionado a lo pedido.
@@ -394,9 +384,7 @@ class Iviru():
         así que seguramente se va a poder sacar por bs4.
         
         """
-        deeplink = self.get_Deeplinks(content)
-
-        deeplink = deeplink["web"] + "/" + "person"
+        deeplink = self.get_Deeplinks + "/" + "person"
 
         request = self.sesion.get(deeplink)
 
@@ -409,16 +397,13 @@ class Iviru():
         for item in actores_contenidos:
             nombre = actores_contenidos.find('div', {'class':"slimPosterBlock__title"})
             apellido = actores_contenidos.find('div', {'class':"slimPosterBlock__secondTitle"})
-            actor = nombre.join(apellido)
-            actores.append(actor)
+            actores.append(nombre, apellido)
             print(actores)
         
         return actores
 
     def get_directors(self, content):
-        deeplink = self.get_Deeplinks(content)
-
-        deeplink = deeplink["web"] + "/" + "person"
+        deeplink = self.get_Deeplinks + "/" + "person"
 
         request = self.sesion.get(deeplink)
 
