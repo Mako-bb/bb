@@ -110,36 +110,16 @@ class Iviru():
         self.movies = []
         self.series = []
         self.episodes = []
-        self.other = []
+        self.movies_series_ids = []
+        self.episodes_ids = []
 
         self.get_collections()
         self.get_contents()
-        self.get_content_data()
-
-        print('movies:', len(self.movies))
-        print('series:', len(self.series)) #Rari, pasa todo por episodios
-        print('episodes:', len(self.episodes))
-        
-        self.check_other()
-        self.check_trailers(self.movies)
-        self.check_trailers(self.episodes)
-
-        #log para ver que trae episodios, mas rari, episodios sueltos, seasons incompletas.
-        for episode in self.episodes:
-            print(episode['id'])
-            try:
-                print('Episode: ',episode['episode'])
-            except:
-                pass   
-            try:
-                print('Season: ',episode['season'])
-            except:
-                pass
-            try:
-                print('Serie: ',episode['compilation_title'])
-            except:
-                pass
-
+        #self.get_episodes(episode_id)
+        print(len(self.movies_series_ids))
+        print(len(self.movies))
+        print(len(self.series))
+ 
         # self.insert_payloads_close(self.payloads,self.episodes_payloads)
         print("--- %s seconds ---" % (time.time() - start_time))
 
@@ -165,53 +145,23 @@ class Iviru():
             json_data = response.json()
             json_data = json_data['result']
             for content in json_data:
-                self.contents_ids.append(content['id'])
+                if not self.isDuplicate(self.movies_series_ids, content['id']):
+                    if content['object_type'] == 'compilation':
+                        self.series.append(content)
+                    elif content['object_type'] == 'video':
+                        if content['duration_minutes'] > 4:
+                            self.movies.append(content)
+                    self.movies_series_ids.append(content['id'])      
 
-    def get_content_data(self):
-        '''
-            Obtenemos la data de cada contenido por su id. Cada contenido tiene una lista de categories, es decir puede tener mas de un valor.
-            Segun la key categories si es distinta de 1 (este contenido corresponde a canciones OST), el valor 14 corresponde a peliculas y si es 15 a series 
-            (mas especificamente a episodios, por como organiza el contenido la pagina. No hay un contenido padre de serie sino un contenido por cada episodio). 
-        '''
-        self.contents_ids.sort()
-        self.contents_ids = list(set(self.contents_ids))
-        for id in self.contents_ids:
-            content_api = 'https://api.ivi.ru/mobileapi/videoinfo/v6/?id={}'.format(
-                str(id))
-            response = self.session.get(content_api)
-            json_data = response.json()
-            if 'error' not in json_data :
-                content = json_data['result']
-                self.get_type(content)
-            else:
-                pass
-
-               
-
-    def check_other(self):
-        '''
-        '''
-        if self.other:
-            for other in self.other:
-                print(other['id'])
-        else:
-            print('lista other vacia')
-
-    def check_trailers(self, content_list):
-        '''
-            Pareciera no haber trailers, pero este metodo busca contenido de corta duracion por las dudas y por ahora solo imprime el id y la duracion.
-        '''
-        for content in content_list:
-            if 'duration_minutes' in content:
-                if content['duration_minutes'] < 5:
-                    print('---DURACION SOSPECHOSA---')
-                    print(content['id'])
-                    print(content['duration_minutes'])
-                else:
-                    pass
-            else:
-                print('----CONTENIDO SIN DURACION----')
-                print(content['id'])
+    def get_episodes(self, content_id):
+        episode_api = 'https://api.ivi.ru/mobileapi/videoinfo/v6/?id={}'.format(str(content_id))
+        response = self.session.get(episode_api)
+        json_data = response.json()
+        if 'error' not in json_data :
+            episode = json_data['result']
+            if not self.isDuplicate(self.episodes_ids, episode['id']):
+                self.episodes.append(episode)
+                self.episodes_ids.append(episode['id'])
 
     def isDuplicate(self, scraped_list, key_search):
         '''
@@ -300,25 +250,6 @@ class Iviru():
         }
         return payload
 
-    def get_type(self, content):
-        """
-        """
-        content_type = content['categories']
-        if content_type:
-            if 1 in content_type:
-                pass
-            else:
-                if 14 in content_type:
-                    self.movies.append(content)
-                elif 15 in content_type:
-                    if content['object_type']=='compilation':
-                        self.episodes.append(content)
-                    elif content['object_type']=='video':
-                         self.series.append(content)
-                    else:
-                        pass
-        else:
-            pass
 
     def get_Deeplinks(self, content):
         Deeplinks = {
