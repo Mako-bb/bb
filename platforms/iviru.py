@@ -339,16 +339,26 @@ class Iviru():
         Como vimos que habian posters, miniaturas e imagenes de promo, intentamos traerlas 
         con un for que deberia funcionar.
         """
-        try:
-            image = {
-                "ImagenesPromocionales": [content["promo_images"]["url"] for content["promo_images"]["url"] in content["promo_images"] if content["promo_images"]],
-                "Posters": [content["poster_originals"]["path"] for content["poster_originals"]["path"] in content["poster_originals"] if content["poster_originals"]],
-                "Miniaturas": [content["thumbnails"]["path"] for content["thumbnails"]["path"] in content["thumbnails"] if content["thumbnails"]],
-                "MiniaturasOriginales": [content["thumb_originals"]["path"] for content["thumb_originals"]["path"] in content["thumb_originals"] if content["thumb_originals"]],
-            }   
-            return image
-        except:
+
+        Image = {
+        "ImagenesPromocionales": None,
+        "Posters": None,
+        "Miniaturas": None,
+        "MiniaturasOriginales": None,
+        }   
+
+
+        if content["promo_images"]:
+            Image["ImagenesPromocionales"] = [content["url"] for content in content["promo_images"]]
+        if content["poster_originals"]:
+            Image["Posters"] = [content["path"] for content["path"] in content["poster_originals"]]
+        if content["thumbnails"]:
+            Image["Miniaturas"] = [content["path"] for content["path"] in content["thumbnails"]]
+        if content["thumb_originals"]:
+            Image["MinitaurasOriginales"] = [content["path"] for content["path"] in content["thumb_originals"]]
+        else:
             pass
+        return Image
 
     def get_rating(self, content):
         """
@@ -360,7 +370,7 @@ class Iviru():
         except:
             pass
 
-    def get_provider(self):
+    def get_provider(self, content):
         """
         Metodo para los provider.
         Por parte de la pagina no hay algo relacionado a lo pedido.
@@ -384,7 +394,9 @@ class Iviru():
         así que seguramente se va a poder sacar por bs4.
         
         """
-        deeplink = self.get_Deeplinks + "/" + "person"
+        deeplink = self.get_Deeplinks(content)
+
+        deeplink = deeplink["Web"] + "/" + "person"
 
         request = self.sesion.get(deeplink)
 
@@ -397,13 +409,16 @@ class Iviru():
         for item in actores_contenidos:
             nombre = actores_contenidos.find('div', {'class':"slimPosterBlock__title"})
             apellido = actores_contenidos.find('div', {'class':"slimPosterBlock__secondTitle"})
-            actores.append(nombre, apellido)
+            actor = nombre.join(apellido)
+            actores.append(actor)
             print(actores)
         
         return actores
 
     def get_directors(self, content):
-        deeplink = self.get_Deeplinks + "/" + "person"
+        deeplink = self.get_Deeplinks(content)
+
+        deeplink = deeplink["Web"] + "/" + "person"
 
         request = self.sesion.get(deeplink)
 
