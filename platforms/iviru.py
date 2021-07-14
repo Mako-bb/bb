@@ -115,7 +115,6 @@ class Iviru():
 
         self.get_collections()
         self.get_contents()
-        #self.get_episodes(episode_id)
         print(len(self.movies_series_ids))
         print(len(self.movies))
         print(len(self.series))
@@ -153,16 +152,6 @@ class Iviru():
                             self.movies.append(content)
                     self.movies_series_ids.append(content['id'])      
 
-    def get_episodes(self, content_id):
-        episode_api = 'https://api.ivi.ru/mobileapi/videoinfo/v6/?id={}'.format(str(content_id))
-        response = self.session.get(episode_api)
-        json_data = response.json()
-        if 'error' not in json_data :
-            episode = json_data['result']
-            if not self.isDuplicate(self.episodes_ids, episode['id']):
-                self.episodes.append(episode)
-                self.episodes_ids.append(episode['id'])
-
     def isDuplicate(self, scraped_list, key_search):
         '''
             Metodo para validar elementos duplicados segun valor(key) pasado por parametro en una lista de scrapeados.
@@ -189,36 +178,30 @@ class Iviru():
         if self.movies:
             for movie in self.movies:
                 if not self.isDuplicate(self.scraped,movie['id']):
-                    payload = self.generic_payload(movie,'movie')
+                    payload = self.generic_payload(movie,'movie',None)
                     self.payloads.append(payload)
                     self.scraped.append(movie['id'])
         
         if self.series:
             for serie in self.series:
                 if not self.isDuplicate(self.scraped,serie['id']):
-                    payload = self.generic_payload(serie,'serie')
+                    seasons = self.season_payload(serie)
+                    payload = self.generic_payload(serie,'serie',seasons)
                     self.payloads.append(payload)
                     self.scraped.append(serie['id'])
-
+        '''
         if self.episodes:
             for episode in self.episodes:
                 if not self.isDuplicate(self.scraped_episodes,episode['id']):
                     payload = self.episode_payload(episode)
                     self.episodes_payloads.append(payload)
                     self.scraped_episodes.append(episode['id'])
-    
-    def generic_payload(self,content,content_type):
+        '''   
+    def generic_payload(self,content,content_type,seasons):
         '''
             Aca voy a validar el argumento content_type si es serie o movie, dependiendo del type
-            va a completar los campos segun corresponda en el payload. Ej. if content_type == serie, agregar
-            el par key-value 'Seasons':content['seasons'],... etc.
-
+            va a completar los campos segun corresponda en el payload.
         '''
-        if content_type == 'serie':
-            pass
-        else:
-            pass
-        
         payload = {
             'PlatformCode': self._platform_code,
             'Id': self.get_id(content),
@@ -228,7 +211,7 @@ class Iviru():
             'CleanTitle': self.get_clean_title(content),
             'Type': content_type,
             'Year': self.get_year(content),
-            'Duration': self.get_duration(content),
+            'Duration': None,
             'Deeplinks': self.get_Deeplinks(content),
             'Synopsis': self.get_synopsis(content),
             'Image': self.get_image(content),
@@ -248,8 +231,88 @@ class Iviru():
             'Timestamp': datetime.datetime.now().isoformat(),
             'CreatedAt': self._created_at,
         }
+        if content_type == 'serie':
+            payload['Seasons'] = seasons
+            payload['Playback'] = None
+        else:
+            payload['Duration'] = self.get_duration(content)
         return payload
 
+    def get_episode(self,content_id):
+        episode_api = 'https://api.ivi.ru/mobileapi/videoinfo/v6/?id={}'.format(str(content_id))
+        response = self.session.get(episode_api)
+        json_data = response.json()
+        if 'error' not in json_data :
+            episode = json_data['result']
+            if not self.isDuplicate(self.episodes_ids, episode['id']):
+                self.episodes.append(episode)
+                self.episodes_ids.append(episode['id'])
+    
+    def episode_payload(self,content):
+        episode = {
+            'PlatformCode':self._platform_code,
+            'ParentId': None,
+            'ParentTitle': None,
+            'Id': None,
+            'Title':None ,
+            'Episode':None,
+            'Season': None,
+            'Year': None,
+            'Image':None ,
+            'Duration':None,
+            'Deeplinks':{
+                'Web':None,
+                'Android': None,
+                'iOS':None ,
+            },
+            'Synopsis':None,
+            'Rating':None,
+            'Provider':None,
+            'ExternalIds': None,
+            'Genres': None,
+            'Cast':None,
+            'Directors':None,
+            'Availability':None,
+            'Download': None,
+            'IsOriginal': None,
+            'IsAdult': None,
+            'Country': [self.ott_site_country],
+            'Packages': None,
+            'Timestamp': datetime.datetime.now().isoformat(),
+            'CreatedAt': self._created_at,
+        }
+        return episode
+
+    def season_payload(self,content):
+        seasons_list=[]
+        for key, season in content['seasons_extra_info'].items():
+            season_num = int(key) + 1
+            season_str = str(season_num)
+            s = {
+                "Id":season['season_id'], 
+                "Synopsis": self.get_seasons_synopsis(content,str(season_str)), 
+                "Title": self.get_title(season),
+                "Deeplink": self.get_Deeplinks(content), #ver como hacer deeplink para seasons
+                "Number": season_num, 
+                "Year": None, 
+                "Image": None, 
+                "Directors": None, 
+                "Cast": None, 
+                "Episodes": season['max_episode'], 
+                "IsOriginal": None 
+            }
+            seasons_list.append(s)
+        return seasons_list
+
+    def get_seasons_synopsis(self,content,season_num):
+        synopsis = None
+        try:
+            descriptions = content['seasons_description']
+            if season_num in descriptions:
+                synopsis = descriptions[season_num]
+        except:
+            pass
+        return synopsis
 
     def get_Deeplinks(self, content):
         Deeplinks = {
