@@ -311,10 +311,12 @@ class Iviru():
                 if 14 in content_type:
                     self.movies.append(content)
                 elif 15 in content_type:
-                    if content['object_type']=='video':
+                    if content['object_type']=='compilation':
                         self.episodes.append(content)
-                    else:
+                    elif content['object_type']=='video':
                          self.series.append(content)
+                    else:
+                        pass
         else:
             pass
 
@@ -522,7 +524,7 @@ class Iviru():
 
         try:
             original = None #aca estaba repetido el metodo download
-            return download
+            return original
         except:
             pass         
 
