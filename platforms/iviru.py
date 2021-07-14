@@ -25,7 +25,7 @@ class Iviru():
         - VPN: No
         - ¿Usa Selenium?: No.
         - ¿Tiene API?: Si.
-        - ¿Usa BS4?: Si.
+        - ¿Usa BS4?: No.
         - ¿Cuanto demoró la ultima vez?. NA
         - ¿Cuanto contenidos trajo la ultima vez? NA.
 
@@ -115,41 +115,11 @@ class Iviru():
 
         self.get_collections()
         self.get_contents()
-<<<<<<< HEAD
-        self.get_content_data()
-
-
-        print('movies:', len(self.movies))
-        print('series:', len(self.series)) #Rari, pasa todo por episodios
-        print('episodes:', len(self.episodes))
-        
-        self.check_other()
-        self.check_trailers(self.movies)
-        self.check_trailers(self.episodes)
-
-        #log para ver que trae episodios, mas rari, episodios sueltos, seasons incompletas.
-        for serie in self.series:
-            print(serie['id'])
-            try:
-                print('Episode: ',serie['episodes'])
-            except:
-                pass   
-            try:
-                print('Season: ',serie['seasons'])
-            except:
-                pass
-            try:
-                print('Serie: ',serie['title'])
-            except:
-                pass
-
-=======
         #self.get_episodes(episode_id)
         print(len(self.movies_series_ids))
         print(len(self.movies))
         print(len(self.series))
  
->>>>>>> 2271fd769dabc48e96b88550d1668a8da23005dd
         # self.insert_payloads_close(self.payloads,self.episodes_payloads)
         print("--- %s seconds ---" % (time.time() - start_time))
 
@@ -175,57 +145,6 @@ class Iviru():
             json_data = response.json()
             json_data = json_data['result']
             for content in json_data:
-<<<<<<< HEAD
-                self.contents_ids.append(content['id'])
-
-    def get_content_data(self):
-        '''
-            Obtenemos la data de cada contenido por su id. Cada contenido tiene una lista de categories, es decir puede tener mas de un valor.
-            Segun la key categories si es distinta de 1 (este contenido corresponde a canciones OST), el valor 14 corresponde a peliculas y si es 15 a series 
-            (mas especificamente a episodios, por como organiza el contenido la pagina. No hay un contenido padre de serie sino un contenido por cada episodio). 
-        '''
-        self.contents_ids.sort()
-        self.contents_ids = list(set(self.contents_ids))
-        for id in self.contents_ids:
-            content_api = 'https://api.ivi.ru/mobileapi/videoinfo/v6/?id={}'.format(
-                str(id))
-            response = self.session.get(content_api)
-            json_data = response.json()
-            if 'error' not in json_data :
-                content = json_data['result']
-                self.generic_payload(content)
-                self.get_type(content)
-            else:
-                pass
-        
-
-               
-
-    def check_other(self):
-        '''
-        '''
-        if self.other:
-            for other in self.other:
-                print(other['id'])
-        else:
-            print('lista other vacia')
-
-    def check_trailers(self, content_list):
-        '''
-            Pareciera no haber trailers, pero este metodo busca contenido de corta duracion por las dudas y por ahora solo imprime el id y la duracion.
-        '''
-        for content in content_list:
-            if 'duration_minutes' in content:
-                if content['duration_minutes'] < 5:
-                    print('---DURACION SOSPECHOSA---')
-                    print(content['id'])
-                    print(content['duration_minutes'])
-                else:
-                    pass
-            else:
-                print('----CONTENIDO SIN DURACION----')
-                print(content['id'])
-=======
                 if not self.isDuplicate(self.movies_series_ids, content['id']):
                     if content['object_type'] == 'compilation':
                         self.series.append(content)
@@ -243,7 +162,6 @@ class Iviru():
             if not self.isDuplicate(self.episodes_ids, episode['id']):
                 self.episodes.append(episode)
                 self.episodes_ids.append(episode['id'])
->>>>>>> 2271fd769dabc48e96b88550d1668a8da23005dd
 
     def isDuplicate(self, scraped_list, key_search):
         '''
@@ -289,17 +207,17 @@ class Iviru():
                     self.episodes_payloads.append(payload)
                     self.scraped_episodes.append(episode['id'])
     
-    def generic_payload(self,content):
+    def generic_payload(self,content,content_type):
         '''
             Aca voy a validar el argumento content_type si es serie o movie, dependiendo del type
             va a completar los campos segun corresponda en el payload. Ej. if content_type == serie, agregar
             el par key-value 'Seasons':content['seasons'],... etc.
 
-        # '''
-        # if content_type == 'serie':
-        #     pass
-        # else:
-        #     pass
+        '''
+        if content_type == 'serie':
+            pass
+        else:
+            pass
         
         payload = {
             'PlatformCode': self._platform_code,
@@ -308,7 +226,7 @@ class Iviru():
             'Title': self.get_title(content),
             'OriginalTitle': None,
             'CleanTitle': self.get_clean_title(content),
-            # 'Type': content_type,
+            'Type': content_type,
             'Year': self.get_year(content),
             'Duration': self.get_duration(content),
             'Deeplinks': self.get_Deeplinks(content),
@@ -332,28 +250,6 @@ class Iviru():
         }
         return payload
 
-<<<<<<< HEAD
-    def get_type(self, content):
-        """
-        """
-        content_type = content['categories']
-        if content_type:
-            if 1 in content_type:
-                pass
-            else:
-                if 14 in content_type:
-                    self.movies.append(content)
-                elif 15 in content_type:
-                    if content['duration_minutes']:
-                        self.episodes.append(content)
-                    elif content['duration_minutes'] not in content:
-                         self.series.append(content)
-                    else:
-                        pass
-        else:
-            pass
-=======
->>>>>>> 2271fd769dabc48e96b88550d1668a8da23005dd
 
     def get_Deeplinks(self, content):
         Deeplinks = {
@@ -443,26 +339,16 @@ class Iviru():
         Como vimos que habian posters, miniaturas e imagenes de promo, intentamos traerlas 
         con un for que deberia funcionar.
         """
-
-        Image = {
-        "ImagenesPromocionales": None,
-        "Posters": None,
-        "Miniaturas": None,
-        "MiniaturasOriginales": None,
-        }   
-
-
-        if content["promo_images"]:
-            Image["ImagenesPromocionales"] = [content["url"] for content in content["promo_images"]]
-        if content["poster_originals"]:
-            Image["Posters"] = [content["path"] for content["path"] in content["poster_originals"]]
-        if content["thumbnails"]:
-            Image["Miniaturas"] = [content["path"] for content["path"] in content["thumbnails"]]
-        if content["thumb_originals"]:
-            Image["MinitaurasOriginales"] = [content["path"] for content["path"] in content["thumb_originals"]]
-        else:
+        try:
+            image = {
+                "ImagenesPromocionales": [content["promo_images"]["url"] for content["promo_images"]["url"] in content["promo_images"] if content["promo_images"]],
+                "Posters": [content["poster_originals"]["path"] for content["poster_originals"]["path"] in content["poster_originals"] if content["poster_originals"]],
+                "Miniaturas": [content["thumbnails"]["path"] for content["thumbnails"]["path"] in content["thumbnails"] if content["thumbnails"]],
+                "MiniaturasOriginales": [content["thumb_originals"]["path"] for content["thumb_originals"]["path"] in content["thumb_originals"] if content["thumb_originals"]],
+            }   
+            return image
+        except:
             pass
-        return Image
 
     def get_rating(self, content):
         """
@@ -474,7 +360,7 @@ class Iviru():
         except:
             pass
 
-    def get_provider(self, content):
+    def get_provider(self):
         """
         Metodo para los provider.
         Por parte de la pagina no hay algo relacionado a lo pedido.
@@ -498,9 +384,7 @@ class Iviru():
         así que seguramente se va a poder sacar por bs4.
         
         """
-        deeplink = self.get_Deeplinks(content)
-
-        deeplink = deeplink["web"] + "/" + "person"
+        deeplink = self.get_Deeplinks + "/" + "person"
 
         request = self.sesion.get(deeplink)
 
@@ -513,16 +397,13 @@ class Iviru():
         for item in actores_contenidos:
             nombre = actores_contenidos.find('div', {'class':"slimPosterBlock__title"})
             apellido = actores_contenidos.find('div', {'class':"slimPosterBlock__secondTitle"})
-            actor = nombre.join(apellido)
-            actores.append(actor)
+            actores.append(nombre, apellido)
             print(actores)
         
         return actores
 
     def get_directors(self, content):
-        deeplink = self.get_Deeplinks(content)
-
-        deeplink = deeplink["web"] + "/" + "person"
+        deeplink = self.get_Deeplinks + "/" + "person"
 
         request = self.sesion.get(deeplink)
 
