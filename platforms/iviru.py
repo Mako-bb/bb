@@ -99,12 +99,11 @@ class Iviru():
         return query
 
     def _scraping(self, testing=False):
-
         self.scraped = self.query_field(self.titanScraping, field='Id')
         self.scraped_episodes = self.query_field(
             self.titanScrapingEpisodes, field='Id')
         self.payloads = []
-        self.episodes_payloads = []
+        self.episodes_payloads = None
         self.collections_ids = []
         self.contents_ids = []
         self.movies = []
@@ -115,11 +114,11 @@ class Iviru():
 
         self.get_collections()
         self.get_contents()
+        self.get_payload()
+        print(len(self.payloads))
         print(len(self.movies_series_ids))
-        print(len(self.movies))
-        print(len(self.series))
  
-        # self.insert_payloads_close(self.payloads,self.episodes_payloads)
+        self.insert_payloads_close(self.payloads, self.episodes_payloads)
         print("--- %s seconds ---" % (time.time() - start_time))
 
     def get_collections(self):
@@ -178,15 +177,14 @@ class Iviru():
         if self.movies:
             for movie in self.movies:
                 if not self.isDuplicate(self.scraped,movie['id']):
-                    payload = self.generic_payload(movie,'movie',None)
+                    payload = self.generic_payload(movie,'movie')
                     self.payloads.append(payload)
                     self.scraped.append(movie['id'])
         
         if self.series:
             for serie in self.series:
                 if not self.isDuplicate(self.scraped,serie['id']):
-                    seasons = self.season_payload(serie)
-                    payload = self.generic_payload(serie,'serie',seasons)
+                    payload = self.generic_payload(serie,'serie')
                     self.payloads.append(payload)
                     self.scraped.append(serie['id'])
         '''
@@ -197,7 +195,7 @@ class Iviru():
                     self.episodes_payloads.append(payload)
                     self.scraped_episodes.append(episode['id'])
         '''   
-    def generic_payload(self,content,content_type,seasons):
+    def generic_payload(self,content,content_type):
         '''
             Aca voy a validar el argumento content_type si es serie o movie, dependiendo del type
             va a completar los campos segun corresponda en el payload.
@@ -210,7 +208,8 @@ class Iviru():
             'OriginalTitle': None,
             'CleanTitle': self.get_clean_title(content),
             'Type': content_type,
-            'Year': self.get_year(content),
+            #'Year': self.get_year(content),
+            'Year':None,
             'Duration': None,
             'Deeplinks': self.get_Deeplinks(content),
             'Synopsis': self.get_synopsis(content),
@@ -218,9 +217,12 @@ class Iviru():
             'Rating': self.get_rating(content),
             'Provider': self.get_provider(content),
             'ExternalIds': self.get_external_ids(content),
-            'Genres': self.get_genres(content),
-            'Cast': self.get_cast(content),
-            'Directors': self.get_directors(content),
+            #'Genres': self.get_genres(content),
+            'Genres': None,
+            #'Cast': self.get_cast(content),
+            'Cast': None,
+            #'Directors': self.get_directors(content),
+            'Directors': None,
             'Availability': self.get_availability(content),
             'Download': self.get_download(content),
             'IsOriginal': self.get_isOriginal(content),
@@ -232,6 +234,7 @@ class Iviru():
             'CreatedAt': self._created_at,
         }
         if content_type == 'serie':
+            seasons = self.season_payload(content)
             payload['Seasons'] = seasons
             payload['Playback'] = None
         else:
@@ -292,7 +295,12 @@ class Iviru():
                 "Id":season['season_id'], 
                 "Synopsis": self.get_seasons_synopsis(content,str(season_str)), 
                 "Title": self.get_title(season),
-                "Deeplink": self.get_Deeplinks(content), #ver como hacer deeplink para seasons
+                #"Deeplink": self.get_Deeplinks(content), #ver como hacer deeplink para seasons
+                "Deeplink": {
+                    "Web": None,
+                    'Android': None,
+                    'iOS': None,
+                },
                 "Number": season_num, 
                 "Year": None, 
                 "Image": None, 
@@ -331,8 +339,11 @@ class Iviru():
         return Deeplinks
 
     def get_id(self, content):
+        '''
+            Paso el id a str porque asi lo pide el payload para hacer el upload
+        '''
         try:
-            id = int(content["id"])
+            id = str(content["id"])
             return id
         except:
             pass
@@ -378,13 +389,15 @@ class Iviru():
         Metodo para mostrar las ids externas que entrega.
         En cuanto a ID solo trae la de 'kp', después, de otras páginas
         trae el rating o la fecha de salida.
+
+        Lo paso a lista y el id a str porque es el tipo de dato que pide el payload para hacer el upload
         """
         try:
-            external_ids = {
+            external_ids = [{
                 "Provider": "Kp",
-                "Id": content["kp_id"]
+                "Id": str(content["kp_id"])
 
-            }
+            }]
             return external_ids
         except:
             pass
@@ -401,34 +414,35 @@ class Iviru():
         Metodo para conseguir las imagenes.
         Como vimos que habian posters, miniaturas e imagenes de promo, intentamos traerlas 
         con un for que deberia funcionar.
+
+        Hago una lista de dict, porque el payload pide que sea lista para hacer el upload.
         """
 
-        Image = {
-        "ImagenesPromocionales": None,
-        "Posters": None,
-        "Miniaturas": None,
-        "MiniaturasOriginales": None,
-        }   
+        image = []  
 
-
-        if content["promo_images"]:
-            Image["ImagenesPromocionales"] = [content["url"] for content in content["promo_images"]]
-        if content["poster_originals"]:
-            Image["Posters"] = [content["path"] for content["path"] in content["poster_originals"]]
-        if content["thumbnails"]:
-            Image["Miniaturas"] = [content["path"] for content["path"] in content["thumbnails"]]
-        if content["thumb_originals"]:
-            Image["MinitaurasOriginales"] = [content["path"] for content["path"] in content["thumb_originals"]]
-        else:
+        try:
+            if content["promo_images"]:
+                for img in content["promo_images"]:
+                    image.append(img['url'])
+            if content["poster_originals"]:
+                for img in content["poster_originals"]:
+                    image.append(img['path'])
+            #if content["thumbnails"]:
+            #    Image["Miniaturas"] = [content["path"] for content["path"] in content["thumbnails"]]
+            #if content["thumb_originals"]:
+            #    Image["MinitaurasOriginales"] = [content["path"] for content["path"] in content["thumb_originals"]]
+        except:
             pass
-        return Image
+        return image
 
     def get_rating(self, content):
         """
-        Metodo para traer los generos.        
+        Metodo para traer los generos. 
+
+        Lo paso a str porque el payload pide este tipo de dato para el upload.       
         """
         try:
-            genres = content["restrict"]
+            genres = str(content["restrict"])
             return genres
         except:
             pass
@@ -502,11 +516,13 @@ class Iviru():
     def get_availability(self, content):
         """
         Metodo para chequear la disponibilidad.    
-        Devuelve una lista con los paises en los cual está disponible el contenido.    
+        Devuelve una lista con los paises en los cual está disponible el contenido.
+
+        Le paso un solo valor porque el payload pide tipo de dato str, no list.   
         """
 
         try:
-            availability = content["available_in_countries"]
+            availability = content["available_in_countries"][0]
             return availability
         except:
             pass
@@ -544,7 +560,10 @@ class Iviru():
         pass
 
     def get_package(self,content):
-        pass
+        '''
+            hardcodeo el package para probar payload ya que no puede ser None
+        '''
+        return [{'Type':'subscription-vod'}]
 
     def get_crew(self,content):
         pass
