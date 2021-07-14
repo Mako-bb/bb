@@ -116,13 +116,30 @@ class Iviru():
         self.get_contents()
         self.get_content_data()
 
+
         print('movies:', len(self.movies))
-        print('series:', len(self.series))
+        print('series:', len(self.series)) #Rari, pasa todo por episodios
         print('episodes:', len(self.episodes))
         
         self.check_other()
         self.check_trailers(self.movies)
         self.check_trailers(self.episodes)
+
+        #log para ver que trae episodios, mas rari, episodios sueltos, seasons incompletas.
+        for serie in self.series:
+            print(serie['id'])
+            try:
+                print('Episode: ',serie['episodes'])
+            except:
+                pass   
+            try:
+                print('Season: ',serie['seasons'])
+            except:
+                pass
+            try:
+                print('Serie: ',serie['title'])
+            except:
+                pass
 
         # self.insert_payloads_close(self.payloads,self.episodes_payloads)
         print("--- %s seconds ---" % (time.time() - start_time))
@@ -157,16 +174,22 @@ class Iviru():
             Segun la key categories si es distinta de 1 (este contenido corresponde a canciones OST), el valor 14 corresponde a peliculas y si es 15 a series 
             (mas especificamente a episodios, por como organiza el contenido la pagina. No hay un contenido padre de serie sino un contenido por cada episodio). 
         '''
+        self.contents_ids.sort()
+        self.contents_ids = list(set(self.contents_ids))
         for id in self.contents_ids:
             content_api = 'https://api.ivi.ru/mobileapi/videoinfo/v6/?id={}'.format(
                 str(id))
             response = self.session.get(content_api)
             json_data = response.json()
-            try:
+            if 'error' not in json_data :
                 content = json_data['result']
+                self.generic_payload(content)
                 self.get_type(content)
-            except:
-                print('CONTENIDO VACIO EN LA PAGINA ID ',id)
+            else:
+                pass
+        
+
+               
 
     def check_other(self):
         '''
@@ -237,17 +260,17 @@ class Iviru():
                     self.episodes_payloads.append(payload)
                     self.scraped_episodes.append(episode['id'])
     
-    def generic_payload(self,content,content_type):
+    def generic_payload(self,content):
         '''
             Aca voy a validar el argumento content_type si es serie o movie, dependiendo del type
             va a completar los campos segun corresponda en el payload. Ej. if content_type == serie, agregar
             el par key-value 'Seasons':content['seasons'],... etc.
 
-        '''
-        if content_type == 'serie':
-            pass
-        else:
-            pass
+        # '''
+        # if content_type == 'serie':
+        #     pass
+        # else:
+        #     pass
         
         payload = {
             'PlatformCode': self._platform_code,
@@ -256,7 +279,7 @@ class Iviru():
             'Title': self.get_title(content),
             'OriginalTitle': None,
             'CleanTitle': self.get_clean_title(content),
-            'Type': content_type,
+            # 'Type': content_type,
             'Year': self.get_year(content),
             'Duration': self.get_duration(content),
             'Deeplinks': self.get_Deeplinks(content),
@@ -282,31 +305,23 @@ class Iviru():
 
     def get_type(self, content):
         """
-        Metodo para definir el tipo de contenido.
-        Como no hay un apartado especifico en la api que traiga el dato,
-        vamos a utilizar la existencia del content["episode"] para compro-
-        bar el tipo.
-
-        Se podría verificar que el 'padre' del archivo con el cual estemos
-        trabajando tenga el content["episode"] para chequear si es un episodio
-        o una pelicula.
         """
-        try:
-            content_type = content['categories']
-            if 1 not in content_type:
+        content_type = content['categories']
+        if content_type:
+            if 1 in content_type:
+                pass
+            else:
                 if 14 in content_type:
                     self.movies.append(content)
                 elif 15 in content_type:
-                    if content['seasons']:
-                        self.series.append(content)
-                    else:
+                    if content['duration_minutes']:
                         self.episodes.append(content)
-                else:
-                    self.other.append(content)
-            else:
-                print('ACA SE DESCARTA UN OST')
-        except:
-            print('CONTENIDO SIN CATEGORIA, NO SE VA A REGISTRAR. ID ', content['id'])
+                    elif content['duration_minutes'] not in content:
+                         self.series.append(content)
+                    else:
+                        pass
+        else:
+            pass
 
     def get_Deeplinks(self, content):
         Deeplinks = {
@@ -396,16 +411,26 @@ class Iviru():
         Como vimos que habian posters, miniaturas e imagenes de promo, intentamos traerlas 
         con un for que deberia funcionar.
         """
-        try:
-            image = {
-                "ImagenesPromocionales": [content["promo_images"]["url"] for content["promo_images"]["url"] in content["promo_images"] if content["promo_images"]],
-                "Posters": [content["poster_originals"]["path"] for content["poster_originals"]["path"] in content["poster_originals"] if content["poster_originals"]],
-                "Miniaturas": [content["thumbnails"]["path"] for content["thumbnails"]["path"] in content["thumbnails"] if content["thumbnails"]],
-                "MiniaturasOriginales": [content["thumb_originals"]["path"] for content["thumb_originals"]["path"] in content["thumb_originals"] if content["thumb_originals"]],
-            }   
-            return image
-        except:
+
+        Image = {
+        "ImagenesPromocionales": None,
+        "Posters": None,
+        "Miniaturas": None,
+        "MiniaturasOriginales": None,
+        }   
+
+
+        if content["promo_images"]:
+            Image["ImagenesPromocionales"] = [content["url"] for content in content["promo_images"]]
+        if content["poster_originals"]:
+            Image["Posters"] = [content["path"] for content["path"] in content["poster_originals"]]
+        if content["thumbnails"]:
+            Image["Miniaturas"] = [content["path"] for content["path"] in content["thumbnails"]]
+        if content["thumb_originals"]:
+            Image["MinitaurasOriginales"] = [content["path"] for content["path"] in content["thumb_originals"]]
+        else:
             pass
+        return Image
 
     def get_rating(self, content):
         """
@@ -417,7 +442,7 @@ class Iviru():
         except:
             pass
 
-    def get_provider(self):
+    def get_provider(self, content):
         """
         Metodo para los provider.
         Por parte de la pagina no hay algo relacionado a lo pedido.
@@ -441,7 +466,9 @@ class Iviru():
         así que seguramente se va a poder sacar por bs4.
         
         """
-        deeplink = self.get_Deeplinks + "/" + "person"
+        deeplink = self.get_Deeplinks(content)
+
+        deeplink = deeplink["web"] + "/" + "person"
 
         request = self.sesion.get(deeplink)
 
@@ -454,14 +481,16 @@ class Iviru():
         for item in actores_contenidos:
             nombre = actores_contenidos.find('div', {'class':"slimPosterBlock__title"})
             apellido = actores_contenidos.find('div', {'class':"slimPosterBlock__secondTitle"})
-            actores.append(nombre, apellido)
+            actor = nombre.join(apellido)
+            actores.append(actor)
             print(actores)
         
         return actores
 
     def get_directors(self, content):
+        deeplink = self.get_Deeplinks(content)
 
-        deeplink = self.get_Deeplinks + "/" + "person"
+        deeplink = deeplink["web"] + "/" + "person"
 
         request = self.sesion.get(deeplink)
 
@@ -512,8 +541,8 @@ class Iviru():
         """
 
         try:
-            download = content["allow_download"]
-            return download
+            original = None #aca estaba repetido el metodo download
+            return original
         except:
             pass         
 
