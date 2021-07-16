@@ -11,6 +11,7 @@ from handle.payload import Payload
 from handle.datamanager import Datamanager
 from bs4 import BeautifulSoup
 import datetime
+from selenium import webdriver
 # from time import sleep
 import re
 start_time = time.time()
@@ -42,6 +43,7 @@ class Iviru():
         self.titanScraping = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodes = config(
         )['mongo']['collections']['episode']
+        self.driver = webdriver.Firefox()
 
         self.api_url = self._config['api_collections_url']
         self.url = self._config['url']
@@ -99,12 +101,11 @@ class Iviru():
         return query
 
     def _scraping(self, testing=False):
-
         self.scraped = self.query_field(self.titanScraping, field='Id')
         self.scraped_episodes = self.query_field(
             self.titanScrapingEpisodes, field='Id')
         self.payloads = []
-        self.episodes_payloads = []
+        self.episodes_payloads = None
         self.collections_ids = []
         self.contents_ids = []
         self.movies = []
@@ -115,12 +116,11 @@ class Iviru():
 
         self.get_collections()
         self.get_contents()
-        #self.get_episodes(episode_id)
+        self.get_payload()
+        print(len(self.payloads))
         print(len(self.movies_series_ids))
-        print(len(self.movies))
-        print(len(self.series))
  
-        # self.insert_payloads_close(self.payloads,self.episodes_payloads)
+        #self.insert_payloads_close(self.payloads, self.episodes_payloads)
         print("--- %s seconds ---" % (time.time() - start_time))
 
     def get_collections(self):
@@ -152,16 +152,6 @@ class Iviru():
                         if content['duration_minutes'] > 4:
                             self.movies.append(content)
                     self.movies_series_ids.append(content['id'])      
-
-    def get_episodes(self, content_id):
-        episode_api = 'https://api.ivi.ru/mobileapi/videoinfo/v6/?id={}'.format(str(content_id))
-        response = self.session.get(episode_api)
-        json_data = response.json()
-        if 'error' not in json_data :
-            episode = json_data['result']
-            if not self.isDuplicate(self.episodes_ids, episode['id']):
-                self.episodes.append(episode)
-                self.episodes_ids.append(episode['id'])
 
     def isDuplicate(self, scraped_list, key_search):
         '''
@@ -199,26 +189,19 @@ class Iviru():
                     payload = self.generic_payload(serie,'serie')
                     self.payloads.append(payload)
                     self.scraped.append(serie['id'])
-
+        '''
         if self.episodes:
             for episode in self.episodes:
                 if not self.isDuplicate(self.scraped_episodes,episode['id']):
                     payload = self.episode_payload(episode)
                     self.episodes_payloads.append(payload)
                     self.scraped_episodes.append(episode['id'])
-    
+        '''   
     def generic_payload(self,content,content_type):
         '''
             Aca voy a validar el argumento content_type si es serie o movie, dependiendo del type
-            va a completar los campos segun corresponda en el payload. Ej. if content_type == serie, agregar
-            el par key-value 'Seasons':content['seasons'],... etc.
-
+            va a completar los campos segun corresponda en el payload.
         '''
-        if content_type == 'serie':
-            pass
-        else:
-            pass
-        
         payload = {
             'PlatformCode': self._platform_code,
             'Id': self.get_id(content),
@@ -228,14 +211,15 @@ class Iviru():
             'CleanTitle': self.get_clean_title(content),
             'Type': content_type,
             'Year': self.get_year(content),
-            'Duration': self.get_duration(content),
+            'Year':None,
+            'Duration': None,
             'Deeplinks': self.get_Deeplinks(content),
             'Synopsis': self.get_synopsis(content),
             'Image': self.get_image(content),
             'Rating': self.get_rating(content),
             'Provider': self.get_provider(content),
             'ExternalIds': self.get_external_ids(content),
-            'Genres': self.get_genres(content),
+            #'Genres': self.get_genres(content),
             'Cast': self.get_cast(content),
             'Directors': self.get_directors(content),
             'Availability': self.get_availability(content),
@@ -248,8 +232,94 @@ class Iviru():
             'Timestamp': datetime.datetime.now().isoformat(),
             'CreatedAt': self._created_at,
         }
+        if content_type == 'serie':
+            seasons = self.season_payload(content)
+            payload['Seasons'] = seasons
+            payload['Playback'] = None
+        else:
+            payload['Duration'] = self.get_duration(content)
         return payload
 
+    def get_episode(self,content_id):
+        episode_api = 'https://api.ivi.ru/mobileapi/videoinfo/v6/?id={}'.format(str(content_id))
+        response = self.session.get(episode_api)
+        json_data = response.json()
+        if 'error' not in json_data :
+            episode = json_data['result']
+            if not self.isDuplicate(self.episodes_ids, episode['id']):
+                self.episodes.append(episode)
+                self.episodes_ids.append(episode['id'])
+    
+    def episode_payload(self,content):
+        episode = {
+            'PlatformCode':self._platform_code,
+            'ParentId': None,
+            'ParentTitle': None,
+            'Id': None,
+            'Title':None ,
+            'Episode':None,
+            'Season': None,
+            'Year': None,
+            'Image':None ,
+            'Duration':None,
+            'Deeplinks':{
+                'Web':None,
+                'Android': None,
+                'iOS':None ,
+            },
+            'Synopsis':None,
+            'Rating':None,
+            'Provider':None,
+            'ExternalIds': None,
+            'Genres': None,
+            'Cast':None,
+            'Directors':None,
+            'Availability':None,
+            'Download': None,
+            'IsOriginal': None,
+            'IsAdult': None,
+            'Country': [self.ott_site_country],
+            'Packages': None,
+            'Timestamp': datetime.datetime.now().isoformat(),
+            'CreatedAt': self._created_at,
+        }
+        return episode
+
+    def season_payload(self,content):
+        seasons_list=[]
+        for key, season in content['seasons_extra_info'].items():
+            season_num = int(key) + 1
+            season_str = str(season_num)
+            s = {
+                "Id":season['season_id'], 
+                "Synopsis": self.get_seasons_synopsis(content,str(season_str)), 
+                "Title": self.get_title(season),
+                #"Deeplink": self.get_Deeplinks(content), #ver como hacer deeplink para seasons
+                "Deeplink": {
+                    "Web": None,
+                    'Android': None,
+                    'iOS': None,
+                },
+                "Number": season_num, 
+                "Year": None, 
+                "Image": None, 
+                "Directors": None, 
+                "Cast": None, 
+                "Episodes": season['max_episode'], 
+                "IsOriginal": None 
+            }
+            seasons_list.append(s)
+        return seasons_list
+
+    def get_seasons_synopsis(self,content,season_num):
+        synopsis = None
+        try:
+            descriptions = content['seasons_description']
+            if season_num in descriptions:
+                synopsis = descriptions[season_num]
+        except:
+            pass
+        return synopsis
 
     def get_Deeplinks(self, content):
         Deeplinks = {
@@ -268,8 +338,11 @@ class Iviru():
         return Deeplinks
 
     def get_id(self, content):
+        '''
+            Paso el id a str porque asi lo pide el payload para hacer el upload
+        '''
         try:
-            id = int(content["id"])
+            id = str(content["id"])
             return id
         except:
             pass
@@ -343,8 +416,6 @@ class Iviru():
         Image = {
         "ImagenesPromocionales": None,
         "Posters": None,
-        "Miniaturas": None,
-        "MiniaturasOriginales": None,
         }   
 
 
@@ -352,10 +423,6 @@ class Iviru():
             Image["ImagenesPromocionales"] = [content["url"] for content in content["promo_images"]]
         if content["poster_originals"]:
             Image["Posters"] = [content["path"] for content["path"] in content["poster_originals"]]
-        if content["thumbnails"]:
-            Image["Miniaturas"] = [content["path"] for content["path"] in content["thumbnails"]]
-        if content["thumb_originals"]:
-            Image["MinitaurasOriginales"] = [content["path"] for content["path"] in content["thumb_originals"]]
         else:
             pass
         return Image
@@ -378,62 +445,111 @@ class Iviru():
         return None
 
     def get_genres(self, content):
-        """
-        La página trae los generos en un formato de código interno que hace referencia a las palabras (generos).
-        Por el momento, no encontramos la forma de hacerlo por api.
-
-        Posibles resoluciones: 1- BS4 o Selenium | 2- Hardcodeo.
-
-        """
-
-        pass
+        genres = None
+        content_genres=[]
+        content_categories=[]
+        
+        for key,val in content['genres'].items():    
+            content_genres.append(val)
+        for key, val in content['categories'].items():
+            content_categories.append(val)
+ 
+        if content_genres and content_categories:
+            response = self.session.get(self.categories_api)
+            json_data = response.json()
+            categories_list = json_data['result']
+            for categorie in categories_list:
+                if categorie['id'] in content_categories:
+                    for genre in categorie['genres']:
+                        for key,val in genre.items():
+                            if val['id'] in content_genres:
+                                genres.append(val['hru'])
+                            else: pass
+                else: pass
+        else: pass
+        return genres
     
     def get_cast(self, content):
         """
-        Por api no parece darlo, pero en el link de cada contenido, hay un apartado de cast "url + /person"
-        así que seguramente se va a poder sacar por bs4.
+        Se consigue mediante BS4 el contenido del cast.
+        Hay tantos "find()" xq no traía el contenido de la página de una.
+        Al final realiza un for e indexa todo a una lista
         
         """
         deeplink = self.get_Deeplinks(content)
-
         deeplink = deeplink["Web"] + "/" + "person"
-
-        request = self.sesion.get(deeplink)
-
-        soup = BeautifulSoup(request.text, 'html.parser')
-              
-        actores_contenidos = soup.find('div', {'class':'gallery movieDetails__gallery', 'data-test':"actors_actors_block"})
-       
+        request = self.session.get(deeplink)
+        soup = BeautifulSoup(request.text, 'html.parser')        
+        general_content = soup.find('div', {'class':'page-wrapper'}) #Contenido general del sector que necesitamos usar.
+        section_content = general_content.find('div', {'class':'pageSection__container-inner'}) #Seccionamos la data (ya que no trae el html entero).
+        button = section_content.find('div', {'class':'content_creators__showAllCreators'})
+        actors_block = section_content.find('div', attrs={'class':'gallery movieDetails__gallery', 'data-test':"actors_actors_block"}) #Traemos el bloque de pagina que hace referencia a los actores.
+        actors_content = actors_block.find('ul', {'class':'gallery__list gallery__list_slimPosterBlock gallery__list_type_person'})
         actores = []
 
-        for item in actores_contenidos:
-            nombre = actores_contenidos.find('div', {'class':"slimPosterBlock__title"})
-            apellido = actores_contenidos.find('div', {'class':"slimPosterBlock__secondTitle"})
-            actor = nombre.join(apellido)
-            actores.append(actor)
-            print(actores)
+        if button is None:
+            for item in actors_content:
+                nombre = item.find('div', {'class':"slimPosterBlock__title"}).contents[0]
+                try:
+                    apellido = item.find('div', {'class':"slimPosterBlock__secondTitle"}).contents[0]
+                except: 
+                    apellido = " " #En lo casos donde no hay apellidos, enviamos un espacio.
+                actor = nombre + " " + apellido
+                actores.append(actor)
+        else:  
+            
+            self.driver.get(deeplink) 
+            content_button = self.driver.find_element_by_class_name('content_creators__showAllCreators')
+            try:
+                other_button = self.driver.find_element_by_class_name('lowest-teaser__close')
+                other_button.click()
+            except:
+                pass
+            content_button.click()
+            html = self.driver.page_source
+            soup = BeautifulSoup(html, 'html.parser')        
+            general_content = soup.find('div', {'class':'page-wrapper'}) #Contenido general del sector que necesitamos usar.
+            section_content = general_content.find('div', {'class':'pageSection__container-inner'}) #Seccionamos la data (ya que no trae el html entero).
+            actors_block = section_content.find('div', attrs={'class':'gallery movieDetails__gallery', 'data-test':"actors_actors_block"}) #Traemos el bloque de pagina que hace referencia a los actores.
+            actors_content = actors_block.find('ul', {'class':'gallery__list gallery__list_slimPosterBlock gallery__list_type_person'})
+            actores = []
+            for item in actors_content:
+                nombre = item.find('div', {'class':"slimPosterBlock__title"}).contents[0]
+                try:
+                    apellido = item.find('div', {'class':"slimPosterBlock__secondTitle"}).contents[0]
+                except: " " #En lo casos donde no hay apellidos, enviamos un espacio.
+                actor = nombre + " " + apellido
+                actores.append(actor)
+
         
         return actores
 
     def get_directors(self, content):
+        """
+        Script parecido al del cast.
+        Traemos los directores y los indexamos a una lista.
+        
+        """
         deeplink = self.get_Deeplinks(content)
-
         deeplink = deeplink["Web"] + "/" + "person"
-
-        request = self.sesion.get(deeplink)
-
-        soup = BeautifulSoup(request.text, 'html.parser')
-
-        directores_contenidos = soup.find('div', {'class':'gallery movieDetails__gallery', 'data-test':"actors_directors_block"})
-
+        request = self.session.get(deeplink)
+        soup = BeautifulSoup(request.text, 'html.parser')        
+        general_content = soup.find('div', {'class':'page-wrapper'}) #Contenido general del sector que necesitamos usar.
+        section_content = general_content.find('div', {'class':'pageSection__container-inner'}) #Seccionamos la data (ya que no trae el html entero).
+        directors_block = section_content.find('div', attrs={'class':'gallery movieDetails__gallery', 'data-test':"actors_directors_block"}) #Traemos el bloque de pagina que hace referencia a los directores.
+        directors_content = directors_block.find('ul', {'class':'gallery__list gallery__list_slimPosterBlock gallery__list_type_person'})
         directores = []
 
-        for item in directores_contenidos:
-            nombre = directores_contenidos.find('div', {'class':"slimPosterBlock__title"})
-            apellido = directores_contenidos.find('div', {'class':"slimPosterBlock__secondTitle"})
-            directores.append(nombre, apellido)
-            print(directores)
+        for item in directors_content:
+            nombre = item.find('div', {'class':"slimPosterBlock__title"}).contents[0]
+            try:
+                apellido = item.find('div', {'class':"slimPosterBlock__secondTitle"}).contents[0]
+            except: 
+                apellido = " " #En lo casos donde no hay apellidos, enviamos un espacio.
+            director = nombre + " " + apellido
+            directores.append(director)
 
+        
         return directores
 
     def get_availability(self, content):
@@ -475,13 +591,63 @@ class Iviru():
             pass         
 
     def get_isBranded(self,content):
-        pass
+        """
+        Hay que chequear bien, pero parece no haber algo así en la página.
+        """
 
     def get_isAdult(self,content):
-        pass
-
+        """
+        Metodo para ver si es contenido para adultos.
+        Devuelve un booleano        
+        """
+        try:
+            isAdult = content["is_erotic"]
+            return isAdult
+        except:
+            pass    
     def get_package(self,content):
-        pass
-
+        """
+        Metodo para el package.      
+        """
+        try:
+            packages = content["content_paid_type"]
+            return packages
+        except:
+            pass  
     def get_crew(self,content):
-        pass
+        """
+        Script parecido al del cast.
+        Se trae el cast según su apartado, productores, operadores, etc.
+        Se hace un if para evitar que rompa al no encontrar alguno de los apartados.
+        
+        """
+        deeplink = self.get_Deeplinks(content)
+        deeplink = deeplink["Web"] + "/" + "person"
+        request = self.session.get(deeplink)
+        soup = BeautifulSoup(request.text, 'html.parser')        
+        general_content = soup.find('div', {'class':'page-wrapper'}) #Contenido general del sector que necesitamos usar.
+        section_content = general_content.find('div', {'class':'pageSection__container-inner'}) #Seccionamos la data (ya que no trae el html entero).
+        crew_option = ['producers', 'operators', 'painter', 'editor', 'screenwriters', 'montage', 'composer']
+        crew = []
+        for option in crew_option:
+            crew_block = section_content.find('div', attrs={'class':'gallery movieDetails__gallery', 'data-test':"actors_{}_block".format(option)})
+            if crew_block == None:
+                pass
+            else:
+                crew_content = crew_block.find('ul', {'class':'gallery__list gallery__list_slimPosterBlock gallery__list_type_person'})
+                for item in crew_content:
+                    rol = crew_block.find('span', {'class':'gallery__headerLink'}).contents[0]
+                    nombre = item.find('div', {'class':"slimPosterBlock__title"}).contents[0]
+                    try:
+                        apellido = item.find('div', {'class':"slimPosterBlock__secondTitle"}).contents[0]
+                    except: 
+                        apellido = " " #En lo casos donde no hay apellidos, enviamos un espacio.
+                    persona = nombre + " " + apellido
+                    crew_dict = {
+                        "Role": rol,
+                        "Name": persona
+                    }
+
+                    crew.append(crew_dict)
+
+        return crew
