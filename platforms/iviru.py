@@ -1,6 +1,6 @@
 from os import replace
 import time
-from pymongo.common import CONNECT_TIMEOUT
+from pymongo.common import CONNECT_TIMEOUT, clean_node
 import requests
 from yaml.tokens import FlowMappingStartToken
 from handle.replace import _replace
@@ -16,7 +16,7 @@ import re
 start_time = time.time()
 
 
-class Iviru():
+class Iviruu():
     def __init__(self, ott_site_uid, ott_site_country, type):
         """
         Iviru es una ott de Rusia.
@@ -44,6 +44,8 @@ class Iviru():
         )['mongo']['collections']['episode']
 
         self.api_url = self._config['api_collections_url']
+        self.contents_api = self._config['api_contents_url']
+        self.categories_api = self._config['api_categories_url']
         self.url = self._config['url']
 
         self.session = requests.session()
@@ -100,65 +102,129 @@ class Iviru():
 
     def _scraping(self, testing=False):
         self.scraped = self.query_field(self.titanScraping, field='Id')
-        self.scraped_episodes = self.query_field(
-            self.titanScrapingEpisodes, field='Id')
+        self.scraped_episodes = self.query_field(self.titanScrapingEpisodes, field='Id')
+        self.api_url = self.api_url + '?app_version=870&from={}&to={}'
+        self.contents_api = self.contents_api +'?id={}&from={}&to={}&withpreorderable=true&app_version=870'
+        self.categories_ids=[]
+        self.categories_contents=[]
         self.payloads = []
-        self.episodes_payloads = None
-        self.collections_ids = []
-        self.contents_ids = []
+        self.episodes_payloads = []
         self.movies = []
         self.series = []
         self.episodes = []
         self.movies_series_ids = []
         self.episodes_ids = []
 
-        self.get_collections()
+        self.get_ids()
         self.get_contents()
-        self.get_payload()
+
+        print('------movies&series-------')
         print(len(self.payloads))
-        print(len(self.movies_series_ids))
- 
-        self.insert_payloads_close(self.payloads, self.episodes_payloads)
+        print(len(self.movies))
+        print(len(self.series))
+        print('------episodes-------')
+        print(len(self.episodes))
+        print(len(self.episodes_payloads))
+        #self.insert_payloads_close(self.payloads, self.episodes_payloads)
         print("--- %s seconds ---" % (time.time() - start_time))
 
-    def get_collections(self):
-        '''
-            Obtenemos todos los ids correspondientes a cada categoria de contenidos, como esta dividida la pagina
-        '''
-        collections_api = self.api_url
-        response = self.session.get(collections_api)
-        json_data = response.json()
-        json_data = json_data['result']
-        for content in json_data:
-            self.collections_ids.append(content['id'])
-
+    def get_ids(self):
+        self.iterate_all(self.api_url,None,99,self.categories_ids)
+        
     def get_contents(self):
-        '''
-            Obtenemos los ids correspondientes a los contenidos por categoria
-        '''
-        for collection in self.collections_ids:
-            collection_api = 'https://api.ivi.ru/mobileapi/collection/catalog/v5/?id={}&app_version=870'.format(
-                str(collection))
-            response = self.session.get(collection_api)
+        for json in self.categories_ids:
+            content_id = json['id']
+            self.iterate_all(self.contents_api,content_id,29,self.categories_contents)
+            
+    def iterate_all(self,url,id,step,to_list):
+        json_data = None
+        init = 0
+        end = init + step
+        next_page = True
+        while next_page:
+            if id:
+                api = url.format(id,init,end)
+            else:
+                api = url.format(init,end)
+            response = self.session.get(api)
             json_data = response.json()
-            json_data = json_data['result']
-            for content in json_data:
-                if not self.isDuplicate(self.movies_series_ids, content['id']):
-                    if content['object_type'] == 'compilation':
-                        self.series.append(content)
-                    elif content['object_type'] == 'video':
-                        if content['duration_minutes'] > 4:
-                            self.movies.append(content)
-                    self.movies_series_ids.append(content['id'])      
+            if 'error' in json_data:
+                next_page = False
+            else:
+                json_data = json_data['result']
+                self.save_contents(json_data,to_list)
+                init = end 
+                end = init + step
+                if len(json_data) < step:
+                    next_page = False
 
-    def isDuplicate(self, scraped_list, key_search):
+    def save_contents(self,json_result,to_list):
+        if len(json_result) > 1:
+            for content in json_result:
+                self.separate_videos_compilations(content)
+                to_list.append(content)
+        elif len(json_result) == 1:
+            self.separate_videos_compilations(json_result[0])
+            to_list.append(json_result[0])
+        else:
+            pass
+
+        self.get_payloads()
+
+    def separate_videos_compilations(self, content):
+        if content['object_type'] == 'compilation':
+            if not self.isDuplicate(self.movies_series_ids, content['id']):
+                self.series.append(content)
+                self.movies_series_ids.append(content['id'])
+        else:
+            if content['object_type'] == 'video':
+                if content['duration_minutes'] > 4:
+                    self.separate_episode_movie(content)
+                else: pass
+            else: pass  
+
+    def separate_episode_movie(self, content):
+        content_id = content['id']
+        content_api = 'https://api.ivi.ru/mobileapi/videoinfo/v6/?id={}'.format(content_id)
+        response = self.session.get(content_api)
+        json_data = response.json()
+        if 'error' not in json_data :
+            content_result = json_data['result']
+            if 'episode' in content_result or 'compilation' in content_result:
+                if not self.isDuplicate(self.episodes_ids, content_id):
+                    self.episodes.append(content_result)
+                    self.episodes_ids.append(content_id)
+                else: pass
+            else:
+                if not self.isDuplicate(self.movies_series_ids, content_id):
+                    self.movies.append(content_result)
+                    self.movies_series_ids.append(content_id)
+        else: pass
+
+    def get_payloads(self):
         '''
-            Metodo para validar elementos duplicados segun valor(key) pasado por parametro en una lista de scrapeados.
         '''
-        isDup = False
-        if key_search in scraped_list:
-            isDup = True
-        return isDup
+        if self.movies:
+            print('----creando payloads movies----')
+            for movie in self.movies:
+                if not self.isDuplicate(self.scraped,movie['id']):
+                    payload = self.generic_payload(movie,'movie')
+                    self.payloads.append(payload)
+                    self.scraped.append(movie['id'])     
+        if self.series:
+            print('----creando payloads series----')
+            for serie in self.series:
+                if not self.isDuplicate(self.scraped,serie['id']):
+                    payload = self.generic_payload(serie,'serie')
+                    self.payloads.append(payload)
+                    self.scraped.append(serie['id'])
+        if self.episodes:
+            print('----creando payloads episodes----')
+            for episode in self.episodes:
+                if not self.isDuplicate(self.scraped_episodes,episode['id']):
+                    payload = self.episode_payload(episode)
+                    self.episodes_payloads.append(payload)
+                    self.scraped_episodes.append(episode['id'])
 
     def insert_payloads_close(self, payloads, epi_payloads):
         '''
@@ -170,31 +236,7 @@ class Iviru():
             self.mongo.insertMany(self.titanScrapingEpisodes, epi_payloads)
         self.session.close()
         Upload(self._platform_code, self._created_at, testing=True)
-
-    def get_payload(self):
-        '''
-        '''
-        if self.movies:
-            for movie in self.movies:
-                if not self.isDuplicate(self.scraped,movie['id']):
-                    payload = self.generic_payload(movie,'movie')
-                    self.payloads.append(payload)
-                    self.scraped.append(movie['id'])
-        
-        if self.series:
-            for serie in self.series:
-                if not self.isDuplicate(self.scraped,serie['id']):
-                    payload = self.generic_payload(serie,'serie')
-                    self.payloads.append(payload)
-                    self.scraped.append(serie['id'])
-        '''
-        if self.episodes:
-            for episode in self.episodes:
-                if not self.isDuplicate(self.scraped_episodes,episode['id']):
-                    payload = self.episode_payload(episode)
-                    self.episodes_payloads.append(payload)
-                    self.scraped_episodes.append(episode['id'])
-        '''   
+    
     def generic_payload(self,content,content_type):
         '''
             Aca voy a validar el argumento content_type si es serie o movie, dependiendo del type
@@ -205,24 +247,20 @@ class Iviru():
             'Id': self.get_id(content),
             'Crew': self.get_crew(content),
             'Title': self.get_title(content),
-            'OriginalTitle': None,
+            'OriginalTitle': self.get_original_title(content),
             'CleanTitle': self.get_clean_title(content),
             'Type': content_type,
-            #'Year': self.get_year(content),
-            'Year':None,
+            'Year': self.get_year(content),
             'Duration': None,
-            'Deeplinks': self.get_Deeplinks(content),
+            'Deeplinks': self.get_Deeplinks(content,None),
             'Synopsis': self.get_synopsis(content),
             'Image': self.get_image(content),
             'Rating': self.get_rating(content),
             'Provider': self.get_provider(content),
             'ExternalIds': self.get_external_ids(content),
-            #'Genres': self.get_genres(content),
-            'Genres': None,
-            #'Cast': self.get_cast(content),
-            'Cast': None,
-            #'Directors': self.get_directors(content),
-            'Directors': None,
+            'Genres': self.get_genres(content),
+            'Cast': self.get_cast(content),
+            'Directors': self.get_directors(content),
             'Availability': self.get_availability(content),
             'Download': self.get_download(content),
             'IsOriginal': self.get_isOriginal(content),
@@ -240,47 +278,36 @@ class Iviru():
         else:
             payload['Duration'] = self.get_duration(content)
         return payload
-
-    def get_episode(self,content_id):
-        episode_api = 'https://api.ivi.ru/mobileapi/videoinfo/v6/?id={}'.format(str(content_id))
-        response = self.session.get(episode_api)
-        json_data = response.json()
-        if 'error' not in json_data :
-            episode = json_data['result']
-            if not self.isDuplicate(self.episodes_ids, episode['id']):
-                self.episodes.append(episode)
-                self.episodes_ids.append(episode['id'])
     
     def episode_payload(self,content):
         episode = {
             'PlatformCode':self._platform_code,
-            'ParentId': None,
-            'ParentTitle': None,
-            'Id': None,
-            'Title':None ,
-            'Episode':None,
-            'Season': None,
-            'Year': None,
-            'Image':None ,
-            'Duration':None,
-            'Deeplinks':{
-                'Web':None,
-                'Android': None,
-                'iOS':None ,
-            },
-            'Synopsis':None,
-            'Rating':None,
-            'Provider':None,
-            'ExternalIds': None,
-            'Genres': None,
-            'Cast':None,
-            'Directors':None,
-            'Availability':None,
-            'Download': None,
-            'IsOriginal': None,
-            'IsAdult': None,
+            'Id': self.get_id(content),
+            'ParentId': self.get_ep_parent_id(content),
+            'ParentTitle': self.get_ep_parent_title(content),
+            'Episode':self.get_ep_episode_number(content),
+            'Season': self.get_ep_season_number(content),
+            'Crew': self.get_crew(content),
+            'Title':self.get_title(content),
+            'OriginalTitle': self.get_original_title(content),
+            'Year': self.get_year(content),
+            'Duration':self.get_duration(content),
+            'ExternalIds': self.get_external_ids(content),
+            'Deeplinks':self.get_Deeplinks(content,None),
+            'Synopsis':self.get_synopsis(content),
+            'Image':self.get_image(content),
+            'Rating':self.get_rating(content),
+            'Provider':self.get_provider(content),
+            'Genres': self.get_genres(content),
+            'Cast':self.get_cast(content),
+            'Directors':self.get_directors(content),
+            'Availability':self.get_availability(content),
+            'Download': self.get_download(content),
+            'IsOriginal': self.get_isOriginal(content),
+            'IsAdult': self.get_isAdult(content),
+            'IsBranded':self.get_isBranded(content),
+            'Packages': self.get_package(content),
             'Country': [self.ott_site_country],
-            'Packages': None,
             'Timestamp': datetime.datetime.now().isoformat(),
             'CreatedAt': self._created_at,
         }
@@ -295,14 +322,9 @@ class Iviru():
                 "Id":season['season_id'], 
                 "Synopsis": self.get_seasons_synopsis(content,str(season_str)), 
                 "Title": self.get_title(season),
-                #"Deeplink": self.get_Deeplinks(content), #ver como hacer deeplink para seasons
-                "Deeplink": {
-                    "Web": None,
-                    'Android': None,
-                    'iOS': None,
-                },
+                "Deeplink": self.get_Deeplinks(content,season_str),
                 "Number": season_num, 
-                "Year": None, 
+                "Year": self.get_year(content), 
                 "Image": None, 
                 "Directors": None, 
                 "Cast": None, 
@@ -311,6 +333,56 @@ class Iviru():
             }
             seasons_list.append(s)
         return seasons_list
+
+    def isDuplicate(self, scraped_list, key_search):
+        '''
+            Metodo para validar elementos duplicados segun valor(key) pasado por parametro en una lista de scrapeados.
+        '''
+        isDup = False
+        if key_search in scraped_list:
+            isDup = True
+        return isDup
+
+    def get_ep_parent_id(self, content):
+        parent_id = None
+        try:
+            parent_id = content['compilation']
+        except:
+            pass
+        return parent_id
+    
+    def get_ep_parent_title(self, content):
+        parent_title = None
+        try:
+            parent_title = content['compilation_hru']
+        except:
+            pass
+        return parent_title
+
+    def get_ep_episode_number(self, content):
+        ep_number = None
+        try:
+            ep_number = content['episode']
+        except:
+            pass
+        return ep_number
+
+    def get_ep_season_number(self, content):
+        season_number = None
+        try:
+            season_number = content['season']
+        except:
+            pass
+        return season_number
+
+    def get_original_title(self, content):
+        original_title = None
+        try:
+            if content['orig_title'] != '':
+                original_title = content['orig_title']
+        except:
+            pass
+        return original_title
 
     def get_seasons_synopsis(self,content,season_num):
         synopsis = None
@@ -322,20 +394,30 @@ class Iviru():
             pass
         return synopsis
 
-    def get_Deeplinks(self, content):
+    def get_Deeplinks(self, content, season):
         Deeplinks = {
             "Web": None,
             "Android": None,
             "Ios": None,
-        }      
-        if content["share_link"]:
-            Deeplinks["Web"] = content["share_link"]
-        else:
-            available = content['available_in_countries']
-            if available:
-                Deeplinks["Web"] = 'https://www.ivi.tv/watch/{}'.format(content["id"]),
+        }
+        if season:
+            if content["hru"] != '':
+                Deeplinks["Web"] = 'https://www.ivi.tv/watch/{}/season{}'.format(content["hru"],season)
+        else: 
+            if "share_link" in content:
+                Deeplinks["Web"] = content["share_link"]
             else:
-                pass
+                available = content['available_in_countries']
+                if available:
+                    if content["object_type"] == 'video':
+                        Deeplinks["Web"] = 'https://www.ivi.tv/watch/{}'.format(content["id"])
+                    else:
+                        if content["hru"]:
+                            Deeplinks["Web"] = 'https://www.ivi.tv/watch/{}'.format(content["hru"])
+                        else:
+                            pass
+                else:
+                    pass
         return Deeplinks
 
     def get_id(self, content):
@@ -368,14 +450,19 @@ class Iviru():
 
 
     def get_year(self, content):
-        try:
-            year = int(content["year"])
-            if year < 2022:
-                return year
-            else:
+        year = 0
+        if content['object_type'] == 'video':
+            try:
+                year = int(content["year"])
+            except:
                 pass
-        except:
+        else:
             pass
+        if 1870 > year or year > 2022:
+            year = None
+        else:
+            pass
+        return year
 
     def get_duration(self, content):
         try:
@@ -403,11 +490,17 @@ class Iviru():
             pass
 
     def get_synopsis(self, content):
+        synopsis = None
         try:
-            synopsis = content["synopsis"]
-            return synopsis
+            if content["synopsis"] != '':
+                synopsis = content["synopsis"]
+            elif content["description"] != '':
+                synopsis = content["description"]
+            else:
+                pass
         except:
             pass
+        return synopsis
 
     def get_image(self, content):
         """
@@ -417,20 +510,14 @@ class Iviru():
 
         Hago una lista de dict, porque el payload pide que sea lista para hacer el upload.
         """
-
         image = []  
-
         try:
-            if content["promo_images"]:
+            if "promo_images" in content:
                 for img in content["promo_images"]:
                     image.append(img['url'])
-            if content["poster_originals"]:
+            if "poster_originals" in content:
                 for img in content["poster_originals"]:
                     image.append(img['path'])
-            #if content["thumbnails"]:
-            #    Image["Miniaturas"] = [content["path"] for content["path"] in content["thumbnails"]]
-            #if content["thumb_originals"]:
-            #    Image["MinitaurasOriginales"] = [content["path"] for content["path"] in content["thumb_originals"]]
         except:
             pass
         return image
@@ -452,26 +539,43 @@ class Iviru():
         Metodo para los provider.
         Por parte de la pagina no hay algo relacionado a lo pedido.
         """
-        return None
+        provider = None
+        return provider
 
     def get_genres(self, content):
         """
-        La página trae los generos en un formato de código interno que hace referencia a las palabras (generos).
-        Por el momento, no encontramos la forma de hacerlo por api.
-
-        Posibles resoluciones: 1- BS4 o Selenium | 2- Hardcodeo.
-
         """
+        genres = []
+        content_genres=[]
+        content_categories=[]
+        
+        for genre in content['genres']:   
+            content_genres.append(genre)
+        for categorie in content['categories']:
+            content_categories.append(categorie)
 
-        pass
-    
+        if content_genres and content_categories:
+            response = self.session.get(self.categories_api)
+            json_data = response.json()
+            categories_list = json_data['result']
+            for categorie in categories_list:
+                if categorie['id'] in content_categories:
+                    for genre in categorie['genres']:
+                        if genre['id'] in content_genres:
+                            genres.append(genre['hru'])
+                        else: pass
+                else: pass
+        else: genres = None
+        return genres
+
     def get_cast(self, content):
         """
         Por api no parece darlo, pero en el link de cada contenido, hay un apartado de cast "url + /person"
         así que seguramente se va a poder sacar por bs4.
         
         """
-        deeplink = self.get_Deeplinks(content)
+        return None
+        deeplink = self.get_Deeplinks(content,None)
 
         deeplink = deeplink["Web"] + "/" + "person"
 
@@ -489,11 +593,12 @@ class Iviru():
             actor = nombre.join(apellido)
             actores.append(actor)
             print(actores)
+        #return actores
         
-        return actores
 
     def get_directors(self, content):
-        deeplink = self.get_Deeplinks(content)
+        return None
+        deeplink = self.get_Deeplinks(content, None)
 
         deeplink = deeplink["Web"] + "/" + "person"
 
@@ -511,21 +616,20 @@ class Iviru():
             directores.append(nombre, apellido)
             print(directores)
 
-        return directores
+        #return directores
 
     def get_availability(self, content):
         """
         Metodo para chequear la disponibilidad.    
-        Devuelve una lista con los paises en los cual está disponible el contenido.
-
         Le paso un solo valor porque el payload pide tipo de dato str, no list.   
         """
-
-        try:
-            availability = content["available_in_countries"][0]
-            return availability
-        except:
-            pass
+        availability = None
+        if content['object_type'] == 'video':
+            try:
+                availability = content["best_watch_before"]
+            except:
+                pass
+        return availability
 
 
     def get_download(self, content):
@@ -533,37 +637,60 @@ class Iviru():
         Metodo para ver si se puede descargar.
         Devuelve un booleano        
         """
-
+        download = False
         try:
             download = content["allow_download"]
-            return download
         except:
-            pass    
+            pass
+        return download    
 
     def get_isOriginal(self, content):
         """
         Metodo para ver si es original de la página.
         
-        Devuelve un booleano        
-        """
+        Devuelve un bool
 
-        try:
-            original = None #aca estaba repetido el metodo download
-            return original
-        except:
-            pass         
+        No hay data de si es original o no, se hardcodea en None, por si algun dia cambia que no quede en False.        
+        """
+        isOriginal = None
+        return isOriginal      
 
     def get_isBranded(self,content):
-        pass
+        '''
+        No hay data de si es branded o no, se hardcodea en None, por si algun dia cambia que no quede en False.
+        '''
+        branded = None
+        return branded
 
     def get_isAdult(self,content):
-        pass
+        isErotic = False
+        try:
+            isErotic = content['is_erotic']
+        except:
+            pass
+        return isErotic
 
     def get_package(self,content):
-        '''
-            hardcodeo el package para probar payload ya que no puede ser None
-        '''
-        return [{'Type':'subscription-vod'}]
+        """
+        Metodo para el package.      
+        """
+        packages = []
+        package = {'Type':'free-vod'}
+        try:
+            for pack in content["content_paid_types"]:
+                for key,val in pack.items():
+                    package['Type'] =  val
+                    packages.append(package)
+        except:
+            packages.append(package)
+        return packages
 
-    def get_crew(self,content):
-        pass
+def get_crew(self,content):
+    """
+    Script parecido al del cast.
+    Se trae el cast según su apartado, productores, operadores, etc.
+    Se hace un if para evitar que rompa al no encontrar alguno de los apartados.
+
+    """
+    crew = None
+    return crew
