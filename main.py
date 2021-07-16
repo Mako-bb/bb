@@ -92,7 +92,7 @@ from platforms.starz_fev import StarzFEV
 #Vice: Fede, Pato, Darío
 from platforms.vice_pfd import VicePFD
 #Iviru Naza y Mati
-from platforms.iviru import Iviru
+from platforms.iviru import Iviruu
 
 #HistoryVault: Damián y Fio
 from platforms.historyVault import historyV
