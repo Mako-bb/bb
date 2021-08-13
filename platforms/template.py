@@ -25,12 +25,12 @@ class Template():
     El __init__ de la clase define los atributos de la clase al instanciar un objeto de la misma.
     Los parámetros que se le pasan al momento de instanciar una clase son los que se insertan desde la terminal
     y siempre son los mismos:
-    - ott_site_uid: El nombre de la clase, debe coincidir con el nombre que se encuentra en el config.yaml
+    - ott_platforms: El nombre de la clase, debe coincidir con el nombre que se encuentra en el config.yaml
     - ott_site_country: El ISO code de 2 dígitos del país a scrapear. ejm: AR (Argentina), US (United States)
-    - operation: El tipo de operación a realizar. Cuando estamos desarrollando usamos 'testing', cuando
+    - ott_operation: El tipo de operación a realizar. Cuando estamos desarrollando usamos 'testing', cuando
     se corre en el server usa 'scraping'
     Al insertar el comando en la terminal, se vería algo así:
-    python main.py --o [operation] --c [ott_site_country] [ott_site_uid]
+    python main.py --o [ott_operation] --c [ott_site_country] [ott_platforms]
 
     Los atributos de la clase que use Datamanager siempre deben mantener el nombre, ya que Datamanager
     accede a ellos por nombre. Por ejemplo, si el script usa Datamanager, entonces self.titanScrapingEpisodios
@@ -38,9 +38,9 @@ class Template():
     Datamanager no lo va a reconocer y va a lanzar una excepción.
     """
 
-    def __init__(self, ott_site_uid, ott_site_country, operation):
-        self.test = operation in ("testing", "return") #
-        config_ = config()['ott_sites'][ott_site_uid] # Obligatorio
+    def __init__(self, ott_platforms, ott_site_country, ott_operation):
+        self.test = ott_operation in ("testing", "return") #
+        config_ = config()['ott_sites'][ott_platforms] # Obligatorio
         self.country = ott_site_country # Opcional, puede ser útil dependiendo de la lógica del script.
         self._created_at = time.strftime('%Y-%m-%d')
         self._platform_code = config_['countries'][ott_site_country]
@@ -66,7 +66,7 @@ class Template():
         nuestro Mongo local, la cual podemos usar para saltar los contenidos scrapeados y volver rápidamente
         a donde había cortado el script.
         """
-        if operation == 'return':
+        if ott_operation == 'return':
             return_params = {'PlatformCode' : self._platform_code}
             last_item = self.mongo.lastCretedAt('titanPreScraping', return_params)
             if last_item.count() > 0:
@@ -78,5 +78,5 @@ class Template():
         else:
             self.prescraped_ids = list()
 
-        if operation in ('testing', 'scraping'):
+        if ott_operation in ('testing', 'scraping'):
             self.scraping()
