@@ -29,7 +29,17 @@ mongo:
 types:
   movie: movie
   serie: serie
-ott_sites:
+ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrollando
+  Template: # El nombre de la clase, debe coincidir con la que está en el script
+    countries: # El campo 'countries' es necesario en todos los casos
+      AR: ar.template # Cada país de esta lista debe ir en el format 'PAIS: pais.plataforma'
+      US: us.template # Si no siguen en el formato pueden causar problemas al correr en los servers
+      CA: ca.template
+    # a excepción de 'countries', pueden llamar y estructurar los
+    # demás campos de forma libre según requiera el script, por ejemplo:
+    auth:
+      username: pepito
+      password: pepito1154
   AcornTV:
     countries:
       US: us.acorntv
@@ -55,7 +65,7 @@ ott_sites:
       US: us.amazon_login
   HBO_NO:
     countries:
-      US: us.hbo_test      
+      US: us.hbo_test
   HBO_Test:
     countries:
       US: us.hbo_test
@@ -182,7 +192,7 @@ ott_sites:
   SundanceNow:
     countries:
       US: 'us.sundancenow'
-      CA: 'ca.sundancenow'      
+      CA: 'ca.sundancenow'
   Amc:
     countries:
       US: us.amcseries_
@@ -225,7 +235,7 @@ ott_sites:
     start_url: https://www.bet.com/shows.html
     queries:
       main_page_see_more_xpath: '/html/body/div[3]/div[1]/div[5]/div/div[2]/section[3]/div/div[{}]/a'
-      episodes_see_more_css_selector: 'a.js-loadMoreButton:nth-child({})' 
+      episodes_see_more_css_selector: 'a.js-loadMoreButton:nth-child({})'
   AMCNetworks:
     countries:
       US: us.wetv # Completar con la lista de platform.code
@@ -405,13 +415,13 @@ ott_sites:
       AR: ar.pluto
     url: https://www.pluto.com.ar/
     api_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.0-38a9908bb8d8f15260d990bd00c1f6b49c7bba28&app_name=web&clientDeviceType=0&clientID=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&clientModelNumber=na&deviceDNT=false&deviceId=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&deviceLat=-34.5106&deviceLon=-58.7536&deviceMake=Microsoft%2BEdge&deviceModel=web&deviceType=web&deviceVersion=91.0.864.37&marketingRegion=VE&serverSideAds=true&sessionID=02158376-c248-11eb-975c-0242ac110002&sid=02158376-c248-11eb-975c-0242ac110002&userId=&attributeV4=foo
-    season_api_url: https://service-vod.clusters.pluto.tv/v3/vod/series/    
+    season_api_url: https://service-vod.clusters.pluto.tv/v3/vod/series/
   DarkMattertv:
     countries:
       AR: ar.darkmatter
     start_url: https://www.darkmattertv.com/?
     api_url: https://api-ott.darkmattertv.com/getreferencedobjects?&auth_token=27e87908-8537-4350-8775-eec416fa12a4&banners=0&connection=wifi&device_type=desktop&for_user=0&image_format=poster&image_width=213&is_af_request=0&language=es&max=18&parent_id={}&parent_type=collection&partner=internal&platform=web&timestamp=1623685147&use_device_width_widescreen=1&version=11.0
-  
+
   Iviruu:
     countries:
       RU: ru.iviru
@@ -429,7 +439,7 @@ ott_sites:
     api_url: https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module/tilegroup/2431500?brand=026&device=001&size=999999
 
   Allblk_panda:
-    countries: 
+    countries:
       US: us.umc
     start_url: https://allblk.tv/browse/all/
     package_url: https://allblk.tv/gift/
@@ -473,7 +483,7 @@ ott_sites:
       AR: ar.pluto
     all_episodes_url2: https://service-vod.clusters.pluto.tv/v3/vod/series/{}/seasons?advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=c636f54d-adcd-4b30-b2cd-02cf58d954f4&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=c636f54d-adcd-4b30-b2cd-02cf58d954f4&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.114&marketingRegion=VE&serverSideAds=true&sessionID=be85a5ba-d44b-11eb-8a41-0242ac110002&sid=be85a5ba-d44b-11eb-8a41-0242ac110002&userId=&attributeV4=foo
     all_episodes_url: https://service-vod.clusters.pluto.tv/v3/vod/slugs/
-    all_titles_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=087a349a-f41e-4d03-8213-2d8330d86e68&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=087a349a-f41e-4d03-8213-2d8330d86e68&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.114&marketingRegion=VE&serverSideAds=true&sessionID=f76850cd-d39e-11eb-9515-0242ac110002&sid=f76850cd-d39e-11eb-9515-0242ac110002&userId=&attributeV4=foo     
+    all_titles_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=087a349a-f41e-4d03-8213-2d8330d86e68&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=087a349a-f41e-4d03-8213-2d8330d86e68&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.114&marketingRegion=VE&serverSideAds=true&sessionID=f76850cd-d39e-11eb-9515-0242ac110002&sid=f76850cd-d39e-11eb-9515-0242ac110002&userId=&attributeV4=foo
   StarzPQ: #Patricio
     countries:
       AR: ar.starz
@@ -484,7 +494,7 @@ ott_sites:
     countries:
       AR: ar.starz
     api_url: https://playdata.starz.com/metadata-service/play/partner/Web_ES/v8/blocks?playContents=map&lang=es-ES&pages=MOVIES,SERIES&includes=contentId,title,contentType,releaseYear,runtime,logLine,image,ratingCode,genres,actors,directors,original,countryOfOrigin,seriesName,seasonNumber,episodeCount,childContent,details
-  
+
   StarzFEV: #Federico
     countries:
       AR: ar.starz
@@ -507,7 +517,7 @@ ott_sites:
       info_movie: https://www.hbo.com/movies/
       all_documentaries: https://www.hbo.com/documentaries/catalog
       all_series: https://www.hbo.com/series/all-series
-      
+
 
   HBOPQ: #Patricio
       countries:
@@ -517,7 +527,7 @@ ott_sites:
       info_movie: https://www.hbo.com/movies/
       all_documentaries: https://www.hbo.com/documentaries/catalog
       all_series: https://www.hbo.com/series/all-series
-      
+
 
   HBOPQ: #Patricio
       countries:
@@ -530,6 +540,6 @@ ott_sites:
   VicePQ: #Patricio
       countries:
         AR: en_us.vice
-      url:  https://www.viceland.com/ 
+      url:  https://www.viceland.com/
       all_shows: https://video.vice.com/api/v1/shows?locale=en_us&page=1&per_page=50
       all_episodes_per_shows: https://video.vice.com/api/v1/videos?locale=en_us&show_id=5f527d2dadb68f5cd21833d3&video_type=full_length&sort=episode_display_mode&per_page=24&page=1
