@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import requests # Si el script usa requests/api o requests/bs4
+import time
 from bs4                import BeautifulSoup # Si el script usa bs4
 from selenium           import webdriver # Si el script usa selenium
 from handle.datamanager import Datamanager # Opcional si el script usa Datamanager
@@ -80,3 +81,7 @@ class Template():
 
         if ott_operation in ('testing', 'scraping'):
             self.scraping()
+
+
+    def scraping(self):
+        print("estoy corriendo el Template")
