@@ -3,7 +3,7 @@ import argparse
 import logging
 from datetime import datetime
 from common import config
-from handle.logchecker import LogChecker
+#from handle.logchecker import LogChecker
 
 # 1) Evito importar todo con importlib.
 from importlib import import_module

@@ -29,6 +29,29 @@ mongo:
 types:
   movie: movie
   serie: serie
+tp_sites:
+  reelgood_v3:
+    - YoutubePremiumUS
+    - YoutubeUs
+    - GoogleUs
+    - HBOUsNow
+    - AmazonUs
+    - ItunesUs
+    - NetflixUs
+    - MicrosoftUs
+    - Hulu
+    - DisneyNOW
+    - NBCUniverso
+    # - NationalGeographic
+    - PlayStationVideo
+    - SproutNow
+    - TelemundoNow
+    - UrbanMovieChannel
+    # - Velocity
+    # - Viceland
+  globosat:
+    - CanalOff
+    - Globosat
 ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrollando
   Template: # El nombre de la clase, debe coincidir con la que está en el script
     countries: # El campo 'countries' es necesario en todos los casos
