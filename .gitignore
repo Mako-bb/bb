@@ -50,3 +50,7 @@ handle/notepad.py
 *.xlsx
 apuntes.txt
 .data_analysis
+*.ipynb
+excel_exports
+pluto2.py
+allblk_panda.py

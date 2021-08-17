@@ -29,7 +29,17 @@ mongo:
 types:
   movie: movie
   serie: serie
-ott_sites:
+ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrollando
+  Template: # El nombre de la clase, debe coincidir con la que está en el script
+    countries: # El campo 'countries' es necesario en todos los casos
+      AR: ar.template # Cada país de esta lista debe ir en el format 'PAIS: pais.plataforma'
+      US: us.template # Si no siguen en el formato pueden causar problemas al correr en los servers
+      CA: ca.template
+    # a excepción de 'countries', pueden llamar y estructurar los
+    # demás campos de forma libre según requiera el script, por ejemplo:
+    auth:
+      username: pepito
+      password: pepito1154
   AcornTV:
     countries:
       US: us.acorntv
@@ -53,6 +63,26 @@ ott_sites:
   AmazonLogin:
     countries:
       US: us.amazon_login
+  HBO_NO:
+    countries:
+      US: us.hbo_test
+  HBO_Test:
+    countries:
+      US: us.hbo_test
+  HBO_Fev:
+    countries:
+      US: us.hbo_fev
+  HboDM:
+    countries:
+      US: us.hbo
+    url: https://www.hbo.com/
+    api_mv_url: https://proxy-v4.cms.hbo.com/v1/schedule/programs?productIds={}
+    api_series_url: https://proxy-v4.cms.hbo.com/v1/schedule/programs?seriesIds={}
+    url_movies: https://www.hbo.com/movies/catalog
+    url_series: https://www.hbo.com/series/all-series
+  HboMI:
+    countries:
+      US: us.hbo_mi
   FlixFling:
     countries:
       US: us.flixfling
@@ -68,6 +98,9 @@ ott_sites:
   TruTV:
     countries:
       US: us.trutv
+  HallMark:
+    countries:
+      US: us.hallmark
   Pongalo:
     movie: 'movie'
     serie: 'serie'
@@ -113,21 +146,37 @@ ott_sites:
   OptimumTest:
     countries:
       US: us.optimum_test
-  Indieflix_test:
+    series_url: https://espanol.optimum.net/api/vod-webapp/services/v1/onyx/getMenus
+  WeTV:
     countries:
-      US: us.indieflix_test
-  Comedy_central_test:
+      US: us.wetv
+    url: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/wetv/url/shows?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web
+    common_url: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/wetv/url
+  BounceTV:
     countries:
-      US: us.comedy_central_test
-  Vh1_test:
+      US: us.bouncetv
+    url_movies: https://www.bouncetv.com/movies/
+    url_series: https://www.bouncetv.com/shows/?show-type=streaming
+    api: https://www.bouncetv.com/json-statics/titles.php?id=
+  Indieflix:
     countries:
-      US: us.vh1_test
-  FxnowTest:
+      US: us.indieflix
+  Comedy_central:
+    countries:
+      US: us.comedy_central
+  Vh1:
+    countries:
+      US: us.vh1
+  Shoutfactorytv:
+    countries:
+      US: us.shoutfactorytv
+  Fxnow:
     countries:
       US: us.fxnow
-  TvLand:
-    countries:
-      US: us.tvland
+    movie_api: https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module/tilegroup/2430495?start={}&size=24&authlevel=0&brand=025&device=001
+    serie_api: https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module/tilegroup/2430493?start={}&size=24&authlevel=0&brand=025&device=001
+
+
   DiscoveryLife:
     countries:
       US: us.discoverylife
@@ -137,12 +186,16 @@ ott_sites:
   AmazonLogin:
     countries:
       US: us.amazon_login
-  SundanceTvTest:
+  SundanceTv:
     countries:
-      US: us.sundancetv_test
-  AmcSeries:
+      US: us.sundance
+  SundanceNow:
     countries:
-      US: us.amcseries
+      US: 'us.sundancenow'
+      CA: 'ca.sundancenow'
+  Amc:
+    countries:
+      US: us.amcseries_
     movie_url: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/movies?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web
     episode_url: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/episodes?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web
     show_url: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/shows?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web
@@ -176,9 +229,13 @@ ott_sites:
     urls:
       start_url: 'https://abc.com'
       api_url: 'https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module/tilegroup/2134522?start={}&size={}&authlevel=0&brand=001&device=001'
-  BetTest:
+  Bet:
     countries:
-      US: us.bet_test
+      US: us.bet
+    start_url: https://www.bet.com/shows.html
+    queries:
+      main_page_see_more_xpath: '/html/body/div[3]/div[1]/div[5]/div/div[2]/section[3]/div/div[{}]/a'
+      episodes_see_more_css_selector: 'a.js-loadMoreButton:nth-child({})'
   AMCNetworks:
     countries:
       US: us.wetv # Completar con la lista de platform.code
@@ -252,9 +309,237 @@ ott_sites:
       start_url: 'https://espanol.wwe.com'
       api_url: 'https://cdn.watch.wwe.com/api/'
       cdn_watch_url: 'https://cdn.watch.wwe.com'
+  Prueba:
+    countries:
+      US: us.freeform2
   BravoTv:
     countries:
       US: us.bravotv
-  Telemundo:
+    urls:
+      url_principal: https://www.bravotv.com
+    queries:
+      shows_div_class: container view-shows container
+      shows_a_class: teaser__wrapper-link
+      name_show_div_class: teaser__meta-wrapper
+      img_show_div_class: teaser__image-wrapper
+      description_show_div_class: show-about__body
+      cast_show_div_class: teaser__meta
+      botton_season_selec_id: edit-field-tv-shows-season
+      botton_season_select_class: form-select
+      episodes_soup_article_class: teaser teaser--episode-guide-teaser
+      episodes_soup_video_article_class: teaser teaser--playlist-teaser video
+      img_episodes_div_class: teaser__image-wrapper
+      season_soup_select_id: edit-field-tv-shows-season
+      season_soup_select_class: from-select
+      botton_load_more_li_class: pager__item
+      episodes_soup_season_article_class: teaser teaser--episode-guide-teaser
+      info_episode_details_class: video__meta
+      summary_episode: summary
+      description_episode_div_class: video__description
+      air_date_episode_div_class: video__air-date
+      rating_episode_div_class: video__rating_expiration
+      season_episode_div_class: video__label
+  TvLand:
     countries:
-      US: us.telemundo
+      US: us.tvland
+    urls:
+      url_principal: https://www.tvland.com
+    queries:
+      span_shows: span
+      links_shows_li_class: item poster css-q2f74n-Wrapper e19yuxbf0
+      img_show_div_class: content
+      description_show_div_class: deck
+      season_show_button_data_display_name: Button
+      season_show_a_class: css-1wkgy79-StyledTypography e1wje7qk0
+      season_show_a_tabindex: -1
+      episodes_soup_section_class_type_1: module-container video-guide-container
+      episodes_div_class: meta-wrap css-1b0z283-Wrapper e1u7s1dj0
+      url_episodes_li_class_type1: item full-ep css-q2f74n-Wrapper e19yuxbf0
+      url_episodes_li_class_type2: item video css-q2f74n-Wrapper e19yuxbf0
+      season_episode_div_class_type1: spr-header
+      season_episode_div_class_type2: header
+      title_episode_div_class_type1: sub-header
+      title_episode_div_class_type2: header
+      description_episode_div_class: deck
+      date_episode_div_class: meta
+      img_episode_dic_class: content
+      botton_episode_load_more: expand-wrap
+
+  NBCNetworks:
+    countries:
+      US: us.{}
+    urls:
+      nbc_url: https://www.nbc.com/
+    apis:
+      nbc_api: https://friendship.nbc.co/v2/graphql?variables=%7B%22name%22:%22paginatedAllShows%22,%22type%22:%22PAGE%22,%22userId%22:%223681070535274955148%22,%22platform%22:%22web%22,%22device%22:%22web%22,%22timeZone%22:%22America%2FNew_York%22,%22ld%22:true,%22profile%22:[%2200000%22],%22oneApp%22:true,%22app%22:%22nbc%22,%22language%22:%22en%22,%22authorized%22:false,%22brand%22:%22{}%22,%22appVersion%22:1180009%7D&extensions=%7B%22persistedQuery%22:%7B%22version%22:1,%22sha256Hash%22:%22778d8ab0f222484583c39a3bcbe74b85c9e74847a3d58579f714b6eca13ac6d9%22%7D%7D
+      series_api: https://friendship.nbc.co/v2/graphql?variables=%7B%22app%22:%22nbc%22,%22userId%22:%223681070535274955148%22,%22device%22:%22web%22,%22platform%22:%22web%22,%22language%22:%22en%22,%22oneApp%22:true,%22name%22:%22{}%22,%22type%22:%22TITLE%22,%22timeZone%22:%22America%2FNew_York%22,%22authorized%22:false,%22ld%22:true,%22profile%22:[%2200000%22]%7D&extensions=%7B%22persistedQuery%22:%7B%22version%22:1,%22sha256Hash%22:%22e323415cb0b53d1e95d743d9d79abdad22dbcb7129e35f92b96ffc5e3708d7cc%22%7D%7D
+      season_api_format_one: https://friendship.nbc.co/v2/graphql?variables=%7B%22name%22:%22{}%22,%22type%22:%22TITLE%22,%22userId%22:%223681070535274955148%22,%22platform%22:%22web%22,%22device%22:%22web%22,%22timeZone%22:%22America%2FNew_York%22,%22ld%22:true,%22profile%22:[%2200000%22],%22oneApp%22:true,%22app%22:%22nbc%22,%22language%22:%22en%22,%22authorized%22:false,%22seriesName%22:%22{}%22,%22seasonNumber%22:{},%22appVersion%22:1180009%7D&extensions=%7B%22persistedQuery%22:%7B%22version%22:1,%22sha256Hash%22:%22eb56c6b78480558f9d125fa31f5b364f32a174749e6b96a7213438a0c52b0a10%22%7D%7D
+      season_api_format_two: https://friendship.nbc.co/v2/graphql?variables=%7B%22name%22:%22{}%22,%22type%22:%22TITLE%22,%22userId%22:%223681070535274955148%22,%22platform%22:%22web%22,%22device%22:%22web%22,%22timeZone%22:%22America%2FNew_York%22,%22ld%22:true,%22profile%22:[%2200000%22],%22oneApp%22:true,%22app%22:%22nbc%22,%22language%22:%22en%22,%22authorized%22:false,%22seriesName%22:%22{}%22,%22programmingType%22:%22{}%22,%22appVersion%22:1180009%7D&extensions=%7B%22persistedQuery%22:%7B%22version%22:1,%22sha256Hash%22:%22eb56c6b78480558f9d125fa31f5b364f32a174749e6b96a7213438a0c52b0a10%22%7D%7D
+  Amediateka:
+    countries:
+      RU: ru.amediateka
+      UA: ua.amediateka
+      UZ: uz.amediateka
+      KZ: kz.amediateka
+      AZ: az.amediateka
+      GE: ge.amediateka
+      # Pendientes:
+      # Turkmenistán
+      # Tayikistán
+      # Kirguistán
+      # Armenia
+      # Bielorusia
+    start_url: https://www.amediateka.ru
+    api_url: https://api.amediateka.tech/cms/content/{content_type}/?apiKey={api_key}&limit=20&offset={offset}&ordering=-last_publish_date&platform=amediaWeb
+    serie_api_url: https://api.amediateka.tech/cms/content/seasons/{content_id}/?apiKey={api_key}&platform=amediaWeb&deviceType=desktopWeb&deviceModel=Edge-89
+    contents:
+      - series
+      - movies
+  Starz:
+    countries:
+      AR: ar.starz
+    api_url: https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/content
+  StarzDM:  #Starz Darío
+    countries:
+      AR: ar.starz
+    url: https://www.starz.com/ar/es/
+    api_url: https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/content
+    images_url: https://stz1.imgix.net/Web_AR/contentId/{}/type/KEY/dimension/1536x2048
+  StarzMI:  #Starz Mati
+    countries:
+      AR: ar.starz
+    url: https://www.starz.com/ar/es/
+    api_url: http://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/content
+  PlutoCapacitacion: # PRUEBA
+    countries:
+      AR: ar.pluto
+    url: https://www.pluto.com.ar/
+    api_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.0-38a9908bb8d8f15260d990bd00c1f6b49c7bba28&app_name=web&clientDeviceType=0&clientID=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&clientModelNumber=na&deviceDNT=false&deviceId=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&deviceLat=-34.5106&deviceLon=-58.7536&deviceMake=Microsoft%2BEdge&deviceModel=web&deviceType=web&deviceVersion=91.0.864.37&marketingRegion=VE&serverSideAds=true&sessionID=02158376-c248-11eb-975c-0242ac110002&sid=02158376-c248-11eb-975c-0242ac110002&userId=&attributeV4=foo
+    season_api_url: https://service-vod.clusters.pluto.tv/v3/vod/series/
+  DarkMattertv:
+    countries:
+      AR: ar.darkmatter
+    start_url: https://www.darkmattertv.com/?
+    api_url: https://api-ott.darkmattertv.com/getreferencedobjects?&auth_token=27e87908-8537-4350-8775-eec416fa12a4&banners=0&connection=wifi&device_type=desktop&for_user=0&image_format=poster&image_width=213&is_af_request=0&language=es&max=18&parent_id={}&parent_type=collection&partner=internal&platform=web&timestamp=1623685147&use_device_width_widescreen=1&version=11.0
+
+  Iviruu:
+    countries:
+      RU: ru.iviru
+    url: https://www.ivi.tv/
+    url_movies: https://www.ivi.tv/movies/all
+    url_series: https://www.ivi.tv/series/all
+    url_animation: https://www.ivi.tv/animation/all
+    api_collections_url: https://api.ivi.ru/mobileapi/collections/v5/
+    api_contents_url: https://api.ivi.ru/mobileapi/catalogue/v5/
+    api_categories_url: https://api.ivi.ru/mobileapi/categories/v5/
+
+  Natgeotv:
+    countries:
+      US: us.national-geographic
+    api_url: https://prod.gatekeeper.us-abc.symphony.edgedatg.com/api/ws/pluto/v1/module/tilegroup/2431500?brand=026&device=001&size=999999
+
+  Allblk_panda:
+    countries:
+      US: us.umc
+    start_url: https://allblk.tv/browse/all/
+    package_url: https://allblk.tv/gift/
+  PlutoDL: #Damian
+    countries:
+      AR: ar.pluto
+  PlutoFV: #Fede
+    countries:
+      AR: ar.pluto
+    url: https://pluto.tv/on-demand
+    api_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=a4f86dcf-ad48-4179-b6f3-15f26f190d16&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=a4f86dcf-ad48-4179-b6f3-15f26f190d16&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.114&marketingRegion=VE&serverSideAds=true&sessionID=90fbd984-d5d2-11eb-9721-0242ac110002&sid=90fbd984-d5d2-11eb-9721-0242ac110002&userId=&attributeV4=foo
+    season_api_url: https://service-vod.clusters.pluto.tv/v3/vod/series/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=a4f86dcf-ad48-4179-b6f3-15f26f190d16&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=a4f86dcf-ad48-4179-b6f3-15f26f190d16&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.114&marketingRegion=VE&serverSideAds=true&sessionID=90fbd984-d5d2-11eb-9721-0242ac110002&sid=90fbd984-d5d2-11eb-9721-0242ac110002&userId=&attributeV4=foo
+  PlutoNO: #Nazareno
+    countries:
+      AR: ar.pluto
+    url: https://www.pluto.com.ar/
+    api_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.0-38a9908bb8d8f15260d990bd00c1f6b49c7bba28&app_name=web&clientDeviceType=0&clientID=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&clientModelNumber=na&deviceDNT=false&deviceId=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&deviceLat=-34.5106&deviceLon=-58.7536&deviceMake=Microsoft%2BEdge&deviceModel=web&deviceType=web&deviceVersion=91.0.864.37&marketingRegion=VE&serverSideAds=true&sessionID=02158376-c248-11eb-975c-0242ac110002&sid=02158376-c248-11eb-975c-0242ac110002&userId=&attributeV4=foo
+    season_api_url: https://service-vod.clusters.pluto.tv/v3/vod/slugs/{}?advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=95b00792-ce58-4e87-b310-caaf6c8d8de4&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=95b00792-ce58-4e87-b310-caaf6c8d8de4&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Firefox&deviceModel=web&deviceType=web&deviceVersion=89.0&marketingRegion=VE&serverSideAds=true&sessionID=4987c7e3-d482-11eb-bee6-0242ac110002&sid=4987c7e3-d482-11eb-bee6-0242ac110002&userId=&attributeV4=foo
+  PlutoDM: #Dario
+    countries:
+      AR: ar.pluto
+    url: https://pluto.tv/on-demand/
+    api_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.0-38a9908bb8d8f15260d990bd00c1f6b49c7bba28&app_name=web&clientDeviceType=0&clientID=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&clientModelNumber=na&deviceDNT=false&deviceId=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&deviceLat=-34.5106&deviceLon=-58.7536&deviceMake=Microsoft%2BEdge&deviceModel=web&deviceType=web&deviceVersion=91.0.864.37&marketingRegion=VE&serverSideAds=true&sessionID=02158376-c248-11eb-975c-0242ac110002&sid=02158376-c248-11eb-975c-0242ac110002&userId=&attributeV4=foo
+    season_api_url: https://service-vod.clusters.pluto.tv/v3/vod/series/{}/seasons?advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=c636f54d-adcd-4b30-b2cd-02cf58d954f4&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=c636f54d-adcd-4b30-b2cd-02cf58d954f4&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.114&marketingRegion=VE&serverSideAds=true&sessionID=be85a5ba-d44b-11eb-8a41-0242ac110002&sid=be85a5ba-d44b-11eb-8a41-0242ac110002&userId=&attributeV4=foo
+  PlutoAH: #Axel
+    countries:
+      AR: ar.pluto
+  PlutoFioV: #Fiorella
+    countries:
+      AR: ar.pluto
+    url: https://pluto.tv/on-demand/
+    api_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.0-38a9908bb8d8f15260d990bd00c1f6b49c7bba28&app_name=web&clientDeviceType=0&clientID=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&clientModelNumber=na&deviceDNT=false&deviceId=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&deviceLat=-34.5106&deviceLon=-58.7536&deviceMake=Microsoft%2BEdge&deviceModel=web&deviceType=web&deviceVersion=91.0.864.37&marketingRegion=VE&serverSideAds=true&sessionID=02158376-c248-11eb-975c-0242ac110002&sid=02158376-c248-11eb-975c-0242ac110002&userId=&attributeV4=foo
+    season_api_url: https://service-vod.clusters.pluto.tv/v3/vod/series/{}/seasons?advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=c636f54d-adcd-4b30-b2cd-02cf58d954f4&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=c636f54d-adcd-4b30-b2cd-02cf58d954f4&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.114&marketingRegion=VE&serverSideAds=true&sessionID=be85a5ba-d44b-11eb-8a41-0242ac110002&sid=be85a5ba-d44b-11eb-8a41-0242ac110002&userId=&attributeV4=foo
+  PlutoMI: #Matias
+    countries:
+      AR: ar.pluto
+    url: https://pluto.tv/es/on-demand/
+    api_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=5ba90432-9a1d-46d1-8f93-b54afe54cd1e&deviceLat=-34.5106&deviceLon=-58.7536&deviceMake=Microsoft%2BEdge&deviceModel=web&deviceType=web&deviceVersion=91.0.864.54&marketingRegion=VE&serverSideAds=true
+  PlutoPQ: #Patricio
+    countries:
+      AR: ar.pluto
+    all_episodes_url2: https://service-vod.clusters.pluto.tv/v3/vod/series/{}/seasons?advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=c636f54d-adcd-4b30-b2cd-02cf58d954f4&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=c636f54d-adcd-4b30-b2cd-02cf58d954f4&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.114&marketingRegion=VE&serverSideAds=true&sessionID=be85a5ba-d44b-11eb-8a41-0242ac110002&sid=be85a5ba-d44b-11eb-8a41-0242ac110002&userId=&attributeV4=foo
+    all_episodes_url: https://service-vod.clusters.pluto.tv/v3/vod/slugs/
+    all_titles_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=087a349a-f41e-4d03-8213-2d8330d86e68&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=087a349a-f41e-4d03-8213-2d8330d86e68&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.114&marketingRegion=VE&serverSideAds=true&sessionID=f76850cd-d39e-11eb-9515-0242ac110002&sid=f76850cd-d39e-11eb-9515-0242ac110002&userId=&attributeV4=foo
+  StarzPQ: #Patricio
+    countries:
+      AR: ar.starz
+    url: https://www.starz.com/ar/es/
+    all_titles_url: https://playdata.starz.com/metadata-service/play/partner/Web_AR/v8/content
+
+  StarzNO: #Naza
+    countries:
+      AR: ar.starz
+    api_url: https://playdata.starz.com/metadata-service/play/partner/Web_ES/v8/blocks?playContents=map&lang=es-ES&pages=MOVIES,SERIES&includes=contentId,title,contentType,releaseYear,runtime,logLine,image,ratingCode,genres,actors,directors,original,countryOfOrigin,seriesName,seasonNumber,episodeCount,childContent,details
+
+  StarzFEV: #Federico
+    countries:
+      AR: ar.starz
+    url: https://www.starz.com/ar/es/
+    api_url: https://playdata.starz.com/metadata-service/play/partner/Web_ES/v8/blocks?playContents=map&lang=es-ES&pages=BROWSE,HOME,MOVIES,PLAYLIST,SEARCH,SEARCH%20RESULTS,SERIES&includes=contentId,contentType,title,product,seriesName,seasonNumber,free,comingSoon,newContent,topContentId,properCaseTitle,categoryKeys,runtime,popularity,original,firstEpisodeRuntime,releaseYear,images,minReleaseYear,maxReleaseYear,episodeCount,detail
+
+
+  VicePFD: #Pato, Fede, Darío
+    countries:
+      US: us.vice
+    url: https://video.vice.com/en_us/shows
+    api_shows: https://video.vice.com/api/v1/shows?locale=en_us&page={}&per_page=50
+    api_videos: https://video.vice.com/api/v1/videos?locale=en_us&show_id={id}&video_type=full_length&sort=episode_display_mode&per_page=25&page={page}
+
+  HBOPQ: #Patricio
+      countries:
+        AR: ar.hbo
+      url: https://www.hbo.com/
+      all_movies: https://www.hbo.com/movies/catalog
+      info_movie: https://www.hbo.com/movies/
+      all_documentaries: https://www.hbo.com/documentaries/catalog
+      all_series: https://www.hbo.com/series/all-series
+
+
+  HBOPQ: #Patricio
+      countries:
+        AR: ar.hbo
+      url: https://www.hbo.com/
+      all_movies: https://www.hbo.com/movies/catalog
+      info_movie: https://www.hbo.com/movies/
+      all_documentaries: https://www.hbo.com/documentaries/catalog
+      all_series: https://www.hbo.com/series/all-series
+
+
+  HBOPQ: #Patricio
+      countries:
+        AR: ar.hbo
+      url: https://www.hbo.com/
+      all_movies: https://www.hbo.com/movies/catalog
+      info_movie: https://www.hbo.com/movies/
+      all_documentaries: https://www.hbo.com/documentaries/catalog
+      all_series: https://www.hbo.com/series/all-series
+  VicePQ: #Patricio
+      countries:
+        AR: en_us.vice
+      url:  https://www.viceland.com/
+      all_shows: https://video.vice.com/api/v1/shows?locale=en_us&page=1&per_page=50
+      all_episodes_per_shows: https://video.vice.com/api/v1/videos?locale=en_us&show_id=5f527d2dadb68f5cd21833d3&video_type=full_length&sort=episode_display_mode&per_page=24&page=1

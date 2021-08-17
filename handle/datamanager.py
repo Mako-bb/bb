@@ -235,7 +235,14 @@ class Datamanager():
         if showURL == True:
             print("\x1b[1;33;40m INTENTANDO PAGINA ----> \x1b[0m"+URL)
         time.sleep(timeOut)
-        content = self.sesion.get(URL,headers=headers)
+        while True:
+            try:
+                content = self.sesion.get(URL,headers=headers)
+                break
+            except:
+                print("Waiting 5 seconds to reconect")
+                time.sleep(5)
+        
         soup = BeautifulSoup(content.text, features=parser)
         return soup
 
