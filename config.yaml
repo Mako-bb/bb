@@ -63,6 +63,9 @@ ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrol
     auth:
       username: pepito
       password: pepito1154
+  Pluto:
+    countries: 
+      AR: ar.pluto
   AcornTV:
     countries:
       US: us.acorntv
