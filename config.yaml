@@ -53,16 +53,25 @@ tp_sites:
     - CanalOff
     - Globosat
 ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrollando
-  Template: # El nombre de la clase, debe coincidir con la que está en el script
+  TemplateFacu: # El nombre de la clase, debe coincidir con la que está en el script
     countries: # El campo 'countries' es necesario en todos los casos
-      AR: ar.template # Cada país de esta lista debe ir en el format 'PAIS: pais.plataforma'
-      US: us.template # Si no siguen en el formato pueden causar problemas al correr en los servers
-      CA: ca.template
+      AR: ar.templateFacu # Cada país de esta lista debe ir en el format 'PAIS: pais.plataforma'
+      US: us.templateFacu # Si no siguen en el formato pueden causar problemas al correr en los servers
+      CA: ca.templateFacu
     # a excepción de 'countries', pueden llamar y estructurar los
+    url: "https://www.looke.com.br"
     # demás campos de forma libre según requiera el script, por ejemplo:
     auth:
       username: pepito
       password: pepito1154
+
+  StarzPlay:
+    countries:
+      AR: ar.starzplay
+      US: us.starzplay
+      
+    url: "https://www.starz.com/es/es/"
+
   AcornTV:
     countries:
       US: us.acorntv
