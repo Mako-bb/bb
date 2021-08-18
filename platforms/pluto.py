@@ -65,7 +65,3 @@ class Pluto():
         soup = BeautifulSoup(web, "lxml")
         menu = soup.find_all("button", {"class": "iconButton-0-2-108"})
         button_links = []
-        for buttons in menu:
-
-
-
