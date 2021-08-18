@@ -67,6 +67,13 @@ ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrol
     auth:
       username: pepito
       password: pepito1154
+  StarzPlay:
+    countries:
+      AR: ar.starzplay
+      US: us.starzplay
+
+    url: "https://www.starz.com/es/es/"
+
   AcornTV:
     countries:
       US: us.acorntv

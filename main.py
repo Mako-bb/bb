@@ -108,7 +108,8 @@ if __name__ == '__main__':
     # Si no se indica fecha, se muestra el log más reciente.
     # Se puede reemplazar "log" por "logd" para descargar el log en un archivo de texto
     if ott_operation in ('log', 'logd'):
-        LogChecker(ott_platforms, ott_site_country, ott_operation, provider, logat)
+        pass
+        #LogChecker(ott_platforms, ott_site_country, ott_operation, provider, logat)
 
     # python main.py --o excel --c [ott_site_country] [ott_platforms]
     # Para exportar el scraping de una plataforma a un archivo de excel.
