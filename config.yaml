@@ -91,6 +91,13 @@ ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrol
       SE: se.acorntv
       NL: nl.acorntv
       ZA: za.acorntv
+  CapacitacionApi:
+    countries:
+      AR: ar.capacitacionesapi
+    urls:
+      movies: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/movies?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web
+      series: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/shows?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web
+      episodes: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/episodes?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web
   AdultSwim:
     countries:
       US: us.adultswim
