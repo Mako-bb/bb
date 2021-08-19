@@ -36,6 +36,8 @@ class CapacitacionApi():
         self.urls = config_['urls']
         self.payloads = []
         self.payloads_episodes = []
+        self.ids_scrapeados = Datamanager._getListDB(self,self.titanScraping)
+
         """
         La operación 'return' la usamos en caso que se nos corte el script a mitad de camino cuando
         testeamos, sea por un error de conexión u otra cosa. Nos crea una lista de ids ya insertados en
@@ -60,8 +62,6 @@ class CapacitacionApi():
             self.scraping(testing=True)
 
     def get_movies(self, movies):
-        payload = Payload()
-        
 
         pass
 
@@ -74,7 +74,30 @@ class CapacitacionApi():
         """
         Con el módulo Requests vamos a obtener las respuestas de la API.
         """
-        rq_ = requests.get("https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/movies?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web")
+        headers = {
+            "authority": 'content-delivery-gw.svc.ds.amcn.com',
+            "method": 'GET',
+            "path": '/api/v2/content/amcn/amc/url/movies?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web',
+            "scheme": 'https',
+            "accept": '*/*',
+            "accept-encoding": 'gzip, deflate, br',
+            "accept-language": 'es-419,es;q=0.9,es-ES;q=0.8,en;q=0.7,en-GB;q=0.6,en-US;q=0.5',
+            "amcn-cache-hash": '6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9',
+            "amcn-user-state": '{"entitlements":["amc_unauth"],"device":"web"}',
+            "cache-control": 'no-cache',
+            "origin": 'https://www.amc.com',
+            "pragma": 'no-cache',
+            "referer": 'https://www.amc.com/',
+            "sec-ch-ua": '"Chromium";v="92", " Not A;Brand";v="99", "Microsoft Edge";v="92"',
+            "sec-ch-ua-mobile": '?0',
+            "sec-fetch-dest": 'empty',
+            "sec-fetch-mode": 'cors',
+            "sec-fetch-site": 'cross-site',
+            "user-agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36 Edg/92.0.902.73',
+        }
+        rq_ = requests.get(
+        "https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/movies?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web",
+        headers=headers)
         json_ = rq_.json()
         #print(json_)
         """
@@ -84,6 +107,12 @@ class CapacitacionApi():
         """
         movies = json_['data']['children'][4]['children']
         print(movies)
+        for movie in movies:
+            payload = self.get_payload(movie)
+            payload_movie = payload.payload_movie()
+            payload_episode = payload.payload_episode()
+            payload_serie = payload.payload_serie()
+            Datamanager._checkDBandAppend(self,payload_movie,self.ids_scrapeados,self.payloads)
         """
         Cuando ya tenemos una lista con todas las peliculas de la plataforma,
         la recorremos para obtener todos los datos.
@@ -94,7 +123,7 @@ class CapacitacionApi():
         Data manager nos simplifica la manera de interactuar entre las listas
         y la base de datos.
         """
-        #ids = Datamanager._getListDB(self,self.titanScraping)
+        self.test_request()
 
         # self.scraped = query_field(Collecion, Campo, )
         # if payload not in self.scraped:
@@ -103,10 +132,10 @@ class CapacitacionApi():
         # payload = self.get_payload()
         # movie = payload.payload_movie()
         # self.payloads.append(movie)
-        #Datamanager._checkDBandAppend(self,movie,ids,self.payloads)
+        # Datamanager._checkDBandAppend(self,movie,ids,self.payloads)
 
-        #Datamanager._insertIntoDB(self,self.payloads,self.titanScraping)
-        #Datamanager._insertIntoDB(self,self.payloads_episodes,self.titanScrapingEpisodios)
+        Datamanager._insertIntoDB(self,self.payloads,self.titanScraping)
+        # Datamanager._insertIntoDB(self,self.payloads_episodes,self.titanScrapingEpisodios)
         """
         Hace una Query para ver lo que scrapeamos.
         Chequea los payloads para ver que esten correctos.
@@ -139,7 +168,7 @@ class CapacitacionApi():
             payload.id = self.get_id(content_metadata)
             payload.title = self.get_title(content_metadata)
             payload.original_title = self.get_original_title(content_metadata)
-            payload.clean_title = ""# self.get_clean_title(content_metadata)
+            payload.clean_title = self.get_clean_title(content_metadata)
             payload.deeplink_web = self.get_deeplinks(content_metadata)
             # Si no es un episodio, los datos pasan a scrapearse del html.
             if self.is_episode:
@@ -165,11 +194,17 @@ class CapacitacionApi():
         """
         Este metodo se encarga de Obtener la ID 
         """
-
+        id = content_metadata['properties']['cardData']['meta']['nid']
+        return id
         pass
     def get_title(self, content_metadata):
+        title = content_metadata['properties']['cardData']['text']['title']
+        return title
         pass
     def get_clean_title(self, content_metadata):
+        title = content_metadata['properties']['cardData']['text']['title']
+        clean_title = _replace(title)
+        return clean_title
         pass
     def get_original_title(self, content_metadata):
         pass
@@ -177,7 +212,7 @@ class CapacitacionApi():
         pass
     def get_duration(self, content_metadata):
         pass
-    def get_deeplinks(self, content_metadata,title,Serie):
+    def get_deeplinks(self, content_metadata):
         pass
     def get_synopsis(self, content_metadata):
         pass
@@ -194,6 +229,7 @@ class CapacitacionApi():
     def get_availability(self, content_metadata):
         pass
     def get_packages(self, content_metadata):
+        return [{'Type':'subscription-vod'}]
         pass
     def get_country(self, content_metadata):
         pass
