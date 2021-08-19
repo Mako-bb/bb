@@ -32,9 +32,10 @@ class CapacitacionApi():
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode'] # Obligatorio. También lo usa Datamanager
         self.skippedTitles          = 0 # Requerido si se va a usar Datamanager
         self.skippedEpis            = 0 # Requerido si se va a usar Datamanager
-
         ###############################################
         self.urls = config_['urls']
+        self.payloads = []
+        self.payloads_episodes = []
         """
         La operación 'return' la usamos en caso que se nos corte el script a mitad de camino cuando
         testeamos, sea por un error de conexión u otra cosa. Nos crea una lista de ids ya insertados en
@@ -53,8 +54,10 @@ class CapacitacionApi():
         else:
             self.prescraped_ids = list()
 
-        if ott_operation in ('testing', 'scraping'):
+        if ott_operation == 'scraping':
             self.scraping()
+        if ott_operation == "testing":
+            self.scraping(testing=True)
 
     def get_movies(self, movies):
         payload = Payload()
@@ -86,10 +89,33 @@ class CapacitacionApi():
         la recorremos para obtener todos los datos.
         """
         pass
-    def scraping(self):
-        
-        self.test_request()
+    def scraping(self,testing=True):
+        """
+        Data manager nos simplifica la manera de interactuar entre las listas
+        y la base de datos.
+        """
+        #ids = Datamanager._getListDB(self,self.titanScraping)
 
+        # self.scraped = query_field(Collecion, Campo, )
+        # if payload not in self.scraped:
+            # self.payloads.append(payload)
+        # self.test_request()
+        # payload = self.get_payload()
+        # movie = payload.payload_movie()
+        # self.payloads.append(movie)
+        #Datamanager._checkDBandAppend(self,movie,ids,self.payloads)
+
+        #Datamanager._insertIntoDB(self,self.payloads,self.titanScraping)
+        #Datamanager._insertIntoDB(self,self.payloads_episodes,self.titanScrapingEpisodios)
+        """
+        Hace una Query para ver lo que scrapeamos.
+        Chequea los payloads para ver que esten correctos.
+        Si estamos en testing no intenta subir a misato,
+        pero realiza las validaciones.
+        """
+        Upload(self._platform_code,self._created_at,testing=testing)
+        #print(movie)
+        pass
 
 
 
@@ -109,12 +135,11 @@ class CapacitacionApi():
                 self.is_episode = True
             else:
                 self.is_episode = False
-
             payload.platform_code = self._platform_code
             payload.id = self.get_id(content_metadata)
             payload.title = self.get_title(content_metadata)
             payload.original_title = self.get_original_title(content_metadata)
-            payload.clean_title = self.get_clean_title(content_metadata)
+            payload.clean_title = ""# self.get_clean_title(content_metadata)
             payload.deeplink_web = self.get_deeplinks(content_metadata)
             # Si no es un episodio, los datos pasan a scrapearse del html.
             if self.is_episode:
@@ -122,7 +147,6 @@ class CapacitacionApi():
                 payload.parent_id = self.get_parent_id(content_metadata)
                 payload.season = self.get_season(content_metadata)
                 payload.episode = self.get_episode(content_metadata)
-                #del payload.seasons
 
             payload.year = self.get_year(content_metadata)
             payload.duration = self.get_duration(content_metadata)
@@ -138,6 +162,10 @@ class CapacitacionApi():
             payload.createdAt = self._created_at
             return payload
     def get_id(self, content_metadata):
+        """
+        Este metodo se encarga de Obtener la ID 
+        """
+
         pass
     def get_title(self, content_metadata):
         pass
