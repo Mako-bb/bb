@@ -56,7 +56,7 @@ ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrol
   Pluto:
     countries:
       AR: ar.pluto
-    url: https://pluto.tv/en/on-demand
+    url: https://service-vod.clusters.pluto.tv/v4/vod/
   Template: # El nombre de la clase, debe coincidir con la que está en el script
     countries: # El campo 'countries' es necesario en todos los casos
       AR: ar.template # Cada país de esta lista debe ir en el format 'PAIS: pais.plataforma'
