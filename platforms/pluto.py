@@ -15,6 +15,7 @@ class Pluto():
     """
 
     DATOS IMPORTANTES:
+    - ESTADO: EN PROCESO
     - VPN: No
     - ¿Usa Selenium?: No
     - ¿Tiene API?: Si
@@ -79,14 +80,6 @@ class Pluto():
 
 
 
-<<<<<<< HEAD
-    def scraping(self):
-        res = requests.get("https://pluto.tv/en/on-demand")
-        web = res.content
-        soup = BeautifulSoup(web, "lxml")
-        menu = soup.find_all("button", {"class": "iconButton-0-2-108"})
-        button_links = []
-=======
 
 
     def get_categories(self):
@@ -197,5 +190,4 @@ class Pluto():
     def scraping(self):
         cat_ = self.get_categories()
         #self.get_movies(cat_)
-        print(self.get_movies(cat_))
->>>>>>> pluto
+        #print(self.get_movies(cat_))
