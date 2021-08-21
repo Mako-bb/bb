@@ -1,5 +1,6 @@
-from datetime               import datetime, date
-from handle.replace         import _replace
+from datetime import datetime
+from handle.replace import _replace
+
 
 class Payload:
     def __init__(self, platform_code=None,
@@ -36,8 +37,8 @@ class Payload:
                  seasons=None,
                  number=None,
                  createdAt=None,
-                 timestamp=None):
-                 
+                 crew=None):
+
         self._platformCode = platform_code
         self._id = id_
         self._title = title
@@ -64,7 +65,7 @@ class Payload:
         self._is_adult = is_adult
         self._packages = packages
         self._country = country
-        #self._timestamp = timestamp
+        # self._timestamp = timestamp
         self._timestamp = datetime.now().isoformat()
         self._episodes = episodes
         self._created_at = createdAt
@@ -74,6 +75,7 @@ class Payload:
         self._season = season
         self._seasons = seasons
         self._number = number
+        self._crew = crew
 
     @property
     def platform_code(self):
@@ -90,7 +92,7 @@ class Payload:
     @id.setter
     def id(self, new_id):
         self._id = new_id
-    
+
     @property
     def clean_title(self):
         return self._clean_title
@@ -229,6 +231,14 @@ class Payload:
         self._directors = new_directors
 
     @property
+    def crew(self):
+        return self._crew
+
+    @crew.setter
+    def crew(self, new_crew):
+        self._crew = new_crew
+
+    @property
     def availability(self):
         return self._availability
 
@@ -312,8 +322,8 @@ class Payload:
     def episode(self, new_episode):
         self._episode = new_episode
 
-    #Numero de temporada.
-    #----------------------------------#
+    # Numero de temporada.
+    # ---------------------------------- #
     @property
     def season(self):
         return self._season
@@ -321,7 +331,7 @@ class Payload:
     @season.setter
     def season(self, new_season):
         self._season = new_season
-    #----------------------------------#
+    # ---------------------------------- #
 
     @property
     def number(self):
@@ -331,8 +341,8 @@ class Payload:
     def number(self, new_number):
         self._number = new_number
 
-    #Cantidad de temporadas.
-    #----------------------------------#
+    # Cantidad de temporadas.
+    # ---------------------------------- #
     @property
     def seasons(self):
         return self._seasons
@@ -340,14 +350,14 @@ class Payload:
     @seasons.setter
     def seasons(self, new_season):
         self._seasons = new_season
-    #----------------------------------#
+    # ---------------------------------- #
 
     @property
     def createdAt(self):
         return self._created_at
 
     @createdAt.setter
-    def createdAt(self,new_created_at):
+    def createdAt(self, new_created_at):
         self._created_at = new_created_at
 
     @property
@@ -355,7 +365,7 @@ class Payload:
         return self._episodes
 
     @episodes.setter
-    def episodes(self,new_episodes):
+    def episodes(self, new_episodes):
         self._episodes = new_episodes
 
     def payload_movie(self):
@@ -382,6 +392,7 @@ class Payload:
             'Genres': self._genres,
             'Cast': self._cast,
             'Directors': self._directors,
+            'Crew': self._crew,
             'Availability': self._availability,
             'Download': self._download,
             'IsOriginal': self._is_original,
@@ -418,6 +429,7 @@ class Payload:
             'Genres': self._genres,
             'Cast': self._cast,
             'Directors': self._directors,
+            'Crew': self._crew,
             'Availability': self._availability,
             'Download': self._download,
             'IsOriginal': self._is_original,
@@ -468,6 +480,7 @@ class Payload:
             'Genres': self.genres,
             'Cast': self.cast,
             'Directors': self.directors,
+            'Crew': self.crew,
             'Availability': self.availability,
             'Download': self.download,
             'IsOriginal': self._is_original,
