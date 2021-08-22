@@ -184,7 +184,7 @@ class StarzPlay():
     
     
     def get_is_original(self, content_metadata):
-        return content_metadata.get('original','') or None
+        return content_metadata.get('original','')
 
 
     def get_download(self, content_metadata):
