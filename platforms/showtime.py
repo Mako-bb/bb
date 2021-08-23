@@ -73,6 +73,7 @@ class Showtime():
                     payload = self.buildPayloadMovie(href)
 
                 if payload:
+                    pass
                     #Datamanager._checkDBandAppend(self, payload, self.payloads, self.payloads_db)
         
         #Datamanager._insertIntoDB(self, self.payloads)
