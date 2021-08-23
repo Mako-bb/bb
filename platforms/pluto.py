@@ -16,7 +16,7 @@ class Pluto():
     - Status: EN PROCESO
     - VPN: NO
     - Método: API
-    - Runtime: MENOR A 2 MINUTOS
+    - Runtime: 8 MINUTOS
     """
 
     def __init__(self, ott_platforms, ott_site_country, ott_operation):
@@ -46,6 +46,7 @@ class Pluto():
         self.payloads = []
         self.payloads_episodes = []
         self.ids_scrapeados = Datamanager._getListDB(self,self.titanScraping)
+        self.ids_episcrap = Datamanager._getListDB(self,self.titanScrapingEpisodios)
 
         #### OBLIGATORIO si se usa Selenium para que pueda correr en los servers
         try:
@@ -105,7 +106,7 @@ class Pluto():
 
 
 
-    def get_payload(self,content_metadata,is_episode=None):
+    def get_payload(self,content_metadata, parent_id=None, parent_name=None,is_episode=None):
             """Método para crear el payload. Se reutiliza tanto para
             titanScraping, como para titanScrapingEpisodes.
             Args:
@@ -128,8 +129,8 @@ class Pluto():
             payload.clean_title = self.get_clean_title(content_metadata)
             payload.deeplink_web = self.get_deeplinks(content_metadata)
             if self.is_episode:
-                payload.parent_title = self.get_parent_title(content_metadata)
-                payload.parent_id = self.get_parent_id(content_metadata)
+                payload.parent_title = parent_name
+                payload.parent_id = parent_id
                 payload.season = self.get_season(content_metadata)
                 payload.episode = self.get_episode(content_metadata)
             if content_metadata['type'] == "series":
@@ -161,7 +162,6 @@ class Pluto():
         title = content_metadata['name']
         clean_title = _replace(title)
         return clean_title
-    
     def get_original_title(self, content_metadata):
         pass
     
@@ -207,22 +207,19 @@ class Pluto():
         return [{'Type':'free-vod'}]
     def get_country(self, content_metadata):
         pass
-    def get_parent_title(self, content_metadata):
-        title = content_metadata['name']
-        return title
-    def get_parent_id(self, content_metadata):
-        id = content_metadata['_id']
-        return id
     def get_episode(self, content_metadata):
         episode = content_metadata['number']
         return episode
+    
+    
     def get_episodes(self, content_metadata):
-        print(content_metadata["name"])
+        parent_name = content_metadata['name']
+        parent_id = content_metadata['_id']
         for i in content_metadata['seasons']:
             for episode in i['episodes']:
-                payload = self.get_payload(episode, True)
+                payload = self.get_payload(episode,parent_id=parent_id, parent_name=parent_name, is_episode=True)
                 payload_episode = payload.payload_episode()
-                Datamanager._checkDBandAppend(self,payload_episode,self.ids_scrapeados,self.payloads,isEpi=True)
+                Datamanager._checkDBandAppend(self,payload_episode,self.ids_episcrap,self.payloads,isEpi=True)
 
     def get_season(self, content_metadata):
         season = content_metadata['season']
@@ -250,5 +247,6 @@ class Pluto():
         cat = self.get_categories()
         self.get_movies(cat)
         self.get_series(cat)
+        Datamanager._insertIntoDB(self,self.payloads_episodes,self.titanScrapingEpisodios)
         Datamanager._insertIntoDB(self,self.payloads,self.titanScraping)
         
