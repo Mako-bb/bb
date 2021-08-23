@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import requests # Si el script usa requests/api o requests/bs4
 import time
-import json
 from bs4                import BeautifulSoup # Si el script usa bs4
 from selenium           import webdriver # Si el script usa selenium
 from handle.datamanager import Datamanager # Opcional si el script usa Datamanager
@@ -12,18 +11,14 @@ from handle.replace     import _replace
 from handle.payload     import Payload
 
 class Pluto():
+    
+    """
+    - Status: EN PROCESO
+    - VPN: NO
+    - Método: API
+    - Runtime: MENOR A 2 MINUTOS
     """
 
-    DATOS IMPORTANTES:
-    - ESTADO: EN PROCESO
-    - VPN: No
-    - ¿Usa Selenium?: No
-    - ¿Tiene API?: Si
-    - ¿Usa BS4?: No
-    - ¿Cuanto demoró la ultima vez?
-    - ¿Cuanto contenidos trajo la ultima vez?
-
-    """
     def __init__(self, ott_platforms, ott_site_country, ott_operation):
         self.test = ott_operation in ("testing", "return") #
         config_ = config()['ott_sites'][ott_platforms] # Obligatorio
@@ -43,11 +38,14 @@ class Pluto():
                 'Accept': '*/*',
                 'Accept-Language': 'en-US,en;q=0.5',
                 'Referer': 'https://pluto.tv/en/on-demand',
-                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsImtpZCI6IjI3Y2Y3MWM4LWJlOWQtNGQ3Mi1hNmVmLWUzZGE3ZmRmZTljYyIsInR5cCI6IkpXVCJ9.eyJzZXNzaW9uSUQiOiI1NTQ0Y2NjYS0wMTllLTExZWMtODE4Yi0wMjQyYWMxMTAwMDMiLCJjbGllbnRJUCI6IjE4Ni4yMi4yMzguMTEiLCJjaXR5IjoiTG9tYXMgZGUgWmFtb3JhIiwicG9zdGFsQ29kZSI6IjE4MzIiLCJjb3VudHJ5IjoiQVIiLCJkbWEiOjAsImFjdGl2ZVJlZ2lvbiI6IlZFIiwiZGV2aWNlTGF0IjotMzQuNzY2MSwiZGV2aWNlTG9uIjotNTguMzk1NywicHJlZmVycmVkTGFuZ3VhZ2UiOiJlbiIsImRldmljZVR5cGUiOiJ3ZWIiLCJkZXZpY2VWZXJzaW9uIjoiNzguMC4wIiwiZGV2aWNlTWFrZSI6ImZpcmVmb3giLCJkZXZpY2VNb2RlbCI6IndlYiIsImFwcE5hbWUiOiJ3ZWIiLCJhcHBWZXJzaW9uIjoiNS4xMDIuMC1mYjFmZWRiZDY0MTkzZjlkYjAwMGY5N2M0NGNlMjlkZTZiMGJiOWQ1IiwiY2xpZW50SUQiOiJjY2Q5Zjc5Ni1kNzAzLTQwNTUtODEzNy0yODAzMWM2OGQ4YTIiLCJjbUF1ZGllbmNlSUQiOiIiLCJpc0NsaWVudEROVCI6ZmFsc2UsInVzZXJJRCI6IiIsImxvZ0xldmVsIjoiREVGQVVMVCIsInRpbWVab25lIjoiQW1lcmljYS9BcmdlbnRpbmEvQnVlbm9zX0FpcmVzIiwic2VydmVyU2lkZUFkcyI6dHJ1ZSwiZTJlQmVhY29ucyI6ZmFsc2UsImZlYXR1cmVzIjp7fSwiYXVkIjoiKi5wbHV0by50diIsImV4cCI6MTYyOTQ4MjgwOCwianRpIjoiZmFkNzNlOWYtNTYxZC00NmE0LWE1NTctMTI0ZjhhM2U5YzcxIiwiaWF0IjoxNjI5NDU0MDA4LCJpc3MiOiJib290LnBsdXRvLnR2Iiwic3ViIjoicHJpOnYxOnBsdXRvOmRldmljZXM6VkU6WTJOa09XWTNPVFl0WkRjd015MDBNRFUxTFRneE16Y3RNamd3TXpGak5qaGtPR0V5In0.y6NReTcbh5RVCgRJvBidW0awtYmffVdRdzEYDN35QCw',
+                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsImtpZCI6IjJjNTE3NWIzLTJkYzEtNDcwMy1iM2NiLTM2YjA0Y2VmMDNhNyIsInR5cCI6IkpXVCJ9.eyJzZXNzaW9uSUQiOiIyNTg1YWM2OC0wNDA3LTExZWMtOGIwMS0wMjQyYWMxMTAwMDMiLCJjbGllbnRJUCI6IjI4MDA6ODEwOjU1NDpiZDQ6YjE1Zjo1ZWI1OjQ5MzI6YjJiYSIsImNpdHkiOiJMb21hcyBkZSBaYW1vcmEiLCJwb3N0YWxDb2RlIjoiMTgzMiIsImNvdW50cnkiOiJBUiIsImRtYSI6MCwiYWN0aXZlUmVnaW9uIjoiVkUiLCJkZXZpY2VMYXQiOi0zNC43NjYxLCJkZXZpY2VMb24iOi01OC4zOTU3LCJwcmVmZXJyZWRMYW5ndWFnZSI6ImVzIiwiZGV2aWNlVHlwZSI6IndlYiIsImRldmljZVZlcnNpb24iOiI5Mi4wLjkwMiIsImRldmljZU1ha2UiOiJlZGdlLWNocm9taXVtIiwiZGV2aWNlTW9kZWwiOiJ3ZWIiLCJhcHBOYW1lIjoid2ViIiwiYXBwVmVyc2lvbiI6IjUuMTAyLjAtZmIxZmVkYmQ2NDE5M2Y5ZGIwMDBmOTdjNDRjZTI5ZGU2YjBiYjlkNSIsImNsaWVudElEIjoiZDk3MDkxODYtNzJkNi00OGRkLWFkOWItMDRhYjczMTAzYWM1IiwiY21BdWRpZW5jZUlEIjoiIiwiaXNDbGllbnRETlQiOmZhbHNlLCJ1c2VySUQiOiIiLCJsb2dMZXZlbCI6IkRFRkFVTFQiLCJ0aW1lWm9uZSI6IkFtZXJpY2EvQXJnZW50aW5hL0J1ZW5vc19BaXJlcyIsInNlcnZlclNpZGVBZHMiOnRydWUsImUyZUJlYWNvbnMiOmZhbHNlLCJmZWF0dXJlcyI6e30sImF1ZCI6IioucGx1dG8udHYiLCJleHAiOjE2Mjk3NDc3MjgsImp0aSI6IjU5MjUzYmI4LTA5ZjUtNGFhYy04NzQ2LWYxZjM1NzFmZmJlNiIsImlhdCI6MTYyOTcxODkyOCwiaXNzIjoiYm9vdC5wbHV0by50diIsInN1YiI6InByaTp2MTpwbHV0bzpkZXZpY2VzOlZFOlpEazNNRGt4T0RZdE56SmtOaTAwT0dSa0xXRmtPV0l0TURSaFlqY3pNVEF6WVdNMSJ9.uNeKgJrO0YLXViACSwMHQBgfQ-9RAhIBaYF_Vpur_wk',
                 'Origin': 'https://pluto.tv',
                 'Connection': 'keep-alive',
                 'TE': 'Trailers'
                 }
+        self.payloads = []
+        self.payloads_episodes = []
+        self.ids_scrapeados = Datamanager._getListDB(self,self.titanScraping)
 
         #### OBLIGATORIO si se usa Selenium para que pueda correr en los servers
         try:
@@ -78,116 +76,179 @@ class Pluto():
         if ott_operation in ('testing', 'scraping'):
             self.scraping()
 
-
-
-
-
     def get_categories(self):
-        """Obtiene todas las categorias
-
-        Returns:
-            JSON: Categorias
-        """
         res = requests.get(self._url + "categories", headers=self._headers)
         cat_ = res.json()
         return cat_['categories']
 
-
-
-
-
-    def get_series(self, categories):
-        """[summary]
-
-        Args:
-            categories ([type]): [description]
-
-        Returns:
-            [type]: [description]
-        """
-        series = []
-        for category in categories:
-            res = requests.get(self._url + "categories/" + category['_id'] + '/items', headers=self._headers)
-            res = res.json()
-            for serie in res['items']:
-                if serie['type'] == "series":
-                    series.append(serie)
-        return series
-
-
-
-
     def get_movies(self, categories):
-        """[summary]
-
-        Args:
-            categories ([type]): [description]
-
-        Returns:
-            [type]: [description]
-        """
-        movies = []
-        for category in categories:
+        cat_ = categories
+        for category in cat_:
             res = requests.get(self._url + "categories/" + category['_id'] + '/items', headers=self._headers)
             res = res.json()
             for movie in res['items']:
                 if movie['type'] == "movie":
-                    movies.append(movie)
-        return movies
+                    payload = self.get_payload(movie)
+                    payload_movie = payload.payload_movie()
+                    Datamanager._checkDBandAppend(self,payload_movie,self.ids_scrapeados,self.payloads)
 
-    #def get_payload(self,content_metadata,is_episode=None):
-    #        """Método para crear el payload. Se reutiliza tanto para
-    #        titanScraping, como para titanScrapingEpisodes.
-    #        Args:
-    #            content_metadata (dict): Indica la metadata del contenido.
-    #            is_episode (bool, optional): Indica si hay que crear un payload
-    #            que es un episodio. Defaults to False.
-    #        Returns:
-    #            Payload: Retorna el payload.
-    #        """
-    #        payload = Payload()
-    #        # Indica si el payload a completar es un episodio:
-    #        if is_episode:
-    #            self.is_episode = True
-    #        else:
-    #            self.is_episode = False
-    #        payload.platform_code = self._platform_code
-    #        payload.id = self.get_id(content_metadata)
-    #        payload.title = self.get_title(content_metadata)
-    #        payload.original_title = self.get_original_title(content_metadata)
-    #        payload.clean_title = ""# self.get_clean_title(content_metadata)
-    #        payload.deeplink_web = self.get_deeplinks(content_metadata)
-    #        # Si no es un episodio, los datos pasan a scrapearse del html.
-    #        if self.is_episode:
-    #            payload.parent_title = self.get_parent_title(content_metadata)
-    #            payload.parent_id = self.get_parent_id(content_metadata)
-    #            payload.season = self.get_season(content_metadata)
-    #            payload.episode = self.get_episode(content_metadata)
-#
-    #        payload.year = self.get_year(content_metadata)
-    #        payload.duration = self.get_duration(content_metadata)
-    #        payload.synopsis = self.get_synopsis(content_metadata)
-    #        payload.image = self.get_images(content_metadata)
-    #        payload.rating = self.get_ratings(content_metadata)
-    #        payload.genres = self.get_genres(content_metadata)
-    #        payload.cast = self.get_cast(content_metadata)
-    #        payload.directors = self.get_directors(content_metadata)
-    #        payload.availability = self.get_availability(content_metadata)
-    #        payload.packages = self.get_packages(content_metadata)
-    #        payload.country = self.get_country(content_metadata)
-    #        payload.createdAt = self._created_at
-    #        return payload
+    def get_series(self, categories):
+        cat_ = categories
+        for category in cat_:
+            res = requests.get(self._url + "categories/" + category['_id'] + '/items', headers=self._headers)
+            res = res.json()
+            for serie in res['items']:
+                if serie['type'] == "series":
+                    payload = self.get_payload(serie)
+                    payload_serie = payload.payload_serie()
+                    Datamanager._checkDBandAppend(self,payload_serie,self.ids_scrapeados,self.payloads)
+
+
+
+    def get_payload(self,content_metadata,is_episode=None):
+            """Método para crear el payload. Se reutiliza tanto para
+            titanScraping, como para titanScrapingEpisodes.
+            Args:
+                content_metadata (dict): Indica la metadata del contenido.
+                is_episode (bool, optional): Indica si hay que crear un payload
+                que es un episodio. Defaults to False.
+            Returns:
+                Payload: Retorna el payload.
+            """
+            payload = Payload()
+            # Indica si el payload a completar es un episodio:
+            if is_episode:
+                self.is_episode = True
+            else:
+                self.is_episode = False
+            payload.platform_code = self._platform_code
+            payload.id = self.get_id(content_metadata)
+            payload.title = self.get_title(content_metadata)
+            payload.original_title = self.get_original_title(content_metadata)
+            payload.clean_title = self.get_clean_title(content_metadata)
+            payload.deeplink_web = self.get_deeplinks(content_metadata)
+            if self.is_episode:
+                payload.parent_title = self.get_parent_title(content_metadata)
+                payload.parent_id = self.get_parent_id(content_metadata)
+                payload.season = self.get_season(content_metadata)
+                payload.episode = self.get_episode(content_metadata)
+            if content_metadata['type'] == "series":
+                payload.seasons = self.get_seasons(content_metadata)
+
+            payload.year = self.get_year(content_metadata)
+            payload.duration = self.get_duration(content_metadata)
+            payload.synopsis = self.get_synopsis(content_metadata)
+            payload.image = self.get_images(content_metadata)
+            payload.rating = self.get_ratings(content_metadata)
+            payload.genres = self.get_genres(content_metadata)
+            payload.cast = self.get_cast(content_metadata)
+            payload.directors = self.get_directors(content_metadata)
+            payload.availability = self.get_availability(content_metadata)
+            payload.packages = self.get_packages(content_metadata)
+            payload.country = self.get_country(content_metadata)
+            payload.createdAt = self._created_at
+            return payload
 
     def get_id(self, content_metadata):
-        """
-        Este metodo se encarga de Obtener la ID 
-        """
-
-        pass
+        id = content_metadata['_id']
+        return id
+    
     def get_title(self, content_metadata):
+        title = content_metadata['name']
+        return title
+    
+    def get_clean_title(self, content_metadata):
+        title = content_metadata['name']
+        clean_title = _replace(title)
+        return clean_title
+    
+    def get_original_title(self, content_metadata):
         pass
+    
+    def get_year(self, content_metadata):
+        pass
+    def get_duration(self, content_metadata):
+        if content_metadata['type'] == "series":
+            duration = None
+        else:
+            duration = content_metadata['duration'] / 1000
+            duration = duration / 60
+        return duration
+    def get_deeplinks(self, content_metadata):
+       deeplink = {
+           "Web": None,
+           "Android": None,
+           "iOS": None
+           }
+       if content_metadata['type'] == "movie":
+           deeplink["Web"] = "https://pluto.tv/es/on-demand/movies/" + content_metadata["slug"]
+       else:
+           deeplink["Web"] = "https://pluto.tv/es/on-demand/series/" + content_metadata["slug"]
+       return deeplink
+    
+    def get_synopsis(self, content_metadata):
+        synopsis = content_metadata['description']
+        return synopsis
+    def get_images(self, content_metadata):
+        image = content_metadata['covers']
+        return image
+    def get_ratings(self, content_metadata):
+        rating = content_metadata['rating']
+    def get_genres(self, content_metadata):
+        genres = content_metadata['genre'].replace(" & ", ",").split(",")
+        return genres
+    def get_cast(self, content_metadata):
+        pass
+    def get_directors(self, content_metadata):
+        pass
+    def get_availability(self, content_metadata):
+        pass
+    def get_packages(self, content_metadata):
+        return [{'Type':'free-vod'}]
+    def get_country(self, content_metadata):
+        pass
+    def get_parent_title(self, content_metadata):
+        title = content_metadata['name']
+        return title
+    def get_parent_id(self, content_metadata):
+        id = content_metadata['_id']
+        return id
+    def get_episode(self, content_metadata):
+        episode = content_metadata['number']
+        return episode
+    def get_episodes(self, content_metadata):
+        print(content_metadata["name"])
+        for i in content_metadata['seasons']:
+            for episode in i['episodes']:
+                payload = self.get_payload(episode, True)
+                payload_episode = payload.payload_episode()
+                Datamanager._checkDBandAppend(self,payload_episode,self.ids_scrapeados,self.payloads,isEpi=True)
+
+    def get_season(self, content_metadata):
+        season = content_metadata['season']
+        return season
+    def get_seasons(self, content_metadata):
+        seasons = []
+        payload_season = {
+            "Number": None,
+            "Episodes": None,
+            "Deeplink": None
+            }
+        res = requests.get(self._url + "series/" + content_metadata['_id'] + "/seasons", headers=self._headers)
+        res = res.json()
+        slug = res['slug']
+        self.get_episodes(res)
+        
+        for season in res['seasons']:
+            payload_season["Number"] = season['number']
+            payload_season["Episodes"] = len(season['episodes'])
+            payload_season["Deeplink"] = self._url + "series/" + slug + "/details" + "/seasons" + str(season['number'])
+            seasons.append(payload_season)
+        return seasons
 
     def scraping(self):
-        cat_ = self.get_categories()
-        #self.get_movies(cat_)
-        #print(self.get_movies(cat_))
+        cat = self.get_categories()
+        self.get_movies(cat)
+        self.get_series(cat)
+        Datamanager._insertIntoDB(self,self.payloads,self.titanScraping)
+        
