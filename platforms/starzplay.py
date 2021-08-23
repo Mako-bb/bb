@@ -166,10 +166,24 @@ class StarzPlay():
             payload.is_original = self.get_is_original(content_metadata)
             payload.is_adult = self.get_is_adult(content_metadata)
             payload.provider = self.get_provider(content_metadata)
+            payload.crew = self.get_crew(content_metadata)
             payload.createdAt = self._created_at
 
             return payload
     
+    def get_crew(self, content_metadata):
+        crew = []
+        if ('credits' in content_metadata):
+            credits = content_metadata['credits']
+            for credit in credits:
+                    crew.append({
+                        "name": credit['name'],
+                        "rol": credit['keyedRoles'][0]['name']
+                    })
+        return crew
+        
+
+
     def get_provider(self, content_metadata):
         return content_metadata.get('product','') or None
     
@@ -219,7 +233,7 @@ class StarzPlay():
         #return (f'{self.url}movies/{new_title}-{id}').lower() if type_=='Movie' else (f'{self.url}series/{new_title}/{id}').lower()
         if type_ == 'Movie':
             return (f'{self.url}movies/{new_title}-{id}').lower()
-            
+
         return (f'{self.url}series/{new_title}/{id}').lower()
         
         
