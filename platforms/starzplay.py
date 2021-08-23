@@ -18,7 +18,7 @@ class StarzPlay():
     - Status: EN PROGRESO
     - VPN: NO
     - Método: API
-    - Runtime: < 2
+    - Runtime: < 30sec
 
     """
 
@@ -118,12 +118,10 @@ class StarzPlay():
                 seasons = content['childContent']
                 for season in seasons:
                     episodes = season['childContent']
-                    count_episode = 0
                     for episode in episodes:
-                        count_episode+=1
-                        payload_season = self.get_payload(episode, True, count_episode)
+                        payload_season = self.get_payload(episode, True)
                         payload_episode = payload_season.payload_episode()
-                        Datamanager._checkDBandAppend(self,payload_episode,self.ids_scrapeados,self.payloads_episodes, 0, 0, True)
+                        Datamanager._checkDBandAppend(self,payload_episode,self.ids_scrapeados,self.payloads_episodes, isEpi=True)
 
             else:
                 payload = self.get_payload(content)
@@ -131,7 +129,7 @@ class StarzPlay():
                 Datamanager._checkDBandAppend(self,payload_movie,self.ids_scrapeados,self.payloads)
                        
     
-    def get_payload(self,content_metadata,is_episode=None,count_episode=0):
+    def get_payload(self,content_metadata,is_episode=None):
 
             payload = Payload()
             # Indica si el payload a completar es un episodio:
@@ -150,9 +148,7 @@ class StarzPlay():
                 payload.parent_title = self.get_parent_title(content_metadata)
                 payload.parent_id = self.get_parent_id(content_metadata)
                 payload.season = self.get_season(content_metadata)
-                #Al no poder traer el numero del episodio lo paso por param y lo seteo de esta manera
-                #payload.episode = self.get_episode(content_metadata)
-                payload.episode = count_episode
+                payload.episode = self.get_episode(content_metadata)
 
             payload.year = self.get_year(content_metadata)
             payload.duration = self.get_duration(content_metadata)
@@ -184,7 +180,7 @@ class StarzPlay():
     
     
     def get_is_original(self, content_metadata):
-        return content_metadata.get('original','') or None
+        return content_metadata.get('original','')
 
 
     def get_download(self, content_metadata):
@@ -220,11 +216,12 @@ class StarzPlay():
         id = content_metadata['contentId']
         type_ = content_metadata['contentType']
         new_title = title.replace(':','').replace(' ','-')
+        #return (f'{self.url}movies/{new_title}-{id}').lower() if type_=='Movie' else (f'{self.url}series/{new_title}/{id}').lower()
         if type_ == 'Movie':
-            url_movie = (f'{self.url}movies/{new_title}-{id}').lower()
-            return url_movie
-        url_serie = (f'{self.url}series/{new_title}/{id}').lower()
-        return url_serie
+            return (f'{self.url}movies/{new_title}-{id}').lower()
+            
+        return (f'{self.url}series/{new_title}/{id}').lower()
+        
         
     
     def get_synopsis(self, content_metadata):
@@ -294,3 +291,6 @@ class StarzPlay():
     
     def get_season(self, content_metadata):
         return content_metadata['seasonNumber']
+
+    def get_episode(self, content_metada):
+        pass
