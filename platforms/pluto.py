@@ -219,7 +219,7 @@ class Pluto():
             for episode in i['episodes']:
                 payload = self.get_payload(episode,parent_id=parent_id, parent_name=parent_name, is_episode=True)
                 payload_episode = payload.payload_episode()
-                Datamanager._checkDBandAppend(self,payload_episode,self.ids_episcrap,self.payloads,isEpi=True)
+                Datamanager._checkDBandAppend(self,payload_episode,self.ids_episcrap,self.payloads_episodes,isEpi=True)
 
     def get_season(self, content_metadata):
         season = content_metadata['season']
