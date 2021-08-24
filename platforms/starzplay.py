@@ -39,7 +39,7 @@ class StarzPlay():
         self.payloads               = []
         self.payloads_episodes      = []
         self.ids_scrapeados         = Datamanager._getListDB(self,self.titanScraping)
-        
+        self.ids_scrapeados_episodios= Datamanager._getListDB(self,self.titanScrapingEpisodios)
         """
         La operación 'return' la usamos en caso que se nos corte el script a mitad de camino cuando
         testeamos, sea por un error de conexión u otra cosa. Nos crea una lista de ids ya insertados en
@@ -119,9 +119,10 @@ class StarzPlay():
                 for season in seasons:
                     episodes = season['childContent']
                     for episode in episodes:
-                        payload_season = self.get_payload(episode, True)
-                        payload_episode = payload_season.payload_episode()
-                        Datamanager._checkDBandAppend(self,payload_episode,self.ids_scrapeados,self.payloads_episodes, isEpi=True)
+                        if episode['runtime']/60 > 5:
+                            payload_season = self.get_payload(episode, True)
+                            payload_episode = payload_season.payload_episode()
+                            Datamanager._checkDBandAppend(self,payload_episode,self.ids_scrapeados_episodios,self.payloads_episodes, isEpi=True)
 
             else:
                 payload = self.get_payload(content)
@@ -222,7 +223,7 @@ class StarzPlay():
     
 
     def get_duration(self, content_metadata):
-        return round(content_metadata.get('runtime',0)/60) or round(content_metadata.get('firstEpisodeRuntime',0)/60) or None
+        return round(content_metadata.get('runtime',0)/60) or None
 
 
     def get_deeplinks(self, content_metadata):
