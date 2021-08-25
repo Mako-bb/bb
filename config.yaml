@@ -57,7 +57,7 @@ ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrol
     countries:
       AR: ar.hbofacu
       US: us.hbofacu
-    url: "https://www.hbo.com/"
+    url: "https://www.hbo.com"
 
   Showtime:
     countries: 
@@ -84,6 +84,8 @@ ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrol
       US: us.starzplay
 
     url: "https://www.starz.com/es/es/"
+    url_api_ids: "https://playdata.starz.com/metadata-service/play/partner/Web_ES/v8/blocks?playContents=map&lang=es-ES&pages=BROWSE,HOME,MOVIES,PLAYLIST,SEARCH,SEARCH%20RESULTS,SERIES&includes=contentId,contentType,title,product,seriesName,seasonNumber,free,comingSoon,newContent,topContentId,properCaseTitle,categoryKeys,runtime,popularity,original,firstEpisodeRuntime,releaseYear,images,minReleaseYear,maxReleaseYear,episodeCount,detail"
+    url_api: "https://playdata.starz.com/metadata-service/play/partner/Web_ES/v8/content?lang=es-ES&contentIds="
 
   AcornTV:
     countries:
