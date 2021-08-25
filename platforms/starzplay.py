@@ -87,7 +87,7 @@ class StarzPlay():
         Datamanager._insertIntoDB(self,self.payloads,self.titanScraping)
         Datamanager._insertIntoDB(self,self.payloads_episodes,self.titanScrapingEpisodios)
         
-        #Upload(self._platform_code,self._created_at,testing=testing)
+        Upload(self._platform_code,self._created_at,testing=testing)
 
 
     def get_movies(self, content):
@@ -99,7 +99,7 @@ class StarzPlay():
     def get_series(self,content):
         payload = self.get_payload(content)
         payload_serie = payload.payload_serie()
-        if content['episodeCount']>2:
+        if content['episodeCount']>1:
             Datamanager._checkDBandAppend(self,payload_serie,self.ids_scrapeados,self.payloads)
 
         pass
