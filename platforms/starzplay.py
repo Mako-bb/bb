@@ -77,20 +77,7 @@ class StarzPlay():
         pero realiza las validaciones.
         """
         #Upload(self._platform_code,self._created_at,testing=testing)
-        #print(movie)
-        pass
-
-
-    def get_movies(self, movies):
-
-        pass
-
-
-    def get_series(self):
-        pass
-
-
-    def get_episodes(self):
+        
         pass
     
 
@@ -184,7 +171,6 @@ class StarzPlay():
         return crew
         
 
-
     def get_provider(self, content_metadata):
         return content_metadata.get('product','') or None
     
@@ -192,8 +178,7 @@ class StarzPlay():
     def get_is_adult(self, content_metadata):
        return content_metadata.get('ratingRank','')>=18 
         
-    
-    
+      
     def get_is_original(self, content_metadata):
         return content_metadata.get('original','')
 
@@ -242,9 +227,6 @@ class StarzPlay():
     def get_synopsis(self, content_metadata):
         return content_metadata.get('logLine','') or None
         
-
-    def get_images(self, content_metadata):
-        pass
     
     
     def get_ratings(self, content_metadata):
@@ -290,11 +272,7 @@ class StarzPlay():
     
     def get_packages(self, content_metadata):
         return {"Type":"subscription-vod"}
-         
-    
-    def get_country(self, content_metadata):
-        pass
-    
+  
     
     def get_parent_title(self, content_metadata):
         return content_metadata.get('seriesName','') or None
@@ -306,6 +284,3 @@ class StarzPlay():
     
     def get_season(self, content_metadata):
         return content_metadata['seasonNumber']
-
-    def get_episode(self, content_metada):
-        pass
