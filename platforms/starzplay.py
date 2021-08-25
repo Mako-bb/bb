@@ -36,10 +36,12 @@ class StarzPlay():
         self.skippedTitles          = 0 # Requerido si se va a usar Datamanager
         self.skippedEpis            = 0 # Requerido si se va a usar Datamanager
         self.url                    = config_['url']
+        self.url_api_ids            = config_['url_api_ids']
+        self.url_api                = config_['url_api']
         self.payloads               = []
         self.payloads_episodes      = []
         self.ids_scrapeados         = Datamanager._getListDB(self,self.titanScraping)
-        self.ids_scrapeados_episodios= Datamanager._getListDB(self,self.titanScrapingEpisodios)
+        self.ids_scrapeados_episodios = Datamanager._getListDB(self,self.titanScrapingEpisodios)
         """
         La operación 'return' la usamos en caso que se nos corte el script a mitad de camino cuando
         testeamos, sea por un error de conexión u otra cosa. Nos crea una lista de ids ya insertados en
@@ -61,62 +63,82 @@ class StarzPlay():
         if ott_operation in ('testing', 'scraping'):
             self.scraping()
     
+
     def scraping(self,testing=True):
-        """
-        Data manager nos simplifica la manera de interactuar entre las listas
-        y la base de datos.
-        """
-        self.test_request()
-
-        Datamanager._insertIntoDB(self,self.payloads,self.titanScraping)
-        Datamanager._insertIntoDB(self,self.payloads_episodes,self.titanScrapingEpisodios)
-        """
-        Hace una Query para ver lo que scrapeamos.
-        Chequea los payloads para ver que esten correctos.
-        Si estamos en testing no intenta subir a misato,
-        pero realiza las validaciones.
-        """
-        #Upload(self._platform_code,self._created_at,testing=testing)
-        
-        pass
-    
-
-    def test_request(self):
-
-        rq_ = requests.get(
-        "https://playdata.starz.com/metadata-service/play/partner/Web_ES/v8/blocks?playContents=map&lang=es-ES&pages=BROWSE,HOME,MOVIES,PLAYLIST,SEARCH,SEARCH%20RESULTS,SERIES&includes=contentId,contentType,title,product,seriesName,seasonNumber,free,comingSoon,newContent,topContentId,properCaseTitle,categoryKeys,runtime,popularity,original,firstEpisodeRuntime,releaseYear,images,minReleaseYear,maxReleaseYear,episodeCount,detail")
-        json_ = rq_.json()
-        
-        #OBTENGO DE LA API BLOQUE TODAS LAS IDS DE LOS FILMS
-        ids_movies = json_['blocks'][7]['playContentsById']
-
+        ids_movies = self.get_ids()
+        #IDS MOVIES CONTIENE ID DE PELICULAS Y SERIES
         for id in ids_movies:
-            url_ = (f'https://playdata.starz.com/metadata-service/play/partner/Web_ES/v8/content?lang=es-ES&contentIds={ids_movies[id]["contentId"]}')
-            rq__ = requests.get(url_)
-            json__ = rq__.json()
-            content = rq__.json()['playContentArray']['playContents'][0]
-            
-            if content['contentType'] != "Movie" and content['contentType'] != 'Episode':
-                
-                payload = self.get_payload(content)
-                payload_serie = payload.payload_serie()
-                Datamanager._checkDBandAppend(self,payload_serie,self.ids_scrapeados,self.payloads)
 
+            content = self.get_content(id, ids_movies)
+            type_ = self.get_type(content)
+
+            #SI EL TIPO NO ES MOVIE NI EPISODE ES UNA SERIE
+            if type_ != "Movie" and type_ != 'Episode':
+                self.get_series(content) 
+                #AGARRO LAS SEASON DE LAS SERIES PARA LUEGO RECORRER LOS EPISODIOS
                 seasons = content['childContent']
                 for season in seasons:
                     episodes = season['childContent']
-                    for episode in episodes:
-                        if episode['runtime']/60 > 5:
-                            payload_season = self.get_payload(episode, True)
-                            payload_episode = payload_season.payload_episode()
-                            Datamanager._checkDBandAppend(self,payload_episode,self.ids_scrapeados_episodios,self.payloads_episodes, isEpi=True)
+                    self.get_episodes(episodes)    
 
             else:
-                payload = self.get_payload(content)
-                payload_movie = payload.payload_movie()
-                Datamanager._checkDBandAppend(self,payload_movie,self.ids_scrapeados,self.payloads)
-                       
+                self.get_movies(content)
+
+        Datamanager._insertIntoDB(self,self.payloads,self.titanScraping)
+        Datamanager._insertIntoDB(self,self.payloads_episodes,self.titanScrapingEpisodios)
+        
+        #Upload(self._platform_code,self._created_at,testing=testing)
+
+
+    def get_movies(self, content):
+        payload = self.get_payload(content)
+        payload_movie = payload.payload_movie()
+        Datamanager._checkDBandAppend(self,payload_movie,self.ids_scrapeados,self.payloads)
+        
+
+    def get_series(self,content):
+        payload = self.get_payload(content)
+        payload_serie = payload.payload_serie()
+        Datamanager._checkDBandAppend(self,payload_serie,self.ids_scrapeados,self.payloads)
+
+        pass
+
+
+    def get_episodes(self, episodes):
+        for episode in episodes:
+            if episode['runtime']/60 > 5:
+                payload_season = self.get_payload(episode, True)
+                payload_episode = payload_season.payload_episode()
+                Datamanager._checkDBandAppend(self,payload_episode,self.ids_scrapeados_episodios,self.payloads_episodes, isEpi=True)
+        
     
+    def get_type(self,content):
+        return content['contentType']
+
+    
+    def get_ids(self):
+        
+        """
+        Summary:
+            [Este metodo le pega a la api que contiene el id
+            de todas las peliculas y series y lo retorna]
+
+        Returns:
+            [int]: [ids_movies]
+        """
+        rq_ = requests.get(self.url_api_ids)
+        json_ = rq_.json()
+        ids_movies = json_['blocks'][7]['playContentsById']
+        return ids_movies
+
+
+    def get_content(self,id, ids_movies):
+        url_ = (f'{self.url_api}{ids_movies[id]["contentId"]}')
+        rq__ = requests.get(url_)
+        json__ = rq__.json()
+        return rq__.json()['playContentArray']['playContents'][0]
+    
+
     def get_payload(self,content_metadata,is_episode=None):
 
             payload = Payload()
@@ -124,7 +146,7 @@ class StarzPlay():
             if is_episode:
                 self.is_episode = True
             else:
-                self.is_episode = False
+                self.is_episode = False 
             payload.platform_code = self._platform_code
             payload.id = self.get_id(content_metadata)
             payload.title = self.get_title(content_metadata)
@@ -136,49 +158,47 @@ class StarzPlay():
                 payload.parent_title = self.get_parent_title(content_metadata)
                 payload.parent_id = self.get_parent_id(content_metadata)
                 payload.season = self.get_season(content_metadata)
-                payload.episode = self.get_episode(content_metadata)
 
             payload.year = self.get_year(content_metadata)
             payload.duration = self.get_duration(content_metadata)
             payload.synopsis = self.get_synopsis(content_metadata)
-            payload.image = self.get_images(content_metadata)
             payload.rating = self.get_ratings(content_metadata)
             payload.genres = self.get_genres(content_metadata)
             payload.cast = self.get_cast(content_metadata)
             payload.directors = self.get_directors(content_metadata)
             payload.availability = self.get_availability(content_metadata)
             payload.packages = self.get_packages(content_metadata)
-            payload.country = self.get_country(content_metadata)
             #Agregados
             payload.download = self.get_download(content_metadata)
             payload.is_original = self.get_is_original(content_metadata)
             payload.is_adult = self.get_is_adult(content_metadata)
-            payload.provider = self.get_provider(content_metadata)
             payload.crew = self.get_crew(content_metadata)
             payload.createdAt = self._created_at
 
             return payload
     
+
     def get_crew(self, content_metadata):
         crew = []
+        cast = self.get_cast(content_metadata)
+        directors = self.get_directors(content_metadata)
+
         if ('credits' in content_metadata):
             credits = content_metadata['credits']
             for credit in credits:
+                if not credit['name'] in cast and  not credit['name'] in directors:
                     crew.append({
                         "name": credit['name'],
                         "rol": credit['keyedRoles'][0]['name']
                     })
+                
         return crew
         
-
-    def get_provider(self, content_metadata):
-        return content_metadata.get('product','') or None
-    
     
     def get_is_adult(self, content_metadata):
        return content_metadata.get('ratingRank','')>=18 
         
-      
+    
     def get_is_original(self, content_metadata):
         return content_metadata.get('original','')
 
@@ -188,7 +208,7 @@ class StarzPlay():
 
 
     def get_id(self, content_metadata):
-        return content_metadata.get('contentId','') or None
+        return str(content_metadata.get('contentId','')) or None
         
     
     def get_title(self, content_metadata): 
@@ -221,12 +241,10 @@ class StarzPlay():
             return (f'{self.url}movies/{new_title}-{id}').lower()
 
         return (f'{self.url}series/{new_title}/{id}').lower()
-        
-        
+         
     
     def get_synopsis(self, content_metadata):
         return content_metadata.get('logLine','') or None
-        
     
     
     def get_ratings(self, content_metadata):
@@ -244,26 +262,18 @@ class StarzPlay():
     
     def get_cast(self, content_metadata):
         cast = []
-        if ('credits' in content_metadata):
-            credits = content_metadata['credits']
-            for credit in credits:
-                if 'Actor' in credit['keyedRoles'][0].values():
-                    cast.append(credit['name'])
+        if ('actors' in content_metadata):
+            for actors in content_metadata['actors']:
+                cast.append(actors['fullName'])
         return cast
     
     
     def get_directors(self, content_metadata):
-        director = []
-        if ('credits' in content_metadata):
-            credits = content_metadata['credits']
-            for credit in credits:
-                if 'Director' in credit['keyedRoles'][0].values():
-                    director.append({
-                    'Role': 'Director',                         
-                    'Name': credit['name']
-                })
-        
-        return director
+        directors = []
+        if ('directors' in content_metadata):
+            for dir in content_metadata['directors']:
+                directors.append(dir['fullName'])
+        return directors
     
     
     def get_availability(self, content_metadata):
@@ -271,15 +281,15 @@ class StarzPlay():
     
     
     def get_packages(self, content_metadata):
-        return {"Type":"subscription-vod"}
-  
+        return [{"Type":"subscription-vod"}]
+         
     
     def get_parent_title(self, content_metadata):
         return content_metadata.get('seriesName','') or None
         
      
     def get_parent_id(self, content_metadata):
-        return content_metadata.get('topContentId','') or None
+        return str(content_metadata.get('topContentId','')) or None
         
     
     def get_season(self, content_metadata):
