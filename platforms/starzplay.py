@@ -99,14 +99,15 @@ class StarzPlay():
     def get_series(self,content):
         payload = self.get_payload(content)
         payload_serie = payload.payload_serie()
-        Datamanager._checkDBandAppend(self,payload_serie,self.ids_scrapeados,self.payloads)
+        if content['episodeCount']>2:
+            Datamanager._checkDBandAppend(self,payload_serie,self.ids_scrapeados,self.payloads)
 
         pass
 
 
     def get_episodes(self, episodes):
         for episode in episodes:
-            if episode['runtime']/60 > 5:
+            if episode['runtime']/60 > 5 and not 'Actualizaciones de la Temporada' in episode['title']:
                 payload_season = self.get_payload(episode, True)
                 payload_episode = payload_season.payload_episode()
                 Datamanager._checkDBandAppend(self,payload_episode,self.ids_scrapeados_episodios,self.payloads_episodes, isEpi=True)
