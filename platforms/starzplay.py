@@ -67,7 +67,8 @@ class StarzPlay():
     def scraping(self,testing=True):
         ids_movies = self.get_ids()
         #IDS MOVIES CONTIENE ID DE PELICULAS Y SERIES
-        for id in ids_movies:
+        for n, id in enumerate(ids_movies):
+            print(f"\nProgress {n}/{len(ids_movies)}\n")
 
             content = self.get_content(id, ids_movies)
             type_ = self.get_type(content)
