@@ -137,7 +137,6 @@ class StarzPlay():
     def get_content(self,id, ids_movies):
         url_ = (f'{self.url_api}{ids_movies[id]["contentId"]}')
         rq__ = requests.get(url_)
-        json__ = rq__.json()
         return rq__.json()['playContentArray']['playContents'][0]
     
 
@@ -238,7 +237,6 @@ class StarzPlay():
         id = content_metadata['contentId']
         type_ = content_metadata['contentType']
         new_title = title.replace(':','').replace(' ','-')
-        #return (f'{self.url}movies/{new_title}-{id}').lower() if type_=='Movie' else (f'{self.url}series/{new_title}/{id}').lower()
         if type_ == 'Movie':
             return (f'{self.url}movies/{new_title}-{id}').lower()
 
@@ -257,7 +255,11 @@ class StarzPlay():
         arr_genres = content_metadata['genres']
         list_genres = []
         for genres in arr_genres:
-            list_genres.append(genres.get('description'))
+            if "/" in genres.get('description'):
+                split_genre = genres['description'].split('/')
+                list_genres +=split_genre
+            else:  
+                list_genres.append(genres.get('description'))
         
         return list_genres
          
@@ -282,7 +284,7 @@ class StarzPlay():
         return content_metadata.get('endDate','') or None
     
     
-    def get_packages(self, content_metadata):
+    def get_packages(self):
         """  Se hardcodeo el package porque no se encontró el dato. """
         return [{"Type":"subscription-vod"}]
          
