@@ -67,7 +67,8 @@ class StarzPlay():
     def scraping(self,testing=True):
         ids_movies = self.get_ids()
         #IDS MOVIES CONTIENE ID DE PELICULAS Y SERIES
-        for id in ids_movies:
+        for n, id in enumerate(ids_movies):
+            print(f"\nProgress {n}/{len(ids_movies)}\n")
 
             content = self.get_content(id, ids_movies)
             type_ = self.get_type(content)
@@ -87,7 +88,7 @@ class StarzPlay():
         Datamanager._insertIntoDB(self,self.payloads,self.titanScraping)
         Datamanager._insertIntoDB(self,self.payloads_episodes,self.titanScrapingEpisodios)
         
-        #Upload(self._platform_code,self._created_at,testing=testing)
+        Upload(self._platform_code,self._created_at,testing=testing)
 
 
     def get_movies(self, content):
@@ -99,14 +100,15 @@ class StarzPlay():
     def get_series(self,content):
         payload = self.get_payload(content)
         payload_serie = payload.payload_serie()
-        Datamanager._checkDBandAppend(self,payload_serie,self.ids_scrapeados,self.payloads)
+        if content['episodeCount']>1:
+            Datamanager._checkDBandAppend(self,payload_serie,self.ids_scrapeados,self.payloads)
 
         pass
 
 
     def get_episodes(self, episodes):
         for episode in episodes:
-            if episode['runtime']/60 > 5:
+            if episode['runtime']/60 > 5 and not 'Actualizaciones de la Temporada' in episode['title']:
                 payload_season = self.get_payload(episode, True)
                 payload_episode = payload_season.payload_episode()
                 Datamanager._checkDBandAppend(self,payload_episode,self.ids_scrapeados_episodios,self.payloads_episodes, isEpi=True)
@@ -281,6 +283,7 @@ class StarzPlay():
     
     
     def get_packages(self, content_metadata):
+        """  Se hardcodeo el package porque no se encontró el dato. """
         return [{"Type":"subscription-vod"}]
          
     

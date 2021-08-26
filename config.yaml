@@ -53,21 +53,6 @@ tp_sites:
     - CanalOff
     - Globosat
 ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrollando
-  HBOFacu:
-    countries:
-      AR: ar.hbofacu
-      US: us.hbofacu
-    url: "https://www.hbo.com"
-
-  Showtime:
-    countries: 
-      US: us.showtime
-    urls:
-      HOME: https://www.sho.com
-  Pluto:
-    countries:
-      AR: ar.pluto
-    url: https://service-vod.clusters.pluto.tv/v4/vod/
   Template: # El nombre de la clase, debe coincidir con la que está en el script
     countries: # El campo 'countries' es necesario en todos los casos
       AR: ar.template # Cada país de esta lista debe ir en el format 'PAIS: pais.plataforma'
@@ -104,13 +89,6 @@ ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrol
       SE: se.acorntv
       NL: nl.acorntv
       ZA: za.acorntv
-  CapacitacionApi:
-    countries:
-      AR: ar.capacitacionesapi
-    urls:
-      movies: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/movies?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web
-      series: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/shows?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web
-      episodes: https://content-delivery-gw.svc.ds.amcn.com/api/v2/content/amcn/amc/url/episodes?cacheHash=6fbe285914ba1b125a543cb2a78a8e5d2b8bf1962737c01b1fd874e87f8dbdb9&device=web
   AdultSwim:
     countries:
       US: us.adultswim
