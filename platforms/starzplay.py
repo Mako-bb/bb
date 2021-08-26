@@ -283,6 +283,7 @@ class StarzPlay():
     
     
     def get_packages(self, content_metadata):
+        """  Se hardcodeo el package porque no se encontró el dato. """
         return [{"Type":"subscription-vod"}]
          
     
