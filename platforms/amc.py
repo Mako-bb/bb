@@ -98,14 +98,15 @@ class Amc():
         payloads = []
         payloads_series = []
         ids_guardados = Datamanager._getListDB(self, self.titanScraping)
-        ids_guardados_series = Datamanager._getListDB(
+        ids_guardados_episodios = Datamanager._getListDB(
             self, self.titanScrapingEpisodios)
         # Definimos los links de las apis y con el Datamanager usamos la función _getJson
         url_movie = self._movies_url
         url_episode = self._episode_url
-        episode_data = Datamanager._getJSON(self, url_episode)
         i = 0
         url_serie = self._show_url
+        
+        episode_data = Datamanager._getJSON(self, url_episode)
         serie_data = Datamanager._getJSON(self, url_serie)
         movie_data = Datamanager._getJSON(self, url_movie)
 
@@ -114,7 +115,7 @@ class Amc():
             try:
                 if i == (len(episode_data['data']['children'][2]['children'])-1):
                     break
-            except:
+            except Exception:
                 break
             # Ubicamos los valores dentro del Json
             movies = movie_data['data']['children'][4]['children']
@@ -247,7 +248,7 @@ class Amc():
                         'CreatedAt':     self._created_at
                     }
                     Datamanager._checkDBandAppend(
-                        self, payload, ids_guardados_series, payloads, isEpi=True
+                        self, payload, ids_guardados_episodios, payloads, isEpi=True
                     )
 
         Datamanager._insertIntoDB(self, payloads_series, self.titanScraping)
