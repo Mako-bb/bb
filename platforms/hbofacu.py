@@ -60,36 +60,119 @@ class HBOFacu():
         if ott_operation in ('testing', 'scraping'):
             self.scraping()
     
+    
     def scraping(self):
         all_movies = self.get_all_movies()
         all_series = self.get_all_series()
 
-        for movie in all_movies:
-            payload = self.get_payload(movie)
-            payload_movie = payload.payload_movie()
-            Datamanager._checkDBandAppend(self,payload_movie,self.ids_scrapeados,self.payloads)
+        for n,movie in enumerate(all_movies):
+            print(f"\nProgress {n}/{len(all_movies)}\n")
+            is_available = self.is_available_movie(movie)
+            if is_available == True:
+                self.get_movies(movie)
+                
 
-        for series in all_series:
-            payload = self.get_payload(series)
-            payload_serie = payload.payload_serie()
-            Datamanager._checkDBandAppend(self,payload_serie,self.ids_scrapeados,self.payloads)
+        for n,series in enumerate(all_series):
+            print(f"\nProgress {n}/{len(all_series)}\n")
+            is_available = self.is_available_serie(series)
+            if is_available  ==True:
+                credits = self.get_credits(series)
+                payload = self.get_payload(series,credits)
+                payload_serie = payload.payload_serie()
+                Datamanager._checkDBandAppend(self,payload_serie,self.ids_scrapeados,self.payloads)
             
-            seasons_url = self.get_seasons_url(payload.deeplink_web)
-            if seasons_url != []:
-                episodes_url = self.get_episodes_url(seasons_url)
-                self.get_episodes(episodes_url, payload.id, payload.title)
+                seasons_url = self.get_seasons_url(payload.deeplink_web)
+                if seasons_url != []:   
+                    episodes_url = self.get_episodes_url(seasons_url)
+                    self.get_episodes(episodes_url, payload.id, payload.title)
        
         
         Datamanager._insertIntoDB(self, self.payloads,self.titanScraping)
-        
+        Datamanager._insertIntoDB(self,self.payloads_episodes,self.titanScrapingEpisodios)
 
         #Upload(self._platform_code, self._created_at, testing=True, has_episodes=bool(self.payloads_episodes))
     
     
+    def is_available_movie(self, movie):
+        try:
+            if movie.get('moviePageUrl','') !='':
+                url = self.URL + movie['moviePageUrl']
+                res = requests.get(url)
+                if res.status_code == 200 and url != self.URL:
+                    return True
+        except Exception:
+            print('Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo')
+        print(f'{movie["title"]} : NO DISPONIBLE')
+        return False
+        
+
+    def is_available_serie(self, serie):
+        if serie.get('catalogPath','') !='':
+            url = serie['catalogPath'].split('.')
+            url = f'{self.URL}/{url[1]}'
+            try:
+                res = requests.get(url)
+                if res.status_code == 200 and url != self.URL:
+                    return True
+            except Exception:
+                print('Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo')
+        
+        return False
+
+
+    def get_credits(self, serie):
+        credits = {
+            'cast' : [],
+            'crew' : []
+        }
+
+        deeplink = self.get_deeplinks(serie)
+        cast_a_crew_url = (f'{deeplink}/cast-and-crew')
+        try:
+            res = requests.get(cast_a_crew_url)   
+        except Exception:
+            print('error al solicitar cast and crew : pagina no responde')
+       
+        data = self.get_noscript(res)
+        for band in data['bands']:
+            if band['band'] == 'Cast':
+                credits['cast']+=self.get_cast(band)
+            if band['band'] == 'Crew':
+                credits['crew']+=self.get_crew(band)
+        
+        return credits
+
+
+    def  get_crew(self, band):
+        crew =[]
+        for crews in band['data']['groups'][0]['categories'][0]['members']:
+            crew.append({
+                "name" : crews['name'],
+                "rol" : crews['role']
+            })
+        
+        return crew
+        
+
+    def get_cast(self, band):
+        casts =[]
+        for cast in band['data']['groups'][0]['members']:
+            casts.append(cast['name'])
+        
+        return casts
+        
+    
+    def get_movies(self, movie):
+        payload = self.get_payload(movie)
+        payload_movie = payload.payload_movie()
+        Datamanager._checkDBandAppend(self,payload_movie,self.ids_scrapeados,self.payloads)
+
+
     def get_noscript(self, res):
         soup = BeautifulSoup(res.text, features="html.parser")
         noscript = soup.find('noscript',{'id':'react-data'})
         return json.loads(noscript['data-state'])
+
 
     def get_episodes(self, episodes_url, parent_id, parent_title):
         for episode_url in episodes_url:
@@ -99,6 +182,7 @@ class HBOFacu():
             Datamanager._checkDBandAppend(self,payload_episode,self.ids_scrapeados_episodios,self.payloads_episodes, isEpi=True)
         pass  
 
+
     def get_episodes_url(self, seasons):
         episodes = []
         for season in seasons:
@@ -106,30 +190,43 @@ class HBOFacu():
             data = self.get_noscript(res)
             for bands in data['bands']:
                 if bands['band'] == 'SerialEpisode':               
-                    if bands.get('data',{}).get('episode',{}).get('cta',{}).get('href',{}) != {}:
-                        url_episode = bands['data']['episode']['cta']['href']
-                        episodes.append((f'{self.URL}{url_episode}'))
-                    else:
-                        return bands['band']
+                    try:
+                        if bands.get('data',{}).get('episode',{}).get('cta',{}).get('href',{}) != {}:
+                            url_episode = bands['data']['episode']['cta']['href']
+                            episodes.append((f'{self.URL}{url_episode}'))
+                    except Exception:
+                        print(f'Se produjo un error')
 
         return episodes
     
-    
+
     def get_seasons_url(self,deeplink):
         seasons_url =[]
         num_season = 1
         while True:
+            #Armo 2 url de season por que algunas tienen un 0 adelante del numero de la season
             URL_SEASON = (f'{deeplink}/season-{num_season}')
-            res = requests.get(URL_SEASON)
-            if res.status_code == 200:
-                seasons_url.append(URL_SEASON)
-                num_season+=1
-                if num_season>20:
-                    print (seasons_url)
-                    return []
-            else:
-                return seasons_url
+            URL_SEASON2 = (f'{deeplink}/season-0{num_season}')
+            
+            try:
+                res = requests.get(URL_SEASON)
+                res2 = requests.get(URL_SEASON2)
                 
+                if res.status_code == 200 and self.URL != URL_SEASON:
+                    seasons_url.append(URL_SEASON)
+                    num_season+=1
+
+                if res2.status_code == 200 and self.URL != URL_SEASON2:
+                    seasons_url.append(URL_SEASON2)
+                    num_season+=1
+                else:
+                    return seasons_url
+                if num_season > 20:
+                    return []
+                
+            except Exception:
+                print(f'Fallo request a {URL_SEASON}')    
+
 
     def get_all_movies(self):
         URL_MOVIES = (f'{self.URL}/movies/catalog')
@@ -145,37 +242,31 @@ class HBOFacu():
         return data['bands'][1]['data']['entries']
 
 
-    def get_payload(self,content_metadata,is_episode=None):
+    def get_payload(self,content_metadata, credits={}):
+            
+        payload = Payload()
 
-            payload = Payload()
-            # Indica si el payload a completar es un episodio:
-            if is_episode:
-                self.is_episode = True
-            else:
-                self.is_episode = False
-            payload.platform_code = self._platform_code
-            payload.id = self.get_id(content_metadata)
-            payload.title = self.get_title(content_metadata)
-            payload.original_title = self.get_original_title(content_metadata)
-            payload.clean_title = _replace(payload.title)
-            payload.deeplink_web = self.get_deeplinks(content_metadata)
-            #Si no es un episodio, los datos pasan a scrapearse del html.
-            if self.is_episode:
-                payload.parent_title = self.get_parent_title(content_metadata)
-                payload.parent_id = self.get_parent_id(content_metadata)
-
-            payload.year = self.get_year(content_metadata)
-            payload.duration = self.get_duration(content_metadata)
-            payload.synopsis = self.get_synopsis(content_metadata)
-            payload.image = self.get_images(content_metadata)
-            payload.rating = self.get_ratings(content_metadata)
-            payload.genres = self.get_genres(content_metadata)
-            payload.availability = self.get_availability(content_metadata)
-            payload.packages = self.get_packages()
-            payload.is_branded = self.get_is_branded(content_metadata)
-            payload.createdAt = self._created_at
-
-            return payload
+        payload.platform_code = self._platform_code
+        payload.id = self.get_id(content_metadata)
+        payload.title = self.get_title(content_metadata)
+        payload.original_title = self.get_original_title(content_metadata)
+        payload.clean_title = _replace(payload.title)
+        payload.deeplink_web = self.get_deeplinks(content_metadata)
+        if credits != {}:
+            payload.cast = credits['cast']
+            payload.crew = credits['crew']
+        payload.year = self.get_year(content_metadata)
+        payload.duration = self.get_duration(content_metadata)
+        payload.synopsis = self.get_synopsis(content_metadata)
+        payload.image = self.get_images(content_metadata)
+        payload.rating = self.get_ratings(content_metadata)
+        payload.genres = self.get_genres(content_metadata)
+        payload.availability = self.get_availability(content_metadata)
+        payload.packages = self.get_packages()
+        payload.is_branded = self.get_is_branded(content_metadata)
+        payload.createdAt = self._created_at
+        
+        return payload
         
     
     def get_is_branded(self, content_metadata):
@@ -267,25 +358,29 @@ class HBOFacu():
     
     def get_packages(self):
         return [{"Type":"subscription-vod"}]
-         
-       
-
-     
-          
+                 
     
     def build_payload_episode(self, content_metadata, parent_id, parent_title, deeplink ):
         def get_id():
             return str(content_metadata['bands'][1]['data']['infoSlice']['streamingId']['id'])
         
         def get_title():
-            if content_metadata['bands'][1]['data']['infoSlice'].get('title','') != '':
-                title = content_metadata['bands'][1]['data']['infoSlice']['title']
+            if content_metadata.get('title',None) != None:
+                title = content_metadata['title']
+                if '-' in title:
+                    new_title = title.split('-')
+                    return new_title[1]
                 if ':' in title:
                     new_title = title.split(':')
-                    return new_title[1]
+                    return new_title[1]    
                 else:
                     return title
-            else:
+            elif content_metadata.get('socialShareTitle', None) != None:
+                title = content_metadata['socialShareTitle']
+                if '-' in title:
+                    new_title = title.split('-')
+                    return new_title[1]
+            else: 
                 return ''
         
         def get_season_number():return content_metadata['dataLayer']['pageInfo']['seriesSeasonNumber']
@@ -294,8 +389,11 @@ class HBOFacu():
         
         def get_images():
             images = []
-            for image in content_metadata['bands'][1]['data']['image']['images']:
-                images.append(image['src'])
+            try:
+                for image in content_metadata['bands'][1]['data']['image']['images']:
+                    images.append(image['src'])
+            except Exception:
+                print(f'error')
             return images
         
         def get_synopsis():
