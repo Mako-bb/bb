@@ -168,7 +168,7 @@ class StarzPlay():
             payload.cast = self.get_cast(content_metadata)
             payload.directors = self.get_directors(content_metadata)
             payload.availability = self.get_availability(content_metadata)
-            payload.packages = self.get_packages(content_metadata)
+            payload.packages = self.get_packages()
             #Agregados
             payload.download = self.get_download(content_metadata)
             payload.is_original = self.get_is_original(content_metadata)
@@ -237,6 +237,8 @@ class StarzPlay():
         id = content_metadata['contentId']
         type_ = content_metadata['contentType']
         new_title = title.replace(':','').replace(' ','-')
+        new_title = new_title.replace('?','').replace('¿','')
+        new_title = new_title.replace('!','').replace('¡','')
         if type_ == 'Movie':
             return (f'{self.url}movies/{new_title}-{id}').lower()
 
