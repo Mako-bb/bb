@@ -84,6 +84,10 @@ ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrol
     auth:
       username: pepito
       password: pepito1154
+  HBOFede:
+    countries:
+      US: us.hbofede
+    url: https://www.hbo.com
   StarzPlay:
     countries:
       AR: ar.starzplay

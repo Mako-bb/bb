@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import requests # Si el script usa requests/api o requests/bs4
 import time
+import re
 from bs4                import BeautifulSoup # Si el script usa bs4
 from selenium           import webdriver # Si el script usa selenium
 from handle.datamanager import Datamanager # Opcional si el script usa Datamanager
@@ -38,7 +39,7 @@ class Pluto():
                 'Accept': '*/*',
                 'Accept-Language': 'en-US,en;q=0.5',
                 'Referer': 'https://pluto.tv/en/on-demand',
-                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsImtpZCI6IjJjNTE3NWIzLTJkYzEtNDcwMy1iM2NiLTM2YjA0Y2VmMDNhNyIsInR5cCI6IkpXVCJ9.eyJzZXNzaW9uSUQiOiIyNTg1YWM2OC0wNDA3LTExZWMtOGIwMS0wMjQyYWMxMTAwMDMiLCJjbGllbnRJUCI6IjI4MDA6ODEwOjU1NDpiZDQ6YjE1Zjo1ZWI1OjQ5MzI6YjJiYSIsImNpdHkiOiJMb21hcyBkZSBaYW1vcmEiLCJwb3N0YWxDb2RlIjoiMTgzMiIsImNvdW50cnkiOiJBUiIsImRtYSI6MCwiYWN0aXZlUmVnaW9uIjoiVkUiLCJkZXZpY2VMYXQiOi0zNC43NjYxLCJkZXZpY2VMb24iOi01OC4zOTU3LCJwcmVmZXJyZWRMYW5ndWFnZSI6ImVzIiwiZGV2aWNlVHlwZSI6IndlYiIsImRldmljZVZlcnNpb24iOiI5Mi4wLjkwMiIsImRldmljZU1ha2UiOiJlZGdlLWNocm9taXVtIiwiZGV2aWNlTW9kZWwiOiJ3ZWIiLCJhcHBOYW1lIjoid2ViIiwiYXBwVmVyc2lvbiI6IjUuMTAyLjAtZmIxZmVkYmQ2NDE5M2Y5ZGIwMDBmOTdjNDRjZTI5ZGU2YjBiYjlkNSIsImNsaWVudElEIjoiZDk3MDkxODYtNzJkNi00OGRkLWFkOWItMDRhYjczMTAzYWM1IiwiY21BdWRpZW5jZUlEIjoiIiwiaXNDbGllbnRETlQiOmZhbHNlLCJ1c2VySUQiOiIiLCJsb2dMZXZlbCI6IkRFRkFVTFQiLCJ0aW1lWm9uZSI6IkFtZXJpY2EvQXJnZW50aW5hL0J1ZW5vc19BaXJlcyIsInNlcnZlclNpZGVBZHMiOnRydWUsImUyZUJlYWNvbnMiOmZhbHNlLCJmZWF0dXJlcyI6e30sImF1ZCI6IioucGx1dG8udHYiLCJleHAiOjE2Mjk3NDc3MjgsImp0aSI6IjU5MjUzYmI4LTA5ZjUtNGFhYy04NzQ2LWYxZjM1NzFmZmJlNiIsImlhdCI6MTYyOTcxODkyOCwiaXNzIjoiYm9vdC5wbHV0by50diIsInN1YiI6InByaTp2MTpwbHV0bzpkZXZpY2VzOlZFOlpEazNNRGt4T0RZdE56SmtOaTAwT0dSa0xXRmtPV0l0TURSaFlqY3pNVEF6WVdNMSJ9.uNeKgJrO0YLXViACSwMHQBgfQ-9RAhIBaYF_Vpur_wk',
+                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsImtpZCI6IjM2MTkwOWQzLWI1NjUtNGI0ZS04YTQ5LTBhNTgzMGU4Mjk1ZSIsInR5cCI6IkpXVCJ9.eyJzZXNzaW9uSUQiOiI2NTA5MTgzZS0wNjlmLTExZWMtOGQ1ZC0wMjQyYWMxMTAwMDMiLCJjbGllbnRJUCI6IjE4Ni4yMi4yMzguMTEiLCJjaXR5IjoiTG9tYXMgZGUgWmFtb3JhIiwicG9zdGFsQ29kZSI6IjE4MzIiLCJjb3VudHJ5IjoiQVIiLCJkbWEiOjAsImFjdGl2ZVJlZ2lvbiI6IlZFIiwiZGV2aWNlTGF0IjotMzQuNzY2MSwiZGV2aWNlTG9uIjotNTguMzk1NywicHJlZmVycmVkTGFuZ3VhZ2UiOiJlcyIsImRldmljZVR5cGUiOiJ3ZWIiLCJkZXZpY2VWZXJzaW9uIjoiOTIuMC45MDIiLCJkZXZpY2VNYWtlIjoiZWRnZS1jaHJvbWl1bSIsImRldmljZU1vZGVsIjoid2ViIiwiYXBwTmFtZSI6IndlYiIsImFwcFZlcnNpb24iOiI1LjEwMy4wLTE5YzEwNWFkMzJjNzY5OGY5MjcxOTY1MzUwMWI2ZTQ4NmY2ODdmOWIiLCJjbGllbnRJRCI6ImQ5NzA5MTg2LTcyZDYtNDhkZC1hZDliLTA0YWI3MzEwM2FjNSIsImNtQXVkaWVuY2VJRCI6IiIsImlzQ2xpZW50RE5UIjpmYWxzZSwidXNlcklEIjoiIiwibG9nTGV2ZWwiOiJERUZBVUxUIiwidGltZVpvbmUiOiJBbWVyaWNhL0FyZ2VudGluYS9CdWVub3NfQWlyZXMiLCJzZXJ2ZXJTaWRlQWRzIjp0cnVlLCJlMmVCZWFjb25zIjpmYWxzZSwiZmVhdHVyZXMiOnt9LCJhdWQiOiIqLnBsdXRvLnR2IiwiZXhwIjoxNjMwMDMzMDIwLCJqdGkiOiI0NTMwZjU1NS1jYTI1LTQ4MTYtODgxNy0xNjNkNjQzODZhNWUiLCJpYXQiOjE2MzAwMDQyMjAsImlzcyI6ImJvb3QucGx1dG8udHYiLCJzdWIiOiJwcmk6djE6cGx1dG86ZGV2aWNlczpWRTpaRGszTURreE9EWXROekprTmkwME9HUmtMV0ZrT1dJdE1EUmhZamN6TVRBellXTTEifQ.zjLx9tCKbt94S9wzCrTZqBJSKUgD6ThZl92LkQC8Kdw',
                 'Origin': 'https://pluto.tv',
                 'Connection': 'keep-alive',
                 'TE': 'Trailers'
@@ -78,11 +79,21 @@ class Pluto():
             self.scraping()
 
     def get_categories(self):
-        res = requests.get(self._url + "categories", headers=self._headers)
+        """Obtiene todas las categorias"""
+        """
+        Returns:
+            cat_: list
+        """
+        res = requests.get(self._url + "categories?includeCategoryFields=iconSvg", headers=self._headers)
         cat_ = res.json()
         return cat_['categories']
 
     def get_movies(self, categories):
+        """Obtiene todas las peliculas
+
+        Args:
+            categories (list): lista de categorias
+        """
         cat_ = categories
         for category in cat_:
             res = requests.get(self._url + "categories/" + category['_id'] + '/items', headers=self._headers)
@@ -94,19 +105,24 @@ class Pluto():
                     Datamanager._checkDBandAppend(self,payload_movie,self.ids_scrapeados,self.payloads)
 
     def get_series(self, categories):
+        """Obtiene todas las series/" +
+
+        Args:
+            categories (list): lista de categorias
+        """
         cat_ = categories
         for category in cat_:
             res = requests.get(self._url + "categories/" + category['_id'] + '/items', headers=self._headers)
             res = res.json()
             for serie in res['items']:
                 if serie['type'] == "series":
-                    payload = self.get_payload(serie)
+                    payload = self.get_payload(serie, is_serie=True)
                     payload_serie = payload.payload_serie()
                     Datamanager._checkDBandAppend(self,payload_serie,self.ids_scrapeados,self.payloads)
 
 
 
-    def get_payload(self,content_metadata, parent_id=None, parent_name=None,is_episode=None):
+    def get_payload(self,content_metadata, parent_id=None, parent_name=None,is_episode=None, is_serie=None):
             """Método para crear el payload. Se reutiliza tanto para
             titanScraping, como para titanScrapingEpisodes.
             Args:
@@ -117,99 +133,86 @@ class Pluto():
                 Payload: Retorna el payload.
             """
             payload = Payload()
-            # Indica si el payload a completar es un episodio:
-            if is_episode:
-                self.is_episode = True
-            else:
-                self.is_episode = False
             payload.platform_code = self._platform_code
             payload.id = self.get_id(content_metadata)
             payload.title = self.get_title(content_metadata)
-            payload.original_title = self.get_original_title(content_metadata)
             payload.clean_title = self.get_clean_title(content_metadata)
             payload.deeplink_web = self.get_deeplinks(content_metadata)
-            if self.is_episode:
+            if is_episode:
                 payload.parent_title = parent_name
                 payload.parent_id = parent_id
                 payload.season = self.get_season(content_metadata)
                 payload.episode = self.get_episode(content_metadata)
-            if content_metadata['type'] == "series":
+            if is_serie:
                 payload.seasons = self.get_seasons(content_metadata)
-
             payload.year = self.get_year(content_metadata)
             payload.duration = self.get_duration(content_metadata)
             payload.synopsis = self.get_synopsis(content_metadata)
             payload.image = self.get_images(content_metadata)
             payload.rating = self.get_ratings(content_metadata)
             payload.genres = self.get_genres(content_metadata)
-            payload.cast = self.get_cast(content_metadata)
-            payload.directors = self.get_directors(content_metadata)
-            payload.availability = self.get_availability(content_metadata)
             payload.packages = self.get_packages(content_metadata)
-            payload.country = self.get_country(content_metadata)
             payload.createdAt = self._created_at
             return payload
 
     def get_id(self, content_metadata):
-        id = content_metadata['_id']
-        return id
+        # Obtiene el ID desde el content_metadata
+        return content_metadata.get("_id") or None
     
     def get_title(self, content_metadata):
-        title = content_metadata['name']
-        return title
+        # Obtiene el titulo desde el content_metadata
+        return content_metadata.get("name") or None
     
     def get_clean_title(self, content_metadata):
-        title = content_metadata['name']
-        clean_title = _replace(title)
-        return clean_title
-    def get_original_title(self, content_metadata):
-        pass
+        # Remplaza el título del content_metadata para generar uno limpio
+        return _replace(content_metadata.get("name")) or None
     
     def get_year(self, content_metadata):
-        pass
+        # Obtiene el año desde el content_metadata["slug"], si matchean 4 digitos entre dos no caracteres lo devuelve
+        regex = re.compile(r'\W(\d{4})\W')
+        if regex.search(content_metadata.get("slug")):
+            year = regex.search(content_metadata.get("slug")).group(1)
+        else:
+            year = None
+        return year
     def get_duration(self, content_metadata):
+        # Obtiene la duracion desde el content_metadata y hace el calculo para pasarlo a minutos
         if content_metadata['type'] == "series":
             duration = None
         else:
-            duration = content_metadata['duration'] / 1000
-            duration = duration / 60
+            duration = content_metadata['duration'] // 1000
+            duration = duration // 60
         return duration
+
     def get_deeplinks(self, content_metadata):
-       deeplink = {
-           "Web": None,
-           "Android": None,
-           "iOS": None
-           }
-       if content_metadata['type'] == "movie":
-           deeplink["Web"] = "https://pluto.tv/es/on-demand/movies/" + content_metadata["slug"]
-       else:
-           deeplink["Web"] = "https://pluto.tv/es/on-demand/series/" + content_metadata["slug"]
-       return deeplink
+        deeplink = None
+        if content_metadata['type'] == "movie":
+           deeplink = "https://pluto.tv/es/on-demand/movies/" + content_metadata["slug"]
+        else:
+           deeplink = "https://pluto.tv/es/on-demand/series/" + content_metadata["slug"]
+        return deeplink
     
     def get_synopsis(self, content_metadata):
-        synopsis = content_metadata['description']
-        return synopsis
+        return content_metadata.get("description") or None
     def get_images(self, content_metadata):
-        image = content_metadata['covers']
-        return image
+        images = []
+        for image in content_metadata.get("covers"):
+            images.append(image['url'])
+        return images
     def get_ratings(self, content_metadata):
         rating = content_metadata['rating']
+        return content_metadata.get("rating")
     def get_genres(self, content_metadata):
-        genres = content_metadata['genre'].replace(" & ", ",").split(",")
+        genres = None
+        if "genre" in content_metadata:
+            genres = content_metadata['genre'].replace(" & ", ",")
+            genres = genres.replace(" Y ", ",")
+            genres = genres.replace("/", ",").split(",")
         return genres
-    def get_cast(self, content_metadata):
-        pass
-    def get_directors(self, content_metadata):
-        pass
-    def get_availability(self, content_metadata):
-        pass
     def get_packages(self, content_metadata):
         return [{'Type':'free-vod'}]
-    def get_country(self, content_metadata):
-        pass
     def get_episode(self, content_metadata):
-        episode = content_metadata['number']
-        return episode
+        return content_metadata.get('number') or None
     
     
     def get_episodes(self, content_metadata):
@@ -222,21 +225,17 @@ class Pluto():
                 Datamanager._checkDBandAppend(self,payload_episode,self.ids_episcrap,self.payloads_episodes,isEpi=True)
 
     def get_season(self, content_metadata):
-        season = content_metadata['season']
-        return season
+        return content_metadata.get("season") or None
     def get_seasons(self, content_metadata):
         seasons = []
-        payload_season = {
-            "Number": None,
-            "Episodes": None,
-            "Deeplink": None
-            }
+        payload = Payload()
         res = requests.get(self._url + "series/" + content_metadata['_id'] + "/seasons", headers=self._headers)
         res = res.json()
         slug = res['slug']
         self.get_episodes(res)
         
         for season in res['seasons']:
+            payload_season = payload.payload_season()
             payload_season["Number"] = season['number']
             payload_season["Episodes"] = len(season['episodes'])
             payload_season["Deeplink"] = self._url + "series/" + slug + "/details" + "/seasons" + str(season['number'])
@@ -250,3 +249,4 @@ class Pluto():
         Datamanager._insertIntoDB(self,self.payloads_episodes,self.titanScrapingEpisodios)
         Datamanager._insertIntoDB(self,self.payloads,self.titanScraping)
         
+        Upload(self._platform_code,self._created_at,testing=True)
