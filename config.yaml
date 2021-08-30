@@ -58,6 +58,12 @@ ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrol
       AR: ar.hbofacu
       US: us.hbofacu
     url: "https://www.hbo.com"
+  
+  VrtFacu:
+    countries:
+      BE: be.vrtfacu
+    
+    url: "https://www.vrt.be"
 
   Showtime:
     countries: 
