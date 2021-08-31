@@ -151,7 +151,6 @@ class StarzPlay():
             payload.platform_code = self._platform_code
             payload.id = self.get_id(content_metadata)
             payload.title = self.get_title(content_metadata)
-            payload.original_title = self.get_original_title(content_metadata)
             payload.clean_title = self.get_clean_title(content_metadata)
             payload.deeplink_web = self.get_deeplinks(content_metadata)
             #Si no es un episodio, los datos pasan a scrapearse del html.
@@ -219,10 +218,6 @@ class StarzPlay():
     def get_clean_title(self, content_metadata):
         return _replace(content_metadata.get('title','')) or None
       
-        
-    def get_original_title(self, content_metadata):
-        return content_metadata.get('properCaseTitle','') or None
-    
     
     def get_year(self, content_metadata):
         return int(content_metadata.get('releaseYear',0)) or int(content_metadata.get('minReleaseYear',0)) or None
