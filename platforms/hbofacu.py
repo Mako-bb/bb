@@ -14,7 +14,8 @@ from updates.upload     import Upload
 from handle.replace     import _replace
 from handle.payload     import Payload
 import json
-
+import re
+import hashlib
 class HBOFacu():
 
     """
@@ -77,16 +78,11 @@ class HBOFacu():
             is_available = self.is_available_serie(series)
             if is_available  ==True:
                 credits = self.get_credits(series)
-                payload = self.get_payload(series,credits)
+                payload = self.get_payload(series,credits,is_serie=True)
                 payload_serie = payload.payload_serie()
                 Datamanager._checkDBandAppend(self,payload_serie,self.ids_scrapeados,self.payloads)
             
-                seasons_url = self.get_seasons_url(payload.deeplink_web)
-                if seasons_url != []:   
-                    episodes_url = self.get_episodes_url(seasons_url)
-                    self.get_episodes(episodes_url, payload.id, payload.title)
-       
-        
+                
         Datamanager._insertIntoDB(self, self.payloads,self.titanScraping)
         Datamanager._insertIntoDB(self,self.payloads_episodes,self.titanScrapingEpisodios)
 
@@ -94,6 +90,12 @@ class HBOFacu():
     
     
     def is_available_movie(self, movie):
+        """
+        confirmo si la pelicula sigue disponible 
+        corroborando estado y que sea diferente 
+        de la url home ya que en algunos casos redirecciona
+        automaticamente
+        """
         try:
             if movie.get('moviePageUrl','') !='':
                 url = self.URL + movie['moviePageUrl']
@@ -107,6 +109,12 @@ class HBOFacu():
         
 
     def is_available_serie(self, serie):
+        """
+        confirmo si la serie sigue disponible 
+        corroborando estado y que sea diferente 
+        de la url home ya que en algunos casos redirecciona
+        automaticamente
+        """
         if serie.get('catalogPath','') !='':
             url = serie['catalogPath'].split('.')
             url = f'{self.URL}/{url[1]}'
@@ -121,6 +129,12 @@ class HBOFacu():
 
 
     def get_credits(self, serie):
+        """
+        Al haber un link donde se encuentra cast&crew todo mezclado
+        y tener que hacer un request a ese apartado
+        cree un diccionario para luego insertarlos en el payload por separado
+        sin tener que llamarlo muchas veces mas adelante
+        """
         credits = {
             'cast' : [],
             'crew' : []
@@ -129,20 +143,20 @@ class HBOFacu():
         deeplink = self.get_deeplinks(serie)
         cast_a_crew_url = (f'{deeplink}/cast-and-crew')
         try:
-            res = requests.get(cast_a_crew_url)   
+            res = requests.get(cast_a_crew_url)
+            data = self.get_noscript(res)
+            for band in data['bands']:
+                if band['band'] == 'Cast':
+                    credits['cast']+=self.get_cast(band)
+                if band['band'] == 'Crew':
+                    credits['crew']+=self.get_crew(band)
+                    return credits
         except Exception:
-            print('error al solicitar cast and crew : pagina no responde')
+            pass
        
-        data = self.get_noscript(res)
-        for band in data['bands']:
-            if band['band'] == 'Cast':
-                credits['cast']+=self.get_cast(band)
-            if band['band'] == 'Crew':
-                credits['crew']+=self.get_crew(band)
-        
         return credits
 
-
+    
     def  get_crew(self, band):
         crew =[]
         for crews in band['data']['groups'][0]['categories'][0]['members']:
@@ -169,6 +183,10 @@ class HBOFacu():
 
 
     def get_noscript(self, res):
+        """
+        Retorna en formato json el noscript del html
+        el cual contiene la metadata
+        """
         soup = BeautifulSoup(res.text, features="html.parser")
         noscript = soup.find('noscript',{'id':'react-data'})
         return json.loads(noscript['data-state'])
@@ -183,19 +201,25 @@ class HBOFacu():
         pass  
 
 
-    def get_episodes_url(self, seasons):
+    def get_episodes_url(self, season):
         episodes = []
-        for season in seasons:
+        try:
             res = requests.get(season)
             data = self.get_noscript(res)
             for bands in data['bands']:
                 if bands['band'] == 'SerialEpisode':               
                     try:
-                        if bands.get('data',{}).get('episode',{}).get('cta',{}).get('href',{}) != {}:
+                        if bands.get('data',{}).get('episode',{}).get('cta',{}).get('href',{}):
                             url_episode = bands['data']['episode']['cta']['href']
                             episodes.append((f'{self.URL}{url_episode}'))
                     except Exception:
-                        print(f'Se produjo un error')
+                        pass
+        except Exception:
+            #Si existe algun problema de conexion
+            #Espero 10 segundos y vuelvo a ejecutar la funcion
+            print('HUBO UN ERROR DE CONEXION')
+            time.sleep(10)
+            self.get_episodes_url(season)
 
         return episodes
     
@@ -242,14 +266,13 @@ class HBOFacu():
         return data['bands'][1]['data']['entries']
 
 
-    def get_payload(self,content_metadata, credits={}):
+    def get_payload(self,content_metadata, credits={},is_serie=False):
             
         payload = Payload()
 
         payload.platform_code = self._platform_code
         payload.id = self.get_id(content_metadata)
         payload.title = self.get_title(content_metadata)
-        payload.original_title = self.get_original_title(content_metadata)
         payload.clean_title = _replace(payload.title)
         payload.deeplink_web = self.get_deeplinks(content_metadata)
         if credits != {}:
@@ -265,28 +288,37 @@ class HBOFacu():
         payload.packages = self.get_packages()
         payload.is_branded = self.get_is_branded(content_metadata)
         payload.createdAt = self._created_at
-        
+
+        if is_serie == True:
+            seasons = []
+            seasons_url = self.get_seasons_url(payload.deeplink_web)
+            for season in seasons_url:
+                seasons.append(self.build_payload_season(season, payload.title))
+                episodes_url = self.get_episodes_url(season)
+                self.get_episodes(episodes_url, payload.id, payload.title)
+            payload.seasons = seasons
+            
         return payload
         
     
     def get_is_branded(self, content_metadata):
-        if content_metadata.get('slotData',{}).get('logoType',{})!={}:
+        if content_metadata.get('slotData',{}).get('logoType',{}):
             if content_metadata['slotData']['logoType'] == 'HBOFilm':
                 return True
         return None
         
 
     def get_id(self, content_metadata):
-        return str(content_metadata.get('streamingId',{}).get('id','')) or None
-        
+        if content_metadata.get('streamingId',{}).get('id',{}):
+            return str(content_metadata.get('streamingId',{}).get('id',''))
+        else:
+            print('se seteo el id con haslib')
+            return hashlib.md5(self.get_deeplinks(content_metadata).encode('utf-8')).hexdigest()
+    
     
     def get_title(self, content_metadata): 
         return content_metadata.get('title','') or None
-
-      
-    def get_original_title(self, content_metadata):
-        return content_metadata.get('title','') or None
-    
+  
     
     def get_year(self, content_metadata):
         date = content_metadata.get('releaseDate','')
@@ -346,11 +378,21 @@ class HBOFacu():
         
 
     def get_genres(self, content_metadata): 
-        return content_metadata.get('genres','') or None
+        if content_metadata.get('genres','') != '':
+            arr_genres = content_metadata['genres']
+            list_genres = []
+            for genres in arr_genres:
+                if "horror-sci-fi" == genres.lower():
+                    list_genres.append('horror')
+                    list_genres.append('science fiction')
+                else:
+                        list_genres.append(genres)
+            return list_genres
+        return None
          
     
     def get_availability(self, content_metadata):
-        if content_metadata.get('availability','')!='':
+        if content_metadata.get('availability',''):
             for availability in content_metadata['availability']:
                 return availability['end']
         return None
@@ -361,6 +403,7 @@ class HBOFacu():
                  
     
     def build_payload_episode(self, content_metadata, parent_id, parent_title, deeplink ):
+        
         def get_id():
             return str(content_metadata['bands'][1]['data']['infoSlice']['streamingId']['id'])
         
@@ -383,15 +426,42 @@ class HBOFacu():
             else: 
                 return ''
         
-        def get_season_number():return content_metadata['dataLayer']['pageInfo']['seriesSeasonNumber']
-        
-        def get_episode_number():return content_metadata['dataLayer']['pageInfo']['seriesEpisodeNumber']
+        def get_season_number():
+            patron = re.compile('\A0\d')
+            if content_metadata.get('dataLayer').get('pageInfo').get('seriesSeasonNumber') != None:
+                return content_metadata['dataLayer']['pageInfo']['seriesSeasonNumber']
+            else:
+                #Si el noscript no me trae el num de season lo saco de la url
+                num_season = deeplink.split('/')
+                for n in num_season:
+                    if 'season' in n:
+                        season = n.split('-')
+                        season = season[1]
+                        if patron.match(season):
+                            return int(season.replace('0',''))
+                        else:
+                            return int(season)
+
+        def get_episode_number():
+            patron = re.compile('\A0\d')
+            episode = content_metadata['dataLayer']['pageInfo']['seriesEpisodeNumber']
+            episode = str(episode)
+            try:
+                if patron.match(episode):
+                    return int(episode.replace('0',''))
+                else:
+                    return int(episode)
+            except Exception:
+                pass        
         
         def get_images():
             images = []
             try:
                 for image in content_metadata['bands'][1]['data']['image']['images']:
-                    images.append(image['src'])
+                    if 'https' in image['src']:
+                        images.append(image['src'])
+                    else:
+                        images.append(self.URL + image['src'])
             except Exception:
                 print(f'error')
             return images
@@ -409,14 +479,68 @@ class HBOFacu():
         payload.platform_code = self._platform_code
         payload.parent_id = parent_id
         payload.parent_title = parent_title
-        payload.id = get_id() # (str) debe ser único para este contenido de esta plataforma
-        payload.title = get_title() # (str)
-        payload.season = get_season_number() # (int) el número de la temporada a la que pertenece
-        payload.episode = get_episode_number()  # (int) el número de episodio
+        payload.id = get_id() 
+        payload.title = get_title()
+        payload.season = get_season_number() 
+        payload.episode = get_episode_number() 
         payload.deeplink_web = deeplink
-        payload.synopsis = get_synopsis() # (str)
+        payload.synopsis = get_synopsis() 
         payload.image = get_images()
         payload.packages = [{"Type":"subscription-vod"}]
         payload.createdAt = self._created_at
         
         return payload.payload_episode()
+
+
+    def build_payload_season(self, season, title_serie):
+        res = requests.get(season)
+        data = self.get_noscript(res)
+    
+        def get_id():
+            id = data['bands'][1] 
+            return  str(id.get('data',{}).get('infoSlice',{}).get('streamingId',{}).get('id',{}))
+
+        def get_number_season():
+            #sea es el num de season, le pongo ese nombre para que
+            #no se choque la variable que paso por parametro
+            patron = re.compile('\A0\d')
+            num_season = season.split('/')
+            for n in num_season:
+                if 'season' in n:
+                    sea = n.split('-')
+                    sea = sea[1]
+                    if patron.match(sea):
+                        return sea.replace('0','')
+                    else:
+                        return sea
+
+        def get_images():
+            images = []
+            try:
+                for image in data['bands'][1]['data']['image']['images']:
+                    if 'https' in image['src']:
+                        images.append(image['src'])
+                    else:
+                        images.append(self.URL + image['src'])
+            except Exception:
+                print(f'error')
+            return images
+            
+        def get_cant_episodes():
+            count = 0
+            for bands in data['bands']:
+                if bands['band'] == 'SerialEpisode':
+                    count+=1
+            return count    
+            
+        
+        payload = Payload()
+        
+        payload.id = get_id()
+        payload.deeplink_web = season
+        payload.number = get_number_season()
+        payload.episodes = get_cant_episodes()
+        payload.title = (f'{title_serie} - Season {payload.number}')
+        payload.image = get_images()
+
+        return payload.payload_season()
