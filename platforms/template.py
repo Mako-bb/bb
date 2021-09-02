@@ -8,6 +8,7 @@ from common             import config
 from handle.mongo       import mongo
 from updates.upload     import Upload
 from handle.replace     import _replace
+from handle.payload     import Payload
 
 class Template():
 
@@ -85,3 +86,29 @@ class Template():
 
     def scraping(self):
         print("estoy corriendo el Template")
+        #self.testConnectionToKaji()
+
+    def testConnectionToKaji(self):
+        payload = self.build_payload_movie()
+        self.mongo.insert(self.titanScraping, payload)
+        print("Insertado a mongo local. Ejecutando Upload...")
+        
+        Upload(self._platform_code, self._created_at, testing=self.test, server=2)
+
+    def build_payload_movie(self):
+
+        payload = Payload()
+
+        payload.platform_code = self._platform_code
+        payload.id = "12345" # (str) debe ser único para este contenido de esta plataforma
+        payload.title = "Payload for testing connection to Kaji" # (str)
+        payload.clean_title = _replace(payload.title) # (str)
+        payload.deeplink_web = "https://www.google.com" # (str)
+        payload.packages = [
+            {
+                "Type":"free-vod"
+            }
+        ]
+        payload.createdAt = self._created_at
+        
+        return payload.payload_movie()
