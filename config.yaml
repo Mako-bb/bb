@@ -72,6 +72,12 @@ ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrol
     auth:
       username: pepito
       password: pepito1154
+  VRTNuFede:
+    countries:
+      BE: be.vrtnu
+    base_url: https://www.vrt.be
+    url_movies: https://www.vrt.be/vrtnu/a-z/#filter=categories%3Afilms&searchtype=programs
+    url_series: https://www.vrt.be/vrtnu/a-z/#filter=categories%3Aseries&searchtype=programs
   HBOFede:
     countries:
       US: us.hbofede

@@ -122,7 +122,7 @@ class Pluto():
 
 
 
-    def get_payload(self,content_metadata, parent_id=None, parent_name=None,is_episode=None, is_serie=None):
+    def get_payload(self,content_metadata, url_base=None, parent_id=None, parent_name=None,is_episode=None, is_serie=None):
             """Método para crear el payload. Se reutiliza tanto para
             titanScraping, como para titanScrapingEpisodes.
             Args:
@@ -137,7 +137,7 @@ class Pluto():
             payload.id = self.get_id(content_metadata)
             payload.title = self.get_title(content_metadata)
             payload.clean_title = self.get_clean_title(content_metadata)
-            payload.deeplink_web = self.get_deeplinks(content_metadata)
+            payload.deeplink_web = self.get_deeplinks(content_metadata, url_base, is_episode)
             if is_episode:
                 payload.parent_title = parent_name
                 payload.parent_id = parent_id
@@ -184,12 +184,15 @@ class Pluto():
             duration = duration // 60
         return duration
 
-    def get_deeplinks(self, content_metadata):
+    def get_deeplinks(self, content_metadata, url_base, is_episode):
         deeplink = None
         if content_metadata['type'] == "movie":
            deeplink = "https://pluto.tv/es/on-demand/movies/" + content_metadata["slug"]
         else:
            deeplink = "https://pluto.tv/es/on-demand/series/" + content_metadata["slug"]
+        if is_episode:
+            _url_base = url_base + "/" + content_metadata["season"] + "/episode/" + content_metadata["slug"]
+            deeplink = _url_base
         return deeplink
     
     def get_synopsis(self, content_metadata):
@@ -206,7 +209,7 @@ class Pluto():
         genres = None
         if "genre" in content_metadata:
             genres = content_metadata['genre'].replace(" & ", ",")
-            genres = genres.replace(" Y ", ",")
+            genres = genres.replace(" y ", ",")
             genres = genres.replace("/", ",").split(",")
         return genres
     def get_packages(self, content_metadata):
@@ -215,12 +218,12 @@ class Pluto():
         return content_metadata.get('number') or None
     
     
-    def get_episodes(self, content_metadata):
+    def get_episodes(self, content_metadata, url_base):
         parent_name = content_metadata['name']
         parent_id = content_metadata['_id']
         for i in content_metadata['seasons']:
             for episode in i['episodes']:
-                payload = self.get_payload(episode,parent_id=parent_id, parent_name=parent_name, is_episode=True)
+                payload = self.get_payload(episode,url_base=url_base,parent_id=parent_id, parent_name=parent_name, is_episode=True)
                 payload_episode = payload.payload_episode()
                 Datamanager._checkDBandAppend(self,payload_episode,self.ids_episcrap,self.payloads_episodes,isEpi=True)
 
@@ -232,13 +235,14 @@ class Pluto():
         res = requests.get(self._url + "series/" + content_metadata['_id'] + "/seasons", headers=self._headers)
         res = res.json()
         slug = res['slug']
-        self.get_episodes(res)
+        url_base = "https://pluto.tv/es/on-demand/" + "series/" + slug + "/details" + "/season"
+        self.get_episodes(res, url_base)
         
         for season in res['seasons']:
             payload_season = payload.payload_season()
             payload_season["Number"] = season['number']
             payload_season["Episodes"] = len(season['episodes'])
-            payload_season["Deeplink"] = self._url + "series/" + slug + "/details" + "/seasons" + str(season['number'])
+            payload_season["Deeplink"] = "https://pluto.tv/es/on-demand/" + "series/" + slug + "/details" + "/seasons" + str(season['number'])
             seasons.append(payload_season)
         return seasons
 
