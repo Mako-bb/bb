@@ -359,7 +359,11 @@ class HBOFacu():
     
     
     def get_synopsis(self, content_metadata):
-        return content_metadata.get('synopsis','') or None
+        patron = re.compile('^Short film.')
+        synopsis = content_metadata.get('synopsis','')
+        if patron.match(synopsis):
+            return None
+        return synopsis or None
         
 
     def get_images(self, content_metadata):
@@ -400,6 +404,13 @@ class HBOFacu():
     def get_packages(self):
         return [{"Type":"subscription-vod"}]
                  
+    
+    def set_image(self, image):
+            if 'https' in image['src']:
+                return image['src']
+            else:
+                return self.URL + image['src']
+
     
     def build_payload_episode(self, content_metadata, parent_id, parent_title, deeplink ):
         
@@ -455,25 +466,34 @@ class HBOFacu():
         
         def get_images():
             images = []
-            try:
+            path = content_metadata['bands'][1]['data']
+
+            if path.get('image'):
                 for image in content_metadata['bands'][1]['data']['image']['images']:
-                    if 'https' in image['src']:
-                        images.append(image['src'])
-                    else:
-                        images.append(self.URL + image['src'])
-            except Exception:
-                print(f'error')
-            return images
+                    images.append(self.set_image(image))
+                    
+            elif path.get('video').get('image'):
+                for image in content_metadata['bands'][1]['data']['video']['image']['images']:
+                    images.append(self.set_image(image))
+                    print(images)
+            
+            return images or None
         
         def get_synopsis():
-            if content_metadata['bands'][2].get('data',{}).get('summary','') !='':
+            if content_metadata['bands'][2].get('data',{}).get('summary',''):
                 synopsis = content_metadata['bands'][2]['data']['summary']
-                synopsis = synopsis.replace('<p>','').replace('</p>','')
-                synopsis = synopsis.replace('<b>','').replace('</b>','')
-                synopsis = synopsis.replace('<br>','').replace('</br>','')
-                synopsis = synopsis.replace('\r\n','').replace('&amp;','and')
+                synopsis = text_plain(synopsis)
                 return synopsis
 
+        def text_plain(text):
+            trash_text = ['<p>','</p>','<b>','</b>','<br>','</br>','\r\n','<u>','</u>',
+                         '&nbsp;','·','<sup>','</sup>','<i>','</i>']
+            clean_text = text            
+            for trash in trash_text:
+                clean_text = clean_text.replace(trash,'')
+            return clean_text
+
+            
         payload = Payload()
         payload.platform_code = self._platform_code
         payload.parent_id = parent_id
@@ -515,15 +535,18 @@ class HBOFacu():
 
         def get_images():
             images = []
-            try:
+            path = data['bands'][1]['data']
+
+            if path.get('image'):
                 for image in data['bands'][1]['data']['image']['images']:
-                    if 'https' in image['src']:
-                        images.append(image['src'])
-                    else:
-                        images.append(self.URL + image['src'])
-            except Exception:
-                print(f'error')
-            return images
+                    images.append(self.set_image(image))
+                    
+            elif path.get('video').get('image'):
+                for image in data['bands'][1]['data']['video']['image']['images']:
+                    images.append(self.set_image(image))
+                    print(images)
+            
+            return images or None
             
         def get_cant_episodes():
             count = 0
