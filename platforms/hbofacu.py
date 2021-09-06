@@ -86,7 +86,7 @@ class HBOFacu():
         Datamanager._insertIntoDB(self, self.payloads,self.titanScraping)
         Datamanager._insertIntoDB(self,self.payloads_episodes,self.titanScrapingEpisodios)
 
-        #Upload(self._platform_code, self._created_at, testing=True, has_episodes=bool(self.payloads_episodes))
+        Upload(self._platform_code, self._created_at, testing=True, has_episodes=bool(self.payloads_episodes))
     
     
     def is_available_movie(self, movie):
@@ -321,10 +321,9 @@ class HBOFacu():
   
     
     def get_year(self, content_metadata):
-        date = content_metadata.get('releaseDate','')
-        if date != '':
-            year = date.split('-')
-            return year[0]
+        if content_metadata.get('releaseDate',''):
+            year = content_metadata['releaseDate'].split('-')
+            return int(year[0])
         return None
     
 
@@ -510,9 +509,9 @@ class HBOFacu():
                     sea = n.split('-')
                     sea = sea[1]
                     if patron.match(sea):
-                        return sea.replace('0','')
+                        return int(sea.replace('0',''))
                     else:
-                        return sea
+                        return int(sea)
 
         def get_images():
             images = []
