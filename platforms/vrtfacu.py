@@ -20,8 +20,8 @@ class VrtFacu():
     """
     - Status: EN PROGRESO
     - VPN: NO
-    - Método: API
-    - Runtime: < 30sec
+    - Método: Selenium
+    - Runtime: 0:59:50.996992
 
     """
 
@@ -82,37 +82,36 @@ class VrtFacu():
         except Exception:
             return False
  
-    def is_trailer_movie(self, browser):
-        if 'trailer' in browser.current_url:
+    
+    def is_trailer(self,browser, type_):
+        if type_ == 'movie':
+            if 'trailer' in browser.current_url:
                 return True
-        return False
-
-    def is_trailer_serie(self, browser):
-        div_cant_seasons = browser.find_elements_by_css_selector('vrtnu-meta[slot="meta"] span')
-        for span in div_cant_seasons:
-            if '0 Seizoenen' in span.text:
-                print(f'{browser.current_url} ES UN TRAILER')
-                return True
-            if 'audiodescriptie' in browser.current_url:
-                return True
-        return False
         
-    def is_trailer_episode(self, episode):
-        if 'making-of' in episode:
-            return True
-        if 'extra-s' in episode:
-            return True
-        if 'samenvattingen' in episode:
-            return True
-        if 'extra' in episode:
-            return True
-        if 'bloopers' in episode:
-            return True
-        if 'trailer' in episode:
-            return True
-            
+        if type_ == 'serie':
+            div_cant_seasons = browser.find_elements_by_css_selector('vrtnu-meta[slot="meta"] span')
+            for span in div_cant_seasons:
+                if '0 Seizoenen' in span.text:
+                    return True
+                if 'audiodescriptie' in browser.current_url:
+                    return True
+        
+        if type_ == 'episode':
+            if 'making-of' in browser:
+                return True
+            if 'extra-s' in browser:
+                return True
+            if 'samenvattingen' in browser:
+                return True
+            if 'extra' in browser:
+                return True
+            if 'bloopers' in browser:
+                return True
+            if 'trailer' in browser:
+                return True
         return False
-
+    
+    
     def is_repeated(self, movie):
         if 'audiodescriptie' in movie:
             return True
@@ -135,12 +134,16 @@ class VrtFacu():
             
         for serie in series:
             browser.get(serie)
-            is_trailer = self.is_trailer_serie(browser)
+            type_ = 'serie'
+            is_trailer = self.is_trailer(browser, type_)
             if is_trailer == False :
                 self.get_serie_content(browser)
+        
         Datamanager._insertIntoDB(self,self.payloads,self.titanScraping)
         Datamanager._insertIntoDB(self,self.payloads_episodes,self.titanScrapingEpisodios)
-
+        Upload(self._platform_code, self._created_at, testing=True, has_episodes=bool(self.payloads_episodes))
+    
+    
     def get_series(self, browser):
         browser.find_element_by_css_selector('input[value="series"]').click()
         #Tiempo de espera para que se actualice el filtro
@@ -165,10 +168,17 @@ class VrtFacu():
 
     
     def get_image(self, browser):
+
         if self.is_exist(browser,'#parsys_pageHeader'):
             return browser.find_element_by_css_selector('#parsys_pageHeader').get_attribute('src')
         else:
             return browser.find_element_by_css_selector('#parsys_pageheader').get_attribute('src')
+    
+    
+    def get_synopsis(self, browser):
+        if self.is_exist(browser, 'div[slot="short-description"]'):
+            return browser.find_element_by_css_selector('div[slot="short-description"]').text
+        return None
     
     
     def get_hrefs(self, browser):
@@ -197,13 +207,13 @@ class VrtFacu():
         return episodes_deeplinks
     
     
-    def get_episode_content(self,content, parent_id, parent_title, episode):
-        payload = self.build_payload_episode(content, parent_id, parent_title, episode)
-        payload_episode = payload.payload_episode()
-        if payload_episode !='':
+    def get_episode_content(self,content, parent_id, parent_title, rating, episode):
+        payload = self.build_payload_episode(content, parent_id, parent_title, rating, episode)
+        if payload != '':
+            payload_episode = payload.payload_episode()
             Datamanager._checkDBandAppend(self,payload_episode,self.ids_scrapeados_episodios,self.payloads_episodes, isEpi=True)
 
-
+    
     def get_movie_content(self, movie, browser):
         browser.get(movie)
         time.sleep(1)
@@ -213,12 +223,15 @@ class VrtFacu():
         time.sleep(3)
         #Saco la imagen que hay en el banner antes de acceder a la pelicula
         image = self.get_image(browser)
-        
+        #Saco la synopsis por si no esta dentro de la pelicula sucede en varios casos
+        synopsis = self.get_synopsis(browser)
         browser.execute_script("return document.querySelector('vrtnu-tile').shadowRoot.querySelector('.media')").click()
         #Tiempo para que cargue la pelicula
         time.sleep(5)
-        if self.is_trailer_movie(browser) == False:
-            payload = self.build_payload_movie(browser, image)
+        type_ = 'movie'
+        is_trailer = self.is_trailer(browser, type_)
+        if is_trailer == False:
+            payload = self.build_payload_movie(browser, image, synopsis)
             payload_movie = payload.payload_movie()
             Datamanager._checkDBandAppend(self,payload_movie,self.ids_scrapeados,self.payloads)
          
@@ -232,7 +245,7 @@ class VrtFacu():
         Datamanager._checkDBandAppend(self,payload_serie,self.ids_scrapeados,self.payloads)   
         
     
-    def build_payload_movie(self,browser, image):
+    def build_payload_movie(self,browser, image, synopsis):
         
         def get_id():
             deeplinks = browser.current_url
@@ -252,12 +265,6 @@ class VrtFacu():
         def get_duration():
             div = browser.find_elements_by_class_name("vrtnu-text--default")
             return int(div[1].text.replace('min',''))
-
-
-        def get_synopsis():
-            if self.is_exist(browser,'vrtnu-video-information .cmp-text p'):
-                return browser.find_element_by_css_selector('vrtnu-video-information .cmp-text p').text
-            return None
 
    
         def get_rating():
@@ -289,12 +296,11 @@ class VrtFacu():
         payload.platform_code = self._platform_code
         payload.id = get_id()
         payload.title = get_title()
-        payload.original_title = payload.title
         payload.clean_title = _replace(payload.title)
         payload.deeplink_web = browser.current_url
         payload.year = get_year()
         payload.duration = get_duration()
-        payload.synopsis = get_synopsis()
+        payload.synopsis = synopsis
         payload.rating = get_rating()
         payload.genres = get_genres()
         payload.image = [image]
@@ -312,9 +318,9 @@ class VrtFacu():
 
         
         def get_synopsis():
-            try:
+            if self.is_exist(browser,'div[slot="short-description"] > p'):
                 return browser.find_element_by_css_selector('div[slot="short-description"] > p').text
-            except:
+            else:
                 return browser.find_element_by_css_selector('div[slot="short-description"]').text
         
         
@@ -344,22 +350,22 @@ class VrtFacu():
 
         def get_rating():
             try:
-                icon_rating = browser.find_element_by_tag_name('vrtnu-icon').get_attribute('alt')     
-                icon_rating = icon_rating.split(' ')
-                return icon_rating[1]
+                icon_rating = browser.find_element_by_tag_name('vrtnu-icon').get_attribute('name')     
+                if 'plus' in icon_rating:
+                    return icon_rating.replace('plus','+')
             except Exception:
                 print(f'No se encontro rating para : {browser.current_url}')
                 return None
-
+        
 
         payload = Payload()    
         payload.platform_code = self._platform_code
         payload.id = get_id()
         payload.title = get_title()
-        payload.original_title = payload.title
         payload.clean_title = _replace(payload.title)
         payload.deeplink_web = browser.current_url
         payload.image = [image]
+        payload.rating = get_rating()
         payload.seasons = get_seasons()
         payload.synopsis = get_synopsis()
         payload.packages = get_packages()
@@ -370,25 +376,25 @@ class VrtFacu():
         if self.is_exist(browser,'#parsys_container_banner_navigation'):
             self.recorrer_seasons(browser)
         
-        
         seasons = browser.find_elements_by_css_selector('vrtnu-list[content="episode"]')
         n=0
+        
         for season in seasons:
             episodes = self.get_episodes_hrefs(season)
             if self.is_exist(browser,'#parsys_container_banner_navigation'):
-                    select = browser.find_element_by_css_selector('#parsys_container_banner_navigation select')
-                    options = select.find_elements_by_css_selector('option')
-                    if len(options)>n:
-                        self.change_season(browser,options[n])
-                    n+=1
+                self.change_season(browser,n)
+                n+=1
             
             for episode in episodes:
-                if self.is_trailer_episode(episode)== False:
+                type_ = 'episode'
+                is_trailer = self.is_trailer(episode,type_)
+                if is_trailer== False:
                     selector = (f'vrtnu-tile[link="{episode}"]')
                     content = browser.execute_script(f"return document.querySelector('{selector}')")
-                    self.get_episode_content(content, payload.id, payload.title, episode) 
+                    self.get_episode_content(content, payload.id, payload.title, payload.rating, episode) 
       
         return payload
+    
     
     def recorrer_seasons(self,browser):
         """
@@ -399,17 +405,25 @@ class VrtFacu():
         select = browser.find_element_by_css_selector('#parsys_container_banner_navigation select')
         options = select.find_elements_by_css_selector('option')
         for option in options:
-            self.change_season(browser,option) 
+            if 'Seizoen' in option.text:
+                browser.find_element_by_css_selector('#parsys_container_banner_navigation select').click()
+                time.sleep(2)
+                option.click()
+                time.sleep(8)
     
-    def change_season(self, browser, option):
-        if 'Seizoen' in option.text:
-            browser.find_element_by_css_selector('#parsys_container_banner_navigation select').click()
-            time.sleep(2)
-            option.click()
-            time.sleep(8)
+    
+    def change_season(self, browser, n):
+        select = browser.find_element_by_css_selector('#parsys_container_banner_navigation select')
+        options = select.find_elements_by_css_selector('option')
+        if len(options) >n:  
+            if 'Seizoen' in options[n].text:
+                browser.find_element_by_css_selector('#parsys_container_banner_navigation select').click()
+                time.sleep(2)
+                options[n].click()
+                time.sleep(8)
                           
 
-    def build_payload_episode(self, content, parent_id, parent_title, deeplinks):
+    def build_payload_episode(self, content, parent_id, parent_title, rating, deeplinks):
         
         def get_id():
             return hashlib.md5(deeplinks.encode('utf-8')).hexdigest()
@@ -423,19 +437,47 @@ class VrtFacu():
         def get_episode():
             episode = content.find_elements_by_css_selector('span.is-hidden-below-tablet')
             episode = episode[-1].text.split(' ')
-            return episode[-1]
+            try:
+                if '/' in episode[-1]:
+                    epi = get_with_deeplink('episode')
+                    return int(epi)
+                return int(episode[-1])
+            except Exception:
+                print('No es un episodio valido')
+                return ''
+        
+        
+        def get_with_deeplink(type_):
+            """
+            Este metodo es para obtener el numero de season y episodio por el deeplink
+            ya que existen 4 capitulos que vienen con una fecha ejs 31/08 01/09
+            """
+            url = deeplinks
+            url = url.split('/')
+            url = url[-2].split('-')
+            url = url[1].split('a')
+            if type_ == 'episode':
+                return url[-1]
+            if type_ == 'season':
+                return url[0].replace('s','')
         
         
         def get_season():
             season = content.find_elements_by_css_selector('span.is-hidden-below-tablet')
             season = season[0].text.split(' ')
-            if season == 'Vlaams':
-                return season[0]
-            if season == 'Series':
-                
-                pass
-            return season[-1]
-
+            try:
+                if season[-1] == 'Vlaams':
+                    return int(season[0])
+                if '/' in season[-1]:
+                    seas = get_with_deeplink('season')
+                    return int(seas)
+                if len(season[-1]) >= 3:
+                    return None
+                return int(season[-1])
+            except Exception:
+                print('No es una season valida')
+                return ''
+        
         
         def get_duration():
             min = content.find_element_by_css_selector('vrtnu-label[slot="media-meta"]').text
@@ -465,9 +507,14 @@ class VrtFacu():
         payload.id = get_id()
         payload.title = get_title()
         payload.episode = get_episode()
-        payload.season = get_season()
-        if payload.season == 'Series':
+        if payload.episode == '':
             return ''
+        payload.season = get_season()
+        if payload.season == '':
+            return ''
+       
+        
+        payload.rating = rating
         payload.duration = get_duration()
         payload.synopsis = get_synopsis()
         payload.image = get_image()
