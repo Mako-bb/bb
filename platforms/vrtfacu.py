@@ -166,14 +166,21 @@ class VrtFacu():
         time.sleep(5)
         return self.get_hrefs(browser)
 
-    
-    def get_image(self, browser):
+    def set_image(self, image):
+        if not 'https:' in image:
+            new_image_url  = (f'https:{image}')
+            return [new_image_url]
+        return [image]
 
+    def get_image(self, browser):
         if self.is_exist(browser,'#parsys_pageHeader'):
-            return browser.find_element_by_css_selector('#parsys_pageHeader').get_attribute('src')
+            image = browser.find_element_by_css_selector('#parsys_pageHeader').get_attribute('src')
+            return self.set_image(image)
+            
         else:
-            return browser.find_element_by_css_selector('#parsys_pageheader').get_attribute('src')
-    
+            image = browser.find_element_by_css_selector('#parsys_pageheader').get_attribute('src')
+            return self.set_image(image)
+            
     
     def get_synopsis(self, browser):
         if self.is_exist(browser, 'div[slot="short-description"]'):
@@ -492,6 +499,9 @@ class VrtFacu():
 
         def get_image():
             image = content.find_element_by_css_selector('vrtnu-image[slot="image"]').get_attribute('src')
+            if not 'https:' in image:
+                new_image_url  = (f'https:{image}')
+                return [new_image_url]
             return [image]
         
         
