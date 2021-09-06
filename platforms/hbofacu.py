@@ -486,6 +486,7 @@ class HBOFacu():
                 return synopsis
 
         def text_plain(text):
+            patron = '<[^<]+?>'
             trash_text = ['<p>','</p>','<b>','</b>','<br>','</br>','\r\n','<u>','</u>',
                          '&nbsp;','·','<sup>','</sup>','<i>','</i>']
             clean_text = text            
