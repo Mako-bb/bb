@@ -4,6 +4,7 @@
 __pycache__
 handle/__pycache__
 platforms/__pycache__
+drivers/chromedriver.exe
 geckodriver.exe
 geckodriver
 geckodriver.log
@@ -54,3 +55,4 @@ apuntes.txt
 excel_exports
 pluto2.py
 allblk_panda.py
+drivers/chromedriver.exe

@@ -2,6 +2,7 @@
 import requests # Si el script usa requests/api o requests/bs4
 import time
 import re
+import hashlib
 from bs4                import BeautifulSoup # Si el script usa bs4
 from selenium           import webdriver # Si el script usa selenium
 from handle.datamanager import Datamanager # Opcional si el script usa Datamanager
@@ -39,7 +40,7 @@ class Pluto():
                 'Accept': '*/*',
                 'Accept-Language': 'en-US,en;q=0.5',
                 'Referer': 'https://pluto.tv/en/on-demand',
-                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsImtpZCI6IjM2MTkwOWQzLWI1NjUtNGI0ZS04YTQ5LTBhNTgzMGU4Mjk1ZSIsInR5cCI6IkpXVCJ9.eyJzZXNzaW9uSUQiOiI2NTA5MTgzZS0wNjlmLTExZWMtOGQ1ZC0wMjQyYWMxMTAwMDMiLCJjbGllbnRJUCI6IjE4Ni4yMi4yMzguMTEiLCJjaXR5IjoiTG9tYXMgZGUgWmFtb3JhIiwicG9zdGFsQ29kZSI6IjE4MzIiLCJjb3VudHJ5IjoiQVIiLCJkbWEiOjAsImFjdGl2ZVJlZ2lvbiI6IlZFIiwiZGV2aWNlTGF0IjotMzQuNzY2MSwiZGV2aWNlTG9uIjotNTguMzk1NywicHJlZmVycmVkTGFuZ3VhZ2UiOiJlcyIsImRldmljZVR5cGUiOiJ3ZWIiLCJkZXZpY2VWZXJzaW9uIjoiOTIuMC45MDIiLCJkZXZpY2VNYWtlIjoiZWRnZS1jaHJvbWl1bSIsImRldmljZU1vZGVsIjoid2ViIiwiYXBwTmFtZSI6IndlYiIsImFwcFZlcnNpb24iOiI1LjEwMy4wLTE5YzEwNWFkMzJjNzY5OGY5MjcxOTY1MzUwMWI2ZTQ4NmY2ODdmOWIiLCJjbGllbnRJRCI6ImQ5NzA5MTg2LTcyZDYtNDhkZC1hZDliLTA0YWI3MzEwM2FjNSIsImNtQXVkaWVuY2VJRCI6IiIsImlzQ2xpZW50RE5UIjpmYWxzZSwidXNlcklEIjoiIiwibG9nTGV2ZWwiOiJERUZBVUxUIiwidGltZVpvbmUiOiJBbWVyaWNhL0FyZ2VudGluYS9CdWVub3NfQWlyZXMiLCJzZXJ2ZXJTaWRlQWRzIjp0cnVlLCJlMmVCZWFjb25zIjpmYWxzZSwiZmVhdHVyZXMiOnt9LCJhdWQiOiIqLnBsdXRvLnR2IiwiZXhwIjoxNjMwMDMzMDIwLCJqdGkiOiI0NTMwZjU1NS1jYTI1LTQ4MTYtODgxNy0xNjNkNjQzODZhNWUiLCJpYXQiOjE2MzAwMDQyMjAsImlzcyI6ImJvb3QucGx1dG8udHYiLCJzdWIiOiJwcmk6djE6cGx1dG86ZGV2aWNlczpWRTpaRGszTURreE9EWXROekprTmkwME9HUmtMV0ZrT1dJdE1EUmhZamN6TVRBellXTTEifQ.zjLx9tCKbt94S9wzCrTZqBJSKUgD6ThZl92LkQC8Kdw',
+                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsImtpZCI6IjJiYjNkYTc3LWRhMTktNGVmZC05ODJiLWVjMGI4MDNkY2JlYyIsInR5cCI6IkpXVCJ9.eyJzZXNzaW9uSUQiOiI5NjY3NzI3Mi0wZmRkLTExZWMtOGNhOS0wMjQyYWMxMTAwMDMiLCJjbGllbnRJUCI6IjE4Ni4yMi4yMzguMTEiLCJjaXR5IjoiTG9tYXMgZGUgWmFtb3JhIiwicG9zdGFsQ29kZSI6IjE4MzIiLCJjb3VudHJ5IjoiQVIiLCJkbWEiOjAsImFjdGl2ZVJlZ2lvbiI6IlZFIiwiZGV2aWNlTGF0IjotMzQuNzY2MSwiZGV2aWNlTG9uIjotNTguMzk1NywicHJlZmVycmVkTGFuZ3VhZ2UiOiJlcyIsImRldmljZVR5cGUiOiJ3ZWIiLCJkZXZpY2VWZXJzaW9uIjoiOTMuMC45NjEiLCJkZXZpY2VNYWtlIjoiZWRnZS1jaHJvbWl1bSIsImRldmljZU1vZGVsIjoid2ViIiwiYXBwTmFtZSI6IndlYiIsImFwcFZlcnNpb24iOiI1LjEwMy4xLThmYWQ5ZjU1MjNmZWY1N2RjZTA2MTc5ZGE2MDU2ODJjMDM1YWZlOTkiLCJjbGllbnRJRCI6ImQ5NzA5MTg2LTcyZDYtNDhkZC1hZDliLTA0YWI3MzEwM2FjNSIsImNtQXVkaWVuY2VJRCI6IiIsImlzQ2xpZW50RE5UIjpmYWxzZSwidXNlcklEIjoiIiwibG9nTGV2ZWwiOiJERUZBVUxUIiwidGltZVpvbmUiOiJBbWVyaWNhL0FyZ2VudGluYS9CdWVub3NfQWlyZXMiLCJzZXJ2ZXJTaWRlQWRzIjp0cnVlLCJlMmVCZWFjb25zIjpmYWxzZSwiZmVhdHVyZXMiOnt9LCJhdWQiOiIqLnBsdXRvLnR2IiwiZXhwIjoxNjMxMDQ5MjkyLCJqdGkiOiIxOThlNjViZi0wNjU5LTQ5ZjQtODY4Yy1lYWQwYWZkODAzNjAiLCJpYXQiOjE2MzEwMjA0OTIsImlzcyI6ImJvb3QucGx1dG8udHYiLCJzdWIiOiJwcmk6djE6cGx1dG86ZGV2aWNlczpWRTpaRGszTURreE9EWXROekprTmkwME9HUmtMV0ZrT1dJdE1EUmhZamN6TVRBellXTTEifQ.9R2a2xOCagQwYw0tcwxDziwx2xjkQseokeTev47bXzM',
                 'Origin': 'https://pluto.tv',
                 'Connection': 'keep-alive',
                 'TE': 'Trailers'
@@ -103,6 +104,10 @@ class Pluto():
                     payload = self.get_payload(movie)
                     payload_movie = payload.payload_movie()
                     Datamanager._checkDBandAppend(self,payload_movie,self.ids_scrapeados,self.payloads)
+
+
+    def hashing(self, var):
+        return hashlib.md5(var.encode("utf-8")).hexdigest()
 
     def get_series(self, categories):
         """Obtiene todas las series/" +
@@ -191,7 +196,7 @@ class Pluto():
         else:
            deeplink = "https://pluto.tv/es/on-demand/series/" + content_metadata["slug"]
         if is_episode:
-            _url_base = url_base + "/" + content_metadata["season"] + "/episode/" + content_metadata["slug"]
+            _url_base = url_base + "/" + str(content_metadata["season"]) + "/episode/" + content_metadata["slug"]
             deeplink = _url_base
         return deeplink
     
@@ -210,6 +215,7 @@ class Pluto():
         if "genre" in content_metadata:
             genres = content_metadata['genre'].replace(" & ", ",")
             genres = genres.replace(" y ", ",")
+            genres = genres.replace(" Y ", ",")
             genres = genres.replace("/", ",").split(",")
         return genres
     def get_packages(self, content_metadata):
@@ -235,14 +241,17 @@ class Pluto():
         res = requests.get(self._url + "series/" + content_metadata['_id'] + "/seasons", headers=self._headers)
         res = res.json()
         slug = res['slug']
-        url_base = "https://pluto.tv/es/on-demand/" + "series/" + slug + "/details" + "/season"
+        url_base = "https://pluto.tv/es/on-demand/" + "series/" + slug + "/season"
         self.get_episodes(res, url_base)
         
         for season in res['seasons']:
+            url = "https://pluto.tv/es/on-demand/" + "series/" + slug + "/details" + "/season/" + str(season['number'])
             payload_season = payload.payload_season()
+            payload_season["Id"] = self.hashing(url)
+            payload_season["Title"] = "Season " + str(season['number'])
             payload_season["Number"] = season['number']
             payload_season["Episodes"] = len(season['episodes'])
-            payload_season["Deeplink"] = "https://pluto.tv/es/on-demand/" + "series/" + slug + "/details" + "/seasons" + str(season['number'])
+            payload_season["Deeplink"] = url
             seasons.append(payload_season)
         return seasons
 

@@ -106,8 +106,8 @@ class VRTNuFede():
             payload.clean_title = self.get_clean_title(content_metadata)
             payload.deeplink_web = self.get_deeplinks(content_metadata)
             if is_episode:
-                payload.parent_title = None
-                payload.parent_id = None
+                payload.parent_title = self.get_parent_title(content_metadata)
+                payload.parent_id = self.get_parent_id(content_metadata)
                 payload.season = self.get_season(content_metadata)
                 payload.episode = self.get_episode(content_metadata)
     
@@ -120,6 +120,7 @@ class VRTNuFede():
             return payload
 
     def get_clean_title(self, content_metadata):
+        return _replace(content_metadata.get("title"))
         pass
     
 
@@ -132,8 +133,13 @@ class VRTNuFede():
                 movie_links.append(item.get_attribute("href"))
         for movie_link in movie_links:
             url = f'https://www.vrt.be{movie_link}'
+            if "audiodescriptie" in movie_link:
+                continue
+            if "trailer" in movie_link:
+                continue
             self.driver.get(url)
             i_l = []
+            #Se puede usar el payload, use este formato porque me era más comodo seguir qué estaba extrayendo
             metadata = {
                 "id":None,
                 "deeplink":None,
@@ -148,6 +154,10 @@ class VRTNuFede():
             try:
                 if EC.element_to_be_clickable((By.ID, "qlf-close-button")):
                     self.driver.find_element_by_id("qlf-close-button").click()
+            except:
+                pass
+            try:
+                metadata["genre"] = str(self.driver.find_element_by_css_selector("div[slot='category']").text).replace("Films", "").replace(" / ", ",").split(",")
             except:
                 pass
             try:
@@ -179,7 +189,7 @@ class VRTNuFede():
         pass
     
     def get_clean_title(self, content_metadata):
-        return _replace(content_metadata.get("title"))
+        return _replace(content_metadata.get("title")) or None
     
     def get_year(self, content_metadata):
         return content_metadata.get("year") or None
@@ -194,11 +204,16 @@ class VRTNuFede():
         return content_metadata.get("desc") or None
         
     def get_title(self, content_metadata):
-        print(content_metadata.get("title"))
-        return content_metadata.get('title')
+        return content_metadata.get('title') or None
     
     def get_images(self, content_metadata):
-        return content_metadata.get('images')
+        return content_metadata.get('images') or None
+    
+    def get_season(self, content_metadata):
+        return content_metadata.get('season') or None
+    
+    def get_episode(self, content_metadata):
+        return content_metadata.get("number") or None
     
     def get_series(self):
         self.driver.get(self._url_series)
@@ -208,9 +223,16 @@ class VRTNuFede():
             if item.is_displayed():
                 serie_links.append(item.get_attribute("href"))
         for serie_link in serie_links:
+            if "audiodescriptie" in serie_link:
+                continue
             url = f'https://www.vrt.be{serie_link}'
             self.driver.get(url)
+            time.sleep(10)
+            if "Making of" in self.driver.find_element_by_tag_name("h2").text:
+                continue
+            
             i_l = []
+            #Se puede usar el payload, use este formato porque me era más comodo seguir qué estaba extrayendo
             metadata = {
                 "id":None,
                 "deeplink":None,
@@ -227,32 +249,127 @@ class VRTNuFede():
                     self.driver.find_element_by_id("qlf-close-button").click()
             except:
                 pass
-            time.sleep(0.5)
-            link_episodes = []
+            time.sleep(3)
+            seasons = []
+            metadata["id"] = self.hashing(self.driver.current_url)
+            metadata["title"] = self.driver.find_element_by_tag_name("h1").text
+            metadata["genre"] = str(self.driver.find_element_by_css_selector("div[slot='category']").text).replace("Series", "").replace(" / ", ",").split(",")
             if self.driver.find_elements_by_tag_name('select'):
                 tempos = self.driver.find_elements_by_tag_name('option')
                 n_seasons = len(tempos)
+                epi_act = 0
                 for tempo in tempos:
-                    tempo.click()
-                    episodes = self.driver.find_elements_by_tag_name('vrtnu-tile')
-                    for link_epi in episodes:
-                        link_episodes.append(self._base_url + link_epi.get_attribute("link"))
-                    
-                    
-            metadata["title"] = self.driver.find_element_by_tag_name("h1").text
+                    self.driver.find_element_by_tag_name("select")
+                    if "Seizoen" in tempo.text:
+                        tempo.click()
+                        time.sleep(2)
+                        episodes = self.driver.find_elements_by_tag_name('vrtnu-tile')
+                        if epi_act:
+                                del episodes[0:epi_act]
+                        season = {
+                            "title":None,
+                            "number":None,
+                            "episodes":None
+                        }
+                        try:
+                            split_title = str(tempo.text).split(" (")
+                            season["title"]= split_title[0]
+                            season["number"] = int(split_title[0].replace("Seizoen ", ""))
+                            season["episodes"] = int(split_title[1].replace(" afleveringen)", ""))
+                            seasons.append(season)
+                        except:
+                            pass
+                        parent_id = metadata["id"]
+                        parent_title = metadata["title"]
+                        self.get_episodes(episodes, parent_id=parent_id, parent_title=parent_title)
+                        epi_act = epi_act + len(episodes)
+            else:
+                episodes = self.driver.find_elements_by_tag_name('vrtnu-tile')
+                season = {
+                            "title":None,
+                            "number":None,
+                            "episodes":None
+                        }
+                try:
+                    split_title = str(self.driver.find_element_by_tag_name("h2").text).split(" (")
+                    season["title"]= split_title[0]
+                    season["number"] = int(split_title[0].replace("Seizoen ", ""))
+                    season["episodes"] = len(episodes)
+                    seasons.append(season)
+                except:
+                    pass
+                parent_id = metadata["id"]
+                parent_title = metadata["title"]
+                self.get_episodes(episodes, parent_id=parent_id, parent_title=parent_title)
+            metadata["seasons"] = seasons
             i_l.append(self.driver.find_element_by_tag_name("vrtnu-image").get_attribute("src"))
             metadata["year"] = self.driver.find_element_by_tag_name("h2").text
-            self.driver.get(self._base_url + self.driver.find_element_by_tag_name("vrtnu-tile").get_attribute("link"))
             time.sleep(0.5)
             metadata["deeplink"] = self.driver.current_url
-            metadata["id"] = self.hashing(self.driver.current_url)
-            metadata["duration"] = str(self.driver.find_elements_by_class_name("vrtnu-text--default")[1].text).split(" ")[0]
+            #metadata["duration"] = str(self.driver.find_elements_by_class_name("vrtnu-text--default")[1].text).split(" ")[0]
             metadata["images"] = i_l
             payload = self.get_payload(metadata)
             payload_serie = payload.payload_serie()
             Datamanager._checkDBandAppend(self, payload_serie, self.ids_scrapeados, self.payloads)
+    
+    def get_episodes(self, epis, parent_id=None, parent_title=None):
+        for epi in epis:
+            time.sleep(3)
+            if epi.find_element_by_tag_name("h3").text == "":
+                continue
+            #Se puede usar el payload, use este formato porque me era más comodo seguir qué estaba extrayendo
+            metadata = {
+                "id":None,
+                "title":None,
+                "duration":None,
+                "number":None,
+                "images":None,
+                "season":None,
+                "desc":None,
+                "deeplink":None,
+                "parent_title":parent_title,
+                "parent_id":parent_id
+            }
+            metadata["parent_title"] = parent_title
+            try:
+                metadata["desc"] = epi.find_element_by_css_selector('div[slot="description"]').text
+            except:
+                pass
+            img = []
+            img.append(epi.find_element_by_tag_name("vrtnu-image").get_attribute("src"))
+            metadata["images"] = img
+            metadata["parent_id"] = parent_id
+            details = str(epi.find_element_by_tag_name("vrtnu-meta").text).replace("Seizoen ", "s-").replace("Aflevering ", "a-").split("\n")
+            metadata["id"] = self.hashing(self._base_url + epi.get_attribute("link"))
+            print("------------------------------------------")
+            print(metadata["parent_id"])
+            print(parent_title)
+            print("------------------------------------------")
+            try:
+                metadata["title"] = epi.find_element_by_tag_name("h3").text
+                metadata["season"] = int(str(details[0].replace("s-", "")))
+                metadata["number"] = int(str(details[1].replace("a-", "")))
+                metadata["duration"] = int(str(epi.find_element_by_tag_name("vrtnu-label").text).replace(" min", ""))
+            except:
+                pass
+            try:
+                element = epi.find_element_by_tag_name("vrtnu-meta")
+                print(epi.find_element_by_selector(f'#parsys_container_episodes-list_1-{metadata["number"]-1} > div').text)
+            except:
+                pass
+            if "trailer" in epi.get_attribute("link") or "blooper" in epi.get_attribute("link"):
+                continue
+            metadata["deeplink"] = self._base_url + epi.get_attribute("link")
+            print(metadata)
+            payload = self.get_payload(metadata, is_episode=True)
+            payload_episode = payload.payload_episode()
+            Datamanager._checkDBandAppend(self,payload_episode,self.ids_episcrap,self.payloads_episodes,isEpi=True)
             
-        pass
+    def get_parent_id(self, content_metadata):
+        return content_metadata.get('parent_id') or None
+    
+    def get_parent_title(self, content_metadata):
+        return content_metadata.get('parent_title') or None
     
     def get_packages(self):
         return [{'Type':'free-vod'}]
@@ -260,7 +377,7 @@ class VRTNuFede():
     def scraping(self):
         #self.get_movies()
         self.get_series()
-        #Datamanager._insertIntoDB(self,self.payloads_episodes,self.titanScrapingEpisodios)
-        #Datamanager._insertIntoDB(self,self.payloads,self.titanScraping)
+        Datamanager._insertIntoDB(self,self.payloads_episodes,self.titanScrapingEpisodios)
+        Datamanager._insertIntoDB(self,self.payloads,self.titanScraping)
         
         Upload(self._platform_code,self._created_at,testing=True)
