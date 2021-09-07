@@ -2,8 +2,8 @@
 import requests  # Si el script usa requests/api o requests/bs4
 import time
 import json
-import random as rand
 import string
+import hashlib
 from bs4 import BeautifulSoup  # Si el script usa bs4
 from selenium import webdriver  # Si el script usa selenium
 # Opcional si el script usa Datamanager
@@ -18,10 +18,10 @@ from handle.payload import Payload
 class HBOFede():
 
     """
-    - Status: EN PROCESO
+    - Status: TERMINADO
     - VPN: NO
     - Método: Mixto; Requests y BeautifulSoup
-    - Runtime: ?
+    - Runtime: 1h 20min
     """
 
     def __init__(self, ott_platforms, ott_site_country, ott_operation):
@@ -105,6 +105,9 @@ class HBOFede():
                         Datamanager._checkDBandAppend(
                             self, payload_movie, self.ids_scrapeados, self.payloads)
 
+    def hashing(self, var):
+        return hashlib.md5(var.encode("utf-8")).hexdigest()
+
     def get_series(self):
         """Obtiene todas las series
         """
@@ -125,7 +128,7 @@ class HBOFede():
                         "div", {"class": "components/MainContent--mainContent"})
                     if serie_data.find("div", {"class": "components/RichText--richText"}) != None:
                         # Si el contenido no está vacio, procedemos a ingresar los datos
-                        payload = self.get_payload(serie, is_serie=True)
+                        payload = self.get_payload(serie, parent_id=serie.get("streamingId").get("id"),parent_title=serie.get("title"), is_serie=True)
                         payload_serie = payload.payload_serie()
                         Datamanager._checkDBandAppend(
                             self, payload_serie, self.ids_scrapeados, self.payloads)
@@ -141,39 +144,35 @@ class HBOFede():
                 Payload: Retorna el payload.
             """
             payload = Payload()
-            # Indica si el payload a completar es un episodio:
-            if is_episode:
-                self.is_episode = True
-            else:
-                self.is_episode = False
             payload.platform_code = self._platform_code
-            payload.id = self.get_id(content_metadata)
+            payload.id = self.get_id(content_metadata, is_episode)
             payload.title = self.get_title(content_metadata)
-            payload.original_title = self.get_original_title(content_metadata)
-            payload.clean_title = self.get_clean_title(content_metadata)
-            payload.deeplink_web = self.get_deeplinks(content_metadata)
-            if self.is_episode:
+            payload.original_title = self.get_original_title(content_metadata, is_serie)
+            payload.clean_title = self.get_clean_title(content_metadata, is_episode)
+            payload.deeplink_web = self.get_deeplinks(content_metadata, is_episode)
+            if is_episode:
                 payload.parent_title = parent_title
                 payload.parent_id = parent_id
                 payload.season = self.get_season(content_metadata)
                 payload.episode = self.get_episode(content_metadata)
             if is_serie:
-                payload.seasons = self.get_seasons(content_metadata)
+                payload.seasons = self.get_seasons(content_metadata, parent_id, parent_title)
             payload.year = self.get_year(content_metadata)
             payload.duration = self.get_duration(content_metadata, is_serie, is_episode)
-            payload.synopsis = self.get_synopsis(content_metadata)
+            payload.synopsis = self.get_synopsis(content_metadata, is_serie)
             payload.image = self.get_images(content_metadata)
             payload.rating = self.get_ratings(content_metadata)
             payload.genres = self.get_genres(content_metadata)
             payload.cast = self.get_cast(content_metadata)
             payload.crew = self.get_crew(content_metadata)
+            payload.directors = self.get_director(content_metadata)
             payload.availability = self.get_availability(content_metadata, is_serie, is_episode)
-            payload.is_original = self.get_is_original(content_metadata)
+            payload.is_original = self.get_is_original(content_metadata, is_episode)
             payload.packages = self.get_packages(content_metadata)
             payload.createdAt = self._created_at
             return payload
 
-    def get_id(self, content_metadata):
+    def get_id(self, content_metadata, is_episode):
         """Obtiene el ID desde la metadata, de no obtenerlo.. se genera
 
         Args:
@@ -182,10 +181,21 @@ class HBOFede():
         Returns:
             str: ID del contenido
         """
-        random = ''.join([rand.choice(string.ascii_letters
-                                                    + string.digits) for n in range(32)])
-        return content_metadata.get("streamingId").get("id")
-        pass
+        id_ = None
+        if is_episode:
+            if content_metadata["data"]["episode"]["cta"] != "":
+                url_ = self._url + content_metadata["data"]["episode"]["cta"]["href"]
+            else:
+                url_ = self._url + content_metadata["data"]["episode"]["cards"][0]["video"]["shareUrl"]
+                
+            id_ = self.hashing(url_)
+        else:
+            url_ = self._url + content_metadata["cta"]["href"]
+            id_ = self.hashing(url_)
+        if "streamingId" in content_metadata:
+            return content_metadata.get("streamingId").get("id")
+        else:
+            return id_
 
     def get_title(self, content_metadata):
         """Obtiene el título desde la metadata del contenido
@@ -199,15 +209,20 @@ class HBOFede():
         return content_metadata.get("title") or content_metadata.get("data").get("episode").get("title") or None
         pass
 
-    def get_clean_title(self, content_metadata):
+    def get_clean_title(self, content_metadata, is_episode):
+        if is_episode:
+            return None
         return _replace(content_metadata.get("title")) or None
 
-    def get_original_title(self, content_metadata):
-        title = str(content_metadata["title"]).strip()
-        index = None
-        if "(" in title:
-            index = title.index("(")
-            title = title[index:len(title)-1]
+    def get_original_title(self, content_metadata, is_serie):
+        if is_serie:
+            return None
+        else:
+            title = str(content_metadata.get("title"))
+            index = None
+            if "(" in title:
+                index = title.index("(")
+                title = title[index:len(title)-1]
         return title
 
     def get_year(self, content_metadata):
@@ -241,7 +256,7 @@ class HBOFede():
             format_time = format_time + int(mins)
         return format_time
 
-    def get_deeplinks(self, content_metadata):
+    def get_deeplinks(self, content_metadata, is_episode):
         """Obtiene el link del contenido desde la metadata
 
         Args:
@@ -250,12 +265,17 @@ class HBOFede():
         Returns:
             str: Link del contenido
         """
-        return content_metadata.get("cta").get("href") or content_metadata.get("data").get("episode").get("cta").get("href") or None
+        if is_episode:
+            if content_metadata.get("data").get("episode").get("cta") == "":
+                return None
+            else:
+                return "https://www.hbo.com"+content_metadata.get("data").get("episode").get("cta").get("href")
+        return "https://www.hbo.com"+content_metadata.get("cta").get("href") or None
     
     
     
     
-    def get_synopsis(self, content_metadata):
+    def get_synopsis(self, content_metadata, is_serie):
         """Obtiene la synopsis desde la metadata del contenido
 
         Args:
@@ -264,7 +284,12 @@ class HBOFede():
         Returns:
             str: Synopsis del contenido
         """
-        return content_metadata.get("synopsis") or content_metadata.get("data").get("episode").get("summary") or None
+        if is_serie:
+            if "data" in content_metadata:
+                return content_metadata.get("data").get("episode").get("summary")
+            else:
+                return None
+        return content_metadata.get("synopsis") or None
     
     
     
@@ -281,11 +306,20 @@ class HBOFede():
         images = []
         if "thumbnail" in content_metadata:
             for image in content_metadata["thumbnail"]["images"]:
-                images.append(image["src"])
+                if "/content" in image["src"]:
+                    images.append("https://www.hbo.com"+image["src"])
+                else:
+                    images.append(image["src"])
         elif "cards" in content_metadata:
             for image in content_metadata["cards"][0]["image"]["images"]:
-                images.append(image["src"])
-        return images
+                if "/content" in image["src"]:
+                    images.append("https://www.hbo.com"+image["src"])
+                else:
+                    images.append(image["src"])
+        if images:
+            return images
+        else:
+            return None
     
     
     
@@ -326,66 +360,136 @@ class HBOFede():
                     cast.append(member["byline"])
         except:
             pass
-        return cast
+        if cast:
+            return cast
+        else:
+            return None
     
     def get_crew(self, content_metadata):
         crew = []
-        person = {
-            "Role":None,
-            "Name":None
-        }
-        res = requests.get(self._url + content_metadata["cta"]["href"] + "/cast-and-crew")
-        soup = BeautifulSoup(res.text, "lxml")
-        d = soup.find("noscript")
-        d = json.loads(d["data-state"])
-        #Chequeamos si tiene más de 2 indices, de ser así, podemos acceder
-        if len(d["bands"]) > 2:
-            #Acá accedemos al segundo para preguntar por la propiedad "Crew"
-                if "Crew" in d["bands"][2]["band"]:
-                    for member in d["bands"][2]["data"]["groups"][0]["categories"][0]["members"]:
-                        person = {
-                            "Role":None,
-                            "Name":None
-                            }
-                        #Preguntamos si existe contenido en los atributos
-                        if member["role"] != None or member["name"] != None:
-                            person["Role"] = str(member.get("role")).replace("/",",").strip()
-                            person["Name"] = member.get("name").strip()
+        if "cta" in content_metadata:
+            res = requests.get(self._url + content_metadata["cta"]["href"] + "/cast-and-crew")
+            soup = BeautifulSoup(res.text, "lxml")
+            d = soup.find("noscript")
+            d = json.loads(d["data-state"])
+            #Chequeamos si tiene más de 2 indices, de ser así, podemos acceder
+            if len(d["bands"]) > 2:
+                #Acá accedemos al segundo para preguntar por la propiedad "Crew"
+                    if "Crew" in d["bands"][2]["band"]:
+                        for member in d["bands"][2]["data"]["groups"][0]["categories"][0]["members"]:
+                            person = {
+                                "Role":None,
+                                "Name":None
+                                }
+                            #Preguntamos si existe contenido en los atributos
+                            if member["role"] != None or member["name"] != None:
+                                if "Director" in member["role"]:
+                                    continue
+                                person["Role"] = str(member.get("role")).replace("/",",").replace("Director", "").strip()
+                                person["Name"] = member.get("name").strip()
+                                crew.append(person)
+            elif "cta" in d["bands"][4]["data"]:
+                res = requests.get(self._url + d["cta"]["href"] + "/cast-and-crew")
+                soup = BeautifulSoup(res.text, features="lxml")
+                d = soup.find("noscript")
+                d = d.json()
+                if len(d["bands"]) > 2:
+                    if "Crew" in d["bands"][2]["band"]:
+                        for member in d["bands"][2]["data"]["groups"][0]["categories"][0]["members"]:
+                            person = {
+                                "Role":None,
+                                "Name":None
+                                }
+                            if member["role"] != None or member["name"] != None:
+                                if "Director" in member["role"]:
+                                    continue
+                                person["Role"] = str(member.get("role")).replace("/",",").strip()
+                                person["Name"] = member.get("name").strip()
+                                crew.append(person)
+                            person["Role"] = member["role"].replace("/",",").strip()
+                            person["Name"] = member["name"].strip()
                             crew.append(person)
-        elif "cta" in d["bands"][4]["data"]:
-            res = requests.get(self._url + d["cta"]["href"] + "/cast-and-crew")
-            soup = BeautifulSoup(res.text, features="lxml")
-            d = soup.find("noscript")
-            d = d.json()
-            if len(d["bands"]) > 2:
-                if "Crew" in d["bands"][2]["band"]:
-                    for member in d["bands"][2]["data"]["groups"][0]["categories"][0]["members"]:
-                        person = {
-                            "Role":None,
-                            "Name":None
-                            }
-                        person["Role"] = member["role"].replace("/",",").strip()
-                        person["Name"] = member["name"].strip()
-                        crew.append(person)
-        elif "cta" in d["bands"][5]["data"]:
-            res = requests.get(self._url + d["cta"]["href"] + "/cast-and-crew")
-            soup = BeautifulSoup(res.text, features="lxml")
-            d = soup.find("noscript")
-            d = d.json()
-            if len(d["bands"]) > 2:
-                if "Crew" in d["bands"][2]["band"]:
-                    for member in d["bands"][2]["data"]["groups"][0]["categories"][0]["members"]:
-                        person = {
-                            "Role":None,
-                            "Name":None
-                            }
-                        person["Role"] = member["role"].replace("/",",").strip()
-                        person["Name"] = member["name"].strip()
-                        crew.append(person)
+            elif "cta" in d["bands"][5]["data"]:
+                res = requests.get(self._url + d["cta"]["href"] + "/cast-and-crew")
+                soup = BeautifulSoup(res.text, features="lxml")
+                d = soup.find("noscript")
+                d = d.json()
+                if len(d["bands"]) > 2:
+                    if "Crew" in d["bands"][2]["band"]:
+                        for member in d["bands"][2]["data"]["groups"][0]["categories"][0]["members"]:
+                            person = {
+                                "Role":None,
+                                "Name":None
+                                }
+                            if member["role"] != None or member["name"] != None:
+                                if "Director" in member["role"]:
+                                    continue
+                                person["Role"] = str(member.get("role")).replace("/",",").strip()
+                                person["Name"] = member.get("name").strip()
+                                crew.append(person)
         return crew
         
     
-    
+    def get_director(self, content_metadata):
+        directors = []
+        if "cta" in content_metadata:
+            res = requests.get(self._url + content_metadata["cta"]["href"] + "/cast-and-crew")
+            soup = BeautifulSoup(res.text, "lxml")
+            d = soup.find("noscript")
+            d = json.loads(d["data-state"])
+            #Chequeamos si tiene más de 2 indices, de ser así, podemos acceder
+            if len(d["bands"]) > 2:
+                #Acá accedemos al segundo para preguntar por la propiedad "Crew"
+                    if "Crew" in d["bands"][2]["band"]:
+                        for member in d["bands"][2]["data"]["groups"][0]["categories"][0]["members"]:
+                            person = {
+                                "Role":None,
+                                "Name":None
+                                }
+                            #Preguntamos si existe contenido en los atributos
+                            if member["role"] != None and "Director" in member["role"]:
+                                person["Role"] = str(member.get("role")).replace("/",",").strip()
+                                person["Name"] = member.get("name").strip()
+                                directors.append(person)
+            elif "cta" in d["bands"][4]["data"]:
+                res = requests.get(self._url + d["cta"]["href"] + "/cast-and-crew")
+                soup = BeautifulSoup(res.text, features="lxml")
+                d = soup.find("noscript")
+                d = d.json()
+                if len(d["bands"]) > 2:
+                    if "Crew" in d["bands"][2]["band"]:
+                        for member in d["bands"][2]["data"]["groups"][0]["categories"][0]["members"]:
+                            person = {
+                                "Role":None,
+                                "Name":None
+                                }
+                            if member["role"] != None and "Director" in member["role"]:
+                                person["Role"] = str(member.get("role")).replace("/",",").strip()
+                                person["Name"] = member.get("name").strip()
+                                directors.append(person)
+                            person["Role"] = member["role"].replace("/",",").strip()
+                            person["Name"] = member["name"].strip()
+                            directors.append(person)
+            elif "cta" in d["bands"][5]["data"]:
+                res = requests.get(self._url + d["cta"]["href"] + "/cast-and-crew")
+                soup = BeautifulSoup(res.text, features="lxml")
+                d = soup.find("noscript")
+                d = d.json()
+                if len(d["bands"]) > 2:
+                    if "Crew" in d["bands"][2]["band"]:
+                        for member in d["bands"][2]["data"]["groups"][0]["categories"][0]["members"]:
+                            person = {
+                                "Role":None,
+                                "Name":None
+                                }
+                            if member["role"] != None and "Director" in member["role"]:
+                                person["Role"] = str(member.get("role")).replace("/",",").strip()
+                                person["Name"] = member.get("name").strip()
+                                directors.append(person)
+        if directors:
+            return directors
+        else:
+            return None
     
     
     def get_availability(self, content_metadata, is_serie, is_episode):
@@ -400,7 +504,9 @@ class HBOFede():
     
     
     
-    def get_is_original(self, content_metadata):
+    def get_is_original(self, content_metadata, is_episode):
+        if is_episode:
+            return None
         return content_metadata.get("streamingId").get("hboFilm") or None
     
     
@@ -411,7 +517,10 @@ class HBOFede():
     
     
     def get_episode(self, content_metadata):
-        return int(str(content_metadata.get("data").get("episode").get("groups").get(1).get("groupingValue")).replace("0","")) or None
+        if "groupingValue" in content_metadata["data"]["episode"]["groups"][1]:
+            return int(str(content_metadata["data"]["episode"]["groups"][1]["groupingValue"]).lstrip('0'))
+        else:
+            return None
     
     
     def get_episodes(self, content_metadata, parent_id, parent_title):
@@ -424,12 +533,15 @@ class HBOFede():
                 
                 
     def get_season(self, content_metadata):
-        return content_metadata.get("data").get("episode").get("groups").get(1).get("groupingValue") or None
+        if "groupingValue" in content_metadata["data"]["episode"]["groups"][0]:
+            return int(content_metadata["data"]["episode"]["groups"][0]["groupingValue"])
+        else:
+            return None
       
     
     
     
-    def get_seasons(self, content_metadata):
+    def get_seasons(self, content_metadata, parent_id, parent_name):
         payload = Payload()
         seasons = []
         res = requests.get(self._url + content_metadata["cta"]["href"])
@@ -440,34 +552,36 @@ class HBOFede():
             if "seasonCards" in d["bands"][5]["data"]:
                 for season in d["bands"][5]["data"]["seasonCards"]:
                     payload_season = payload.payload_season()
-                    res = requests.get("https://www.hbo.com" + season["href"])
+                    url = "https://www.hbo.com" + season["href"]
+                    res = requests.get(url)
                     soup = BeautifulSoup(res.text, "lxml")
                     nosc = soup.find("noscript")
                     d = json.loads(nosc["data-state"])
-                    count = None
-                    random = ''.join([rand.choice(string.ascii_letters
-                                                    + string.digits) for n in range(32)])
-                    payload_season["Id"] = random
+                    count = 0
+                    parent_id = self.hashing(url)
+                    payload_season["Id"] = parent_id
                     payload_season["Title"] = d["title"]
-                    payload_season["Number"] = season["groupingValue"]
-                    payload_season["Deeplink"] = season["href"]
+                    payload_season["Number"] = int(season["groupingValue"])
+                    payload_season["Deeplink"] = url
                     for num_epi in d["bands"]:
                         if num_epi["band"] == "SerialEpisode":
                             count += 1
                     payload_season["Episodes"] = count
                     seasons.append(payload_season)
-                    self.get_episodes(d["bands"], parent_title = d["title"], parent_id = random)
+                    self.get_episodes(d["bands"], parent_title = parent_name, parent_id = parent_id)
+                if seasons:
+                    return seasons
+                else:
+                    return None
         except IndexError:
-            #Si la serie no 
-            pass       
-    
-    
+            pass           
     
     
 
     def scraping(self):
         self.get_movies()
         self.get_series()
-        # Datamanager._insertIntoDB(self,self.payloads_episodes,self.titanScrapingEpisodios)
-        # Datamanager._insertIntoDB(self,self.payloads,self.titanScraping)
+        Datamanager._insertIntoDB(self,self.payloads_episodes,self.titanScrapingEpisodios)
+        Datamanager._insertIntoDB(self,self.payloads,self.titanScraping)
         
+        Upload(self._platform_code,self._created_at,testing=True)
