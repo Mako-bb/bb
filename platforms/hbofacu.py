@@ -487,13 +487,10 @@ class HBOFacu():
 
         def text_plain(text):
             patron = '<[^<]+?>'
-            trash_text = ['<p>','</p>','<b>','</b>','<br>','</br>','\r\n','<u>','</u>',
-                         '&nbsp;','·','<sup>','</sup>','<i>','</i>']
-            clean_text = text            
-            for trash in trash_text:
-                clean_text = clean_text.replace(trash,'')
+            clean_text =  re.sub(patron,'', text)
+            clean_text = clean_text.replace('&nbsp;','').replace('·','')
+            clean_text = clean_text.replace('&quot;')            
             return clean_text
-
             
         payload = Payload()
         payload.platform_code = self._platform_code
