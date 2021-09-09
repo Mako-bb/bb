@@ -431,7 +431,7 @@ class HBOFede():
         
     
     def get_director(self, content_metadata):
-        directors = ""
+        directors = []
         if "cta" in content_metadata:
             res = requests.get(self._url + content_metadata["cta"]["href"] + "/cast-and-crew")
             soup = BeautifulSoup(res.text, "lxml")
@@ -442,16 +442,10 @@ class HBOFede():
                 #Acá accedemos al segundo para preguntar por la propiedad "Crew"
                     if "Crew" in d["bands"][2]["band"]:
                         for member in d["bands"][2]["data"]["groups"][0]["categories"][0]["members"]:
-                            person = {
-                                "Role":None,
-                                "Name":None
-                                }
                             #Preguntamos si existe contenido en los atributos
                             if member["role"] != None:
                                 if "Director" in member["role"]:
-                                    person["Role"] = str(member.get("role"))[member.get("role").find("Director"):8]
-                                    person["Name"] = member.get("name").strip()
-                                    directors = member.get("name").strip()
+                                    directors.append(member.get("name").strip())
             elif "cta" in d["bands"][4]["data"]:
                 res = requests.get(self._url + d["cta"]["href"] + "/cast-and-crew")
                 soup = BeautifulSoup(res.text, features="lxml")
@@ -460,15 +454,9 @@ class HBOFede():
                 if len(d["bands"]) > 2:
                     if "Crew" in d["bands"][2]["band"]:
                         for member in d["bands"][2]["data"]["groups"][0]["categories"][0]["members"]:
-                            person = {
-                                "Role":None,
-                                "Name":None
-                                }
                             if member["role"] != None:
                                 if "Director" in member["role"]:
-                                    person["Role"] = str(member.get("role"))[member.get("role").find("Director"):8]
-                                    person["Name"] = member.get("name").strip()
-                                    directors = member.get("name").strip()
+                                    directors.append(member.get("name").strip())
             elif "cta" in d["bands"][5]["data"]:
                 res = requests.get(self._url + d["cta"]["href"] + "/cast-and-crew")
                 soup = BeautifulSoup(res.text, features="lxml")
@@ -477,15 +465,9 @@ class HBOFede():
                 if len(d["bands"]) > 2:
                     if "Crew" in d["bands"][2]["band"]:
                         for member in d["bands"][2]["data"]["groups"][0]["categories"][0]["members"]:
-                            person = {
-                                "Role":None,
-                                "Name":None
-                                }
                             if member["role"] != None:
                                 if "Director" in member["role"]:
-                                    person["Role"] = str(member.get("role"))[member.get("role").find("Director"):8]
-                                    person["Name"] = member.get("name").strip()
-                                    directors = member.get("name").strip()
+                                    directors.append(member.get("name").strip())
         if directors:
             return directors
         else:
@@ -584,7 +566,7 @@ class HBOFede():
     
 
     def scraping(self):
-        self.get_movies()
+        #self.get_movies()
         self.get_series()
         Datamanager._insertIntoDB(self,self.payloads_episodes,self.titanScrapingEpisodios)
         Datamanager._insertIntoDB(self,self.payloads,self.titanScraping)
