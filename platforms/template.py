@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import requests # Si el script usa requests/api o requests/bs4
 import time
+import platform
 from bs4                import BeautifulSoup # Si el script usa bs4
 from selenium           import webdriver # Si el script usa selenium
 from handle.datamanager import Datamanager # Opcional si el script usa Datamanager
@@ -9,6 +10,7 @@ from handle.mongo       import mongo
 from updates.upload     import Upload
 from handle.replace     import _replace
 from handle.payload     import Payload
+from pyvirtualdisplay   import Display
 
 class Template():
 
@@ -54,10 +56,17 @@ class Template():
         self.skippedTitles          = 0 # Requerido si se va a usar Datamanager
         self.skippedEpis            = 0 # Requerido si se va a usar Datamanager
 
-        #### OBLIGATORIO si se usa Selenium para que pueda correr en los servers
+        # si se usa selenium, el browser debe declararse como un atributo de clase para que nos sea más fácil cerrarlo con el destructor
+        self.browser = webdriver.Firefox()
+
+        #### este bloque de abajo es OBLIGATORIO si se usa Selenium para que pueda correr en los servers
+        #### se debe copiar y pegar tal cual está para que funcione
+        # primero declarando la variable self.display en una línea
+        # y luego llamando al método start de esa variable en la línea que le sigue
         try:
             if platform.system() == 'Linux':
-                Display(visible=0, size=(1366, 768)).start()
+                self.display = Display(visible=0, size=(1366, 768))
+                self.display.start()
         except Exception:
             pass
         ####
@@ -83,6 +92,21 @@ class Template():
         if ott_operation in ('testing', 'scraping'):
             self.scraping()
 
+    def __del__(self):
+        # este es el destructor de clase, realmente solo es necesario añadirlo en scripts donde se use selenium
+        # ya que lo usamos para asegurarnos que se cierren todas las instancias de selenium y los virtual displays
+        # el destructor de clase se encarga de cerrarlos independientemente de si el script corrió hasta el final o
+        # si cortó por un error
+
+        try:
+            self.browser.quit()
+        except Exception:
+            pass
+
+        try:
+            self.display.stop()
+        except Exception:
+            pass
 
     def scraping(self):
         print("estoy corriendo el Template")
@@ -93,7 +117,7 @@ class Template():
         self.mongo.insert(self.titanScraping, payload)
         print("Insertado a mongo local. Ejecutando Upload...")
         
-        Upload(self._platform_code, self._created_at, testing=self.test, server=2)
+        Upload(self._platform_code, self._created_at, testing=True, server=2)
 
     def build_payload_movie(self):
 
