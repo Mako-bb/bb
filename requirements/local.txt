@@ -1,0 +1,8 @@
+-r ./base.txt
+# Hereda de base.txt
+
+# Librerías para trabajar en desarrollo local.
+# Por ejemplo: Pylint o Pandas
+
+pandas==1.2.1
+jupyter==1.0.0
