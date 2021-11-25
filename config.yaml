@@ -53,6 +53,11 @@ tp_sites:
     - CanalOff
     - Globosat
 ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrollando
+  PlutoFranco:
+    countries:
+      AR: ar.plutofranco
+    url: "https://pluto.tv"
+
   HBOFacu:
     countries:
       AR: ar.hbofacu
