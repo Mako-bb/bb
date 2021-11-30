@@ -21,7 +21,7 @@ class Amc():
     - ¿Usa BS4?: No.
     - ¿Se relaciona con scripts TP? No.
     - ¿Instanacia otro archivo de la carpeta "platforms"?: No.
-    - ¿Cuanto demoró la ultima vez? Time: 0:00:03.814766 - Actualizado: 2021/11/30
+    - ¿Cuanto demoró la ultima vez? Time: 0:00:34.986414 - Actualizado: 2021/11/30
     - ¿Cuanto contenidos trajo la ultima vez? TS: 91 Peliculas 83 Series | TSE: 857 - Actualizado: 2021/11/30
     """
     #Constructor, instancia variables
@@ -82,19 +82,19 @@ class Amc():
         
         # Definimos los links de las API'S
         movie_data = Datamanager._getJSON(self, self._movies_url)   #Convierte la URL en un JSON
-        self.get_payload_movies(movie_data) #Le pasa como parametro el JSON y luego la función se encarga de trabajar con el mismo
+        self.getPayloadMovies(movie_data) #Le pasa como parametro el JSON y luego la función se encarga de trabajar con el mismo
 
         show_data = Datamanager._getJSON(self,self._show_url) #Convierte la URL en un JSON
-        self.get_payload_shows(show_data)  #Le pasa como parametro el JSON y luego la función se encarga de trabajar con el mismo
+        self.getPayloadShows(show_data)  #Le pasa como parametro el JSON y luego la función se encarga de trabajar con el mismo
         
         episode_data = Datamanager._getJSON(self, self._episode_url)
-        self.get_payload_episodes(episode_data)
+        self.getPayloadEpisodes(episode_data)
         
         self.sesion.close() #Se cierra la session
         #Upload(self._platform_code, self._created_at, testing=self.testing) #Sube a Misato (OJO, NO LO USAMOS TODAVÍA)
 
     #Se encarga de filtrar y sacar contenido de las movies
-    def get_payload_movies(self, content):
+    def getPayloadMovies(self, content):
         data = content['data']['children']
         for item in data:                       #Este bucle filtra hasta encontrar movies
             if item['properties'].get('title'):
@@ -113,13 +113,13 @@ class Amc():
             genre = self.getGenre(movie)
             count += 1
 
-            self.payload(title, id, type, deeplink, description, image, genre)   #Se encarga de cargar el payload con los campos correspondientes
+            self.payloadMoviesAndShows(title, id, type, deeplink, description, image, genre)   #Se encarga de cargar el payload con los campos correspondientes
         print("###########################################\nCantidad total de peliculas encontradas: "+ str(count) + "\n" + "###########################################\n")
 
         #Se debe insertar en la BD Local (OJO, TODAVIA NO LO USAMOS)
         #Datamanager._insertIntoDB(self, self.payloads_movies, self.titanScraping)
 
-    def get_payload_shows(self, content):
+    def getPayloadShows(self, content):
         data = content['data']['children']
         for item in data:                       #Este bucle filtra hasta encontrar series
             if item['properties'].get('title'):
@@ -137,13 +137,13 @@ class Amc():
             genre = None
             count += 1
 
-            self.payload(title, id, type, deeplink, description, image, genre)   #Se encarga de cargar el payload con los campos correspondientes
+            self.payloadMoviesAndShows(title, id, type, deeplink, description, image, genre)   #Se encarga de cargar el payload con los campos correspondientes
         print("########################################\nCantidad total de series encontradas: "+ str(count) + "\n" + "########################################\n")
 
         #Se debe insertar en la BD Local (OJO, TODAVIA NO LO USAMOS)
         #Datamanager._insertIntoDB(self, self.payloads_shows, self.titanScraping)
 
-    def get_payload_episodes(self, content):
+    def getPayloadEpisodes(self, content):
         data = content['data']['children']
         for item in data:                       #Este bucle filtra hasta encontrar las series y episodios
             if item['type']:
@@ -152,51 +152,32 @@ class Amc():
                     break
         count = 0
         for show_episode in shows_episodes_data['children']:   #Se para en el contenido series y las recorre para extraer la data           
-            self.parenttitle = self.getParentTitle(show_episode)
-            parentid = self.getParentId(show_episode)
+            parenttitle = self.getParentTitleEpisode(show_episode)
+            parentid = self.getParentIdEpisode(parenttitle)
             for data in show_episode['children']:
-                id = self.getIdEpisode(data)
-                titleepisode = self.getTitleEpisode(data)        
-                deeplink = self.getDeeplinkEpisode(data)
-                description = self.getDescriptionEpisode(data)
-                image = self.getImageEpisode(data)
+                id = self.getId(data)
+                titleepisode = self.getTitle(data)        
+                deeplink = self.getDeeplink(data)
+                description = self.getDescription(data)
+                image = self.getImage(data)
                 season = self.getSeasonEpisode(data)
                 episode = self.getEpisodeEpisode(data)
                 count += 1
 
-                self.payloadEpisodes(id, titleepisode, parentid, self.parenttitle, season, episode, deeplink, description, image)   #Se encarga de cargar el payload con los campos correspondientes
+                self.payloadEpisodes(id, titleepisode, parentid, parenttitle, season, episode, deeplink, description, image)   #Se encarga de cargar el payload con los campos correspondientes
         print("############################################\nCantidad total de episodios encontrados: "+ str(count) + "\n" + "############################################\n")
 
         #Se debe insertar en la BD Local (OJO, TODAVIA NO LO USAMOS)
         #Datamanager._insertIntoDB(self, self.payloads_episodes, self.titanScrapingEpisodios)
 
     #####Los getters se encargan de extraer cada parte importante de información de episodios#####
-    def getParentId(self, content):
-        for id in self.payloads_movies:
-            if id['Title'] == self.parenttitle:
+    def getParentIdEpisode(self, parenttitle):
+        for id in self.payloads_shows:
+            if id['Title'] == parenttitle:
                 return id['Id']
     
-    def getParentTitle(self, content):
+    def getParentTitleEpisode(self, content):
          return content['properties']['title'] 
-    
-    def getIdEpisode(self, content):
-        return content['properties']['cardData']['meta']['nid'] 
-
-    def getTitleEpisode(self, content):
-        return content['properties']['cardData']['text']['title']     
-
-    def getDeeplinkEpisode(self, content):
-        return self.deeplinkBase + content['properties']['cardData']['meta']['permalink']
-    
-    def getDescriptionEpisode(self, content):
-        return content['properties']['cardData']['text']['description']     
-    
-    def getImageEpisode(self, content):
-        if content['properties']['cardData'].get('images'):
-            image = content['properties']['cardData']['images']
-        else:
-            image = None
-        return image
 
     def getEpisodeEpisode(self, content):    
         contentEpisode = content['properties']['cardData']['text']['seasonEpisodeNumber']
@@ -227,14 +208,18 @@ class Amc():
     def getDescription(self, content):    
         return content['properties']['cardData']['text']['description']
 
-    def getImage(self, content):  
-       return content['properties']['cardData']['images']
+    def getImage(self, content):
+        if content['properties']['cardData'].get('images'):
+            image = content['properties']['cardData']['images']
+        else:
+            image = None
+        return image
         
     def getGenre(self, content):
         return content['properties']['cardData']['meta']['genre']
     
     #Se encarga de llenar el payload con la data para peliculas y series y llamar a Datamanager
-    def payload(self, title, id, type, deeplink, description, image, genre):
+    def payloadMoviesAndShows(self, title, id, type, deeplink, description, image, genre):
         payload_content = { 
         "PlatformCode":  self._platform_code,               #Obligatorio   
         "Id":            id,                                #Obligatorio
@@ -281,12 +266,11 @@ class Amc():
     def payloadEpisodes(self, id, titleepisode, parentid, parenttitle, season, episode, deeplink, description, image):
         payload_content = {
         "PlatformCode":  self._platform_code,
-        "Id":            None,           
+        "Id":            id,           
         "ParentId":      parentid,                          #ID de la serie a la que corresponde el episodio
         "ParentTitle":   parenttitle,                       #TITLE de la serie a la que corresponde el episodio
         "Episode":       episode,     
-        "Season":        season,    
-        'Id':            id,            
+        "Season":        season,                
         'Title':         titleepisode,
         'OriginalTitle': titleepisode,
         'Year':          None,
