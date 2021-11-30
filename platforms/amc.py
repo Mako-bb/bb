@@ -1,34 +1,32 @@
 import time
 import requests
-import hashlib
-import pymongo
+#import pymongo
 import re
-import json
-import platform
+#import json
 from handle.replace import _replace
 from common import config
 from datetime import datetime
 from handle.mongo import mongo
-from slugify import slugify
 from handle.datamanager import Datamanager
 from updates.upload import Upload
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.options import Options
-from bs4 import BeautifulSoup
-from time import sleep
-import re
-
-
 class Amc():
-    """ Plataforma: AMC
-        Pais: Estados Unidos(US)
-        Tiempo de Ejecución: 1>min
-        Requiere VPN: No
-        BS4/API/Selenium: API
-        Cantidad de Contenidos (Ultima revisión):
-            TitanScraping: 130
-            TitanScrapingEpisodes: 746
+    """
+    Amc es una ott de Estados Unidos.
+
+    DATOS IMPORTANTES:
+    - Versión Final: Si.
+    - VPN: No.
+    - ¿Usa Selenium?: No.
+    - ¿Tiene API?: Si.
+    - ¿Usa BS4?: No.
+    - ¿Se relaciona con scripts TP? No.
+    - ¿Instanacia otro archivo de la carpeta "platforms"?: No.
+    - ¿Cuanto demoró la ultima vez? 1 min
+    - ¿Cuanto contenidos trajo la ultima vez? TS:163 TSE: 960 07/10/21
+
+    OTROS COMENTARIOS:
+        Contenia series sin episodios, se modificó el script para excluirlas.
+
     """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config = config()['ott_sites'][ott_site_uid]
@@ -38,16 +36,16 @@ class Amc():
         self.mongo = mongo()
         self.titanPreScraping = config()['mongo']['collections']['prescraping']
         self.titanScraping = config()['mongo']['collections']['scraping']
-        self.titanScrapingEpisodios = config(
-        )['mongo']['collections']['episode']
+        self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
         self.skippedEpis = 0
         self.skippedTitles = 0
-        # Urls .YAML
+        ################# URLS  #################
         self._movies_url = self._config['movie_url']
         self._show_url = self._config['show_url']
-        self._format_url = self._config['format_url']
+        #Url para encontrar la información de los contenidos por separado
+        self._format_url = self._config['format_url'] 
         self._episode_url = self._config['episode_url']
-
+        self.testing = False
         self.sesion = requests.session()
         self.headers = {"Accept": "application/json",
                         "Content-Type": "application/json; charset=utf-8"}
@@ -68,192 +66,235 @@ class Amc():
             self._scraping()
 
         if type == 'testing':
-            self._scraping(testing=True)
-
-    def __query_field(self, collection, field, extra_filter=None):
-        if not extra_filter:
-            extra_filter = {}
-
-        find_filter = {
-            'PlatformCode': self._platform_code,
-            'CreatedAt': self._created_at,
-        }
-
-        find_filter.update(extra_filter)
-
-        query = self.mongo.db[collection].find(
-            filter=find_filter,
-            projection={
-                '_id': 0,
-                field: 1,
-            },
-            no_cursor_timeout=False
-        )
-
-        query = {item[field] for item in query}
-
-        return query
+            self.testing = True
+            self._scraping()
 
     def _scraping(self, testing=False):
-        payloads = []
         payloads_series = []
-        ids_guardados = Datamanager._getListDB(self, self.titanScraping)
-        ids_guardados_episodios = Datamanager._getListDB(
+        list_db_episodios = Datamanager._getListDB(
             self, self.titanScrapingEpisodios)
         # Definimos los links de las apis y con el Datamanager usamos la función _getJson
-        url_movie = self._movies_url
-        url_episode = self._episode_url
-        i = 0
-        url_serie = self._show_url
-        
-        episode_data = Datamanager._getJSON(self, url_episode)
-        serie_data = Datamanager._getJSON(self, url_serie)
-        movie_data = Datamanager._getJSON(self, url_movie)
+        episode_data = Datamanager._getJSON(self, self._episode_url)
+        serie_data = Datamanager._getJSON(self,self._show_url )
+        movie_data = Datamanager._getJSON(self, self._movies_url)
 
-        while True:
-            # condición que rompe el bucle infinito
-            try:
-                if i == (len(episode_data['data']['children'][2]['children'])-1):
+        self.get_payload_movies(movie_data)
+        self.get_payload_serie(serie_data)
+        self.get_payload_episodes(episode_data)
+
+    def get_payload_movies(self,content):
+        self.payloads = []
+        list_db = Datamanager._getListDB(self, self.titanScraping)
+        data = content['data']['children']
+        for item in data:
+            if item['properties'].get('title'):
+                if 'Movies' in item['properties']['title']:
+                    movies_data = item
                     break
-            except Exception:
-                break
-            # Ubicamos los valores dentro del Json
-            movies = movie_data['data']['children'][4]['children']
-            episodes = episode_data['data']['children'][2]['children']
-            shows = serie_data['data']['children'][4]['children']
-            # Recorremos el Json de Peliculas y definimos los contendios del Payload
-            for movie in movies:
-                print(movie)
-                deeplink = (self._format_url).format(movie['properties']['cardData']['meta']['permalink'])
-                payload_peliculas = {
-                    "PlatformCode":  self._platform_code,
-                    "Title":         movie['properties']['cardData']['text']['title'],
-                    "CleanTitle":    _replace(movie['properties']['cardData']['text']['title']),
-                    "OriginalTitle": None,
-                    "Type":          "movie",
-                    "Year":          None,
-                    "Duration":      None,
+        for movie in movies_data['children']:
+            id= self.get_id(movie)
+            title= self.get_title(movie)
+            permalink= self.get_permalink(movie)
+            sinopsis= self.get_sinopsis(movie)
+            image=self.get_images(movie)
+            genre=self.get_genre(movie)
+            self.payload_movie(id,title,permalink,sinopsis,image,genre)
+        Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)
 
-                    "Id":            str(movie['properties']['cardData']['meta']['nid']),
-                    "Deeplinks": {
+    def get_payload_serie(self,content):
+        self.payloads_serie = []
+        list_db = Datamanager._getListDB(self, self.titanScraping)
+        data = content['data']['children']
+        for item in data:
+            if item['properties'].get('title'):
+                if 'Shows' in item['properties']['title']:
+                    series_data = item
+                    break
+        for serie in series_data['children']:
+            id=self.get_id(serie)
+            title=self.get_title(serie)
+            permalink=self.get_permalink(serie)
+            sinopsis=self.get_sinopsis(serie)
+            image=self.get_images(serie)
+            genre=self.get_genre(serie)
+            self.payloads_serie(id,title,permalink,sinopsis,image,genre)
+        Datamanager._insertIntoDB(self, self.payloads_serie, self.titanScraping)
 
-                        "Web":       deeplink.replace('/tve?',''),
-                        "Android":   None,
-                        "iOS":       None,
-                    },
-                    "Synopsis":      movie['properties']['cardData']['text']['description'],
-                    "Image":         [movie['properties']['cardData']['images']],
-                    "Rating":        None,  # Important!
-                    "Provider":      None,
-                    "Genres":        [movie['properties']['cardData']['meta']['genre']],  # Important!
-                    "Cast":          None,
-                    "Directors":     None,  # Important!
-                    "Availability":  None,  # Important!
-                    "Download":      None,
-                    "IsOriginal":    None,  # Important!
-                    "IsAdult":       None,  # Important!
-                    "IsBranded":     None,  # Important!
-                    # Obligatorio
-                    "Packages":      [{'Type': 'tv-everywhere'}],
-                    "Country":       None,
-                    "Timestamp":     datetime.now().isoformat(),  # Obligatorio
-                    "CreatedAt":     self._created_at,  # Obligatorio
-                }
-                Datamanager._checkDBandAppend(
-                    self, payload_peliculas, ids_guardados, payloads_series
-                )
-            # Recorremos el Json de las series y definimos los valores del diccionario 
-            for show in shows:
-                deeplink = (self._format_url).format(show['properties']['cardData']['meta']['permalink'])
-                payload_series = {
-                    "PlatformCode":  self._platform_code,
-                    "Id":            str(show['properties']['cardData']['meta']['nid']),
-                    'Title':         show['properties']['cardData']['text']['title'],
-                    "Type":          "serie",
-                    'OriginalTitle': None,
-                    'Year':          None,
-                    'Duration':      None,
-                    'Deeplinks': {
-                        'Web':       deeplink.replace('/tve?',''),
-                        'Android':   None,
-                        'iOS':       None,
-                    },
-                    'Playback':      None,
-                    "CleanTitle":    _replace(show['properties']['cardData']['text']['title']),
-                    'Synopsis':      show['properties']['cardData']['text']['description'],
-                    'Image':         [show['properties']['cardData']['images']],
-                    'Rating':        None,
-                    'Provider':      None,
-                    'Genres':        None,
-                    'Cast':          None,
-                    'Directors':     None,
-                    'Availability':  None,
-                    'Download':      None,
-                    'IsOriginal':    None,
-                    'IsAdult':       None,
-                    'Packages':
-                    [{'Type': 'tv-everywhere'}],
-                        'Country':       None,
-                        'Timestamp':     datetime.now().isoformat(),
-                        'CreatedAt':     self._created_at
-                }
-                Datamanager._checkDBandAppend(
-                    self, payload_series, ids_guardados, payloads_series
-                )
-            # recorremos el json de series y de episodios para poder definir las variables dentro de cada episodio.
-            for episode, show in zip(episodes, shows):
-                for episode_data in episode['children']:
-                    # un filtro para limpiar la información concatenada del json.
-                    filtro = str(
-                        episode_data['properties']['cardData']['text']['seasonEpisodeNumber'])
-                    season_ = re.sub(
-                        '[A-Z] ', "", filtro)
-                    episode__ = season_.split(', ')
-                    deeplink = (self._format_url).format(episode_data['properties']['cardData']['meta']['permalink'])
-                    payload = {
-                        "PlatformCode":  self._platform_code,
-                        "Id":            str(episode_data['properties']['cardData']['meta']['nid']),
-                        "ParentId":      str(show['properties']['cardData']['meta']['nid']),
-                        "ParentTitle":   show['properties']['cardData']['text']['title'],
-                        "Episode":       int(episode__[1].replace('E', '')),
-                        "Season":        int(episode__[0].replace('S', '')),
-                        'Id':            str(episode_data['properties']['cardData']['meta']['nid']),
-                        'Title':         episode_data['properties']['cardData']
-                        ['text']['title'],
-                        'OriginalTitle': None,
-                        'Year':          None,
-                        'Duration':      None,
-                        'Deeplinks': {
-                            'Web':       deeplink.replace('/tve?',""),
-                            'Android':   None,
-                            'iOS':       None,
-                        },
-                        'Playback':      None,
-                        "CleanTitle":    _replace(show['properties']['cardData']['text']['title']),
-                        'Synopsis':      episode_data['properties']['cardData']['text']['description'],
-                        'Image':         [episode_data['properties']['cardData']['images']],
-                        'Rating':        None,
-                        'Provider':      None,
-                        'Genres':        None,
-                        'Cast':          None,
-                        'Directors':     None,
-                        'Availability':  None,
-                        'Download':      None,
-                        'IsOriginal':    None,
-                        'IsAdult':       None,
-                        'Packages':
-                            [{'Type': 'tv-everywhere'}],
-                        'Country':       None,
-                        'Timestamp':     datetime.now().isoformat(),
-                        'CreatedAt':     self._created_at
-                    }
-                    Datamanager._checkDBandAppend(
-                        self, payload, ids_guardados_episodios, payloads, isEpi=True
-                    )
+    def get_payload_episodes(self,content):
+        self.payloads_epis=[]
+        list_db=Datamanager._getListDB(self,self.titanScrapingEpisodios)
+        data=content['data']['children'][2]['children']
+        for serie in data:
+            title=serie['properties']['title']
+            for episode in serie['children']['properties']:
+                id=episode['cardData']['meta']['nid']
+                season=int(episode['cardData']['text']['seasonEpisodeNumber'].split())
+        self.payload_episodes(title,id,season)
+        Datamanager._insertIntoDB(self, self.payloads_epis, self.titanScrapingEpisodios)
 
-        Datamanager._insertIntoDB(self, payloads_series, self.titanScraping)
-        Datamanager._insertIntoDB(
-            self, payloads, self.titanScrapingEpisodios)
-        self.sesion.close()
 
-        Upload(self._platform_code, self._created_at, testing=testing)
+
+
+
+    def payload_movie(self,id,title,permalink,sinopsis,image,genre):
+        payload_contenidos = { 
+            'PlatformCode':  self._platform_code, #Obligatorio   
+            "Id":            id, #Obligatorio
+            "Crew":          None,
+            "Title":         title, #Obligatorio      
+            "CleanTitle":    _replace(title), #Obligatorio      
+            "OriginalTitle": None,                          
+            "Type":          'movie',     #Obligatorio  #movie o serie     
+            "Year":          None,     #Important!  1870 a año actual   
+            "Duration":      None,     #en minutos   
+            "ExternalIds":   None,    
+            "Deeplinks": {
+                "Web":       permalink,       #Obligatorio          
+                "Android":   None,          
+                "iOS":       None,      
+            },
+            "Synopsis":      sinopsis,      
+            "Image":         image,      
+            "Subtitles":    None,
+            "Dubbed":       None,
+            "Rating":        None,     #Important!      
+            "Provider":      None,      
+            "Genres":        genre,    #Important!      
+            "Cast":          None,    #Important!        
+            "Directors":     None,    #Important!      
+            "Availability":  None,     #Important!      
+            "Download":      None,      
+            "IsOriginal":    None,    #Important!        
+            "IsAdult":       None,    #Important!   
+            "IsBranded":     None,    #Important!   (ver link explicativo)
+            "Packages":      [{'Type': 'tv-everywhere'}],    #Obligatorio      
+            "Country":       None,
+            "Timestamp":     datetime.now().isoformat(), #Obligatorio
+            "CreatedAt":     self._created_at, #Obligatorio
+            }
+        Datamanager._checkDBandAppend(self, payload_contenidos, self.payloads_db, self.payloads)
+
+    def payload_series(self,id,title,permalink,sinopsis,image,genre):
+        payload_contenido_series = { 
+            "PlatformCode":  self._platform_code, #Obligatorio   
+            "Id":            id, #Obligatorio
+            "Seasons":       [ #Unicamente para series
+                                None
+            ],
+            "Crew":          [ #Importante
+                                None
+            ],
+            "Title":         title, #Obligatorio      
+            "CleanTitle":    _replace(title), #Obligatorio      
+            "OriginalTitle": None,                          
+            "Type":          'serie',     #Obligatorio  #movie o serie     
+            "Year":          None,     #Important!  1870 a año actual   
+            "Duration":      None,      
+            "ExternalIds":   None,       
+            "Deeplinks": {
+                "Web":       permalink,       #Obligatorio          
+                "Android":   None,          
+                "iOS":       None,      
+            },
+            "Synopsis":      sinopsis,      
+            "Image":         image,      
+            "Subtitles": None,
+            "Dubbed": None,
+            "Rating":        None,     #Important!      
+            "Provider":      None,      
+            "Genres":        genre,    #Important!      
+            "Cast":          None,    #Important!        
+            "Directors":     None,    #Important!      
+            "Availability":  None,     #Important!      
+            "Download":      None,      
+            "IsOriginal":    None,    #Important!        
+            "IsAdult":       None,    #Important!   
+            "IsBranded":     None,    #Important!   (ver link explicativo)
+            "Packages":      [{'Type': 'tv-everywhere'}],    #Obligatorio      
+            "Country":       None,
+            "Timestamp":     datetime.now().isoformat(), #Obligatorio
+            "CreatedAt":     self._created_at, #Obligatorio
+            }
+        Datamanager._checkDBandAppend(self, payload_contenido_series, self.payloads_db, self.payloads)
+
+    def payload_episodes(self,title,id,season):
+            payload_episodios = {      
+                "PlatformCode":  self._platform_code, #Obligatorio      
+                "Id":            id, #Obligatorio
+                "ParentId":      title, #Obligatorio #Unicamente en Episodios
+                "ParentTitle":   "str", #Unicamente en Episodios 
+                "Episode":       "int", #Unicamente en Episodios  
+                "Season":        season, #Obligatorio #Unicamente en Episodios
+                "Crew":          [ #Importante
+                                    {
+                                        "Role": str, 
+                                        "Name": str
+                                    },
+                                    ...
+                ],
+                "Title":         "str", #Obligatorio      
+                "OriginalTitle": "str",                          
+                "Year":          "int",     #Important!     
+                "Duration":      "int",      
+                "ExternalIds":   "list",     
+                "Deeplinks": {          
+                    "Web":       "str",       #Obligatorio          
+                    "Android":   "str",          
+                    "iOS":       "str",      
+                },      
+                "Synopsis":      "str",      
+                "Image":         "list",     
+                "Subtitles": "list",
+                "Dubbed": "list",
+                "Rating":        "str",     #Important!      
+                "Provider":      "list",      
+                "Genres":        "list",    #Important!      
+                "Cast":          "list",    #Important!        
+                "Directors":     "list",    #Important!      
+                "Availability":  "str",     #Important!      
+                "Download":      "bool",      
+                "IsOriginal":    "bool",    #Important!      
+                "IsAdult":       "bool",    #Important!   
+                "IsBranded":     "bool",    #Important!   (ver link explicativo)
+                "Packages":      "list",    #Obligatorio      
+                "Country":       "list",      
+                "Timestamp":     "str", #Obligatorio      
+                "CreatedAt":     "str", #Obligatorio 
+            }
+            Datamanager._checkDBandAppend(self, payload_episodes, self.payloads_db, self.payloads)
+
+    def get_id(self,content):
+        try:
+            return content['properties']['cardData']['meta']['nid']
+        except:
+            None
+
+    def get_title(self,content):
+        try:
+            return content['properties']['cardData']['text']['title']
+        except:
+            None
+
+    def get_permalink(self,content):
+        try:
+            return 'https://www.amc.com'+content['properties']['cardData']['meta']['permalink']
+        except:
+            None
+
+    def get_sinopsis(self,content):
+        try:
+            return content['properties']['cardData']['text']['description']
+        except:
+            None
+
+    def get_images(self,content):
+        try:
+            return content['properties']['cardData']['images']
+        except:
+            return None
+
+    def get_genre(self,content):
+        try:
+            return content['properties']['cardData']['meta']['genre']
+        except:
+            None
