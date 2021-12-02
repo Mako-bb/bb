@@ -127,7 +127,7 @@ class PlutoLE():
         payload.title = self.get_title(content_metadata)
         payload.clean_title = self.get_clean_title(content_metadata)
         payload.type = self.get_type(content_metadata)
-        payload.Year = self.get_year(content_metadata)
+        payload.year = self.get_year(content_metadata)
         payload.duration = self.get_duration(content_metadata)
         payload.deeplink_web = self.get_deep_link(content_metadata)
         payload.synopsis = self.get_synopsis(content_metadata)
@@ -184,7 +184,7 @@ class PlutoLE():
         payload.clean_title = self.get_clean_title(content_metadata)
         payload.seasons = seasons
         payload.type = self.get_type(content_metadata)
-        payload.year = self.get_year(content_metadata)
+        payload.year = self.get_year_series(content_metadata)
         payload.duration = self.get_duration(content_metadata)
         payload.deeplink_web = self.get_deep_link(content_metadata)                 
         payload.synopsis = self.get_synopsis(content_metadata)
@@ -320,3 +320,10 @@ class PlutoLE():
 
     def get_season(self,metadata):
         return metadata.get("season") or None
+
+    def get_year_series(self,metadata):  #se hace chequeo por si no es la primer temporada
+        content = metadata.get("seasonsNumbers")
+        year = None
+        if content[0] == 1:
+            year = self.get_year(metadata)
+        return year
