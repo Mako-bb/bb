@@ -53,25 +53,33 @@ tp_sites:
     - CanalOff
     - Globosat
 ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrollando
+  AllblkFranco:
+    countries:
+      US: us.allblkfranco
+    url: https://allblk.tv/
+
   PlutoFranco:
     countries:
       AR: ar.plutofranco
-    url: "https://pluto.tv"
+    url: https://www.pluto.tv/es/on-demand/
+    url_api_token: https://boot.pluto.tv/v4/start?appName=web&appVersion=5.106.0-f3e2ac48d1dbe8189dc784777108b725b4be6be2&deviceVersion=96.0.1054&deviceModel=web&deviceMake=edge-chromium&deviceType=web&clientID=eb75c8a4-8a92-4745-8a04-4cc0322424b6&clientModelNumber=1.0.0&channelID=5dcde437229eff00091b6c30&serverSideAds=true&constraints=&clientTime=2021-11-26T16:01:26.536Z
+    url_api_categories: https://service-vod.clusters.pluto.tv/v4/vod/categories?includeItems=true&includeCategoryFields=iconSvg&offset=1000&page=1&sort=number%5E%25%5E3Aasc
+    url_api_series: https://service-vod.clusters.pluto.tv/v4/vod/series/
 
   HBOFacu:
     countries:
       AR: ar.hbofacu
       US: us.hbofacu
     url: "https://www.hbo.com"
-  
+
   VrtFacu:
     countries:
       BE: be.vrtfacu
-    
+
     url: "https://www.vrt.be"
 
   Showtime:
-    countries: 
+    countries:
       US: us.showtime
     urls:
       HOME: https://www.sho.com
