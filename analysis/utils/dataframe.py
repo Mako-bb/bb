@@ -1,10 +1,18 @@
+import os
+import sys
 import pandas as pd
-import time
-from pathlib import Path
-import sshtunnel
 import pymongo
-from pymongo import MongoClient
-client = MongoClient()
+for i in range(2):
+    try:
+        from root import servers
+    except ModuleNotFoundError:
+        path = os.path.abspath('../'*i)
+        sys.path.insert(1, path)
+    else:
+        break
+from root import servers
+from settings import settings
+
 
 class DataBaseConnection():
     """
@@ -13,13 +21,20 @@ class DataBaseConnection():
     def __init__(self, server_name='localhost'):
         # Por default me conecto a localhost
         print(f"\n --- Conectando a {server_name} --- ")
-        # Estaría bueno aplicar variables de entorno.
+
         if server_name == 'localhost':
-            hostMongo  = 'mongodb://localhost:27017/'
-            self.db = MongoClient(hostMongo)
+            self.db = pymongo.MongoClient(settings.MONGODB_DATABASE_URI)
+        else:
+            if server_name == settings.MISATO_SERVER_NAME:
+                ssh_connection = servers.MisatoConnection()
+            else:
+                ssh_connection = servers.KajiConnection()
+            server = ssh_connection.connect()
+            self.db = pymongo.MongoClient('127.0.0.1', server.local_bind_port)
 
     def connection(self):
         return self.db
+
 
 class ConsultsDB(): #MongoConnection
     """
@@ -32,7 +47,7 @@ class ConsultsDB(): #MongoConnection
         self.collection = None
 
         # BBDD y colecciones por default.
-        if server == 'misato' or server == 'kaji':
+        if server in (settings.MISATO_SERVER_NAME):
             self.db_name = 'business'
         else:
             self.db_name = 'titan'
@@ -84,3 +99,78 @@ class GetDataFrame():
             DataFrame: Devuelve un dataframe.
         """
         return ConsultsDB().find_mongo(query, collection)
+
+    @staticmethod
+    def kaji(query, collection=None):
+        """Devuelve un df de kaji según la query que se ingrese.
+        La query es un diccionario, es decir, una consulta a Mongo.
+
+        Args:
+            query (dict): La consulta
+            collection (str, optional): Por default usa la collection
+            "titanScraping". Defaults to None.
+
+        Returns:
+            DataFrame: Devuelve un dataframe.
+        """
+        return ConsultsDB(settings.KAJI_SERVER_NAME).find_mongo(query, collection)
+
+    @staticmethod
+    def misato(query, collection=None):
+        """Devuelve un df de misato según la query que se ingrese.
+        La query es un diccionario, es decir, una consulta a Mongo.
+
+        Args:
+            query (dict): La consulta
+            collection (str, optional): Por default usa la collection
+            "apiPresence". Defaults to None.
+
+        Returns:
+            DataFrame: Devuelve un dataframe.
+        """
+        return ConsultsDB(settings.MISATO_SERVER_NAME).find_mongo(query, collection)
+
+class Misato():
+    """
+    Devuelve un DataFrame de las colecciones más importantes de Misato.
+    """
+    @staticmethod
+    def last_update(query):
+        return GetDataFrame.misato(query, collection='last_update')        
+    @staticmethod
+    def updateStats(query):
+        return GetDataFrame.misato(query, collection='updateStats')
+    @staticmethod
+    def apiPlatforms(query):
+        return GetDataFrame.misato(query, collection='apiPlatforms')
+    @staticmethod
+    def updateDups(query):
+        return GetDataFrame.misato(query, collection='updateDups')
+    @staticmethod
+    def titanLog(query):
+        return GetDataFrame.misato(query, collection='titanLog')
+    @staticmethod
+    def updateLog(query):
+        return GetDataFrame.misato(query, collection='updateLog')
+    @staticmethod
+    def apiPresence(query):
+        return GetDataFrame.misato(query, collection='apiPresence')
+    @staticmethod
+    def apiPresenceEpisodes(query):
+        df = GetDataFrame.misato(query, collection='apiPresence')
+        series = df['Type'] == 'serie'
+        df_series = df[series]
+
+        series_dict = df_series['Episodes'].to_dict()
+
+        # Lista de indices donde los contenidos son series.
+        list_index = list(series_dict.keys())
+
+        # Creo df vacío a concatenar.
+        import pandas as pd
+        df_final = pd.DataFrame()
+        for index in list_index:
+            df_nuevo = pd.DataFrame(series_dict[index]).set_index(['ParentId'])
+            df_final = pd.concat([df_final, df_nuevo])
+        
+        return df_final

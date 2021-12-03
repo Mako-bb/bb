@@ -1,0 +1,524 @@
+[
+    {
+        "location": "US",
+        "platforms": [
+            {
+                "PlatformName": "Redbox",
+                "Process": "scraping",
+                "Country": "US"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "ET",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "ET"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "UG",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "UG"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "LB",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "LB"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "LY",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "LY"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "MA",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "MA"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "MZ",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "MZ"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "AM",
+        "platforms": [
+            {
+                "PlatformName": "AmazonPrimeVideo",
+                "Process": "scraping",
+                "Country": "AM"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "HR",
+        "platforms": [
+            {
+                "PlatformName": "AmazonPrimeVideo",
+                "Process": "scraping",
+                "Country": "HR"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "BG",
+        "platforms": [
+            {
+                "PlatformName": "AmazonPrimeVideo",
+                "Process": "scraping",
+                "Country": "BG"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "BD",
+        "platforms": [
+            {
+                "PlatformName": "AmazonPrimeVideo",
+                "Process": "scraping",
+                "Country": "BD"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "MT",
+        "platforms": [
+            {
+                "PlatformName": "AmazonPrimeVideo",
+                "Process": "scraping",
+                "Country": "MT"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "BR",
+        "platforms": [
+            {
+                "PlatformName": "AmazonPrimeVideo",
+                "Process": "scraping",
+                "Country": "BR"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "LK",
+        "platforms": [
+            {
+                "PlatformName": "AmazonPrimeVideo",
+                "Process": "scraping",
+                "Country": "LK"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "AR",
+        "platforms": [
+            {
+                "PlatformName": "AmazonPrimeVideo",
+                "Process": "scraping",
+                "Country": "LATAM"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "AO",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "AO"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "BF",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "BF"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "BI",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "BI"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "BJ",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "BJ"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "BW",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "BW"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "CD",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "CD"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "CI",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "CI"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "SL",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "SL"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "CF",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "CF"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "CM",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "CM"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "ET",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "ET"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "GA",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "GA"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "GH",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "GH"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "GN",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "GN"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "GM",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "GM"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "GQ",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "GQ"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "KE",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "KE"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "ZW",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "ZW"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "LR",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "LR"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "MG",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "MG"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "ML",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "ML"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "MZ",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "MZ"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "MW",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "MW"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "NA",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "NA"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "NG",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "NG"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "NG"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "NE",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "NE"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "RW",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "RW"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "SN",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "SN"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "TD",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "TD"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "TG",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "TG"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "VN",
+        "platforms": [
+            {
+                "PlatformName": "FPTPLAY",
+                "Process": "scraping",
+                "Country": "VN"
+            }
+        ],
+        "client": "hma"
+    },
+    {
+        "location": "ZM",
+        "platforms": [
+            {
+                "PlatformName": "Iroko",
+                "Process": "scraping",
+                "Country": "ZM"
+            }
+        ],
+        "client": "hma"
+    }
+]

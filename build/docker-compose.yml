@@ -1,0 +1,55 @@
+version: '3'
+
+services:
+  agentes_region1:
+    container_name: '${CONTAINER_NAME}'
+    image: ${PROJECT_IMAGE}
+    build: .
+    environment:
+      - ACTIVATION_CODE=$ACTIVATION_CODE
+      - SERVER=$SERVER_LOCATION
+      - PREFERRED_PROTOCOL=$PREFERRED_PROTOCOL
+      - LIGHTWAY_CIPHER=$LIGHTWAY_CIPHER
+      - AGENTES_ENV=docker
+      - DLV_ROOT_NAME=$DLV_ROOT_NAME_DOCKER
+      - CONCURRENT_NUMBER_ROOT=$CONCURRENT_NUMBER_ROOT_DOCKER
+    stdin_open: true
+    tty: true
+    privileged: true
+    command: /bin/bash
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    volumes:
+      - $PWD/:/home/bb/agentes
+      - /var/run/dbus:/var/run/dbus
+    hostname: '${CONTAINER_HOSTNAME}'
+    networks:
+      - agentes_network
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+    depends_on:
+      - mongo
+    links:
+      - mongo
+  mongo:
+    container_name: '${MONGO_CONTAINER_NAME}'
+    image: 'mongo:4.4.6'
+    volumes:
+      - ${DATA_DB_CONTAINER}:/data/db
+    ports:
+      - '${MONGO_EXTERNAL_PORT}:27017'
+    expose:
+      - 27017
+    networks:
+      - agentes_network
+networks:
+  agentes_network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.100.0.0/16
+    name: ${NETWORK_NAME}
