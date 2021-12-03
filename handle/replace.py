@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
 
 replace_strings = [
     "(Full Movie) Gippy Grewal | Gurpreet Ghuggi | Geeta Basra | New Punjabi Full Movie | SagaMusic",
@@ -99,7 +100,7 @@ replace_strings = [
     "(Extended Cut)",
     "[Extended Cut]",
     "(Extended Cut)",
-    "Director's Cut",
+    " Director's Cut",
     " (Subtitulada)",
     " [Subtitulada]",
     "(VF) [Unrated]",
@@ -156,7 +157,6 @@ replace_strings = [
     " (V.O.S.)",
     "(feature)",
     ": Le film",
-    "The Movie",
     "(Dublado)",
     "(Doblado)",
     "[Doblado]",
@@ -200,7 +200,10 @@ def _replace(content_title):
     # for i in range(1,21): ##### LO COMENTO, AGREGAR SOLO EN LAS SERIES EN LAS PLATAFORMAS NECESARIAS.
     #     content_title = content_title.replace('S{:02d}'.format(i), '')
 
-    for i in range(1870, 2021):
+    this_year = datetime.now().year
+    this_year += 1 #Le sumo uno porque range arranca a contar de 0.
+
+    for i in range(1870, this_year):
         content_title = content_title.replace('({})'.format(i), '')
         content_title = content_title.replace('[{}]'.format(i), '')
 

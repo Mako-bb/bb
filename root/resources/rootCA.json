@@ -1,0 +1,118 @@
+[
+    {
+        "location": "Sin VPN",
+        "platforms": [
+            {
+                "PlatformName": "Hayu",
+                "Process": "scraping",
+                "Country": "CA"
+            },
+            {
+                "PlatformName": "Crave",
+                "Process": "scraping",
+                "Country": "CA"
+            },
+            {
+                "PlatformName": "CriterionChannel",
+                "Process": "scraping",
+                "Country": "CA"
+            },
+            {
+                "PlatformName": "Illico",
+                "Process": "scraping",
+                "Country": "CA"
+            },
+            {
+                "PlatformName": "SundanceNow",
+                "Process": "scraping",
+                "Country": "CA"
+            },
+            {
+                "PlatformName": "DoveChannel",
+                "Process": "scraping",
+                "Country": "CA"
+            },
+            {
+                "PlatformName": "Fandor",
+                "Process": "scraping",
+                "Country": "CA"
+            },
+            {
+                "PlatformName": "OSN",
+                "Process": "scraping",
+                "Country": "ALL"
+            },
+            {
+                "PlatformName": "IciTouTv",
+                "Process": "scraping",
+                "Country": "CA"
+            },
+            {
+                "PlatformName": "TubiTV",
+                "Process": "scraping",
+                "Country": "CA"
+            },
+            {
+                "PlatformName": "Hoopla",
+                "Process": "scraping",
+                "Country": "CA"
+            },
+            {
+                "PlatformName": "Shudder",
+                "Process": "scraping",
+                "Country": "CA"
+            },
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "CA"
+            },
+            {
+                "PlatformName": "BritBox",
+                "Process": "scraping",
+                "Country": "CA"
+            },
+            {
+                "PlatformName": "AcornTV",
+                "Process": "scraping",
+                "Country": "CA"
+            },
+            {
+                "PlatformName": "HBOLatam",
+                "Process": "scraping",
+                "Country": "LATAM"
+            },
+            {
+                "PlatformName": "KayoSports",
+                "Process": "scraping",
+                "Country": "AU"
+            },
+            {
+                "PlatformName": "UsaNetwork",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "SmithsonianChannel",
+                "Process": "scraping",
+                "Country": "US"
+            }
+        ]
+    },
+    {
+        "location": "DZ",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "DZ"
+            },
+            {
+                "PlatformName": "Starzplay",
+                "Process": "scraping",
+                "Country": "DZ"
+            }
+        ],
+        "client": "express"
+    }
+]

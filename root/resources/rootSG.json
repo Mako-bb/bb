@@ -1,0 +1,878 @@
+[
+    {
+        "location": "Sin VPN",
+        "platforms": [
+            {
+                "PlatformName": "Telasa",
+                "Process": "scraping",
+                "Country": "JP"
+            },
+            {
+                "PlatformName": "Banglaflix",
+                "Process": "scraping",
+                "Country": "BD"
+            },
+            {
+                "PlatformName": "Bongo",
+                "Process": "scraping",
+                "Country": "BD"
+            },
+            {
+                "PlatformName": "TeleFlix",
+                "Process": "scraping",
+                "Country": "BD"
+            },
+            {
+                "PlatformName": "NowPlayer",
+                "Process": "scraping",
+                "Country": "HK"
+            },
+            {
+                "PlatformName": "Cinespot",
+                "Process": "scraping",
+                "Country": "BD"
+            },
+            {
+                "PlatformName": "ClipTV",
+                "Process": "scraping",
+                "Country": "VN"
+            },
+            {
+                "PlatformName": "Danet",
+                "Process": "scraping",
+                "Country": "VN"
+            },
+            {
+                "PlatformName": "ShahidPlus",
+                "Process": "scraping",
+                "Country": "EG"
+            },
+            {
+                "PlatformName": "ShahidPlus",
+                "Process": "scraping",
+                "Country": "AE"
+            },
+            {
+                "PlatformName": "ShahidPlus",
+                "Process": "scraping",
+                "Country": "SA"
+            },
+            {
+                "PlatformName": "StarhubGo",
+                "Process": "scraping",
+                "Country": "SG"
+            },
+            {
+                "PlatformName": "MeWatch",
+                "Process": "scraping",
+                "Country": "SG"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "IN",
+                "Provider": "amazonprimevideo"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "NZ",
+                "Provider": "amazonprimevideo"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "SG",
+                "Provider": "amazonprimevideo"
+            },
+            {
+                "PlatformName": "OllehTV",
+                "Process": "scraping",
+                "Country": "KR"
+            },
+            {
+                "PlatformName": "Seezn",
+                "Process": "scraping",
+                "Country": "KR"
+            },
+            {
+                "PlatformName": "Fod",
+                "Process": "scraping",
+                "Country": "JP"
+            },
+            {
+                "PlatformName": "HikariTV",
+                "Process": "scraping",
+                "Country": "JP"
+            },
+            {
+                "PlatformName": "DTV",
+                "Process": "scraping",
+                "Country": "JP"
+            },
+            {
+                "PlatformName": "DocomoAnimeStore",
+                "Process": "scraping",
+                "Country": "JP"
+            },
+            {
+                "PlatformName": "TsutayaTV",
+                "Process": "scraping",
+                "Country": "JP"
+            },
+            {
+                "PlatformName": "TVer",
+                "Process": "scraping",
+                "Country": "JP"
+            },
+            {
+                "PlatformName": "Paravi",
+                "Process": "scraping",
+                "Country": "JP"
+            },
+            {
+                "PlatformName": "Genflix",
+                "Process": "scraping",
+                "Country": "ID"
+            },
+            {
+                "PlatformName": "HMVod",
+                "Process": "scraping",
+                "Country": "HK"
+            },
+            {
+                "PlatformName": "Viu",
+                "Process": "scraping",
+                "Country": "SG"
+            },
+            {
+                "PlatformName": "KakaoTV",
+                "Process": "scraping",
+                "Country": "KR"
+            },
+            {
+                "PlatformName": "Hayu",
+                "Process": "scraping",
+                "Country": "AU"
+            },
+            {
+                "PlatformName": "TVING",
+                "Process": "scraping",
+                "Country": "KR"
+            },
+            {
+                "PlatformName": "Stan",
+                "Process": "scraping",
+                "Country": "AU"
+            },
+            {
+                "PlatformName": "Microsoft",
+                "Process": "scraping",
+                "Country": "JP"
+            },
+            {
+                "PlatformName": "SietePlus",
+                "Process": "scraping",
+                "Country": "AU"
+            },
+            {
+                "PlatformName": "Catchplay",
+                "Process": "scraping",
+                "Country": "SG"
+            },
+            {
+                "PlatformName": "SunNxt",
+                "Process": "scraping",
+                "Country": "IN"
+            },
+            {
+                "PlatformName": "Spuul",
+                "Process": "scraping",
+                "Country": "IN"
+            },
+            {
+                "PlatformName": "Altbalaji",
+                "Process": "scraping",
+                "Country": "IN"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "IN",
+                "Provider": "youtube"
+            },
+            {
+                "PlatformName": "Zee5",
+                "Process": "scraping",
+                "Country": "IN"
+            },
+            {
+                "PlatformName": "Hoichoi",
+                "Process": "scraping",
+                "Country": "IN"
+            },
+            {
+                "PlatformName": "Microsoft",
+                "Process": "scraping",
+                "Country": "NZ"
+            },
+            {
+                "PlatformName": "ABCIview",
+                "Process": "scraping",
+                "Country": "AU"
+            },
+            {
+                "PlatformName": "Hayu",
+                "Process": "scraping",
+                "Country": "SG"
+            },
+            {
+                "PlatformName": "CHT",
+                "Process": "scraping",
+                "Country": "TW"
+            },
+            {
+                "PlatformName": "Iqiyi",
+                "Process": "scraping",
+                "Country": "TW"
+            },
+            {
+                "PlatformName": "MyVideo",
+                "Process": "scraping",
+                "Country": "TW"
+            },
+            {
+                "PlatformName": "LiTv",
+                "Process": "scraping",
+                "Country": "TW"
+            },
+            {
+                "PlatformName": "Friday",
+                "Process": "scraping",
+                "Country": "TW"
+            },
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "SG"
+            },
+            {
+                "PlatformName": "Microsoft",
+                "Process": "scraping",
+                "Country": "AU"
+            },
+            {
+                "PlatformName": "Hayu",
+                "Process": "scraping",
+                "Country": "PH"
+            },
+            {
+                "PlatformName": "UNext",
+                "Process": "scraping",
+                "Country": "JP"
+            },
+            {
+                "PlatformName": "Gyao",
+                "Process": "scraping",
+                "Country": "JP"
+            },
+            {
+                "PlatformName": "ShahidPlus",
+                "Process": "scraping",
+                "Country": "BH"
+            },
+            {
+                "PlatformName": "ShahidPlus",
+                "Process": "scraping",
+                "Country": "IL"
+            },
+            {
+                "PlatformName": "ShahidPlus",
+                "Process": "scraping",
+                "Country": "IQ"
+            },
+            {
+                "PlatformName": "ShahidPlus",
+                "Process": "scraping",
+                "Country": "JO"
+            },
+            {
+                "PlatformName": "ShahidPlus",
+                "Process": "scraping",
+                "Country": "KW"
+            },
+            {
+                "PlatformName": "ShahidPlus",
+                "Process": "scraping",
+                "Country": "LB"
+            },
+            {
+                "PlatformName": "ShahidPlus",
+                "Process": "scraping",
+                "Country": "LY"
+            },
+            {
+                "PlatformName": "ShahidPlus",
+                "Process": "scraping",
+                "Country": "MA"
+            },
+            {
+                "PlatformName": "ShahidPlus",
+                "Process": "scraping",
+                "Country": "OM"
+            },
+            {
+                "PlatformName": "ShahidPlus",
+                "Process": "scraping",
+                "Country": "QA"
+            },
+            {
+                "PlatformName": "ShahidPlus",
+                "Process": "scraping",
+                "Country": "SD"
+            },
+            {
+                "PlatformName": "ShahidPlus",
+                "Process": "scraping",
+                "Country": "SY"
+            },
+            {
+                "PlatformName": "ShahidPlus",
+                "Process": "scraping",
+                "Country": "TN"
+            },
+            {
+                "PlatformName": "ShahidPlus",
+                "Process": "scraping",
+                "Country": "DZ"
+            },
+            {
+                "PlatformName": "MyTvSuper",
+                "Process": "scraping",
+                "Country": "HK"
+            },
+            {
+                "PlatformName": "Wavve",
+                "Process": "scraping",
+                "Country": "KR"
+            }
+        ]
+    },
+    {
+        "location": "UZ",
+        "platforms": [
+            {
+                "PlatformName": "Megogo",
+                "Process": "scraping",
+                "Country": "UZ"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "NZ",
+        "platforms": [
+            {
+                "PlatformName": "NeonTV",
+                "Process": "scraping",
+                "Country": "NZ"
+            },
+            {
+                "PlatformName": "AcornTV",
+                "Process": "scraping",
+                "Country": "NZ"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "NZ"
+            },
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "NZ"
+            },
+            {
+                "PlatformName": "Shudder",
+                "Process": "scraping",
+                "Country": "NZ"
+            },
+            {
+                "PlatformName": "Binge",
+                "Process": "scraping",
+                "Country": "AU"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "IN",
+        "platforms": [
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "IN"
+            },
+            {
+                "PlatformName": "SonyLiv",
+                "Process": "scraping",
+                "Country": "IN"
+            },
+            {
+                "PlatformName": "Hotstar",
+                "Process": "scraping",
+                "Country": "IN"
+            },
+            {
+                "PlatformName": "Jiocinema",
+                "Process": "scraping",
+                "Country": "IN"
+            },
+            {
+                "PlatformName": "Voot",
+                "Process": "scraping",
+                "Country": "IN"
+            },
+            {
+                "PlatformName": "YuppTV",
+                "Process": "scraping",
+                "Country": "IN"
+            },
+            {
+                "PlatformName": "Viu",
+                "Process": "scraping",
+                "Country": "IN"
+            },
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "IN"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "IN"
+            },
+            {
+                "PlatformName": "TubiTV",
+                "Process": "scraping",
+                "Country": "IN"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "KR",
+        "platforms": [
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "KR"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "KR"
+            },
+            {
+                "PlatformName": "Watcha",
+                "Process": "scraping",
+                "Country": "KR"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "BD",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "BD"
+            },
+            {
+                "PlatformName": "Addatimes",
+                "Process": "scraping",
+                "Country": "BD"
+            },
+            {
+                "PlatformName": "Zee5",
+                "Process": "scraping",
+                "Country": "BD"
+            },
+            {
+                "PlatformName": "Hoichoi",
+                "Process": "scraping",
+                "Country": "BD"
+            },
+            {
+                "PlatformName": "Iflix",
+                "Process": "scraping",
+                "Country": "BD"
+            }
+
+        ],
+        "client": "express"
+    },
+    {
+        "location": "JP",
+        "platforms": [
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "JP"
+            },
+            {
+                "PlatformName": "AcTVila",
+                "Process": "scraping",
+                "Country": "JP"
+            },
+            {
+                "PlatformName": "Abema",
+                "Process": "scraping",
+                "Country": "JP"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "TH",
+        "platforms": [
+            {
+                "PlatformName": "Iflix",
+                "Process": "scraping",
+                "Country": "TH"
+            },
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "TH"
+            },
+            {
+                "PlatformName": "Viu",
+                "Process": "scraping",
+                "Country": "TH"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "TH"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "ZA",
+        "platforms": [
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "ZA"
+            },
+            {
+                "PlatformName": "Viu",
+                "Process": "scraping",
+                "Country": "ZA"
+            },
+            {
+                "PlatformName": "AcornTV",
+                "Process": "scraping",
+                "Country": "ZA"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "MY",
+        "platforms": [
+            {
+                "PlatformName": "Iflix",
+                "Process": "scraping",
+                "Country": "MY"
+            },
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "MY"
+            },
+            {
+                "PlatformName": "Dimsum",
+                "Process": "scraping",
+                "Country": "MY"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "MY"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "PH",
+        "platforms": [
+            {
+                "PlatformName": "Iflix",
+                "Process": "scraping",
+                "Country": "PH"
+            },
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "PH"
+            },
+            {
+                "PlatformName": "Viu",
+                "Process": "scraping",
+                "Country": "PH"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "PH"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "MM",
+        "platforms": [
+            {
+                "PlatformName": "Iflix",
+                "Process": "scraping",
+                "Country": "MM"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "MM"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "HK",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "HK"
+            },
+            {
+                "PlatformName": "Viu",
+                "Process": "scraping",
+                "Country": "HK"
+            },
+            {
+                "PlatformName": "Iqiyi",
+                "Process": "scraping",
+                "Country": "HK"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "KH",
+        "platforms": [
+            {
+                "PlatformName": "Iflix",
+                "Process": "scraping",
+                "Country": "KH"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "NP",
+        "platforms": [
+            {
+                "PlatformName": "Iflix",
+                "Process": "scraping",
+                "Country": "NP"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "NP"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "VN",
+        "platforms": [
+            {
+                "PlatformName": "Iflix",
+                "Process": "scraping",
+                "Country": "VN"
+            },
+            {
+                "PlatformName": "GalaxyPlay",
+                "Process": "scraping",
+                "Country": "VN"
+            },
+            {
+                "PlatformName": "Iqiyi",
+                "Process": "scraping",
+                "Country": "VN"
+            },
+            {
+                "PlatformName": "WeTVAsia",
+                "Process": "scraping",
+                "Country": "VN"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "VN"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "SG",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "SG"
+            },
+            {
+                "PlatformName": "SingtelTvGo",
+                "Process": "scraping",
+                "Country": "SG"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "LK",
+        "platforms": [
+            {
+                "PlatformName": "Iflix",
+                "Process": "scraping",
+                "Country": "LK"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "LK"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "BN",
+        "platforms": [
+            {
+                "PlatformName": "Iflix",
+                "Process": "scraping",
+                "Country": "BN"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "TW",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "TW"
+            },
+            {
+                "PlatformName": "Catchplay",
+                "Process": "scraping",
+                "Country": "TW"
+            },
+            {
+                "PlatformName": "HamiVideo",
+                "Process": "scraping",
+                "Country": "TW"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "ID",
+        "platforms": [
+            {
+                "PlatformName": "Iflix",
+                "Process": "scraping",
+                "Country": "ID"
+            },
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "ID"
+            },
+            {
+                "PlatformName": "Viu",
+                "Process": "scraping",
+                "Country": "ID"
+            },
+            {
+                "PlatformName": "Catchplay",
+                "Process": "scraping",
+                "Country": "ID"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "ID"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "AU",
+        "platforms": [
+            {
+                "PlatformName": "TubiTV",
+                "Process": "scraping",
+                "Country": "AU"
+            },
+            {
+                "PlatformName": "Tenplay",
+                "Process": "scraping",
+                "Country": "AU"
+            },
+            {
+                "PlatformName": "AcornTV",
+                "Process": "scraping",
+                "Country": "AU"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "AU"
+            },
+            {
+                "PlatformName": "SbsOnDemand",
+                "Process": "scraping",
+                "Country": "AU"
+            },
+            {
+                "PlatformName": "Kanopy",
+                "Process": "scraping",
+                "Country": "AU"
+            },
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "AU"
+            },
+            {
+                "PlatformName": "Shudder",
+                "Process": "scraping",
+                "Country": "AU"
+            },
+            {
+                "PlatformName": "Youtube",
+                "Process": "scraping",
+                "Country": "AU"
+            }
+        ],
+        "client": "express"
+    }
+]

@@ -1,0 +1,1128 @@
+[
+    {
+        "location": "Sin VPN",
+        "platforms": [
+            {
+                "PlatformName": "OrangeTVGO",
+                "Process": "scraping",
+                "Country": "RO"
+            },
+            {
+                "PlatformName": "CosmoteTV",
+                "Process": "scraping",
+                "Country": "GR"
+            },
+            {
+                "PlatformName": "TvVlaanderen",
+                "Process": "scraping",
+                "Country": "BE"
+            },
+            {
+                "PlatformName": "TViN",
+                "Process": "scraping",
+                "Country": "SI"
+            },
+            {
+                "PlatformName": "BluTV",
+                "Process": "scraping",
+                "Country": "TR"
+            },
+            {
+                "PlatformName": "Tvgo",
+                "Process": "scraping",
+                "Country": "HU"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "AT",
+                "Provider": "amazon"
+            },
+            {
+                "PlatformName": "Microsoft",
+                "Process": "scraping",
+                "Country": "NO"
+            },
+            {
+                "PlatformName": "Kuki",
+                "Process": "scraping",
+                "Country": "CZ"
+            },
+            {
+                "PlatformName": "NLZiet",
+                "Process": "scraping",
+                "Country": "NL"
+            },
+            {
+                "PlatformName": "Tv2Play",
+                "Process": "scraping",
+                "Country": "DK"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "BE",
+                "Provider": "amazonprimevideo"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "CZ",
+                "Provider": "amazonprimevideo"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "EE",
+                "Provider": "amazonprimevideo"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "GR",
+                "Provider": "amazonprimevideo"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "NO",
+                "Provider": "amazonprimevideo"
+            },
+            {
+                "PlatformName": "PlayNow",
+                "Process": "scraping",
+                "Country": "PL"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "SE",
+                "Provider": "amazonprimevideo"
+            },
+            {
+                "PlatformName": "Ant1next",
+                "Process": "scraping",
+                "Country": "GR"
+            },
+            {
+                "PlatformName": "NPOStart",
+                "Process": "scraping",
+                "Country": "NL"
+            },
+            {
+                "PlatformName": "HBOEurope2",
+                "Process": "scraping",
+                "Country": "HR"
+            },
+            {
+                "PlatformName": "HBOEurope2",
+                "Process": "scraping",
+                "Country": "MK"
+            },
+            {
+                "PlatformName": "HBOEurope2",
+                "Process": "scraping",
+                "Country": "ME"
+            },
+            {
+                "PlatformName": "HBOEurope2",
+                "Process": "scraping",
+                "Country": "RS"
+            },
+            {
+                "PlatformName": "HBOEurope2",
+                "Process": "scraping",
+                "Country": "SK"
+            },
+            {
+                "PlatformName": "HBOEurope2",
+                "Process": "scraping",
+                "Country": "SI"
+            },
+            {
+                "PlatformName": "HBOEurope2",
+                "Process": "scraping",
+                "Country": "BA"
+            },
+            {
+                "PlatformName": "HBOEurope2",
+                "Process": "scraping",
+                "Country": "BG"
+            },
+            {
+                "PlatformName": "Voyo",
+                "Process": "scraping",
+                "Country": "SI"
+            },
+            {
+                "PlatformName": "Mediaset",
+                "Process": "scraping",
+                "Country": "IT"
+            },
+            {
+                "PlatformName": "SkyIT",
+                "Process": "scraping",
+                "Country": "IT"
+            },
+            {
+                "PlatformName": "AcornTV",
+                "Process": "scraping",
+                "Country": "NL"
+            },
+            {
+                "PlatformName": "Raiplay",
+                "Process": "scraping",
+                "Country": "IT"
+            },
+            {
+                "PlatformName": "TeleSatLiveTv",
+                "Process": "scraping",
+                "Country": "BE"
+            },
+            {
+                "PlatformName": "VooMotion",
+                "Process": "scraping",
+                "Country": "BE"
+            },
+            {
+                "PlatformName": "AntenaPlay",
+                "Process": "scraping",
+                "Country": "RO"
+            },
+            {
+                "PlatformName": "Boxer",
+                "Process": "scraping",
+                "Country": "SE"
+            },
+            {
+                "PlatformName": "ZiggoGo",
+                "Process": "scraping",
+                "Country": "NL"
+            },
+            {
+                "PlatformName": "RtlXl",
+                "Process": "scraping",
+                "Country": "NL"
+            },
+            {
+                "PlatformName": "Microsoft",
+                "Process": "scraping",
+                "Country": "FI"
+            },
+            {
+                "PlatformName": "PatheThuis",
+                "Process": "scraping",
+                "Country": "NL"
+            },
+            {
+                "PlatformName": "Microsoft",
+                "Process": "scraping",
+                "Country": "IT"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "AT"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "CZ"
+            },
+            {
+                "PlatformName": "TVBarrandov",
+                "Process": "scraping",
+                "Country": "CZ"
+            },
+            {
+                "PlatformName": "Microsoft",
+                "Process": "scraping",
+                "Country": "NL"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "DK"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "EE"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "FI"
+            },
+            {
+                "PlatformName": "Microsoft",
+                "Process": "scraping",
+                "Country": "DE"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "HU"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "LV"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "LT"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "IT"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "NL"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "PL"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "RO"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "SE"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "BG"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "GR"
+            },
+            {
+                "PlatformName": "Universcine",
+                "Process": "scraping",
+                "Country": "DE"
+            },
+            {
+                "PlatformName": "Chili",
+                "Process": "scraping",
+                "Country": "AT"
+            },
+            {
+                "PlatformName": "Chili",
+                "Process": "scraping",
+                "Country": "DE"
+            },
+            {
+                "PlatformName": "Chili",
+                "Process": "scraping",
+                "Country": "IT"
+            },
+            {
+                "PlatformName": "Chili",
+                "Process": "scraping",
+                "Country": "PL"
+            },
+            {
+                "PlatformName": "NcPlusGo",
+                "Process": "scraping",
+                "Country": "PL"
+            },
+            {
+                "PlatformName": "Cmore",
+                "Process": "scraping",
+                "Country": "SE"
+            },
+            {
+                "PlatformName": "Cmore",
+                "Process": "scraping",
+                "Country": "DK"
+            },
+            {
+                "PlatformName": "Cmore",
+                "Process": "scraping",
+                "Country": "FI"
+            },
+            {
+                "PlatformName": "Cmore",
+                "Process": "scraping",
+                "Country": "NO"
+            },
+            {
+                "PlatformName": "KION",
+                "Process": "scraping",
+                "Country": "RU"
+            },
+            {
+                "PlatformName": "Beeline",
+                "Process": "scraping",
+                "Country": "RU"
+            },
+            {
+                "PlatformName": "Ntv",
+                "Process": "scraping",
+                "Country": "RU"
+            },
+            {
+                "PlatformName": "MegafonTv",
+                "Process": "scraping",
+                "Country": "RU"
+            },
+            {
+                "PlatformName": "Timvision",
+                "Process": "scraping",
+                "Country": "IT"
+            },
+            {
+                "PlatformName": "Horizon",
+                "Process": "scraping",
+                "Country": "PL"
+            },
+            {
+                "PlatformName": "Horizon",
+                "Process": "scraping",
+                "Country": "HU"
+            },
+            {
+                "PlatformName": "Kividoo",
+                "Process": "scraping",
+                "Country": "DE"
+            },
+            {
+                "PlatformName": "Kividoo",
+                "Process": "scraping",
+                "Country": "AT"
+            },
+            {
+                "PlatformName": "Microsoft",
+                "Process": "scraping",
+                "Country": "CH"
+            },
+            {
+                "PlatformName": "UPCtv",
+                "Process": "scraping",
+                "Country": "CH"
+            },
+            {
+                "PlatformName": "Kividoo",
+                "Process": "scraping",
+                "Country": "CH"
+            },
+            {
+                "PlatformName": "Videoload",
+                "Process": "scraping",
+                "Country": "DE"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "DE"
+            },
+            {
+                "PlatformName": "MagentaTV",
+                "Process": "scraping",
+                "Country": "DE"
+            },
+            {
+                "PlatformName": "DasersteMediathek",
+                "Process": "scraping",
+                "Country": "DE"
+            },
+            {
+                "PlatformName": "Pantaflix",
+                "Process": "scraping",
+                "Country": "AT"
+            },
+            {
+                "PlatformName": "VRTNu",
+                "Process": "scraping",
+                "Country": "BE"
+            },
+            {
+                "PlatformName": "Pantaflix",
+                "Process": "scraping",
+                "Country": "CH"
+            },
+            {
+                "PlatformName": "Microsoft",
+                "Process": "scraping",
+                "Country": "SE"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "KR",
+                "Provider": "naverstore"
+            },
+            {
+                "PlatformName": "Videobuster",
+                "Process": "scraping",
+                "Country": "DE"
+            },
+            {
+                "PlatformName": "Videobuster",
+                "Process": "scraping",
+                "Country": "CH"
+            },
+            {
+                "PlatformName": "Videobuster",
+                "Process": "scraping",
+                "Country": "AT"
+            },
+            {
+                "PlatformName": "Hayu",
+                "Process": "scraping",
+                "Country": "DK"
+            },
+            {
+                "PlatformName": "Hayu",
+                "Process": "scraping",
+                "Country": "SE"
+            },
+            {
+                "PlatformName": "Hayu",
+                "Process": "scraping",
+                "Country": "NO"
+            },
+            {
+                "PlatformName": "Hayu",
+                "Process": "scraping",
+                "Country": "FI"
+            },
+            {
+                "PlatformName": "Microsoft",
+                "Process": "scraping",
+                "Country": "DK"
+            },
+            {
+                "PlatformName": "Hayu",
+                "Process": "scraping",
+                "Country": "NL"
+            },
+            {
+                "PlatformName": "Hayu",
+                "Process": "scraping",
+                "Country": "BE"
+            },
+            {
+                "PlatformName": "YeloPlay",
+                "Process": "scraping",
+                "Country": "BE"
+            },
+            {
+                "PlatformName": "SkyTicket",
+                "Process": "scraping",
+                "Country": "AT"
+            },
+            {
+                "PlatformName": "Viaplay",
+                "Process": "scraping",
+                "Country": "SE"
+            },
+            {
+                "PlatformName": "Viaplay",
+                "Process": "scraping",
+                "Country": "NO"
+            },
+            {
+                "PlatformName": "Viaplay",
+                "Process": "scraping",
+                "Country": "FI"
+            },
+            {
+                "PlatformName": "Viaplay",
+                "Process": "scraping",
+                "Country": "DK"
+            },
+            {
+                "PlatformName": "Go3",
+                "Process": "scraping",
+                "Country": "EE"
+            },
+            {
+                "PlatformName": "Go3",
+                "Process": "scraping",
+                "Country": "LT"
+            },
+            {
+                "PlatformName": "Go3",
+                "Process": "scraping",
+                "Country": "LV"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "AT",
+                "Provider": "skygo"
+            },
+            {
+                "PlatformName": "TvNow",
+                "Process": "scraping",
+                "Country": "DE"
+            },
+            {
+                "PlatformName": "DivanTV",
+                "Process": "scraping",
+                "Country": "UA"
+            },
+            {
+                "PlatformName": "Vodpl",
+                "Process": "scraping",
+                "Country": "PL"
+            },
+            {
+                "PlatformName": "Allente",
+                "Process": "scraping",
+                "Country": "FI"
+            },
+            {
+                "PlatformName": "Turkcell",
+                "Process": "scraping",
+                "Country": "TR"
+            }
+        ]
+    },
+    {
+        "location": "BY",
+        "platforms": [
+            {
+                "PlatformName": "Megogo",
+                "Process": "scraping",
+                "Country": "BY"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "USWD",
+        "platforms": [
+            {
+                "PlatformName": "HistoryVault",
+                "Process": "scraping",
+                "Country": "US"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "NL",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "NL"
+            },
+            {
+                "PlatformName": "Videoland",
+                "Process": "scraping",
+                "Country": "NL"
+            },
+            {
+                "PlatformName": "Allente",
+                "Process": "scraping",
+                "Country": "NO"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "TR",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "TR"
+            },
+            {
+                "PlatformName": "Beinconnect",
+                "Process": "scraping",
+                "Country": "TR"
+            },
+            {
+                "PlatformName": "DSmartGo",
+                "Process": "scraping",
+                "Country": "TR"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "RO",
+        "platforms": [
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "RO"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "RO"
+            },
+            {
+                "PlatformName": "Voyo",
+                "Process": "scraping",
+                "Country": "RO"
+            },
+            {
+                "PlatformName": "Megogo",
+                "Process": "scraping",
+                "Country": "RO"
+            },
+            {
+                "PlatformName": "TelekomTV",
+                "Process": "scraping",
+                "Country": "RO"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "PL",
+        "platforms": [
+            {
+                "PlatformName": "CyfrowyPolsatGo",
+                "Process": "scraping",
+                "Country": "PL"
+            },
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "PL"
+            },
+            {
+                "PlatformName": "MultimediaGo",
+                "Process": "scraping",
+                "Country": "PL"
+            },
+            {
+                "PlatformName": "IPLA",
+                "Process": "scraping",
+                "Country": "PL"
+            },
+            {
+                "PlatformName": "TVN",
+                "Process": "scraping",
+                "Country": "PL"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "PL"
+            },
+            {
+                "PlatformName": "Youtube",
+                "Process": "scraping",
+                "Country": "PL"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "CZ",
+        "platforms": [
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "CZ"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "CZ"
+            },
+            {
+                "PlatformName": "Horizon",
+                "Process": "scraping",
+                "Country": "CZ"
+            },
+            {
+                "PlatformName": "Voyo",
+                "Process": "scraping",
+                "Country": "CZ"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "SK",
+        "platforms": [
+            {
+                "PlatformName": "Horizon",
+                "Process": "scraping",
+                "Country": "SK"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "SK"
+            },
+            {
+                "PlatformName": "Voyo",
+                "Process": "scraping",
+                "Country": "SK"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "HU",
+        "platforms": [
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "HU"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "HU"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "UA",
+        "platforms": [
+            {
+                "PlatformName": "Megogo",
+                "Process": "scraping",
+                "Country": "UA"
+            },
+            {
+                "PlatformName": "OllTv",
+                "Process": "scraping",
+                "Country": "UA"
+            },
+            {
+                "PlatformName": "VoliaTV",
+                "Process": "scraping",
+                "Country": "UA"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "BE",
+        "platforms": [
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "BE"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "BE"
+            },
+            {
+                "PlatformName": "Allente",
+                "Process": "scraping",
+                "Country": "SE"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "LV",
+        "platforms": [
+            {
+                "PlatformName": "Megogo",
+                "Process": "scraping",
+                "Country": "LV"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "LV"
+            },
+            {
+                "PlatformName": "Allente",
+                "Process": "scraping",
+                "Country": "DK"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "IT",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "IT"
+            },
+            {
+                "PlatformName": "InfinityTV",
+                "Process": "scraping",
+                "Country": "IT"
+            },
+            {
+                "PlatformName": "NowTV",
+                "Process": "scraping",
+                "Country": "IT"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "AT",
+        "platforms": [
+            {
+                "PlatformName": "Netzkino",
+                "Process": "scraping",
+                "Country": "AT"
+            },
+            {
+                "PlatformName": "Flimmit",
+                "Process": "scraping",
+                "Country": "AT"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "AT"
+            },
+            {
+                "PlatformName": "Alleskino",
+                "Process": "scraping",
+                "Country": "AT"
+            },
+            {
+                "PlatformName": "Watchbox",
+                "Process": "scraping",
+                "Country": "AT"
+            },
+            {
+                "PlatformName": "SkyStore",
+                "Process": "scraping",
+                "Country": "AT"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "CH",
+        "platforms": [
+            {
+                "PlatformName": "Netzkino",
+                "Process": "scraping",
+                "Country": "CH"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "CH"
+            },
+            {
+                "PlatformName": "Sky",
+                "Process": "scraping",
+                "Country": "CH"
+            },
+            {
+                "PlatformName": "Flimmit",
+                "Process": "scraping",
+                "Country": "CH"
+            },
+            {
+                "PlatformName": "Alleskino",
+                "Process": "scraping",
+                "Country": "CH"
+            },
+            {
+                "PlatformName": "Hollystar",
+                "Process": "scraping",
+                "Country": "CH"
+            },
+            {
+                "PlatformName": "Watchbox",
+                "Process": "scraping",
+                "Country": "CH"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "LU",
+        "platforms": [
+            {
+                "PlatformName": "NetflixTest",
+                "Process": "scraping",
+                "Country": "LU"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "LU"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "USMI2",
+        "platforms": [
+            {
+                "PlatformName": "AmcPlus",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "MagnoliaSelects",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "O2TV",
+                "Process": "scraping",
+                "Country": "SK"
+            },
+            {
+                "PlatformName": "Plex",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "DirecTV_US",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Claro",
+                "Process": "scraping",
+                "Country": "CR"
+            },
+            {
+                "PlatformName": "Crackle",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "MXPlayer",
+                "Process": "scraping",
+                "Country": "IN"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "USCH",
+        "platforms": [
+            {
+                "PlatformName": "AMCTheatres",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "O2TV",
+                "Process": "scraping",
+                "Country": "CZ"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "CA",
+        "platforms": [
+            {
+                "PlatformName": "YoutubePremium",
+                "Process": "scraping",
+                "Country": "ALL"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "CA"
+            },
+            {
+                "PlatformName": "Cineplex",
+                "Process": "scraping",
+                "Country": "CA"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "MT",
+        "platforms": [
+            {
+                "PlatformName": "NetflixTest",
+                "Process": "scraping",
+                "Country": "MT"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "HR",
+        "platforms": [
+            {
+                "PlatformName": "MaxTv",
+                "Process": "scraping",
+                "Country": "HR"
+            },
+            {
+                "PlatformName": "NetflixTest",
+                "Process": "scraping",
+                "Country": "HR"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "HR"
+            },
+            {
+                "PlatformName": "Pickbox",
+                "Process": "scraping",
+                "Country": "HR"
+            },
+            {
+                "PlatformName": "Amazon",
+                "Process": "scraping",
+                "Country": "HR"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "BG",
+        "platforms": [
+            {
+                "PlatformName": "NetflixTest",
+                "Process": "scraping",
+                "Country": "BG"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "BG"
+            },
+            {
+                "PlatformName": "Amazon",
+                "Process": "scraping",
+                "Country": "BG"
+            },
+            {
+                "PlatformName": "Voyo",
+                "Process": "scraping",
+                "Country": "BG"
+            }
+        ],
+        "client": "express"
+    }
+]

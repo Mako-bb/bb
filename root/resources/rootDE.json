@@ -1,0 +1,251 @@
+[
+    {
+        "location": "Sin VPN",
+        "platforms": [
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "US",
+                "Daily": true,
+                "CountryVPN": null,
+                "VPN": false
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "GB",
+                "Daily": true,
+                "CountryVPN": null,
+                "VPN": false
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "BR",
+                "Daily": true,
+                "CountryVPN": null,
+                "VPN": false
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "AR",
+                "Daily": true,
+                "CountryVPN": null,
+                "VPN": false
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "CO",
+                "Daily": true,
+                "CountryVPN": null,
+                "VPN": false
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "CL",
+                "Daily": true,
+                "CountryVPN": null,
+                "VPN": false
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "MX",
+                "Daily": true,
+                "CountryVPN": null,
+                "VPN": false
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "GR",
+                "CountryVPN": null,
+                "VPN": false
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "DE",
+                "Daily": true,
+                "CountryVPN": null,
+                "VPN": false
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "FR",
+                "Daily": true,
+                "CountryVPN": null,
+                "VPN": false
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "ES",
+                "Daily": true,
+                "CountryVPN": null,
+                "VPN": false
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "IN",
+                "Daily": true,
+                "CountryVPN": null,
+                "VPN": false
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "KR",
+                "Daily": true,
+                "CountryVPN": null,
+                "VPN": false
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "CA",
+                "Daily": true,
+                "CountryVPN": null,
+                "VPN": false
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "NZ",
+                "Daily": true,
+                "CountryVPN": null,
+                "VPN": false
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "PE",
+                "Daily": true,
+                "CountryVPN": null,
+                "VPN": false
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "AU",
+                "Daily": true,
+                "CountryVPN": null,
+                "VPN": false
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "EC",
+                "Daily": true,
+                "CountryVPN": null,
+                "VPN": false
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "TR"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "IT"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "AT",
+                "CountryVPN": null,
+                "VPN": false
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "VE",
+                "CountryVPN": null,
+                "VPN": false
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "BE",
+                "CountryVPN": null,
+                "VPN": false
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "DK"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "EE"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "FI"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "IE"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "HU"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "IT"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "LV"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "LT"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "NL"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "PL"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "PT"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "RO"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "RU"
+            },
+            {
+                "PlatformName": "SkyTicket",
+                "Process": "scraping",
+                "Country": "DE"
+            }
+        ]
+    }
+]
