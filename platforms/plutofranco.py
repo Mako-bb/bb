@@ -13,7 +13,7 @@ class PlutoFranco():
     Status: Completado
     VPN: No
     Método: API
-    Runtime: 0:05:39.811863
+    Runtime: 5 minutos
     """
 
     def __init__(self, ott_platforms, ott_site_country, ott_operation):
@@ -35,11 +35,14 @@ class PlutoFranco():
         self.url_api_series         = config_['url_api_series']
         self.payloads               = list()
         self.payloads_episodes      = list()
-        self.ids_scrapeados         = Datamanager._getListDB(self,self.titanScraping)
-        self.ids_scrapeados_episodios = Datamanager._getListDB(self,self.titanScrapingEpisodios)
+        self.ids_scrapeados         = Datamanager._getListDB(self,
+                                                             self.titanScraping)
+        self.ids_scrapeados_episodios = Datamanager._getListDB(self,
+                                                               self.titanScrapingEpisodios)
         self.authorization          = self.getApiToken()
-        self.first_episode_year     = int()
-        self.first_season_year      = int()
+        # self.first_episode_year     = int()
+        # self.first_season_year      = int()
+        self.items_obtenidos        = dict()
 
         """
         Crea una lista de IDs ya scrapeados en nuestra bd local de Mongo para no
@@ -72,13 +75,12 @@ class PlutoFranco():
 
     def scraping(self):
         all_items           = self.requestAllItems()
-        _ids_obtenidas      = list()
         for category in all_items.get("categories"):
             for item in category.get("items"):
-                _id = item.get("_id")
-                if _id not in _ids_obtenidas:
-                    _ids_obtenidas.append(_id)
-                    _type = item.get("type")
+                payload         = None
+                es_duplicado    = self.checkDuplicate(item)
+                if not es_duplicado: 
+                    _type                               = item.get("type")
                     if _type == "series":
                         series                  = item.get("slug")
                         all_seasons_episodes    = self.requestSeries(series)
@@ -86,10 +88,20 @@ class PlutoFranco():
                     elif _type == "movie":
                         movie                   = item
                         payload                 = self.buildPayloadMovie(movie)
-                    # else: ¿Y si no llega ningún "type"?
-                    Datamanager._checkDBandAppend(self,payload,self.ids_scrapeados,self.payloads)
-        Datamanager._insertIntoDB(self,self.payloads,self.titanScraping)
-        Datamanager._insertIntoDB(self,self.payloads_episodes,self.titanScrapingEpisodios)
+
+                    if payload:
+                        clean_title                         = payload['CleanTitle']
+                        synopsis                            = payload['Synopsis']
+                        self.items_obtenidos[clean_title]   = synopsis
+                        Datamanager._checkDBandAppend(self,payload,
+                                                    self.ids_scrapeados,
+                                                    self.payloads)
+        Datamanager._insertIntoDB(self,
+                                  self.payloads,
+                                  self.titanScraping)
+        Datamanager._insertIntoDB(self,
+                                  self.payloads_episodes,
+                                  self.titanScrapingEpisodios)
 
         Upload(self._platform_code,self._created_at,testing=False)
 
@@ -103,6 +115,33 @@ class PlutoFranco():
         headers = self.authorization
 
         return Datamanager._getJSON(self, url, headers)
+
+    def checkDuplicate(self, content_metadata) -> bool:
+        """
+        Chequea que:
+            > El cleanTitle y su Synopsis no estén ya (None = OK) [False]
+                > Contiene 'dubbed' en su deeplink
+                    Continúa la ejecución del script
+                
+            > Pero si están duplicados... [True] # Unificación de contenidos (WIP)
+                > Si es una temporada suelta de un mismo contenido
+                    Debo encontrar el payload anterior y agregarle esta nueva temporada.
+                    self.temporada_suelta   = True
+                > Si son episodios sueltos de un mismo contenido
+                    Debo encontrar el payload anterior y agregarle este nuevo episodio.
+                    self.episodio_suelto    = True
+                > Si es un deeplink distinto para una misma serie pero que tiene más seasons
+                    Porque sus seasons o episodios son más que el contenido anterior,
+                    borra el anterior y lo reemplaza por el nuevo contenido
+        """
+        clean_title     = _replace(self.getTitle(content_metadata))
+        synopsis        = self.getSynopsis(content_metadata)
+        if self.items_obtenidos.get(clean_title):
+            if self.items_obtenidos[clean_title] == synopsis:
+                deeplink    = self.getDeeplink(content_metadata)
+                if not "dubbed" in deeplink:
+                    return True
+        return False
 
     def requestSeries(self, series_slug=None) -> dict:
         """
@@ -133,37 +172,53 @@ class PlutoFranco():
         return payload.payload_movie()
 
     def buildPayloadSerie(self, content_metadata) -> dict:
-        seasons                 = list()
-        for season in content_metadata.get("seasons"):
-            for episode in season.get("episodes"):
-                payload_episode = self.buildPayloadEpisode(episode, content_metadata)
-                Datamanager._checkDBandAppend(self,payload_episode,self.ids_scrapeados_episodios,self.payloads_episodes, isEpi=True)
-            seasons.append(self.buildPayloadSeason(season, content_metadata))
-        payload                 = Payload()
-        payload.platform_code   = self._platform_code
-        payload.id              = self.getId(content_metadata)
-        payload.seasons         = seasons
-        payload.title           = self.getTitle(content_metadata)
-        payload.clean_title     = _replace(payload.title)
-        payload.year            = self.getYearSeries()
-        payload.deeplink_web    = self.getDeeplink(content_metadata)
-        payload.synopsis        = self.getSynopsis(content_metadata)
-        payload.image           = self.getImage(content_metadata)
-        payload.rating          = self.getRating(content_metadata)
-        payload.genres          = self.getGenres(content_metadata)
-        payload.packages        = [{"Type":"free-vod"}]
-        payload.createdAt       = self._created_at
+        checked_series   = self.checkPayloadSeries(content_metadata)
+        if checked_series: # Chequear si no es una movie con mal 'type'
+            seasons         = list()
+            for season in self.getSeasonsMetadata(content_metadata):
+                for episode in self.getEpisodesMetadata(season):
+                    payload_episode = self.buildPayloadEpisode(episode,
+                                                               content_metadata)
+                    Datamanager._checkDBandAppend(self,payload_episode,
+                                                  self.ids_scrapeados_episodios,
+                                                  self.payloads_episodes, 
+                                                  isEpi=True)
+                seasons.append(self.buildPayloadSeason(season, 
+                                                       content_metadata))
+            payload                 = Payload()
+            payload.platform_code   = self._platform_code
+            payload.id              = self.getId(content_metadata)
+            payload.seasons         = seasons 
+            if not payload.seasons: 
+                return None # Si es una serie sin seasons, skipea el payload entero
+            payload.title           = self.getTitle(content_metadata)
+            payload.clean_title     = _replace(payload.title)
+            # payload.year            = self.getYearSeries()
+            payload.deeplink_web    = self.getDeeplink(content_metadata)
+            payload.synopsis        = self.getSynopsis(content_metadata)
+            payload.image           = self.getImage(content_metadata)
+            payload.rating          = self.getRating(content_metadata)
+            payload.genres          = self.getGenres(content_metadata)
+            payload.packages        = [{"Type":"free-vod"}]
+            payload.createdAt       = self._created_at
 
-        return payload.payload_serie()
+            return payload.payload_serie()
+        else:
+            payload = self.fixPayload(content_metadata)
+            return payload.payload_movie()
 
     def buildPayloadSeason(self, content_metadata, parent_metadata) -> dict:
         payload                 = Payload()
-        payload.id              = self.getSeasonId(content_metadata, parent_metadata)
+        payload.id              = self.getSeasonId(content_metadata, 
+                                                   parent_metadata)
+        payload.title           = self.getSeasonTitle(content_metadata, 
+                                                      parent_metadata)
         payload.number          = self.getNumber(content_metadata)
-        payload.year            = self.getYearSeason()
-        if payload.number == 1:
-            self.first_season_year = payload.year
-        payload.deeplink_web    = self.getDeeplinkSeason(content_metadata, parent_metadata)
+        # payload.year            = self.getYearSeason()
+        # if payload.number == 1:
+        #     self.first_season_year = payload.year
+        payload.deeplink_web    = self.getDeeplinkSeason(content_metadata, 
+                                                         parent_metadata)
         payload.episodes        = self.getEpisodes(content_metadata)
 
         return payload.payload_season()
@@ -178,17 +233,75 @@ class PlutoFranco():
         payload.season          = self.getSeasonNumber(content_metadata)
         payload.episode         = self.getNumber(content_metadata)
         payload.year            = self.getYear(content_metadata)
-        if payload.episode == 1:
-            self.first_episode_year = payload.year
-        payload.deeplink_web    = self.getDeeplinkEpisode(content_metadata, parent_metadata)
+        # if payload.episode == 0 or payload.episode == 1:
+        #    self.first_episode_year = payload.year
+        payload.duration        = self.getDuration(content_metadata)
+        payload.deeplink_web    = self.getDeeplinkEpisode(content_metadata, 
+                                                          parent_metadata)
         payload.synopsis        = self.getSynopsis(content_metadata)
-        payload.image           = self.getImage(content_metadata)  # << !!
+        payload.image           = self.getImage(content_metadata)
         payload.rating          = self.getRating(content_metadata)
         payload.genres          = self.getGenres(content_metadata)
         payload.packages        = [{"Type":"free-vod"}]
         payload.createdAt       = self._created_at
 
         return payload.payload_episode()
+
+    def getSeasonsMetadata(self, content_metadata) -> list:
+        return content_metadata.get("seasons")
+
+    def getEpisodesMetadata(self, season_metadata) -> list:
+        return season_metadata.get("episodes")
+
+    def checkPayloadSeries(self, content_metadata) -> bool:
+        """
+        Es TRUE (una serie) si:
+            Tiene más de 1 episodio
+            Tiene más de 1 season
+        Es FALSE (una movie con type erróneo) si:
+            Su único episodio dura más de 60min
+        """
+        seasons_metadata = self.getSeasonsMetadata(content_metadata)
+        if seasons_metadata:
+            if len(seasons_metadata) > 1:
+                return True
+
+        try:
+            episodes_metadata = self.getEpisodesMetadata(seasons_metadata[0])
+            if episodes_metadata:
+                if len(episodes_metadata)  > 1:
+                    return True
+        except IndexError:
+            return True # Lo mando como serie igual
+
+        try:
+            duration = self.getDuration(episodes_metadata[0])
+            if duration > 60:
+                return False
+        except IndexError:
+            return True
+
+    def fixPayload(self, content_metadata) -> dict:
+        payload                 = Payload()
+        payload.platform_code   = self._platform_code
+        payload.id              = self.getId(content_metadata)
+        payload.title           = self.getTitle(content_metadata)
+        payload.clean_title     = _replace(payload.title)
+        
+        payload.synopsis        = self.getSynopsis(content_metadata)
+        season_metadata         = self.getSeasonsMetadata(content_metadata)    # 
+        episode_metadata        = self.getEpisodesMetadata(season_metadata[0]) # <
+        payload.year            = self.getYear(episode_metadata[0])            # <<
+        payload.duration        = self.getDuration(episode_metadata[0])        # <<
+        payload.deeplink_web    = self.getDeeplinkSeason(season_metadata[0],
+                                                         content_metadata)     # <<
+        payload.image           = self.getImage(content_metadata) 
+        payload.rating          = self.getRating(content_metadata)
+        payload.genres          = self.getGenres(content_metadata)
+        payload.packages        = [{"Type":"free-vod"}]
+        payload.createdAt       = self._created_at
+
+        return payload
 
     def getId(self, content_metadata) -> str:
         return content_metadata.get("_id")
@@ -197,36 +310,59 @@ class PlutoFranco():
         return content_metadata.get("name")
 
     def getDuration(self, content_metadata) -> int:
-        return content_metadata.get("allotment")//60
+        duration = content_metadata.get("allotment")
+        if duration:
+            return duration // 60
+
+        duration = content_metadata.get("duration")
+        if duration:
+            return (duration // 1000) // 60
+
+        return None
 
     def getSynopsis(self, content_metadata) -> str:
         return content_metadata.get("description")
 
     def getDeeplink(self, content_metadata) -> str:
         _type = content_metadata.get("type")
-
         if _type == "movie":
             slug_movie      = content_metadata.get("slug")
-            return self.url + "movies/" + slug_movie
+            return (self.url 
+                    + "movies/" 
+                    + slug_movie
+                    + "/details") # Sin /details nos lleva a ver la peli directo
         elif _type == "series":
             slug_series     = content_metadata.get("slug")
-            return self.url + "series/" + slug_series
+            return (self.url 
+                    + "series/" 
+                    + slug_series)
 
     def getDeeplinkSeason(self, content_metadata, parent_metadata) -> str:
         slug_series     = parent_metadata.get("slug")
         season_number   = content_metadata.get("number")
-
-        return self.url + "series/" + slug_series + "/details/season/" + str(season_number)
+        return (self.url 
+                + "series/" 
+                + slug_series 
+                + "/details/season/" 
+                + str(season_number))
 
     def getDeeplinkEpisode(self, content_metadata, parent_metadata) -> str:
         slug_series     = parent_metadata.get("slug")
         slug_episode    = content_metadata.get("slug")
         season_number   = content_metadata.get("season")
-
-        return self.url + "series/" + slug_series + "/season/" + str(season_number) + "/episode/" + slug_episode
+        return (self.url 
+                + "series/" 
+                + slug_series 
+                + "/season/" 
+                + str(season_number) 
+                + "/episode/" 
+                + slug_episode)
 
     def getNumber(self, content_metadata) -> int:
-        return content_metadata.get("number")
+        number = content_metadata.get("number")
+        if number == None:
+            number = 0
+        return number
 
     def getEpisodes(self, content_metadata) -> int:
         """
@@ -254,6 +390,9 @@ class PlutoFranco():
         else:
             return rating
 
+    def getSeasonNumber(self,content_metadata) -> int:
+        return content_metadata.get("season")
+
     def getYear(self, content_metadata) -> int:
         """
         El year proviene del "slug" de la metadata.
@@ -268,17 +407,36 @@ class PlutoFranco():
         else:
             return None
 
-    def getYearSeries(self) -> int:
-        year_series             = self.first_season_year
-        self.first_season_year  = None
+    def getYearSeries(self) -> int:     ### << Dropeado
+        # year_series             = self.first_season_year
+        # self.first_season_year  = None
+        # return year_series
+        return
 
-        return year_series
+    def getYearSeason(self) -> int:     ### << Dropeado
+        ###############################################################
+        # Nueva lógica:
+        #  Si tengo al menos dos seasons con el mismo year, y todos los
+        #  episodios con el mismo year, debo dudar de mi season year.
+        #  Y por supuesto dudar de lo que le mando a YearSeries...
+        #  (Esto sumado a que sólo toma season year si el season number
+        #   corresponde a 1)
+        ###############################################################
 
-    def getYearSeason(self) -> int:
-        year_season             = self.first_episode_year
-        self.first_episode_year = None
+        # offset      = 0
+        # prev_year   = int()
+        # for year in self.all_season_years:
+            # if prev_year == year:
+                # offset =+ 1
+                # if offset == 2:
+                    # return None
+            # prev_year = year
+        
+        # year_season             = self.first_episode_year
+        # self.first_episode_year = None
 
-        return year_season
+        # return year_season
+        return None
 
     def getGenres(self, content_metadata) -> list:
         """
@@ -287,11 +445,16 @@ class PlutoFranco():
         """
         genres      = content_metadata.get("genre")
         r_genres    = re.split(r"\s[\sy&]+", genres)
-
         return r_genres
 
-    def getSeasonNumber(self,content_metadata) -> int:
-        return content_metadata.get("season")
+    def getSeasonTitle(self, content_metadata, parent_metadata) -> str:
+        """
+        Las seasons de la metadata no vienen con title propio.
+        """
+        season_title = (self.getTitle(parent_metadata)
+                       + " season "
+                       + str(self.getNumber(content_metadata)))
+        return season_title
 
     def getSeasonId(self, content_metadata, parent_metadata) -> str:
         """
@@ -299,7 +462,6 @@ class PlutoFranco():
         """
         series_slug     = parent_metadata.get("slug")
         season_number   = content_metadata.get("number")
-        season_id       = str(season_number)\
-                         + series_slug
-
+        season_id       = (str(season_number)
+                          + series_slug)
         return hashlib.md5(season_id.encode("utf-8")).hexdigest()
