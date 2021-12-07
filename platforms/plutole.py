@@ -118,7 +118,9 @@ class PlutoLE():
             for series in porCat:
                 if series['type'] == "series":
                     payload = self.get_payload_series(series)
-                    Datamanager._checkDBandAppend(self,payload,self.ids_scrapeados,self.payloads)
+                    numbers_seasons = len(payload["Seasons"])
+                    if numbers_seasons != 0:
+                        Datamanager._checkDBandAppend(self,payload,self.ids_scrapeados,self.payloads)
 
     def get_payload_movie(self,content_metadata=dict()):
         payload = Payload()
@@ -155,7 +157,6 @@ class PlutoLE():
 
         querystring     = {"offset" : "1000", "page" : "1"}
         response        = requests.request("GET", "https://service-vod.clusters.pluto.tv/v4/vod/series/" + _id + "/seasons", data=payload, headers=headers, params=querystring)
-
         return response.json()
 
     def get_payload_series(self,content_metadata=dict()):
@@ -167,6 +168,7 @@ class PlutoLE():
         name_parent = content.get("name")
         slug_parent = content.get("slug")
         for season in content.get("seasons", []):
+            nro_season = season.get("number")
             for episode in season.get("episodes", []):
                 if episode.get("_id") in self.check_id:
                     continue
@@ -174,8 +176,8 @@ class PlutoLE():
                 self.check_id.append(episode.get("_id"))
                 Datamanager._checkDBandAppend(self,payload_epi,self.ids_episcrap,self.payloads_episodes,isEpi=True)
 
-            nro_season = season.get("number")
             seasons.append(self.build_payload_season(content,nro_season))
+
 
         payload = Payload()
         payload.platform_code = self._platform_code
@@ -324,6 +326,7 @@ class PlutoLE():
     def get_year_series(self,metadata):  #se hace chequeo por si no es la primer temporada
         content = metadata.get("seasonsNumbers")
         year = None
-        if content[0] == 1:
-            year = self.get_year(metadata)
+        if (len(content) != 0):
+            if content[0] == 1:
+                year = self.get_year(metadata)
         return year
