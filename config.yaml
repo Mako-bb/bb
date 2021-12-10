@@ -56,7 +56,7 @@ ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrol
   AllblkFranco:
     countries:
       US: us.allblkfranco
-    url: https://allblk.tv/
+    url: https://allblk.tv/browse/all
 
   PlutoFranco:
     countries:
