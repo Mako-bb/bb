@@ -50,6 +50,9 @@ class Amc():
         self.headers = {"Accept": "application/json",
                         "Content-Type": "application/json; charset=utf-8"}
 
+        self.list_db_episodes = Datamanager._getListDB(
+            self, self.titanScrapingEpisodios)
+
         if type == 'return':
             '''
             Retorna a la Ultima Fecha
@@ -71,18 +74,17 @@ class Amc():
 
     def _scraping(self, testing=False):
         payloads_series = []
-        list_db_episodes = Datamanager._getListDB(
-            self, self.titanScrapingEpisodios)
         # Definimos los links de las apis y con el Datamanager usamos la función _getJson
         episode_data = Datamanager._getJSON(self, self._episode_url)
         serie_data = Datamanager._getJSON(self,self._show_url )
         movie_data = Datamanager._getJSON(self, self._movies_url)
 
         self.getPayloadMovies(movie_data)
-        #self.getPayloadEpisodes(episode_data)
+        self.getPayloadEpisodes(episode_data, serie_data)
         self.getPayloadShows(serie_data)
 
     ##################################################################
+    ############################# MOVIES #############################
 
     def getTitle(self, content):
         return content['properties']['cardData']['text']['title']
@@ -100,30 +102,40 @@ class Amc():
         return (self._format_url).format(content['properties']['cardData']['meta']['permalink'])
 
     ##################################################################
+    ############################ EPISODES ############################
+    def get_parent_title(self, content):
+        try:
+            return content['properties']['title']
+        except:
+            return None
 
-    def getTitleEpisode(self, content):
-        return content['properties']['title']
+    def get_title_episode(self, content):
+        try:
+            return content['properties']['cardData']['meta']['title']
+        except:
+            return None
 
     def getIdEpisode(self, content):
-        return content['properties']['cardData']['meta']['nid']
+        try:
+            return content['properties']['cardData']['meta']['nid']
+        except:
+            return None
 
     def getDescriptionEpisode(self, content):
-        return content['properties']['cardData']['text']['description']
-
-    def getSeasonEpisode(self, content):
-        season = content['properties']['cardData']['text']['seasonEpisodeNumber']
-        return (season[-1:])[:-1]
+        try:
+            return content['properties']['cardData']['text']['description']
+        except:
+            return None
 
     def getEpisodeNumber(self, content):
         return 0
 
-    ##################################################################
+    def getParentTitle():
+        return 0
 
-    def getGenreShow(self, content):
-        try:
-            return content['properties']['cardData']['meta']['genre']
-        except:
-            return None
+
+    ##################################################################
+    ############################# SHOWS ##############################
     
     def getShowTitle(self, content):
         try:
@@ -201,69 +213,94 @@ class Amc():
             Datamanager._checkDBandAppend(self, payloads_movie, list_db, payloads)
         Datamanager._insertIntoDB(self, payloads, self.titanScraping)
         
-    def getPayloadEpisodes(self, content):  
-        payloads = []
-        list_db = Datamanager._getListDB(self, self.titanScraping)
-        episodes_data = content['data']['children'][2]['children']
+    def get_season_from_episode(self, content):
+        try:
+            season = content['properties']['cardData']['text']['seasonEpisodeNumber'].split(', ')[0]
+            return season
+        except:
+            return None
 
-        for episode in episodes_data:
-            print("Titulo: ", self.getTitleEpisode(episode))
-            print("Episodio: ", self.getSeasonEpisode(episode))
+    def get_episode_number(self, content):
+        try:
+            season = content['properties']['cardData']['text']['seasonEpisodeNumber'].split(', ')[1]
+            return season
+        except:
+            return None
+    
+    def get_parent_id_from_title(self, parent_title, show_info):
+        data = show_info['data']['children']
 
-            payload_episodes = {      
-              "PlatformCode":  self._platform_code, #Obligatorio      
-              "Id":            self.getIdEpisode(episode), #Obligatorio
-              "ParentId":      "str", #Obligatorio #Unicamente en Episodios
-              "ParentTitle":   "str", #Unicamente en Episodios 
-              "Episode":       22, #Obligatorio #Unicamente en Episodios  
-              "Season":        22, #Obligatorio #Unicamente en Episodios
-              "Crew":          [ #Importante
-                                 {
-                                    "Role": "str", 
-                                    "Name": "str"
-                                 },
-                                 ...
-             ],
-              "Title":         self.getTitleEpisode(content), #Obligatorio      
-              "OriginalTitle": "str",                          
-              "Year":          "int",     #Important!     
-              "Duration":      "int",      
-              "ExternalIds":   "list",       
-              "Deeplinks": {          
-                "Web":       "str",       #Obligatorio          
-                "Android":   "str",          
-                "iOS":       "str",      
-              },      
-              "Synopsis":      self.getDescriptionEpisode(content),      
-              "Image":         "list",     
-              "Subtitles": "list",
-              "Dubbed": "list",
-              "Rating":        "str",     #Important!      
-              "Provider":      "list",      
-              "Genres":        "list",    #Important!      
-              "Cast":          "list",    #Important!        
-              "Directors":     "list",    #Important!      
-              "Availability":  "str",     #Important!      
-              "Download":      "bool",      
-              "IsOriginal":    "bool",    #Important!      
-              "IsAdult":       "bool",    #Important!   
-              "IsBranded":     "bool",    #Important!   (ver link explicativo)
-              "Packages":      "list",    #Obligatorio      
-              "Country":       "list",      
-              "Timestamp":     "str", #Obligatorio      
-              "CreatedAt":     "str", #Obligatorio 
-            }
-            Datamanager._checkDBandAppend(self, payload_episodes, list_db, payloads)
-        Datamanager._insertIntoDB(self, payloads, self.titanScraping)    
+        for item in data:
+            if item['properties'].get('title'):
+                if 'Shows' in item['properties']['title']:
+                    shows_data = item['children']
+
+        for show in shows_data:
+            if (parent_title == self.getShowTitle(show)):
+                return self.getShowId(show)
+
+        return None
 
 
-        Datamanager._insertIntoDB(
-            self, payloads, self.titanScrapingEpisodios)
+
+    def getPayloadEpisodes(self, content, show_info):  
+        self.payloads = []
+        episodes = content['data']['children'][2]['children']
+
+        for episode in episodes:
+            print("####################################################################################################################")
+            parent_title = self.get_parent_title(episode)
+            parent_id = self.get_parent_id_from_title(parent_title, show_info)
+
+            print("Parent title: ", parent_title)
+
+            for data_episode in episode['children']:
+                title_episode = self.get_title_episode(data_episode)
+                episode_id = self.getIdEpisode(data_episode)
+                #print("           {} : {} -> {}".format(parent_id, episode_id, title_episode))
+                payload_episodes = {      
+                "PlatformCode":  self._platform_code, #Obligatorio      
+                "Id":            str(episode_id), #Obligatorio
+                "ParentId":      str(parent_id), #Obligatorio #Unicamente en Episodios
+                "ParentTitle":   parent_title, #Unicamente en Episodios 
+                "Episode":       self.get_episode_number(data_episode), #Obligatorio #Unicamente en Episodios  
+                "Season":        self.get_season_from_episode(data_episode), #Obligatorio #Unicamente en Episodios
+                "Crew":          None, 
+                "Title":         title_episode, #Obligatorio      
+                "OriginalTitle": parent_title,                          
+                "Year":          2008,     #Important!     Año cualquiera
+                "Duration":      None,      
+                "ExternalIds":   None,       
+                "Deeplinks": {          
+                    "Web":       "str",       #Obligatorio          
+                    "Android":   None,          
+                    "iOS":       None,      
+                },      
+                "Synopsis":      self.getDescriptionEpisode(content),      
+                "Image":         None,     
+                "Subtitles":     None,
+                "Dubbed":        None,
+                "Rating":        None,     #Important!      
+                "Provider":      None,      
+                "Genres":        None,    #Important!      NO TIENE GENERO EPISODES
+                "Cast":          None,    #Important!        
+                "Directors":     None,    #Important!      
+                "Availability":  None,     #Important!      
+                "Download":      None,      
+                "IsOriginal":    None,    #Important!      
+                "IsAdult":       None,    #Important!   
+                "IsBranded":     None,    #Important!   (ver link explicativo)
+                "Packages":      "hola",    #Obligatorio      
+                "Country":       [],      
+                "Timestamp":     datetime.now().isoformat(), #Obligatorio      
+                "CreatedAt":     self._created_at, #Obligatorio 
+                }
+                Datamanager._checkDBandAppend(self, payload_episodes, self.list_db_episodes, self.payloads, isEpi=True)
+        Datamanager._insertIntoDB(self, self.payloads, self.titanScrapingEpisodios)    
+
         self.sesion.close()
 
-        Upload(self._platform_code, self._created_at, testing=self.testing)
-
-
+        #Upload(self._platform_code, self._created_at, testing=self.testing)
 
     def getPayloadShows(self, content):
         payloads = []
@@ -303,7 +340,7 @@ class Amc():
                 "Dubbed": None,
                 "Rating":        None,     #Important!      
                 "Provider":      None,      
-                "Genres":        self.getGenreShow(content),    #Important!      
+                "Genres":        [],    #Important!      NO TIENE GENERO SHOWS
                 "Cast":          None,    #Important!        
                 "Directors":     None,    #Important!      
                 "Availability":  None,     #Important!      
