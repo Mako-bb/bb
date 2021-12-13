@@ -1,8 +1,5 @@
 import time
 import requests
-#import pymongo
-import re
-#import json
 from handle.replace import _replace
 from common import config
 from datetime import datetime
@@ -91,13 +88,7 @@ class Amc():
                     movies_data = item
                     break
         for movie in movies_data['children']:
-            id= self.get_id(movie)
-            title= self.get_title(movie)
-            permalink= self.get_permalink(movie)
-            sinopsis= self.get_sinopsis(movie)
-            image=self.get_images(movie)
-            genre=self.get_genre(movie)
-            self.payload_movie(id,title,permalink,sinopsis,image,genre)
+            self.payload_movie(movie)
         Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)
 
     def get_payload_serie(self,content):
@@ -110,14 +101,8 @@ class Amc():
                     series_data = item
                     break
         for serie in series_data['children']:
-            id=self.get_id(serie)
-            title=self.get_title(serie)
-            self.matchid[title]=id
-            permalink=self.get_permalink(serie)
-            sinopsis=self.get_sinopsis(serie)
-            image=self.get_images(serie)
-            genre=self.get_genre(serie)
-            self.payload_series(id,title,permalink,sinopsis,image,genre)
+            self.matchid[self.get_title(serie)]=id
+            self.payload_series(serie)
         Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)
 
     def get_payload_episodes(self,content):
@@ -126,42 +111,33 @@ class Amc():
         for serie in data:
             title=serie['properties']['title']
             for episode in serie['children']:
-                id=self.get_id(episode)
-                epititle=self.get_title(episode)
-                serieid=self.get_serieid(title)
-                permalink=self.get_permalink(episode)
-                season=int(episode['properties']['cardData']['text']['seasonEpisodeNumber'].split(',')[0].replace('S',''))
-                numepi=int(episode['properties']['cardData']['text']['seasonEpisodeNumber'].split(',')[1].replace('E',''))
-                sinopsis=self.get_sinopsis(episode)
-                image=self.get_images(episode)
-            self.payload_episodes(title,id,epititle,season,numepi,permalink,sinopsis,image,serieid)
+                self.payload_episodes(episode, title)
         Datamanager._insertIntoDB(self, self.payloads_epis, self.titanScrapingEpisodios)
 
-
-    def payload_movie(self,id,title,permalink,sinopsis,image,genre):
+    def payload_movie(self, movie):
         payload_contenidos = { 
             'PlatformCode':  self._platform_code, #Obligatorio   
-            "Id":            id, #Obligatorio
+            "Id":            self.get_id(movie), #Obligatorio
             "Crew":          None,
-            "Title":         title, #Obligatorio      
-            "CleanTitle":    _replace(title), #Obligatorio      
+            "Title":         self.get_title(movie), #Obligatorio      
+            "CleanTitle":    _replace(self.get_title(movie)), #Obligatorio      
             "OriginalTitle": None,                          
             "Type":          'movie',     #Obligatorio  #movie o serie     
             "Year":          None,     #Important!  1870 a año actual   
             "Duration":      None,     #en minutos   
             "ExternalIds":   None,    
             "Deeplinks": {
-                "Web":       permalink,       #Obligatorio          
+                "Web":       self.get_permalink(movie),       #Obligatorio          
                 "Android":   None,          
                 "iOS":       None,      
             },
-            "Synopsis":      sinopsis,      
-            "Image":         image,      
+            "Synopsis":      self.get_sinopsis(movie),      
+            "Image":         self.get_images(movie),      
             "Subtitles":    None,
             "Dubbed":       None,
             "Rating":        None,     #Important!      
             "Provider":      None,      
-            "Genres":        genre,    #Important!      
+            "Genres":        self.get_genre(movie),    #Important!      
             "Cast":          None,    #Important!        
             "Directors":     None,    #Important!      
             "Availability":  None,     #Important!      
@@ -176,35 +152,35 @@ class Amc():
             }
         Datamanager._checkDBandAppend(self, payload_contenidos, self.list_db, self.payloads)
 
-    def payload_series(self,id,title,permalink,sinopsis,image,genre):
+    def payload_series(self,serie):
         payload_contenido_series = { 
             "PlatformCode":  self._platform_code, #Obligatorio   
-            "Id":            id, #Obligatorio
+            "Id":            self.get_id(serie), #Obligatorio
             "Seasons":       [ #Unicamente para series
                                 None
             ],
             "Crew":          [ #Importante
                                 None
             ],
-            "Title":         title, #Obligatorio      
-            "CleanTitle":    _replace(title), #Obligatorio      
+            "Title":         self.get_title(serie), #Obligatorio      
+            "CleanTitle":    _replace(self.get_title(serie)), #Obligatorio      
             "OriginalTitle": None,                          
             "Type":          'serie',     #Obligatorio  #movie o serie     
             "Year":          None,     #Important!  1870 a año actual   
             "Duration":      None,      
             "ExternalIds":   None,       
             "Deeplinks": {
-                "Web":       permalink,       #Obligatorio          
+                "Web":       self.get_permalink(serie),       #Obligatorio          
                 "Android":   None,          
                 "iOS":       None,      
             },
-            "Synopsis":      sinopsis,      
-            "Image":         image,      
+            "Synopsis":      self.get_sinopsis(serie),      
+            "Image":         self.get_images(serie),      
             "Subtitles": None,
             "Dubbed": None,
             "Rating":        None,     #Important!      
             "Provider":      None,      
-            "Genres":        genre,    #Important!      
+            "Genres":        None,    #Important!      
             "Cast":          None,    #Important!        
             "Directors":     None,    #Important!      
             "Availability":  None,     #Important!      
@@ -219,27 +195,27 @@ class Amc():
             }
         Datamanager._checkDBandAppend(self, payload_contenido_series, self.list_db, self.payloads)
 
-    def payload_episodes(self,title,epititle,epid,season,numepi,permalink,sinopsis,image,serieid):
+    def payload_episodes(self,episode,title):
             payload_episodios = {      
                 "PlatformCode":  self._platform_code, #Obligatorio      
-                "Id":            epid, #Obligatorio
-                "ParentId":      serieid, #Obligatorio #Unicamente en Episodios
+                "Id":            self.get_id(episode), #Obligatorio
+                "ParentId":      self.get_serieid(title), #Obligatorio #Unicamente en Episodios
                 "ParentTitle":   title, #Unicamente en Episodios 
-                "Episode":       numepi, #Unicamente en Episodios  
-                "Season":        season, #Obligatorio #Unicamente en Episodios
+                "Episode":       int(episode['properties']['cardData']['text']['seasonEpisodeNumber'].split(',')[1].replace('E','')), #Unicamente en Episodios  
+                "Season":        int(episode['properties']['cardData']['text']['seasonEpisodeNumber'].split(',')[0].replace('S','')), #Obligatorio #Unicamente en Episodios
                 "Crew":          None, #important
-                "Title":         epititle, #Obligatorio      
+                "Title":         self.get_title(episode), #Obligatorio      
                 "OriginalTitle": None,                          
                 "Year":          None,     #Important!     
                 "Duration":      None,      
                 "ExternalIds":   None,     
                 "Deeplinks": {          
-                    "Web":       permalink,       #Obligatorio          
+                    "Web":       self.get_permalink(episode),       #Obligatorio          
                     "Android":   None,          
                     "iOS":       None,      
                 },      
-                "Synopsis":      sinopsis,      
-                "Image":         image,     
+                "Synopsis":      self.get_sinopsis(episode),      
+                "Image":         self.get_images(episode),     
                 "Subtitles": None,
                 "Dubbed": None,
                 "Rating":        None,     #Important!      
@@ -262,43 +238,42 @@ class Amc():
 
 
     def get_id(self,content):
-        try:
-            return content['properties']['cardData']['meta']['nid']
-        except:
-            None
+        return content['properties']['cardData']['meta']['nid']
 
     def get_title(self,content):
-        try:
-            return content['properties']['cardData']['text']['title']
-        except:
-            None
+        return content['properties']['cardData']['text']['title']
 
     def get_permalink(self,content):
-        try:
             return 'https://www.amc.com'+content['properties']['cardData']['meta']['permalink']
-        except:
-            None
 
     def get_sinopsis(self,content):
         try:
             return content['properties']['cardData']['text']['description']
         except:
-            None
+            return None
 
     def get_images(self,content):
+        images=[]
         try:
-            return content['properties']['cardData']['images']
+            if len(content['properties']['cardData']['images'])==0:
+                return images
+            else:
+                for imag in content['properties']['cardData']['images']:
+                    images.append(imag)
+                return images
         except:
             return None
 
     def get_genre(self,content):
-        try:
-            return content['properties']['cardData']['meta']['genre']
-        except:
-            None
+        genre=[]
+        if content['properties']['cardData']['meta']['genre']:
+            for gen in content['properties']['cardData']['meta']['genre']:
+                    genre.append(gen)
+        else:
+            return genre
 
     def get_serieid(self,title):
         if title in self.matchid:
             return self.matchid[title]
         else:
-            None
+            return None
