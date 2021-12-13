@@ -115,10 +115,9 @@ class Amc():
             count += 1
 
             self.payload_movie_and_shows(title, id, type, deeplink, description, image, genre)   #Se encarga de cargar el payload con los campos correspondientes
-        print("###########################################\nCantidad total de peliculas encontradas: "+ str(count) + "\n" + "###########################################\n")
+        #print("###########################################\nCantidad total de peliculas encontradas: "+ str(count) + "\n" + "###########################################\n")
 
-        #Se debe insertar en la BD Local (OJO, TODAVIA NO LO USAMOS)
-        #Datamanager._insertIntoDB(self, self.payloads_movies, self.titanScraping)
+        Datamanager._insertIntoDB(self, self.payloads_movies, self.titanScraping)
 
     def get_payload_shows(self, content):
         data = content['data']['children']
@@ -141,10 +140,9 @@ class Amc():
             count += 1
 
             self.payload_movie_and_shows(title, id, type, deeplink, description, image, genre)   #Se encarga de cargar el payload con los campos correspondientes
-        print("########################################\nCantidad total de series encontradas: "+ str(count) + "\n" + "########################################\n")
+        #print("########################################\nCantidad total de series encontradas: "+ str(count) + "\n" + "########################################\n")
 
-        #Se debe insertar en la BD Local (OJO, TODAVIA NO LO USAMOS)
-        #Datamanager._insertIntoDB(self, self.payloads_shows, self.titanScraping)
+        Datamanager._insertIntoDB(self, self.payloads_shows, self.titanScraping)
 
     def get_payload_episodes(self, content):
         data = content['data']['children']
@@ -156,7 +154,7 @@ class Amc():
         count = 0
         for show_episode in shows_episodes_data['children']:   #Se para en el contenido series y las recorre para extraer la data           
             parenttitle = self.get_parent_title_episode(show_episode)
-            parentid = self.get_parent_id_episode(parenttitle)
+            parentid = self.get_parent_id_episode(parenttitle, count)
             for data in show_episode['children']:
                 id = self.get_id(data)
                 titleepisode = self.get_title(data)        
@@ -168,16 +166,16 @@ class Amc():
                 count += 1
 
                 self.payload_episodes(id, titleepisode, parentid, parenttitle, season, episode, deeplink, description, image)   #Se encarga de cargar el payload con los campos correspondientes
-        print("############################################\nCantidad total de episodios encontrados: "+ str(count) + "\n" + "############################################\n")
+        #print("############################################\nCantidad total de episodios encontrados: "+ str(count) + "\n" + "############################################\n")
 
-        #Se debe insertar en la BD Local (OJO, TODAVIA NO LO USAMOS)
-        #Datamanager._insertIntoDB(self, self.payloads_episodes, self.titanScrapingEpisodios)
+        Datamanager._insertIntoDB(self, self.payloads_episodes, self.titanScrapingEpisodios)
 
     #####Los getters se encargan de extraer cada parte importante de información de episodios#####
-    def get_parent_id_episode(self, parenttitle):
+    def get_parent_id_episode(self, parenttitle, count):
         for item in self.idtitle_shows:
             if item['Title'] == parenttitle:
-                return item['Id']
+                return str(item['Id'])
+        return "Not match" + str(count)     #Si el titulo no matchea retorna "Not match" y el número de episodio que no encuentra           
     
     def get_parent_title_episode(self, content):
          return content['properties']['title'] 
@@ -254,7 +252,7 @@ class Amc():
         "IsOriginal":    None,                              #Important!        
         "IsAdult":       None,                              #Important!   
         "IsBranded":     None,                              #Important!   (ver link explicativo)
-        "Packages":     {"subscription-vod"},               #Se debe colocar el Packages para que reconozca el modelo de negocio del contenido                                      
+        "Packages":     [{'Type': 'subscription-vod'}],             #Se debe colocar el Packages para que reconozca el modelo de negocio del contenido                                      
         "Country":       None,
         "Timestamp":     datetime.now().isoformat(),        #Obligatorio  Inserte fecha en formato ISO.
         "CreatedAt":     self._created_at,                  #Obligatorio  Inserta time.strftime('%Y-%m-%d') para setear fecha en createdAt.
@@ -263,7 +261,7 @@ class Amc():
             Datamanager._checkDBandAppend(self, payload_content, self.list_db_movies_shows, self.payloads_movies)    #Compara el content con lo que existe en la base de datos y lo guarda en payloads
         elif type == 'serie':
             Datamanager._checkDBandAppend(self, payload_content, self.list_db_movies_shows, self.payloads_shows)    #Compara el content con lo que existe en la base de datos y lo guarda en payloads
-        print(payload_content)
+        #print(payload_content)
 
     #Se encarga de llenar el payload con la data para episodios y llamar a Datamanager
     def payload_episodes(self, id, titleepisode, parentid, parenttitle, season, episode, deeplink, description, image):
@@ -296,10 +294,10 @@ class Amc():
         'Download':      None,
         'IsOriginal':    None,
         'IsAdult':       None,
-        'Packages':      {"subscription-vod"},
+        'Packages':      [{'Type': 'subscription-vod'}],
         'Country':       None,
         'Timestamp':     datetime.now().isoformat(),
         'CreatedAt':     self._created_at,
         }            
         Datamanager._checkDBandAppend(self, payload_content, self.list_db_episodes, self.payloads_episodes, isEpi=True)     #Compara el content con lo que existe en la base de datos y lo guarda en payloads
-        print(payload_content)
+        #print(payload_content)
