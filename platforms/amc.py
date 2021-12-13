@@ -73,36 +73,54 @@ class Amc():
             self._scraping()
 
     def _scraping(self, testing=False):
-        payloads_series = []
         # Definimos los links de las apis y con el Datamanager usamos la función _getJson
         episode_data = Datamanager._getJSON(self, self._episode_url)
         serie_data = Datamanager._getJSON(self,self._show_url )
         movie_data = Datamanager._getJSON(self, self._movies_url)
 
-        self.getPayloadMovies(movie_data)
-        self.getPayloadEpisodes(episode_data, serie_data)
-        self.getPayloadShows(serie_data)
+        self.get_payload_movies(movie_data)
+        self.get_payload_episodes(episode_data, serie_data)
+        self.get_payload_shows(serie_data)
+
+    ##################################################################
+    ######################### METODOS EN COMUN #######################
+
+    def get_title(self, content):
+        try:
+            return content['properties']['cardData']['text']['title']
+        except:
+            None
+
+    def get_id(self, content):
+        try:
+            return content['properties']['cardData']['meta']['nid']
+        except:
+            return None
+
+    def get_description(self, content):
+        try:
+            return content['properties']['cardData']['text']['description']
+        except:
+            return None
+
+    def get_deeplink(self, content):
+        return (self._format_url).format(content['properties']['cardData']['meta']['permalink'])
+    
+    def get_images(self,content):
+        try:
+            return [content['properties']['cardData']['images']]
+        except:
+            return None
 
     ##################################################################
     ############################# MOVIES #############################
 
-    def getTitle(self, content):
-        return content['properties']['cardData']['text']['title']
-
-    def getDescription(self, content):
-        return content['properties']['cardData']['text']['description']
-    
-    def getId(self, content):
-        return content['properties']['cardData']['meta']['nid']
-
-    def getGenre(self, content):
+    def get_genre(self, content):
         return content['properties']['cardData']['meta']['genre']
-
-    def getDeeplink(self, content):
-        return (self._format_url).format(content['properties']['cardData']['meta']['permalink'])
 
     ##################################################################
     ############################ EPISODES ############################
+
     def get_parent_title(self, content):
         try:
             return content['properties']['title']
@@ -115,103 +133,13 @@ class Amc():
         except:
             return None
 
-    def getIdEpisode(self, content):
-        try:
-            return content['properties']['cardData']['meta']['nid']
-        except:
-            return None
-
-    def getDescriptionEpisode(self, content):
-        try:
-            return content['properties']['cardData']['text']['description']
-        except:
-            return None
-
-    def getEpisodeNumber(self, content):
-        return 0
-
-    def getParentTitle():
-        return 0
-
-
     ##################################################################
     ############################# SHOWS ##############################
-    
-    def getShowTitle(self, content):
-        try:
-            return content['properties']['cardData']['text']['title']
-        except:
-            return None
 
-    def getShowId(self, content):
-        try:
-            return content['properties']['cardData']['meta']['nid']
-        except:
-            return None
-        
-    def getShowPermalink(self, content):
-        try:
-            return content['properties']['cardData']['meta']['permalink']
-        except:
-            return None
-
-    def getShowDescription(self, content):
-        try:
-            return content['properties']['cardData']['text']['description']
-        except:
-            return None
+    # Los metodos estaban repetidos, no son necesarios
 
     ##################################################################
-
-    def getPayloadMovies(self, content):
-        payloads = []
-        list_db = Datamanager._getListDB(self, self.titanScraping)
-        data = content['data']['children']
-
-        for item in data:
-            if item['properties'].get('title'):
-                if 'Movies' in item['properties']['title']:
-                    movies_data = item
-                    break
-
-        for movie in movies_data['children']:
-            print('Titulo: ', self.getTitle(movie))
-            payloads_movie = {
-                "PlatformCode":  self._platform_code,
-                "Title":         self.getTitle(movie),
-                "CleanTitle":    _replace(self.getTitle(movie)),
-                "OriginalTitle": None,
-                "Type":          "movie",
-                "Year":          int(1999),
-                "Duration":      None,
-
-                "Id":            str(self.getId(movie)),
-                "Deeplinks": {
-
-                    "Web":       self.getDeeplink(movie).replace('/tve?',''),
-                    "Android":   None,
-                    "iOS":       None,
-                },
-                "Synopsis":      self.getDescription(movie),
-                "Image":         self.get_images(movie),
-                "Rating":        None,  # Important!
-                "Provider":      None,
-                "Genres":        self.getGenre(movie),  # Important!
-                "Cast":          None,
-                "Directors":     None,  # Important!
-                "Availability":  None,  # Important!
-                "Download":      None,
-                "IsOriginal":    None,  # Important!
-                "IsAdult":       None,  # Important!
-                "IsBranded":     None,  # Important!
-                # Obligatorio
-                "Packages":      [{'Type': 'tv-everywhere'}],
-                "Country":       None,
-                "Timestamp":     datetime.now().isoformat(),  # Obligatorio
-                "CreatedAt":     self._created_at,  # Obligatorio
-            }
-            Datamanager._checkDBandAppend(self, payloads_movie, list_db, payloads)
-        Datamanager._insertIntoDB(self, payloads, self.titanScraping)
+    ####################### METODOS AUXILIARES #######################
         
     def get_season_from_episode(self, content):
         try:
@@ -236,14 +164,65 @@ class Amc():
                     shows_data = item['children']
 
         for show in shows_data:
-            if (parent_title == self.getShowTitle(show)):
-                return self.getShowId(show)
+            if (parent_title == self.get_title(show)):
+                return self.get_id(show)
 
         return None
 
+    ##################################################################
+    ############## METODOS QUE OBTIENEN LOS PAYLOADS #################
 
+    def get_payload_movies(self, content):
+        payloads = []
+        list_db = Datamanager._getListDB(self, self.titanScraping)
+        data = content['data']['children']
 
-    def getPayloadEpisodes(self, content, show_info):  
+        for item in data:
+            if item['properties'].get('title'):
+                if 'Movies' in item['properties']['title']:
+                    movies_data = item
+                    break
+
+        for movie in movies_data['children']:
+            print('Titulo: ', self.get_title(movie))
+            payloads_movie = {
+                "PlatformCode":  self._platform_code,
+                "Title":         self.get_title(movie),
+                "CleanTitle":    _replace(self.get_title(movie)),
+                "OriginalTitle": None,
+                "Type":          "movie",
+                "Year":          int(1999),
+                "Duration":      None,
+
+                "Id":            str(self.get_id(movie)),
+                "Deeplinks": {
+
+                    "Web":       self.get_deeplink(movie).replace('/tve?',''),
+                    "Android":   None,
+                    "iOS":       None,
+                },
+                "Synopsis":      self.get_description(movie),
+                "Image":         self.get_images(movie),
+                "Rating":        None,  # Important!
+                "Provider":      None,
+                "Genres":        self.get_genre(movie),  # Important!
+                "Cast":          None,
+                "Directors":     None,  # Important!
+                "Availability":  None,  # Important!
+                "Download":      None,
+                "IsOriginal":    None,  # Important!
+                "IsAdult":       None,  # Important!
+                "IsBranded":     None,  # Important!
+                # Obligatorio
+                "Packages":      [{'Type': 'tv-everywhere'}],
+                "Country":       None,
+                "Timestamp":     datetime.now().isoformat(),  # Obligatorio
+                "CreatedAt":     self._created_at,  # Obligatorio
+            }
+            Datamanager._checkDBandAppend(self, payloads_movie, list_db, payloads)
+        Datamanager._insertIntoDB(self, payloads, self.titanScraping)
+
+    def get_payload_episodes(self, content, show_info):  
         self.payloads = []
         episodes = content['data']['children'][2]['children']
 
@@ -256,7 +235,7 @@ class Amc():
 
             for data_episode in episode['children']:
                 title_episode = self.get_title_episode(data_episode)
-                episode_id = self.getIdEpisode(data_episode)
+                episode_id = self.get_id(data_episode)
                 #print("           {} : {} -> {}".format(parent_id, episode_id, title_episode))
                 payload_episodes = {      
                 "PlatformCode":  self._platform_code, #Obligatorio      
@@ -276,7 +255,7 @@ class Amc():
                     "Android":   None,          
                     "iOS":       None,      
                 },      
-                "Synopsis":      self.getDescriptionEpisode(content),      
+                "Synopsis":      self.get_description(content),      
                 "Image":         None,     
                 "Subtitles":     None,
                 "Dubbed":        None,
@@ -290,7 +269,7 @@ class Amc():
                 "IsOriginal":    None,    #Important!      
                 "IsAdult":       None,    #Important!   
                 "IsBranded":     None,    #Important!   (ver link explicativo)
-                "Packages":      "hola",    #Obligatorio      
+                "Packages":      [{'Type': 'tv-everywhere'}],    #Obligatorio      
                 "Country":       [],      
                 "Timestamp":     datetime.now().isoformat(), #Obligatorio      
                 "CreatedAt":     self._created_at, #Obligatorio 
@@ -298,11 +277,7 @@ class Amc():
                 Datamanager._checkDBandAppend(self, payload_episodes, self.list_db_episodes, self.payloads, isEpi=True)
         Datamanager._insertIntoDB(self, self.payloads, self.titanScrapingEpisodios)    
 
-        self.sesion.close()
-
-        #Upload(self._platform_code, self._created_at, testing=self.testing)
-
-    def getPayloadShows(self, content):
+    def get_payload_shows(self, content):
         payloads = []
         list_db = Datamanager._getListDB(self, self.titanScraping)
         data = content['data']['children']
@@ -315,26 +290,26 @@ class Amc():
         for show in shows_data:
             payload_shows = { 
                 "PlatformCode":  self._platform_code, #Obligatorio   
-                "Id":            self.getShowId(show), #Obligatorio
+                "Id":            self.get_id(show), #Obligatorio
                 "Seasons":       [ #Unicamente para series
                                     None
                 ],
                 "Crew":          [ #Importante
                                     None
                 ],
-                "Title":         self.getShowTitle(show), #Obligatorio      
-                "CleanTitle":    _replace(self.getShowTitle(show)), #Obligatorio      
+                "Title":         self.get_title(show), #Obligatorio      
+                "CleanTitle":    _replace(self.get_title(show)), #Obligatorio      
                 "OriginalTitle": None,                          
                 "Type":          'serie',     #Obligatorio  #movie o serie     
                 "Year":          None,     #Important!  1870 a año actual   
                 "Duration":      None,      
                 "ExternalIds":   None,       
                 "Deeplinks": {
-                    "Web":       self.getShowPermalink(show),       #Obligatorio          
+                    "Web":       self.get_deeplink(show),       #Obligatorio          
                     "Android":   None,          
                     "iOS":       None,      
                 },
-                "Synopsis":      self.getShowDescription(show),      
+                "Synopsis":      self.get_description(show),      
                 "Image":         self.get_images(show),      
                 "Subtitles": None,
                 "Dubbed": None,
@@ -355,9 +330,6 @@ class Amc():
                 }
             Datamanager._checkDBandAppend(self, payload_shows, list_db, payloads)
         Datamanager._insertIntoDB(self, payloads, self.titanScraping)    
-
-    def get_images(self,content):
-        try:
-            return [content['properties']['cardData']['images']]
-        except:
-            return None
+    
+    self.sesion.close()
+    Upload(self._platform_code, self._created_at, testing=self.testing)
