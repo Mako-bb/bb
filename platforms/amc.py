@@ -93,7 +93,7 @@ class Amc():
 
     def get_payload_serie(self,content):
         self.payloads = []
-        self.matchid={}
+        self.matchid=[]
         data = content['data']['children']
         for item in data:
             if item['properties'].get('title'):
@@ -101,7 +101,7 @@ class Amc():
                     series_data = item
                     break
         for serie in series_data['children']:
-            self.matchid[self.get_title(serie)]=id
+            self.matchid.append({'title':self.get_title(serie),'id':self.get_id(serie)})
             self.payload_series(serie)
         Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)
 
@@ -273,7 +273,8 @@ class Amc():
             return genre
 
     def get_serieid(self,title):
-        if title in self.matchid:
-            return self.matchid[title]
-        else:
-            return None
+        for item in self.matchid:
+            if title== item['title']:
+                return item['id']
+            elif title != item['title']:
+                return None
