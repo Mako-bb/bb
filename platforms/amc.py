@@ -97,7 +97,7 @@ class Amc():
         data = content['data']['children']
         for item in data:
             if item['properties'].get('title'):
-                if 'Shows' in item['properties']['title']:
+                if 'Shows A - Z' in item['properties']['title']:
                     series_data = item
                     break
         for serie in series_data['children']:
@@ -276,5 +276,3 @@ class Amc():
         for item in self.matchid:
             if title== item['title']:
                 return item['id']
-            elif title != item['title']:
-                return None
