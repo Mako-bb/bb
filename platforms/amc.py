@@ -331,5 +331,5 @@ class Amc():
             Datamanager._checkDBandAppend(self, payload_shows, list_db, payloads)
         Datamanager._insertIntoDB(self, payloads, self.titanScraping)    
     
-    self.sesion.close()
-    Upload(self._platform_code, self._created_at, testing=self.testing)
+        self.sesion.close()
+        #Upload(self._platform_code, self._created_at, testing=self.testing)
