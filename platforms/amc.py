@@ -116,7 +116,7 @@ class Amc():
     ############################# MOVIES #############################
 
     def get_genre(self, content):
-        return content['properties']['cardData']['meta']['genre']
+        return [content['properties']['cardData']['meta']['genre']]
 
     ##################################################################
     ############################ EPISODES ############################
@@ -151,6 +151,7 @@ class Amc():
     def get_episode_number(self, content):
         try:
             season = content['properties']['cardData']['text']['seasonEpisodeNumber'].split(', ')[1]
+            print(season)
             return season
         except:
             return None
@@ -256,12 +257,12 @@ class Amc():
                     "iOS":       None,      
                 },      
                 "Synopsis":      self.get_description(content),      
-                "Image":         None,     
+                "Image":         self.get_images(content),     
                 "Subtitles":     None,
                 "Dubbed":        None,
                 "Rating":        None,     #Important!      
                 "Provider":      None,      
-                "Genres":        None,    #Important!      NO TIENE GENERO EPISODES
+                "Genres":        [],    #Important!      NO TIENE GENERO EPISODES
                 "Cast":          None,    #Important!        
                 "Directors":     None,    #Important!      
                 "Availability":  None,     #Important!      
