@@ -319,4 +319,4 @@ class Amc():
         Datamanager._insertIntoDB(self, payloads, self.titanScraping)    
     
         self.sesion.close()
-        #Upload(self._platform_code, self._created_at, testing=self.testing)
+        Upload(self._platform_code, self._created_at, testing=self.testing)
