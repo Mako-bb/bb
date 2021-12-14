@@ -78,9 +78,9 @@ class Amc():
         serie_data = Datamanager._getJSON(self,self._show_url )
         movie_data = Datamanager._getJSON(self, self._movies_url)
 
-        self.get_payload_movies(movie_data)
+        #self.get_payload_movies(movie_data)
         self.get_payload_episodes(episode_data, serie_data)
-        self.get_payload_shows(serie_data)
+        #self.get_payload_shows(serie_data)
 
     ##################################################################
     ######################### METODOS EN COMUN #######################
@@ -144,15 +144,14 @@ class Amc():
     def get_season_from_episode(self, content):
         try:
             season = content['properties']['cardData']['text']['seasonEpisodeNumber'].split(', ')[0]
-            return season
+            return season[1].replace('S', '')
         except:
             return None
 
     def get_episode_number(self, content):
         try:
-            season = content['properties']['cardData']['text']['seasonEpisodeNumber'].split(', ')[1]
-            print(season)
-            return season
+            episode = content['properties']['cardData']['text']['seasonEpisodeNumber'].split(', ')[1]
+            return episode[1].replace('E', '')
         except:
             return None
     
@@ -192,12 +191,10 @@ class Amc():
                 "CleanTitle":    _replace(self.get_title(movie)),
                 "OriginalTitle": None,
                 "Type":          "movie",
-                "Year":          int(1999),
+                "Year":          None,
                 "Duration":      None,
-
-                "Id":            str(self.get_id(movie)),
+                "Id":           str(self.get_id(content)),
                 "Deeplinks": {
-
                     "Web":       self.get_deeplink(movie).replace('/tve?',''),
                     "Android":   None,
                     "iOS":       None,
@@ -243,35 +240,33 @@ class Amc():
                 "Id":            str(episode_id), #Obligatorio
                 "ParentId":      str(parent_id), #Obligatorio #Unicamente en Episodios
                 "ParentTitle":   parent_title, #Unicamente en Episodios 
-                "Episode":       self.get_episode_number(data_episode), #Obligatorio #Unicamente en Episodios  
-                "Season":        self.get_season_from_episode(data_episode), #Obligatorio #Unicamente en Episodios
-                "Crew":          None, 
+                "Episode":       int(self.get_episode_number(data_episode)), #Obligatorio #Unicamente en Episodios  
+                "Season":        int(self.get_season_from_episode(data_episode)), #Obligatorio #Unicamente en Episodios
+                "Id":            str(episode_id), #Obligatorio
                 "Title":         title_episode, #Obligatorio      
-                "OriginalTitle": parent_title,                          
-                "Year":          2008,     #Important!     Año cualquiera
+                "OriginalTitle": None,
+                "Year":          None,     #Important!     Año cualquiera
                 "Duration":      None,      
-                "ExternalIds":   None,       
                 "Deeplinks": {          
-                    "Web":       "str",       #Obligatorio          
+                    "Web":       self.get_deeplink(data_episode).replace('/tve?', ''),       #Obligatorio          
                     "Android":   None,          
                     "iOS":       None,      
                 },      
+                "Playback":      None,
+                "CleanTitle":    _replace(title_episode),
                 "Synopsis":      self.get_description(content),      
                 "Image":         self.get_images(content),     
-                "Subtitles":     None,
-                "Dubbed":        None,
                 "Rating":        None,     #Important!      
                 "Provider":      None,      
-                "Genres":        [],    #Important!      NO TIENE GENERO EPISODES
+                "Genres":        None,    #Important!      NO TIENE GENERO EPISODES
                 "Cast":          None,    #Important!        
                 "Directors":     None,    #Important!      
                 "Availability":  None,     #Important!      
                 "Download":      None,      
                 "IsOriginal":    None,    #Important!      
                 "IsAdult":       None,    #Important!   
-                "IsBranded":     None,    #Important!   (ver link explicativo)
                 "Packages":      [{'Type': 'tv-everywhere'}],    #Obligatorio      
-                "Country":       [],      
+                "Country":       None,      
                 "Timestamp":     datetime.now().isoformat(), #Obligatorio      
                 "CreatedAt":     self._created_at, #Obligatorio 
                 }
@@ -291,43 +286,34 @@ class Amc():
         for show in shows_data:
             payload_shows = { 
                 "PlatformCode":  self._platform_code, #Obligatorio   
-                "Id":            self.get_id(show), #Obligatorio
-                "Seasons":       [ #Unicamente para series
-                                    None
-                ],
-                "Crew":          [ #Importante
-                                    None
-                ],
+                "Id":            str(self.get_id(show)), #Obligatorio
                 "Title":         self.get_title(show), #Obligatorio      
-                "CleanTitle":    _replace(self.get_title(show)), #Obligatorio      
-                "OriginalTitle": None,                          
                 "Type":          'serie',     #Obligatorio  #movie o serie     
+                "OriginalTitle": None,                          
                 "Year":          None,     #Important!  1870 a año actual   
                 "Duration":      None,      
-                "ExternalIds":   None,       
                 "Deeplinks": {
-                    "Web":       self.get_deeplink(show),       #Obligatorio          
+                    "Web":       self.get_deeplink(show).replace('/tve?',''),       #Obligatorio          
                     "Android":   None,          
                     "iOS":       None,      
                 },
+                "Playback":     None,
+                "CleanTitle":    _replace(self.get_title(show)), #Obligatorio      
                 "Synopsis":      self.get_description(show),      
                 "Image":         self.get_images(show),      
-                "Subtitles": None,
-                "Dubbed": None,
                 "Rating":        None,     #Important!      
                 "Provider":      None,      
-                "Genres":        [],    #Important!      NO TIENE GENERO SHOWS
+                "Genres":        None,    #Important!      NO TIENE GENERO SHOWS
                 "Cast":          None,    #Important!        
                 "Directors":     None,    #Important!      
                 "Availability":  None,     #Important!      
                 "Download":      None,      
                 "IsOriginal":    None,    #Important!        
                 "IsAdult":       None,    #Important!   
-                "IsBranded":     None,    #Important!   (ver link explicativo)
                 "Packages":      [{'Type': 'tv-everywhere'}],    #Obligatorio      
-                "Country":       None,
-                "Timestamp":     datetime.now().isoformat(), #Obligatorio
-                "CreatedAt":     self._created_at, #Obligatorio
+                    "Country":       None,
+                    "Timestamp":     datetime.now().isoformat(), #Obligatorio
+                    "CreatedAt":     self._created_at, #Obligatorio
                 }
             Datamanager._checkDBandAppend(self, payload_shows, list_db, payloads)
         Datamanager._insertIntoDB(self, payloads, self.titanScraping)    
