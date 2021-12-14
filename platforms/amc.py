@@ -78,9 +78,9 @@ class Amc():
         serie_data = Datamanager._getJSON(self,self._show_url )
         movie_data = Datamanager._getJSON(self, self._movies_url)
 
-        #self.get_payload_movies(movie_data)
+        self.get_payload_movies(movie_data)
         self.get_payload_episodes(episode_data, serie_data)
-        #self.get_payload_shows(serie_data)
+        self.get_payload_shows(serie_data)
 
     ##################################################################
     ######################### METODOS EN COMUN #######################
