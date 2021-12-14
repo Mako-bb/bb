@@ -115,7 +115,6 @@ class Amc():
             count += 1
 
             self.payload_movie_and_shows(title, id, type, deeplink, description, image, genre)   #Se encarga de cargar el payload con los campos correspondientes
-        #print("###########################################\nCantidad total de peliculas encontradas: "+ str(count) + "\n" + "###########################################\n")
 
         Datamanager._insertIntoDB(self, self.payloads_movies, self.titanScraping)
 
@@ -140,7 +139,6 @@ class Amc():
             count += 1
 
             self.payload_movie_and_shows(title, id, type, deeplink, description, image, genre)   #Se encarga de cargar el payload con los campos correspondientes
-        #print("########################################\nCantidad total de series encontradas: "+ str(count) + "\n" + "########################################\n")
 
         Datamanager._insertIntoDB(self, self.payloads_shows, self.titanScraping)
 
@@ -166,7 +164,6 @@ class Amc():
                 count += 1
 
                 self.payload_episodes(id, titleepisode, parentid, parenttitle, season, episode, deeplink, description, image)   #Se encarga de cargar el payload con los campos correspondientes
-        #print("############################################\nCantidad total de episodios encontrados: "+ str(count) + "\n" + "############################################\n")
 
         Datamanager._insertIntoDB(self, self.payloads_episodes, self.titanScrapingEpisodios)
 
@@ -193,7 +190,7 @@ class Amc():
         return content['properties']['cardData']['text']['title']
 
     def get_id(self, content):
-        return content['properties']['cardData']['meta']['nid']
+        return str(content['properties']['cardData']['meta']['nid'])
     
     def get_type(self, content):
         type = content['properties']['cardData']['meta']['schemaType']    
@@ -210,21 +207,34 @@ class Amc():
         return content['properties']['cardData']['text']['description']
 
     def get_image(self, content):
+        images = []
         if content['properties']['cardData'].get('images'):
-            image = content['properties']['cardData']['images']
+            if content['properties']['cardData']['images'] is list:
+                for image in content['properties']['cardData']['images']:
+                    images.append(image)
+            else:
+                images.append(content['properties']['cardData']['images'])
         else:
-            image = None
-        return image
+            return None
+        return images
         
     def get_genre(self, content):
-        return content['properties']['cardData']['meta']['genre']
-    
+        genres = []
+        if content['properties']['cardData']['meta'].get('genre'):
+            if content['properties']['cardData']['meta']['genre'] is list:
+                for genre in content['properties']['cardData']['meta']['genre']:
+                    genres.append(genre)
+            else:
+                genres.append(content['properties']['cardData']['meta']['genre'])
+        else:
+            return None
+        return genres
+
     #Se encarga de llenar el payload con la data para peliculas y series y llamar a Datamanager
     def payload_movie_and_shows(self, title, id, type, deeplink, description, image, genre):
         payload_content = { 
         "PlatformCode":  self._platform_code,               #Obligatorio   
         "Id":            id,                                #Obligatorio
-        "Seasons":       None,
         "Crew":          None,
         "Title":         title,                             #Obligatorio      
         "CleanTitle":    _replace(title),                   #Obligatorio  _replace saca los caracteres basura del title.
@@ -260,8 +270,8 @@ class Amc():
         if type == 'movie':
             Datamanager._checkDBandAppend(self, payload_content, self.list_db_movies_shows, self.payloads_movies)    #Compara el content con lo que existe en la base de datos y lo guarda en payloads
         elif type == 'serie':
+            payload_content["Seasons"] = None               #Campo definido solo para series
             Datamanager._checkDBandAppend(self, payload_content, self.list_db_movies_shows, self.payloads_shows)    #Compara el content con lo que existe en la base de datos y lo guarda en payloads
-        #print(payload_content)
 
     #Se encarga de llenar el payload con la data para episodios y llamar a Datamanager
     def payload_episodes(self, id, titleepisode, parentid, parenttitle, season, episode, deeplink, description, image):
@@ -300,4 +310,3 @@ class Amc():
         'CreatedAt':     self._created_at,
         }            
         Datamanager._checkDBandAppend(self, payload_content, self.list_db_episodes, self.payloads_episodes, isEpi=True)     #Compara el content con lo que existe en la base de datos y lo guarda en payloads
-        #print(payload_content)
