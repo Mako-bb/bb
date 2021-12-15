@@ -49,6 +49,7 @@ class AmcPau():
         self.sesion = requests.session()
         self.headers = {"Accept": "application/json",
                         "Content-Type": "application/json; charset=utf-8"}
+        self.payloads_series = []
 
         if type == 'return':
             '''
@@ -167,7 +168,7 @@ class AmcPau():
     ########## Payload series ##########
 
     def get_payload_series(self, content):
-        payloads_series = []
+        
         list_db_series = Datamanager._getListDB(
             self, self.titanScrapingEpisodios)
         data = content['data']['children']
@@ -234,10 +235,13 @@ class AmcPau():
             }
             
 
-            Datamanager._checkDBandAppend(self, payload_series, list_db_series, payloads_series)
-        Datamanager._insertIntoDB(self, payloads_series, self.titanScraping)
+            Datamanager._checkDBandAppend(self, payload_series, list_db_series, self.payloads_series)
+        self.copiapayloads = [{"Id":pay["Id"], "CleanTitle":pay["CleanTitle"].lower().strip()} for pay in self.payloads_series]
+        Datamanager._insertIntoDB(self, self.payloads_series, self.titanScraping)
 
-     ########## Métodos series ##########
+
+
+    ########## Métodos series ##########
 
     def get_title_serie(self, series_data):
         title = series_data['properties']['cardData']['text']['title']
@@ -250,7 +254,7 @@ class AmcPau():
 
     
     def get_deeplink_serie(self, series_data):
-        deeplink = series_data['properties']['cardData']['meta']['permalink']
+        deeplink = "https://www.amc.com" + series_data['properties']['cardData']['meta']['permalink']
         return deeplink
 
     
@@ -276,11 +280,11 @@ class AmcPau():
                 episodes_data = item
                 break
         for serie in episodes_data['children']:
-            for episode in serie:
+            for episode in serie['children']:
                 payload_episodios = {      
                     "PlatformCode":  self._platform_code, #Obligatorio      
                     "Id":            self.get_id_episodes(episode), #Obligatorio
-                    "ParentId":      self.get_parent_id(episode), #Obligatorio #Unicamente en Episodios
+                    "ParentId":      self.get_parent_id(serie), #Obligatorio #Unicamente en Episodios
                     "ParentTitle":   self.get_parent_title(serie), #Unicamente en Episodios 
                     "Episode":       self.get_episode_num(episode), #Obligatorio #Unicamente en Episodios  
                     "Season":        self.get_season(episode), #Obligatorio #Unicamente en Episodios
@@ -323,60 +327,65 @@ class AmcPau():
             Datamanager._checkDBandAppend(self, payload_episodios, list_db_episodes, payloads_episodes)
         Datamanager._insertIntoDB(self, payloads_episodes, self.titanScraping)
 
-############# para eso servía la división por métodos ######################
+############# Métodos episodes ######################
 
-    def get_title_episodes(self, episodes_data):
-        title = episodes_data['children']['properties']['cardData']['text']['title']
+    def get_title_episodes(self, episode):
+        title = episode['properties']['cardData']['text']['title']
         return title
 
 
-    def get_id_episodes(self, episodes_data):
-        id = episodes_data['children']['properties']['cardData']['meta']['nid']
-        return id
+    def get_id_episodes(self, episode):
+        id = episode['properties']['cardData']['meta']['nid']
+        return id   
 
     
-    def get_deeplink_episodes(self, episodes_data):
-        deeplink = episodes_data['children']['properties']['cardData']['meta']['permalink']
+    def get_deeplink_episodes(self, episode):
+        deeplink = "https://www.amc.com" + episode['properties']['cardData']['meta']['permalink']
         return deeplink
 
     
-    def get_syn_episodes(self, episodes_data):
-        syn =  episodes_data['children']['properties']['cardData']['text']['description']
+    def get_syn_episodes(self, episode):
+        syn =  episode['properties']['cardData']['text']['description']
         return syn
 
 
-    def get_image_episodes(self, episodes_data):
-        image = episodes_data['children']['properties']['cardData']['images']
+    def get_image_episodes(self, episode):
+        try:
+            image = episode['properties']['cardData']['images']
+        except:
+            image = None
         return image
 
 
-    def get_parent_id(self, episodes_data):
-        #if self.parenttitle == true
-        #return self id 
-        for item in episodes_data:
-            return
-                
+    def get_parent_id(self, serie):
+        self.counter = 0
+        parent = self.get_parent_title(serie)
+        for item in self.copiapayloads:
+            if item['CleanTitle'] == parent.lower().strip():
+                parent_id = item['Id']
+                break
+            else:
+                parent_id = "no id ", self.counter + 1
+        return parent_id
 
-    def get_parent_title(self, episodes_data, series_data):
-        parent_title = episodes_data['properties']['title']
-        if parent_title == self.get_id_serie()
-
+    def get_parent_title(self, serie):
+        parent_title = serie['properties']['title']
+        return parent_title
 
 
     def get_episode_num(self, episodes_data):
-        for item in episodes_data:
-            if item['text'].get('seasonEpisodeNumber'):
-                episode = 'title'.split(",")
-                episode[1] = 'title'.strip('E',"")
-                return episode[1]
+        #"S1, E1"
+        episode_number = episodes_data['properties']['cardData']['text'].get('seasonEpisodeNumber')
+        if episode_number:
+            episode = episode_number.split(",")
+            return int(episode[-1].replace('E',""))
 
 
     def get_season(self, episodes_data):
-        for item in episodes_data:
-            if item['text'].get('seasonEpisodeNumber'):
-                season = 'title'.split(",")
-                season[0] = 'title'.strip('S', "")
-                return season[0]
+        episode_season = episodes_data['properties']['cardData']['text'].get('seasonEpisodeNumber')
+        if episode_season:
+            season = episode_season.split(",")
+            return int(season[0].replace('S', ""))
 
 
 
