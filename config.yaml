@@ -53,6 +53,11 @@ tp_sites:
     - CanalOff
     - Globosat
 ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrollando
+  AmctheatresFranco:
+    countries:
+      US: us.amctheatresfranco
+    url: https://www.amctheatres.com/movies
+  
   AllblkFranco:
     countries:
       US: us.allblkfranco
