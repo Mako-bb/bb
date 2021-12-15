@@ -78,9 +78,9 @@ class Amc():
        # Definimos los links de las apis y con el Datamanager usamos la función _getJson
         movie_data = Datamanager._getJSON(self, self._movies_url)
         serie_data = Datamanager._getJSON(self,self._show_url )
-        #episode_data = Datamanager._getJSON(self, self._episode_url)
+        episode_data = Datamanager._getJSON(self, self._episode_url)
 
-        #self.get_payload_episodes(episode_data)
+        self.get_payload_episodes(episode_data)
         self.get_payload_movies(movie_data)
         self.get_payload_series(serie_data)
 
@@ -188,12 +188,12 @@ class Amc():
         print(f'----- Cantidad de series insertadas: {len(payload_show)} -----')
     
 
-    '''def get_payload_episodes(self, content):
+    def get_payload_episodes(self, content):
         payload_episodes = []
         list_db_episodes = Datamanager._getListDB(self, self.titanScrapingEpisodios)
-        data = content['data']['children'][2]['children']
+        data = content['data']['children']
         for serie in data:
-            if 'Title' in serie['properties']['title']:
+            if 'Title'== serie['properties']['title']:
                 episodes_data = serie
                 break
     
@@ -202,14 +202,13 @@ class Amc():
             self.get_title(episode)
             payloads_episodes = {
                         "PlatformCode":  self._platform_code,
-                        "Id":            self.get_id,
-                        "ParentId":      self.get_title,
-                        "ParentTitle":   self.get_parent_title,
-                        "Episode":       self.get_episodes_number,
-                        "Season":        int(episode[0].replace('S', '')),
-                        'Id':            self.get_id,
-                        'Title':         episode['properties']['cardData']
-                        ['text']['title'],
+                        "Id":            self.get_id(episode),
+                        "ParentId":      self.get_episode(episode),
+                        "ParentTitle":   None,
+                        "Episode":       int(self.get_episodes_number[1].replace('E', '')),
+                        "Season":        int(self.get_episodes_number[0].replace('S', '')),
+                        'Id':            self.get_id(episode),
+                        'Title':         self.get_title(episode),
                         'OriginalTitle': None,
                         'Year':          None,
                         'Duration':      None,
@@ -240,7 +239,7 @@ class Amc():
 
             Datamanager._checkDBandAppend(self, payloads_episodes, list_db_episodes, payload_episodes)
             Datamanager._insertIntoDB(self, payload_episodes, self.titanScraping)
-        print(f'----- EPISODES: {len(payloads_episodes)} -----') '''
+        print(f'----- EPISODES: {len(payloads_episodes)} -----') 
 
     def get_title(self, data):
         return data['properties']['cardData']['text']['title']
@@ -266,8 +265,8 @@ class Amc():
     def get_episodes_number(data):
           return data['properties']['cardData']['text']['seasonEpisodeNumber']
     
-    def get_title_id(data):
+    '''def get_title_id(data):
         return data['properties']['cardData']['meta']['nid']
     
     def get_parent_title(data):
-        return data['properties']['cardData']['text']['title']
+        return data['properties']['cardData']['text']['title']'''
