@@ -585,6 +585,12 @@ ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrol
     url: "https://allblk.tv/"
     all_titles_url: "https://allblk.tv/browse/all/"
 
+  amcLE:
+    countries:
+      US: us.amcLE
+    url: "https://www.amctheatres.com/"
+    all_movies_url: "https://www.amctheatres.com/movies?availability=ON_DEMAND"
+    
   StarzNO: #Naza
     countries:
       AR: ar.starz
