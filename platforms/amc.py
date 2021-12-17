@@ -78,6 +78,7 @@ class Amc():
         self.get_payload_movies(movie_data)
         self.get_payload_serie(serie_data)
         self.get_payload_episodes(episode_data)
+        Upload(self._platform_code, self._created_at, testing = self.testing)
 
     def get_payload_movies(self,content):
         self.payloads = []
@@ -117,7 +118,7 @@ class Amc():
     def payload_movie(self, movie):
         payload_contenidos = { 
             'PlatformCode':  self._platform_code, #Obligatorio   
-            "Id":            self.get_id(movie), #Obligatorio
+            "Id":            str(self.get_id(movie)), #Obligatorio
             "Crew":          None,
             "Title":         self.get_title(movie), #Obligatorio      
             "CleanTitle":    _replace(self.get_title(movie)), #Obligatorio      
@@ -133,8 +134,8 @@ class Amc():
             },
             "Synopsis":      self.get_sinopsis(movie),      
             "Image":         self.get_images(movie),      
-            "Subtitles":    None,
-            "Dubbed":       None,
+            "Subtitles":     None,
+            "Dubbed":        None,
             "Rating":        None,     #Important!      
             "Provider":      None,      
             "Genres":        self.get_genre(movie),    #Important!      
@@ -155,7 +156,7 @@ class Amc():
     def payload_series(self,serie):
         payload_contenido_series = { 
             "PlatformCode":  self._platform_code, #Obligatorio   
-            "Id":            self.get_id(serie), #Obligatorio
+            "Id":            str(self.get_id(serie)), #Obligatorio
             "Seasons":       [ #Unicamente para series
                                 None
             ],
@@ -176,11 +177,11 @@ class Amc():
             },
             "Synopsis":      self.get_sinopsis(serie),      
             "Image":         self.get_images(serie),      
-            "Subtitles": None,
-            "Dubbed": None,
+            "Subtitles":     None,
+            "Dubbed":        None,
             "Rating":        None,     #Important!      
             "Provider":      None,      
-            "Genres":        None,    #Important!      
+            "Genres":        self.get_genre(serie),    #Important!      
             "Cast":          None,    #Important!        
             "Directors":     None,    #Important!      
             "Availability":  None,     #Important!      
@@ -198,8 +199,8 @@ class Amc():
     def payload_episodes(self,episode,title):
             payload_episodios = {      
                 "PlatformCode":  self._platform_code, #Obligatorio      
-                "Id":            self.get_id(episode), #Obligatorio
-                "ParentId":      self.get_serieid(title), #Obligatorio #Unicamente en Episodios
+                "Id":            str(self.get_id(episode)), #Obligatorio
+                "ParentId":      str(self.get_serieid(title)), #Obligatorio #Unicamente en Episodios
                 "ParentTitle":   title, #Unicamente en Episodios 
                 "Episode":       int(episode['properties']['cardData']['text']['seasonEpisodeNumber'].split(',')[1].replace('E','')), #Unicamente en Episodios  
                 "Season":        int(episode['properties']['cardData']['text']['seasonEpisodeNumber'].split(',')[0].replace('S','')), #Obligatorio #Unicamente en Episodios
@@ -216,13 +217,13 @@ class Amc():
                 },      
                 "Synopsis":      self.get_sinopsis(episode),      
                 "Image":         self.get_images(episode),     
-                "Subtitles": None,
-                "Dubbed": None,
+                "Subtitles":     None,
+                "Dubbed":        None,
                 "Rating":        None,     #Important!      
                 "Provider":      None,      
-                "Genres":        None,    #Important!      
+                "Genres":        self.get_genre(episode),    #Important!      
                 "Cast":          None,    #Important!        
-                "Directors":    None,    #Important!      
+                "Directors":     None,    #Important!      
                 "Availability":  None,     #Important!      
                 "Download":      None,      
                 "IsOriginal":    None,    #Important!      
@@ -238,7 +239,7 @@ class Amc():
 
 
     def get_id(self,content):
-        return content['properties']['cardData']['meta']['nid']
+        return str(content['properties']['cardData']['meta']['nid'])
 
     def get_title(self,content):
         return content['properties']['cardData']['text']['title']
@@ -258,21 +259,22 @@ class Amc():
             if len(content['properties']['cardData']['images'])==0:
                 return images
             else:
-                for imag in content['properties']['cardData']['images']:
-                    images.append(imag)
+                images=content['properties']['cardData']['images'].split(',')
                 return images
         except:
             return None
 
     def get_genre(self,content):
         genre=[]
-        if content['properties']['cardData']['meta']['genre']:
-            for gen in content['properties']['cardData']['meta']['genre']:
-                    genre.append(gen)
-        else:
-            return genre
+        try:
+            if content['properties']['cardData']['meta']['genre']:
+                genre=content['properties']['cardData']['meta']['genre'].split(',')
+            else:
+                return genre
+        except:
+            return None
 
     def get_serieid(self,title):
         for item in self.matchid:
             if title== item['title']:
-                return item['id']
+                return str(item['id'])
