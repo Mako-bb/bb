@@ -201,7 +201,7 @@ ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrol
       US: us.vh1
   Shoutfactorytv:
     countries:
-      US: us.shoutfactorytv
+      US: us.shout-factory-tv
   Fxnow:
     countries:
       US: us.fxnow
