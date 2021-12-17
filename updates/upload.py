@@ -123,32 +123,61 @@ class Upload:
         dt_now = datetime.now()
         date_iso = dt_now.date().isoformat()
         bulk_logs = []
+        bulk_logs_non_critical = []
+        
         for error in errors:
-            bulk_logs.append(
-                UpdateOne(
-                    {
-                        'PlatformCode': self.platform_code,
-                        'Collection': error.collection,
-                        'Error': error.error
-                    },
-                    {
-                        '$set': {
-                            'Message': error.message,
-                            'Source': self.hostname,
-                            'UpdatedAt': date_iso,
-                            'Timestamp': dt_now,
+            if error.critical:
+                bulk_logs.append(
+                    UpdateOne(
+                        {
+                            'PlatformCode': self.platform_code,
+                            'Collection': error.collection,
+                            'Error': error.error
                         },
-                        '$setOnInsert': {
-                            'CreatedAt': date_iso,
-                        }
-                    },
-                    upsert=True,
+                        {
+                            '$set': {
+                                'Message': error.message,
+                                'Source': self.hostname,
+                                'UpdatedAt': date_iso,
+                                'Timestamp': dt_now,
+                            },
+                            '$setOnInsert': {
+                                'CreatedAt': date_iso,
+                            }
+                        },
+                        upsert=True,
+                    )
                 )
-            )
-
-        result = self.db_api['titanLog'].bulk_write(bulk_logs)
-        print(f'titanLog: {result.upserted_count} logs nuevos, {result.matched_count} existentes')
-
+            else:
+                bulk_logs_non_critical.append(
+                    UpdateOne(
+                        {
+                            'PlatformCode': self.platform_code,
+                            'Collection': error.collection,
+                            'Error': error.error
+                        },
+                        {
+                            '$set': {
+                                'Message': error.message,
+                                'Source': self.hostname,
+                                'UpdatedAt': date_iso,
+                                'Timestamp': dt_now,
+                            },
+                            '$setOnInsert': {
+                                'CreatedAt': date_iso,
+                            }
+                        },
+                        upsert=True,
+                    )
+                )
+        
+        if bulk_logs != []:
+            result = self.db_api['titanLog'].bulk_write(bulk_logs)
+            print(f'titanLog: {result.upserted_count} logs nuevos, {result.matched_count} existentes')
+        if bulk_logs_non_critical != []:
+            result = self.db_api['titanLogNonCritical'].bulk_write(bulk_logs_non_critical)
+            print(f'titanLogNonCritical: {result.upserted_count} logs nuevos, {result.matched_count} existentes')
+    
     def _upload_deeplink_errors(self):
         if not self.deeplink_errors:
             return
