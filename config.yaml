@@ -516,6 +516,11 @@ ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrol
     all_episodes_url2: https://service-vod.clusters.pluto.tv/v3/vod/series/{}/seasons?advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=c636f54d-adcd-4b30-b2cd-02cf58d954f4&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=c636f54d-adcd-4b30-b2cd-02cf58d954f4&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.114&marketingRegion=VE&serverSideAds=true&sessionID=be85a5ba-d44b-11eb-8a41-0242ac110002&sid=be85a5ba-d44b-11eb-8a41-0242ac110002&userId=&attributeV4=foo
     all_episodes_url: https://service-vod.clusters.pluto.tv/v3/vod/slugs/
     all_titles_url: https://service-vod.clusters.pluto.tv/v3/vod/categories?includeItems=true&includeCategoryFields=imageFeatured%2CiconPng&itemOffset=10000&advertisingId=&appName=web&appVersion=5.17.1-be7b5e79fc7cad022e22627cbb64a390ca9429c7&app_name=web&clientDeviceType=0&clientID=087a349a-f41e-4d03-8213-2d8330d86e68&clientModelNumber=na&country=AR&deviceDNT=false&deviceId=087a349a-f41e-4d03-8213-2d8330d86e68&deviceLat=-34.6022&deviceLon=-58.3845&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=91.0.4472.114&marketingRegion=VE&serverSideAds=true&sessionID=f76850cd-d39e-11eb-9515-0242ac110002&sid=f76850cd-d39e-11eb-9515-0242ac110002&userId=&attributeV4=foo
+  
+  Shoutfactorytv:
+    countries:
+      US: us.shout-factory.tv
+    url: https://www.shoutfactorytv.com/
   StarzPQ: #Patricio
     countries:
       AR: ar.starz
