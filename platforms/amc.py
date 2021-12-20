@@ -80,9 +80,9 @@ class Amc():
         serie_data = Datamanager._getJSON(self,self._show_url )
         episode_data = Datamanager._getJSON(self, self._episode_url)
 
-        self.get_payload_episodes(episode_data)
         self.get_payload_movies(movie_data)
         self.get_payload_series(serie_data)
+        self.get_payload_episodes(episode_data)
 
     def get_payload_movies(self,content):
         payloads = []
@@ -102,7 +102,7 @@ class Amc():
                 "Title":         self.get_title(movie),
                 "CleanTitle":    _replace(self.get_title(movie)),
                 "OriginalTitle": None,
-                "Type":          "Movies",
+                "Type":          "movie",
                 "Year":          None,
                 "Duration":      None,
 
@@ -133,7 +133,7 @@ class Amc():
         }
         
             Datamanager._checkDBandAppend(self, payload_movies, list_db, payloads)
-            Datamanager._insertIntoDB(self, payloads, self.titanScraping)
+        Datamanager._insertIntoDB(self, payloads, self.titanScraping)
         print(f'----- Cantidad de peliculas insertadas: {len(payload_movies)} -----')
 
     def get_payload_series(self, content):
@@ -143,7 +143,7 @@ class Amc():
         data = content['data']['children']
         for item in data:
             if item['properties'].get('title'):
-                if 'Shows' in item['properties']['title']:
+                if 'Shows A - Z' in item['properties']['title']:
                     serie_data = item
                     break
 
@@ -184,62 +184,65 @@ class Amc():
             }
             
             Datamanager._checkDBandAppend(self, payload_show, list_db_series, payloads_series)
-            Datamanager._insertIntoDB(self, payloads_series, self.titanScraping)
+        Datamanager._insertIntoDB(self, payloads_series, self.titanScraping)
         print(f'----- Cantidad de series insertadas: {len(payload_show)} -----')
     
 
     def get_payload_episodes(self, content):
-        payload_episodes = []
+        payloads_episodes = []
         list_db_episodes = Datamanager._getListDB(self, self.titanScrapingEpisodios)
         data = content['data']['children']
-        for serie in data:
-            if 'Title'== serie['properties']['title']:
-                episodes_data = serie
+        for item in data:
+            if 'list' in item['type']:
+                data_episodes = item
                 break
-    
-        for episode in episodes_data['children']:
-            self.get_episode(episode)
-            self.get_title(episode)
-            payloads_episodes = {
-                        "PlatformCode":  self._platform_code,
-                        "Id":            self.get_id(episode),
-                        "ParentId":      self.get_episode(episode),
-                        "ParentTitle":   None,
-                        "Episode":       int(self.get_episodes_number[1].replace('E', '')),
-                        "Season":        int(self.get_episodes_number[0].replace('S', '')),
-                        'Id':            self.get_id(episode),
-                        'Title':         self.get_title(episode),
-                        'OriginalTitle': None,
-                        'Year':          None,
-                        'Duration':      None,
-                        'Deeplinks': {
-                            'Web':       self.get_deeplink(episode),
-                            'Android':   None,
-                            'iOS':       None,
-                        },
-                        'Playback':      None,
-                        "CleanTitle":    _replace(episode['properties']['cardData']['text']['title']),
-                        'Synopsis':      self.get_synopsis,
-                        'Image':         [episode['properties']['cardData']['images']],
-                        'Rating':        None,
-                        'Provider':      None,
-                        'Genres':        None,
-                        'Cast':          None,
-                        'Directors':     None,
-                        'Availability':  None,
-                        'Download':      None,
-                        'IsOriginal':    None,
-                        'IsAdult':       None,
-                        'Packages':
-                            [{'Type': 'tv-everywhere'}],
-                        'Country':       None,
-                        'Timestamp':     datetime.now().isoformat(),
-                        'CreatedAt':     self._created_at
-                    } 
+                
+        for serie in data_episodes['children']:
+            title = self.get_parent_title(serie)
+            parentId = self.get_parent_id(title)
+            for episode in serie['children']:
+                self.get_episode(episode)
+                self.get_title(episode)
+                payload_episodes = {
+                            "PlatformCode":  self._platform_code,
+                            "Id":            self.get_id(episode),
+                            "ParentId":      parentId(episode),
+                            "ParentTitle":   self.get_parent_title(serie),
+                            "Episode":       int(self.get_episodes_number(episode)),
+                            "Season":        int(self.get_season_number(episode)),
+                            'Id':            self.get_id(episode),
+                            'Title':         self.get_title(episode),
+                            'OriginalTitle': None,
+                            'Year':          None,
+                            'Duration':      None,
+                            'Deeplinks': {
+                                'Web':       self.get_deeplink(episode),
+                                'Android':   None,
+                                'iOS':       None,
+                            },
+                            'Playback':      None,
+                            "CleanTitle":    _replace(episode['properties']['cardData']['text']['title']),
+                            'Synopsis':      self.get_synopsis(episode),
+                            'Image':         self.get_image(episode),
+                            'Rating':        None,
+                            'Provider':      None,
+                            'Genres':        None,
+                            'Cast':          None,
+                            'Directors':     None,
+                            'Availability':  None,
+                            'Download':      None,
+                            'IsOriginal':    None,
+                            'IsAdult':       None,
+                            'Packages':
+                                [{'Type': 'tv-everywhere'}],
+                            'Country':       None,
+                            'Timestamp':     datetime.now().isoformat(),
+                            'CreatedAt':     self._created_at
+                        } 
 
-            Datamanager._checkDBandAppend(self, payloads_episodes, list_db_episodes, payload_episodes)
-            Datamanager._insertIntoDB(self, payload_episodes, self.titanScraping)
-        print(f'----- EPISODES: {len(payloads_episodes)} -----') 
+                Datamanager._checkDBandAppend(self, payload_episodes, list_db_episodes, payloads_episodes, isEpi=True)
+            Datamanager._insertIntoDB(self, payloads_episodes, self.titanScrapingEpisodios)
+ 
 
     def get_title(self, data):
         return data['properties']['cardData']['text']['title']
@@ -262,11 +265,22 @@ class Amc():
             if title == item['title']:
                 return item['id']
 
-    def get_episodes_number(data):
-          return data['properties']['cardData']['text']['seasonEpisodeNumber']
+    def get_episodes_number(self, data):
+            return data['properties']['cardData']['text']['seasonEpisodeNumber'].split(",")[1].replace("E","")
+           
+    def get_season_number(self, data):
+            return data['properties']['cardData']['text']['seasonEpisodeNumber'].split(",")[0].replace("S","")
+
+    def get_parent_id(self, title):
+        for id in self.payload_show:
+            if id['Title'] == title:
+                return id['id']
     
-    '''def get_title_id(data):
-        return data['properties']['cardData']['meta']['nid']
-    
-    def get_parent_title(data):
-        return data['properties']['cardData']['text']['title']'''
+    def get_parent_title(self, data):
+        return data['properties']['title']
+
+    def get_image(self, data):
+        if data['properties']['cardData'].get('images'):
+            return [data['properties']['cardData']['images']]
+        else:
+            return None
