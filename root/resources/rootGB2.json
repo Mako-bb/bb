@@ -1,0 +1,57 @@
+[
+    {
+        "location": "REGION-1",
+        "platforms": [
+            {
+                "PlatformName": "Itunes",
+                "Process": "scraping",
+                "Country": "MAIN"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "REGION-2",
+        "platforms": [
+            {
+                "PlatformName": "Itunes",
+                "Process": "scraping",
+                "Country": "EUROPE"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "REGION-3",
+        "platforms": [
+            {
+                "PlatformName": "Itunes",
+                "Process": "scraping",
+                "Country": "AMERICA"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "REGION-4",
+        "platforms": [
+            {
+                "PlatformName": "Itunes",
+                "Process": "scraping",
+                "Country": "ASIA"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "REGION-5",
+        "platforms": [
+            {
+                "PlatformName": "Itunes",
+                "Process": "scraping",
+                "Country": "OTHERS"
+            }
+        ],
+        "client": "express"
+    }
+]

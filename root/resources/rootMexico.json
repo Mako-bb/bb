@@ -1,0 +1,99 @@
+[
+    {
+       "location": "Sin VPN",
+       "platforms": [
+            {
+                "PlatformName": "ChivasTV",
+                "Process": "scraping",
+                "Country": "MX"
+            },
+            {
+                "PlatformName": "StarPlus",
+                "Process": "scraping",
+                "Country": "MX"
+            },
+            {
+                "PlatformName": "Totalplay",
+                "Process": "scraping",
+                "Country": "MX"
+            },
+            {
+                "PlatformName": "TubiTV",
+                "Process": "scraping",
+                "Country": "MX"
+            },
+            {
+                "PlatformName": "Filmin",
+                "Process": "scraping",
+                "Country": "MX"
+            },
+            {
+                "PlatformName": "Bioscope",
+                "Process": "scraping",
+                "Country": "BD"
+            },
+            {
+                "PlatformName": "NogginLA",
+                "Process": "scraping",
+                "Country": "MX"
+            },
+            {
+                "PlatformName": "CartoonNetworkMX",
+                "Process": "scraping",
+                "Country": "MX"
+            },
+            {
+                "PlatformName": "DisneyPlus",
+                "Process": "scraping",
+                "Country": "MX"
+            },
+            {
+                "PlatformName": "Claro",
+                "Process": "scraping",
+                "Country": "MX"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "MX"
+            },
+            {
+                "PlatformName": "CinepolisKlic",
+                "Process": "scraping",
+                "Country": "MX"
+            },
+            {
+                "PlatformName": "Starzplay",
+                "Process": "scraping",
+                "Country": "MX"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "MX",
+                "Provider": "play"
+            },
+            {
+                "PlatformName": "AcornTV",
+                "Process": "scraping",
+                "Country": "MX"
+            },
+            {
+                "PlatformName": "Pluto",
+                "Process": "scraping",
+                "Country": "MX"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "MX",
+                "Provider": "netflix"
+            },
+            {
+                "PlatformName": "Blim",
+                "Process": "scraping",
+                "Country": "MX"
+            }
+        ]
+    }
+]

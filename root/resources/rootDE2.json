@@ -1,0 +1,278 @@
+[
+    {
+        "location": "Sin VPN",
+        "platforms": [
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "US",
+                "Provider": "play"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "TR",
+                "Provider": "play"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "NL",
+                "Provider": "amazonprimevideo"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "GR",
+                "Provider": "play"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "DE",
+                "Provider": "amazonmubi"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "DE",
+                "Provider": "amazonbbcplayer"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "DE",
+                "Provider": "amazonanimaxplus"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "GB",
+                "Provider": "amazonhayu"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "GB",
+                "Provider": "amazonbfiplayer"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "DE",
+                "Provider": "amazonstarzplay"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "DE",
+                "Provider": "amazonfilmtastic"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "DE",
+                "Provider": "amazonshudder"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "GB",
+                "Provider": "amazonstarzplay"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "DE",
+                "Provider": "amazonzdfherzkino"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "DE",
+                "Provider": "play"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "GB",
+                "Provider": "play"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "FR",
+                "Provider": "play"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "MX",
+                "Provider": "play"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "CA",
+                "Provider": "play"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "KR",
+                "Provider": "play"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "AT",
+                "Provider": "play"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "BE",
+                "Provider": "play"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "CZ",
+                "Provider": "play"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "IT",
+                "Provider": "play"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "JP",
+                "Provider": "amazon"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "JP",
+                "Provider": "amazonprime"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "JP",
+                "Provider": "play"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "US",
+                "Provider": "amazonprime"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "TR",
+                "Provider": "amazonprimevideo"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "GB",
+                "Provider": "amazon"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "GB",
+                "Provider": "amazonprime"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "DE",
+                "Provider": "amazon"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "AU",
+                "Provider": "play"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "IE",
+                "Provider": "play"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "SE",
+                "Provider": "play"
+            },
+            {
+                "PlatformName": "JustWatch",
+                "Process": "jwscraping",
+                "Country": "CH",
+                "Provider": "play"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "CZ"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "SE"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "CH"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "NO"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "TH"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "JP"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "ID"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "SG"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "PH"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "MY"
+            },
+            {
+                "PlatformName": "NetflixJW",
+                "Process": "scraping",
+                "Country": "ZA"
+            }
+        ]
+    }
+]

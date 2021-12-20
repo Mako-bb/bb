@@ -3,41 +3,43 @@ from handle.replace import _replace
 
 
 class Payload:
-    def __init__(self, platform_code=None,
-                 id_=None,
-                 title=None,
-                 original_title=None,
-                 clean_title=None,
-                 year=None,
-                 duration=None,
-                 deeplink_web=None,
-                 deeplink_android=None,
-                 deeplink_ios=None,
-                 playback=None,
-                 synopsis=None,
-                 image=None,
-                 rating=None,
-                 provider=None,
-                 external_ids=None,
-                 genres=None,
-                 cast=None,
-                 directors=None,
-                 availability=None,
-                 download=None,
-                 is_original=None,
-                 is_branded=None,
-                 is_adult=None,
-                 packages=None,
-                 country=None,
-                 episodes=None,
-                 parent_id=None,
-                 parent_title=None,
-                 episode=None,
-                 season=None,
-                 seasons=None,
-                 number=None,
-                 createdAt=None,
-                 crew=None):
+    def __init__(self, platform_code: str=None,
+                 id_: str=None,
+                 title: str=None,
+                 original_title: str=None,
+                 clean_title: str=None,
+                 year: int=None,
+                 duration: int=None,
+                 deeplink_web: str=None,
+                 deeplink_android: str=None,
+                 deeplink_ios: str=None,
+                 playback: str=None,
+                 synopsis: str=None,
+                 image: list=None,
+                 rating: str=None,
+                 provider: list=None,
+                 external_ids: list=None,
+                 genres: list=None,
+                 cast: list=None,
+                 directors: list=None,
+                 availability: str=None,
+                 download: bool=None,
+                 is_original: bool=None,
+                 is_branded: bool=None,
+                 is_adult: bool=None,
+                 packages: list=None,
+                 country: list=None,
+                 episodes: int=None,
+                 parent_id: str=None,
+                 parent_title: str=None,
+                 episode: int=None,
+                 season: int=None,
+                 seasons: list=None,
+                 number: int=None,
+                 createdAt: str=None,
+                 crew: list=None,
+                 subtitles: list=None,
+                 dubbed: list=None):
 
         self._platformCode = platform_code
         self._id = id_
@@ -76,6 +78,8 @@ class Payload:
         self._seasons = seasons
         self._number = number
         self._crew = crew
+        self._subtitles = subtitles
+        self._dubbed = dubbed
 
     @property
     def platform_code(self):
@@ -238,6 +242,24 @@ class Payload:
     def crew(self, new_crew):
         self._crew = new_crew
 
+
+    @property
+    def subtitles(self):
+        return self._subtitles
+
+    @subtitles.setter
+    def subtitles(self, new_subtitles):
+        self._subtitles = new_subtitles
+
+
+    @property
+    def dubbed(self):
+        return self._dubbed
+
+    @dubbed.setter
+    def dubbed(self, new_dubbed):
+        self._dubbed = new_dubbed
+
     @property
     def availability(self):
         return self._availability
@@ -385,6 +407,8 @@ class Payload:
             },
             'Playback': self._playback,
             'Synopsis': self._synopsis,
+            "Subtitles": self._subtitles,
+            "Dubbed": self._dubbed,
             'Image': self._image,
             'Rating': self._rating,
             'Provider': self._provider,
@@ -422,6 +446,8 @@ class Payload:
             'Seasons': self._seasons,
             'Playback': self._playback,
             'Synopsis': self._synopsis,
+            "Subtitles": self._subtitles,
+            "Dubbed": self._dubbed,
             'Image': self._image,
             'Rating': self._rating,
             'Provider': self._provider,
@@ -474,6 +500,8 @@ class Payload:
                 'iOS': self._deeplink_ios
             },
             'Synopsis': self.synopsis,
+            "Subtitles": self._subtitles,
+            "Dubbed": self._dubbed,
             'Rating': self.rating,
             'Provider': self.provider,
             'ExternalIds': self._external_ids,

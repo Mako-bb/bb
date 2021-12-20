@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+import inspect
 import argparse
 import logging
+import traceback
 from datetime import datetime
 from common import config
-#from handle.logchecker import LogChecker
+from handle.logchecker import LogChecker
 
 # 1) Evito importar todo con importlib.
 from importlib import import_module
@@ -83,36 +85,28 @@ if __name__ == '__main__':
         ott_operation = 'no operation'
         status_code = 3
 
-    # python main.py --o scraping --c [ott_site_country] [ott_platforms]
-    # Para correr plataformas comunes.
-    # 'scraping' corre el script, hace los chequeos de los Paylods e intenta subir el scraping a Misato al terminar
-    # 'testing' corre el script y hace los chequeos de los Payloads, pero no intenta subir a Misato
-    # 'return' sirve para seguir el script donde haya quedado en caso de que se haya interrumpido
     if ott_operation in ('scraping', 'return', 'testing', 'generos', 'top-ten'):
-        try:
-            PlatformClass(ott_platforms, ott_site_country, ott_operation, countries)
-        except TypeError:
-            PlatformClass(ott_platforms, ott_site_country, ott_operation)
+        _inspected_class = inspect.getfullargspec(PlatformClass)
+        args_class = _inspected_class.args
+        number_args = len(args_class)
+        try:        
+            if number_args > 4 and "countries" in args_class:
+                PlatformClass(ott_platforms, ott_site_country, ott_operation, countries)
+            else:
+                PlatformClass(ott_platforms, ott_site_country, ott_operation)
+        except Exception as e:
+            traceback.print_exc()
+            raise
 
-    # python main.py --o jwscraping --c [ott_site_country] [ott_platforms]
-    # Para plataformas que se scrapeen por Third Party
-    # se cambia 'jwscraping' por 'jwreturn' para el modo return o 'jwtesting' para el modo testing
     if ott_operation in ('jwscraping', 'jwreturn', 'jwtesting'):
         PlatformClass(ott_platforms, ott_site_country, ott_operation, provider, postscraping, skip)
 
     if ott_operation in ('guia', 'year'):
         PlatformClass(ott_platforms, ott_operation)
 
-    # python main.py --o log --c [ott_site_country] [ott_platforms] --date [logat]
-    # Para visualizar en la terminal el log de la plataforma/país indicada en la fecha dada.
-    # Si no se indica fecha, se muestra el log más reciente.
-    # Se puede reemplazar "log" por "logd" para descargar el log en un archivo de texto
     if ott_operation in ('log', 'logd'):
-        pass
-        #LogChecker(ott_platforms, ott_site_country, ott_operation, provider, logat)
+        LogChecker(ott_platforms, ott_site_country, ott_operation, provider, logat)
 
-    # python main.py --o excel --c [ott_site_country] [ott_platforms]
-    # Para exportar el scraping de una plataforma a un archivo de excel.
     if ott_operation in ('excel'):
         platform_code = config()['ott_sites'][ott_platforms]["countries"].get(ott_site_country)
         if platform_code:
