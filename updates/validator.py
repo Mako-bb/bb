@@ -2,7 +2,7 @@
 import re
 from datetime import datetime
 from collections import defaultdict
-from handle import iso_language
+
 
 def check_packages(validator, item, key, defs):
     """
@@ -15,6 +15,7 @@ def check_packages(validator, item, key, defs):
 
     for idx, pkg in enumerate(item['Packages']):
         pkg_def = pkg.get('Definition')
+
         if pkg_def in definitions[pkg['Type']]:
             validator.add_error('dup', item, (*key, idx, 'Definition'))
 
@@ -24,17 +25,7 @@ def check_packages(validator, item, key, defs):
             continue
 
         if item_type == 'serie':
-            if pkg['Type'] == 'transaction-vod' and \
-                (pkg.get('BuyPrice') or pkg.get('RentPrice')):
-                validator.series_with_price.add(item['Id'])
-            else:
-                continue
-
-        if not pkg.get('Currency'):
-            if item_type == 'episode' and item['ParentId'] in validator.series_with_price:
-                pass
-            else:
-                validator.add_error('missing_currency', item, (*key, idx))
+            continue
 
         prices = prices_dict.get(pkg.get('Currency'), [])
         for price in prices:
@@ -48,14 +39,11 @@ def check_packages(validator, item, key, defs):
         if pkg.get('BuyPrice') or pkg.get('RentPrice'):
             continue
 
-        if item_type == 'episode':
-            if pkg.get('SeasonPrice') or pkg.get('SeasonBuyPrice') or pkg.get('SeasonRentPrice')\
-                or item['ParentId'] in validator.series_with_price:
-                continue
+        if item_type == 'episode' and pkg.get('SeasonPrice'):
+            continue
 
         validator.add_error('missing_price', item, (*key, idx))
 
-######## SPECIFIC CHECKS ###########
 
 def check_id(validator, item, key, defs):
     item_id = item['Id']
@@ -65,27 +53,14 @@ def check_id(validator, item, key, defs):
 
     validator.ids[validator.collection].add(item_id)
 
-    if item.get('Type') == 'serie' and validator.collection == 'titanScraping':
+    if item.get('Type') == 'serie':
         validator.parent_ids.add(item_id)
-        
-            
 
 
 def check_parent_id(validator, item, key, defs):
     if item['ParentId'] not in validator.parent_ids:
         validator.add_error('parent_id', item, key, actual=item['ParentId'])
-    else:
-        validator.parent_ids_used.add(item['ParentId'])
 
-def escape_char(validator, item, key, defs):
-    escapes = ('\n','\t','\r')
-    for escape in escapes:
-        if escape in item[key[0]]:
-            validator.add_error('escape_char', item, key)
-
-def language_validator(validator, item, key, defs):
-    if any(lang == None for lang in item[key[0]]):
-        validator.add_error('language_error', item, key)
 
 class ValueChecker:
     def __init__(self, func=None, regex=None):
@@ -109,11 +84,7 @@ validator_errors = {
     },
     'no_content': {
         'text': 'No trajo contenido',
-        'critical': True
-    },
-    'missing_episodes': {
-        'text': 'Serie sin episodios -> Id: {actual}',
-        'critical': True
+        'critical': False
     },
     'not_exists': {
         'text': '{path} - no existe -> Id: "{id}"',
@@ -121,10 +92,6 @@ validator_errors = {
     },
     'missing_price': {
         'text': '{path} - falta el precio -> Id: "{id}"',
-        'critical': True
-    },
-    'missing_currency': {
-        'text': '{path} - falta la moneda -> Id: "{id}"',
         'critical': True
     },
     'is_none': {
@@ -139,28 +106,12 @@ validator_errors = {
         'text': '{path} - valor incorrecto: {actual} -> Id: "{id}"',
         'critical': True
     },
-    'escape_char': {
-        'text': '{path} - contiene \\n, \\r o \\t -> Id: "{id}"',
-        'critical': False
-    },
-    'language_error':{
-        'text': '{path} - None entre valores de lenguaje -> Id: "{id}"' ,
-        'critical': False
-    }
 }
 
 prices_dict = {
     'USD': {
         'BuyPrice': {
-            'episode': 27
-        },
-        'RentPrice': {
             'episode': 10
-        },
-    },
-    'GBP': {
-        'BuyPrice': {
-            'episode': 20
         },
         'RentPrice': {
             'episode': 10
@@ -168,7 +119,7 @@ prices_dict = {
     },
     'EUR': {
         'BuyPrice': {
-            'episode': 25
+            'episode': 10
         },
         'RentPrice': {
             'episode': 10
@@ -197,7 +148,6 @@ validator_dict = {
         'type': str,
         'required': True,
         'collection': 'titanScraping',
-        'specific': escape_char
     },
     'ParentId': {
         'type': str,
@@ -214,7 +164,6 @@ validator_dict = {
         'collection': 'titanScrapingEpisodes',
         'allow_zero': True,
         'allow_null': True,
-        'required': True,
     },
     'Episode': {
         'type': int,
@@ -241,8 +190,7 @@ validator_dict = {
         'keys': {
             'Web': {
                 'type': str,
-                'required': True,
-                'specific': escape_char
+                'required': True
             },
             'Android': {
                 'type': str,
@@ -319,22 +267,6 @@ validator_dict = {
             }
         }
     },
-    'Crew': {
-        'type': list,
-        'elements': {
-            'type': dict,
-            'keys': {
-                'Role': {
-                    'type': str,
-                    'required': True
-                },
-                'Name': {
-                    'type': str,
-                    'required': True
-                }
-            }
-        }
-    },
     'Packages': {
         'type': list,
         'required': True,
@@ -346,9 +278,6 @@ validator_dict = {
                     'type': str,
                     'required': True,
                     'values': ('subscription-vod', 'transaction-vod', 'free-vod', 'tv-everywhere', 'validated-vod')
-                },
-                'Plan': {
-                    'type': str,
                 },
                 'Definition': {
                     'type': str,
@@ -362,17 +291,7 @@ validator_dict = {
                     'type': float,
                     'values': ValueChecker(lambda x: x > 0)
                 },
-                'SeasonPrice': {  # Obsoleto
-                    'type': float,
-                    'collection': 'titanScrapingEpisodes',
-                    'values': ValueChecker(lambda x: x > 0)
-                },
-                'SeasonBuyPrice': {
-                    'type': float,
-                    'collection': 'titanScrapingEpisodes',
-                    'values': ValueChecker(lambda x: x > 0)
-                },
-                'SeasonRentPrice': {
+                'SeasonPrice': {
                     'type': float,
                     'collection': 'titanScrapingEpisodes',
                     'values': ValueChecker(lambda x: x > 0)
@@ -397,21 +316,6 @@ validator_dict = {
     'CreatedAt': {
         'type': str,
         'required': True
-    },
-
-    'Dubbed':{
-        'type': list,
-        'elements': {
-            'type': str,
-        },
-        'specific': language_validator
-    },
-    'Subtitles':{
-        'type': list,
-        'elements': {
-            'type': str,
-        },
-        'specific': language_validator
     }
 }
 
@@ -424,7 +328,6 @@ class ValidatorError:
         self.path = path or ()
         self.actual = self.format(actual)
         self.expected = self.format(expected)
-        self.critical = validator_errors[error]['critical']
 
     def path_to_str(self):
         path_str = 'doc'
@@ -473,9 +376,7 @@ class Validator:
         self.errors = []
         self.count = defaultdict(int)
         self.parent_ids = set()
-        self.parent_ids_used = set()
         self.ids = defaultdict(set)
-        self.series_with_price = set()
 
     def run_checks(self, collection, items):
         self.collection = collection
@@ -486,10 +387,8 @@ class Validator:
             for key, defs in validator_dict.items():
                 self.dispatch_check(item, (key,), defs)
 
-        
         self.check_no_content()
-        if collection == 'titanScrapingEpisodes':
-            self.check_parent_ids_used()
+
         return self.checks_result(collection)
 
     def dispatch_check(self, item, key, defs):
@@ -564,11 +463,6 @@ class Validator:
         if self.total(self.collection) == 0:
             self.add_error('no_content')
 
-    def check_parent_ids_used(self):
-        unused = self.parent_ids - self.parent_ids_used
-        for parent_id in unused:
-            self.add_error('missing_episodes', actual=parent_id)
-
     def add_error(self, error, item=None, keys=None, actual=None, expected=None):
         val_error = ValidatorError(self.collection, item, error, keys, actual, expected)
         print(val_error)
@@ -604,24 +498,14 @@ class Validator:
             return [item for error in filtered.values() for item in error.values() if item.collection == collection]
         else:
             return [item for error in filtered.values() for item in error.values()]
-    def get_critical_errors(self, errors):
-        critical = []
-        non_critical = []
-        for error in errors:
-            if error.critical:
-                critical.append(error)
-            else:
-                non_critical.append(error)
+
     def checks_result(self, collection):
         col_errors = self.unique_errors(collection=collection)
-        col_errors = [error for error in col_errors if error.critical]
         has_content = all(e.error != 'no_content' for e in col_errors)
-        has_errors = bool(col_errors)
-        no_epis = all(e.error == 'missing_episodes' for e in col_errors)
+        has_errors = bool(len(col_errors))
         ok = has_content and not has_errors
 
-        return {'total': self.total(collection),
-                'has_content': has_content,
-                'has_errors': has_errors,
-                'no_epis': no_epis,
-                'ok': ok}
+        return {'total'       : self.total(collection),
+                'has_content' : has_content,
+                'has_errors'  : has_errors,
+                'ok'          : ok}

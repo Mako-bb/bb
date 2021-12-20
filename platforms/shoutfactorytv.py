@@ -41,7 +41,7 @@ class Shoutfactorytv():
         self.payloads_episodes      = []    #Inicia payloads episodios vacio, luego de la primer ejecución obtenemos contenido
         self.deeplinkBase           = "https://www.shoutfactorytv.com"
         self.url                    = self._config['url']      #URL YAML
-        self._format_url            = self._config['format_url'] 
+        #self._format_url            = self._config['format_url'] 
         self.testing                = False
         self.sesion                 =  requests.session()
         self.headers                 = {"Accept": "application/json",
@@ -67,7 +67,7 @@ class Shoutfactorytv():
             self._scraping()
 
     #Se encarga de instanciar las DB y llamar a los métodos que hacen el scraping
-    def scraping(self):
+    def _scraping(self):
         self.list_db_episodes = Datamanager._getListDB(self, self.titanScrapingEpisodios)
         self.list_db_movies_shows = Datamanager._getListDB(self, self.titanScraping)
         
@@ -84,8 +84,8 @@ class Shoutfactorytv():
 
     def get_payload_movies(self, response):
 
-        print("Status code: " + response.status_code)
-        if response.status_code == '200':
+        print("Status code: " + str(response.status_code))
+        if response.status_code == 200:
             soup = BS(response.text, 'lxml')    #Se trae todo el contenido de la plataforma y lo convierte en un objeto de BS
             contenedor = soup.find_all("div",{"class" : "divRow"})  #Contenido completo 
             print(contenedor)
