@@ -1,4 +1,6 @@
 from .dataframe import GetDataFrame
+from .dataframe import Misato
+
 # Payloads
 from .payload_analysis import PayloadAnalysis
 from .payload_analysis import EpisodesAnalysis
