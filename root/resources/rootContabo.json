@@ -1,0 +1,541 @@
+[
+    {
+        "location": "REGION-0",
+        "platforms": [
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "AE"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "SA"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "EG"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "VN"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "testing",
+                "Country": "FR"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "REGION-1",
+        "platforms": [
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "AL"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "AM"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "AO"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "AZ"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "BA"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "BF"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "BH"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "BJ"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "BO"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "BW"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "REGION-2",
+        "platforms": [
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "BY"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "CR"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "CY"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "DO"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "GA"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "GT"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "ZW"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "HK"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "HN"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "REGION-3",
+        "platforms": [
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "IS"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "JM"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "JO"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "KH"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "KW"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "KZ"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "LA"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "LB"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "LK"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "MD"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "REGION-4",
+        "platforms": [
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "ML"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "NA"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "NE"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "NI"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "NP"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "OM"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "PA"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "PY"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "QA"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "RW"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "SI"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "REGION-5",
+        "platforms": [
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "SK"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "SN"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "SV"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "TG"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "TW"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "TZ"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "UA"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "UG"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "UZ"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "ZM"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "REGION-6",
+        "platforms": [
+            {
+                "PlatformName": "Google",
+                "Process": "testing",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "testing",
+                "Country": "TR"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "testing",
+                "Country": "GR"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "testing",
+                "Country": "DE"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "testing",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "ES"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "testing",
+                "Country": "CA"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "testing",
+                "Country": "MX"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "testing",
+                "Country": "KR"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "NZ"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "REGION-7",
+        "platforms": [
+            {
+                "PlatformName": "Google",
+                "Process": "testing",
+                "Country": "AT"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "testing",
+                "Country": "BE"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "testing",
+                "Country": "CZ"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "DK"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "MY"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "PH"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "SG"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "TH"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "testing",
+                "Country": "JP"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "testing",
+                "Country": "AU"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "EE"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "FI"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "testing",
+                "Country": "IE"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "REGION-8",
+        "platforms": [
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "ID"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "LV"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "LT"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "NL"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "PL"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "PT"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "RU"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "testing",
+                "Country": "SE"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "testing",
+                "Country": "CH"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "NO"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "IN"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "REGION-9",
+        "platforms": [
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "HU"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "LU"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "HR"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "MT"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "AR"
+            },
+            {
+                "PlatformName": "Google",
+                "Process": "scraping",
+                "Country": "ZA"
+            }
+        ]
+    }
+]

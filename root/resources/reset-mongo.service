@@ -1,0 +1,16 @@
+[Unit]
+Description=Mongo restart once the root ends with all platforms
+After=mongod.service
+StartLimitIntervalSec=0
+
+[Service]
+User=root
+Type=simple
+ExecStart=/usr/bin/env python3 /home/bb/agentes/root/reset_mongo.py
+KillMode=process
+KillSignal=SIGINT
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

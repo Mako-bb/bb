@@ -1,0 +1,23 @@
+[
+    {
+        "location": "Sin VPN",
+        "platforms": [
+            {
+                "PlatformName": "Youtube",
+                "Process": "scraping",
+                "Country": "US"
+            }
+        ]
+    },
+    {
+        "location": "CA",
+        "platforms": [
+            {
+                "PlatformName": "Youtube",
+                "Process": "scraping",
+                "Country": "CA"
+            }
+        ],
+        "client": "express"
+    }
+]

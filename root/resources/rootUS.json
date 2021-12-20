@@ -1,0 +1,512 @@
+[
+    {
+        "location": "Sin VPN",
+        "platforms": [
+            {
+                "PlatformName": "FoxUsa",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "FuboTV",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "CinemaxGo",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Comedy_Central",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Vudu",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "DarkMattertv",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "RokuChannel",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Gaia",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "BounceTV",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "TubiTV",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Spectrum",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "HuluTest2",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "DiscoveryPlus",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Epix",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "DishAnywhere",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "HBOMax",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Shudder",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "CBS",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "AppleTV",
+                "Process": "scraping",
+                "Country": "ALL"
+            },
+            {
+                "PlatformName": "SundanceNow",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "IFC",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Hoopla",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "TBS",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Starzplay",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Showtime",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "HBONow",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "HallmarkChannel",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "HallMarkMoviesNow",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "PopTv",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Peacock",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Pluto",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "AcornTV",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "AdultSwim",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "FlixFling",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "AHC",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "DestinationAmerica",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Funimation",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "DiscoveryNetworks",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "BritBox",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Kanopy",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Optimum",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "ScreamBox",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "TheCW",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "CwSeed",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "YoutubeTV",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Boomerang",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "MyOutdoorTV",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Freeform",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "CartoonNetwork",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "FacebookWatch",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "BravoTv",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "TruTV",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "PlayBrands",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "TNTUS",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "RedBullTV",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "EWTN",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Pureflix",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "VerizonOnDemand",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "BBCAmerica",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "BET",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "BounceTV",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Cmt",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "CuriosityStream",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "DiscoveryLifeGO",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Xfinity",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "DisneyNow",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "IFC",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Indieflix",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Logo",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "MTV",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "NBCUniverso",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "NickJr",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Oxygen",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Syfy",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Amc",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "ParamountNetwork",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "PBSKids",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Shoutfactorytv",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Abc",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "TvLand",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "SundanceTv",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "DoveChannel",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Vh1",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Viceland",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Viki",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "CriterionChannel",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Quibi",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Pantaflix",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "WEtv",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Fandor",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Pantaya",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "ConTv",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "YuppTV",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "ESPN",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Nickelodeon",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "EspnPlus",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Fxnow",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "Nationalgeographic",
+                "Process": "scraping",
+                "Country": "US"
+            },
+            {
+                "PlatformName": "PrendeTV",
+                "Process": "scraping",
+                "Country": "US"
+            }
+        ]
+    }
+]

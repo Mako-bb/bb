@@ -1,0 +1,47 @@
+Amazon:
+    countries:
+      US:
+        platformCode: us.amazon
+        domain: https://www.amazon.com/
+        links:
+          - https://www.amazon.com/gp/video/storefront/ref=nav_shopall_aiv_vid?filterId=OFFER_FILTER%3DTVOD
+          - https://www.amazon.com/s/browse?filterId=OFFER_FILTER%3DTVOD&node=2858778011&ref_=nav_em__aiv_shop_0_2_2_5
+          - https://www.amazon.com/gp/video/storefront/ref=atv_cat_facettext?filterId=OFFER_FILTER%3DPRIME
+          - https://www.amazon.com/gp/video/storefront/ref=topnav_storetab_atv?node=2858778011
+      GB:
+        platformCode: gb.amazon
+        domain: https://www.amazon.co.uk/gp/video
+        links:
+          - https://www.amazon.co.uk/gp/video/storefront/ref=nav_shopall_aiv_vid?filterId=OFFER_FILTER%3DTVOD
+          - https://www.amazon.co.uk/gp/video/storefront/ref=atv_cat_facettext?filterId=OFFER_FILTER%3DPRIME
+          - https://www.amazon.co.uk/gp/video/storefront/ref=topnav_storetab_atv?node=2858778011
+          #- https://www.amazon.co.uk/gp/video/storefront/ref=topnav_storetab_atv?node=3010085031
+      JP:
+        platformCode: jp.amazon
+        domain: https://www.amazon.co.jp/gp/video
+        links:
+          - https://www.amazon.co.jp/gp/video/storefront/ref=nav_shopall_aiv_vid?filterId=OFFER_FILTER%3DTVOD
+          - https://www.amazon.co.jp/gp/video/storefront/ref=atv_cat_facettext?filterId=OFFER_FILTER%3DPRIME
+          - https://www.amazon.co.jp/gp/video/storefront/ref=topnav_storetab_atv?node=2351649051
+  PrimeVideo:
+    countries:
+      IN:
+        platformCode: in.amazon
+        domain: https://www.primevideo.com/region/na
+        links:
+          - https://www.primevideo.com/region/na/storefront/home/ref=atv_nb_sf_hm
+          - https://www.primevideo.com/region/na/storefront/tv/ref=atv_nb_sf_tv
+          - https://www.primevideo.com/region/na/storefront/movie/ref=atv_nb_sf_mv
+          - https://www.primevideo.com/region/na/storefront/kids/ref=atv_nb_sf_kids
+        email: "arturomontalvo1154@gmail.com"
+        password: "darwin1154*"
+      KR:
+        platformCode: kr.amazon
+        domain: https://www.primevideo.com/region/na
+        links:
+          - https://www.primevideo.com/region/na/storefront/home/ref=atv_nb_sf_hm
+          - https://www.primevideo.com/region/na/storefront/tv/ref=atv_nb_sf_tv
+          - https://www.primevideo.com/region/na/storefront/movie/ref=atv_nb_sf_mv
+          - https://www.primevideo.com/region/na/storefront/kids/ref=atv_nb_sf_kids
+        email: "antoniaminas1154@gmail.com"
+        password: "darwin1154"
