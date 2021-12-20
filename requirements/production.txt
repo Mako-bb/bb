@@ -1,0 +1,6 @@
+# Inherits from base.txt:
+-r ./base.txt
+
+# Libraries for the roots environment.
+configparser==5.0.2
+python-gnupg==0.4.7

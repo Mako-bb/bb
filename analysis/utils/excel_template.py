@@ -27,6 +27,16 @@ class ExcelTemplate():
         if df.empty and df_episodes.empty:
             print(f"\n¡No se encontró {platform_code} al {date} en mongo local!")
 
+        # Obtener DataFrame de apiPresence:
+        misato_query = { "PlatformCode" : platform_code }
+
+        try:
+            conexion_misato = ConsultsDB('misato')
+            df_apiPresence = conexion_misato.find_mongo(misato_query, collection='apiPresence')
+        except Exception as e:
+            print(f"No esta bien la llave: {e}")
+
+        # TODO: Estaría bueno validar el "file name" para la próxima.
         file_name = ("Analisis " + platform_code + " " + str(date) + ".xlsx" )
 
         import os
@@ -40,10 +50,20 @@ class ExcelTemplate():
 
         with pd.ExcelWriter("excel_exports/" + file_name) as writer:
             try:
-                df_p.to_excel(writer, sheet_name='titanPreScraping', encoding="utf-8", index=False)
+                if not df_p.empty:
+                    df_p.to_excel(writer, sheet_name='titanPreScraping', encoding="utf-8", index=False)
             except:
-                pass
+                print("No hay preScraping")
+
             df.to_excel(writer, sheet_name='titanScraping', encoding="utf-8", index=False)
             df_episodes.to_excel(writer, sheet_name='titanScrapingEpisodes', encoding="utf-8", index=False)
+
+            try:
+                if df_apiPresence.empty:
+                    print("\nNo trajo apiPresence. El PlatformCode debe estar en apiPlatforms")
+                else:
+                    df_apiPresence.to_excel(writer, sheet_name='apiPresence', encoding="utf-8", index=False)
+            except:
+                pass
 
         print("\n¡Excel Exportado!\tBuscar en la carpeta \"excel_exports\"\n")

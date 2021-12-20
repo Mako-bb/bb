@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 import pymongo
-from common    import config
+from settings import settings
+from handle.season_helper import SeasonHelper
 
 class mongo():
     def __init__(self):
-        hostMongo  = config()['mongo']['host']
+        hostMongo  = settings.MONGODB_DATABASE_URI
         connection = pymongo.MongoClient(hostMongo, connect=False, maxPoolSize=None)
         self.db = connection.titan
 
@@ -98,3 +99,23 @@ class mongo():
             return True
         else:
             return False
+
+    @staticmethod
+    def generate_payload_season(plataforma, titan_scraping, titan_scraping_episodes, created_at, platform_code):
+        # genera los payloads de las temporadas donde corresponde porque tiene las mismas separadas
+        print('--------- Comienza el armado de temporadas ---------')
+        series = plataforma.mongo.db[titan_scraping].find(
+            {'PlatformCode': platform_code, 'CreatedAt': created_at, 'Type': 'serie'})
+        series = list(series)
+        for serie in series:
+            episodes = plataforma.mongo.db[titan_scraping_episodes].find(
+                {'PlatformCode': platform_code, 'CreatedAt': created_at, 'ParentId': serie['Id']})
+            episodes = list(episodes)
+            seasons = SeasonHelper().get_seasons_complete(episodes)
+            if seasons:
+                for season in seasons:
+                    season['Deeplink'] = serie['Deeplinks']['Web']
+            query = {'PlatformCode': platform_code, 'CreatedAt': created_at, 'Id': serie['Id']}
+            new_value = {"$set": {"Seasons": seasons}}
+            plataforma.mongo.db[titan_scraping].update(query, new_value)
+        print('--------- Finalizado el armado de temporadas ---------')
