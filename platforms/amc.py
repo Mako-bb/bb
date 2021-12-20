@@ -92,7 +92,7 @@ class Amc():
         self.get_payload_episodes(episode_data)
         
         self.sesion.close() #Se cierra la session
-        #Upload(self._platform_code, self._created_at, testing=self.testing) #Sube a Misato (OJO, NO LO USAMOS TODAVÍA)
+        Upload(self._platform_code, self._created_at, testing=self.testing) #Sube a Misato (OJO, NO LO USAMOS TODAVÍA)
 
     #Se encarga de filtrar y sacar contenido de las movies
     def get_payload_movies(self, content):
