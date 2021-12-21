@@ -1,3 +1,4 @@
+from abc import get_cache_token
 import time
 import requests
 from handle.replace import _replace
@@ -23,9 +24,13 @@ class Shoutfactorytv():
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
         self.skippedEpis = 0
         self.skippedTitles = 0
-        pelis_genres=self.soup.find_all("div",{"dropdown","has-drop-down-a"}).find
+        categorias=self.soup.find_all("div",{"class","drop-holder"})
+        pelis_cat_links= categorias[0]
+        series_cat_links=categorias[1]
+        categories_pelis= get_categories(pelis_cat_links)
+        categories_series= get_categories(series_cat_links)
         ################# URLS  #################
-        self._movies_url = self.url +
+        self._movies_url = self.url 
         self._show_url = self._config['show_url']
         
         
@@ -59,6 +64,7 @@ class Shoutfactorytv():
             self._scraping()
 
     def _scraping(self, testing=False):
+
         payloads_series = []
         # Definimos los links de las apis y con el Datamanager usamos la función _getJson
         episode_data = Datamanager._getJSON(self, self._episode_url)
@@ -70,5 +76,8 @@ class Shoutfactorytv():
         self.get_payload_episodes(episode_data)
         Upload(self._platform_code, self._created_at, testing = self.testing)
 
-    def get_payload_movies(movie_data):
-
+    def get_categories(genres):
+        cat=[]
+        for i in genres:
+            cat.append(i.a["href"])
+        return cat
