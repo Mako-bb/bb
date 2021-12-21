@@ -9,6 +9,7 @@ from datetime import datetime
 from handle.mongo import mongo
 from handle.datamanager import Datamanager
 from updates.upload import Upload
+
 class AmcPau():
     """
     Amc es una ott de Estados Unidos.
