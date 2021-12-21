@@ -70,10 +70,10 @@ class Shoutfactorytv():
         self.list_db_episodes = Datamanager._getListDB(self, self.titanScrapingEpisodios)
         self.list_db_movies_shows = Datamanager._getListDB(self, self.titanScraping)
         
-        self.get_payload_movies(requests.get(self.url))     #Se obtiene la request de la pagina y se extrae la información necesaria
+        response_url = requests.get(self.url)   #Se obtiene la request de la pagina
+        self.get_payload_movies_shows(response_url)     #Se extrae la información necesaria para peliculas y series
 
         '''
-        self.get_payload_shows(show_data) 
         self.get_payload_episodes(episode_data)
         '''
 
@@ -81,38 +81,59 @@ class Shoutfactorytv():
         #Upload(self._platform_code, self._created_at, testing=self.testing) #Sube a Misato (OJO, NO LO USAMOS TODAVÍA)
 
     #Se encargar de llenar extraer información para llenar los payloads de peliculas y series
-    def get_payload_movies(self, response):
+    def get_payload_movies_shows(self, response):
 
+        if (self.verify_status_code(response)):
+
+            soup_categories = BS(response.text, 'lxml')    #Se trae todo el contenido de la plataforma
+            categories = soup_categories.find_all("div", class_='divRow')  #Se queda con los tags que contienen las categorias en una lista
+    
+            list_categories_movies = categories[0].find_all("a")  #Obtiene una lista con todos los links de las categorias de peliculas sin limpiar
+            list_categories_shows = categories[1].find_all("a")   #Obtiene una lista con todos los links de las categorias de series sin limpiar
+
+            links_categories_movies = self.get_links_categories_movies_shows(list_categories_movies)  #Obtiene la lista de categorias para peliculas limpios       
+            '''
+            links_categories_series = self.get_links_categories_movies_shows(list_categories_shows)    #Obtiene la lista de categorias para series
+            '''
+            for link_categorie in links_categories_movies:  #Recorre cada categoria de la lista de categorias de peliculas
+                response_categorie = requests.get(link_categorie)   #Realiza la petición HTTP
+
+                if (self.verify_status_code(response_categorie)):   #Verifica la petición HTTP
+                    soup_link_categorie = BS(response_categorie.text, 'lxml')   #Se trae todo el contenido de las categoria
+                    content_categorie = soup_link_categorie.find_all("div", class_='img-holder')    #Se queda con los tags que contienen la lista de peliculas
+                    
+                    links_movies = []
+                    for content in content_categorie:   #Recorre cada pelicula de la lista de peliculas 
+                        list_links_movies = content.find_all("a")   #Obtiene una lista con todos los links de las peliculas sin limpiar
+                        links_movies.append(self.get_links_movies(list_links_movies))   #Obtiene la lista de peliculas limpios
+
+                    #print(links_movies)
+                                
+                else:
+                    break
+            '''
+            for link in links_categories_series:
+            '''
+
+    #Comprobación del estado de la respuesta a la petición HTTP
+    def verify_status_code(self, response):     
         if response.status_code == 200:
             print("Status code: " + str(response.status_code))
-
-            soup = BS(response.text, 'lxml')    #Se trae todo el contenido de la plataforma y lo convierte en un objeto de BS
-            categories = soup.find_all("div", class_ = 'divRow')  #Se queda con los tags que contienen las catergorias en una lista
-            links_movies = categories[0].find_all("a")  #Obtiene una lista con todos los links de las peliculas
-            links_shows = categories[1].find_all("a")   #Obtiene una lista con todos los links de las series
-
-            deeplinks_movies = self.get_categories_movies(links_movies)
-            deeplinks_series = self.get_categories_shows(links_shows)
-
-            '''
-            for link in deeplinks_movies:
-
-            for link in deeplinks_series:
-            '''
-
+            return True
         else:
-            print("Status code: " + str(response.status_code))
+            print("Status code: " + str(response.status_code))  #Cualquier respuesta que no sea 200 entra por acá
+            return False
             
-    #Getter que extraen las categorias de las peliculas
-    def get_categories_movies(self, links_movies):
-         deeplinks = []
-         for item in links_movies:    
-             deeplinks.append(self.deeplinkBase + item['href'])   #Agrega los links de las categorías de las peliculas en una lista  
-         return deeplinks
+    #Getter que extrae los links de categorias de las peliculas y series
+    def get_links_categories_movies_shows(self, content):
+         links = []
+         for item in content:    
+             links.append(self.deeplinkBase + item['href'])   #Agrega los links de las categorías de las peliculas en una lista  
+         return links
 
-    #Getter que extraen las categorias de las series
-    def get_categories_shows(self, links_series):
-         deeplinks = []
-         for item in links_series:    
-             deeplinks.append(self.deeplinkBase + item['href'])   #Agrega los links de las categorías de las series en una lista  
-         return deeplinks
+    #Getter que extrae los links de las peliculas
+    def get_links_movies(self, content):
+        links = []
+        for item in content:    
+            links.append(self.deeplinkBase + item['href'])   #Agrega los links de las peliculas en una lista 
+        return links
