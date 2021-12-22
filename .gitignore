@@ -1,13 +1,70 @@
+# IDEs and editors.
 .vscode
 .vs
 .idea
-__pycache__
-handle/__pycache__
-platforms/__pycache__
-drivers/chromedriver.exe
+
+# Compilations.
+*.pyc
+*__pycache__
+
+# Drivers
 geckodriver.exe
 geckodriver
 geckodriver.log
+chromedriver.exe
+
+# Virtual enviroments.
+env
+.env
+.venv
+envagentes
+wenv 
+
+# Folders ignore
+log/
+data/
+datos/
+excel_exports/
+analysis/excel_exports/
+testing
+.data_analysis
+data_analysis
+.ipynb_checkpoints
+output
+.DS_Store
+.analisis
+# Keys ignore.
+bb.pem
+misato
+misato.pub
+ca2
+detest
+bb-private
+bb-private.ppk
+bb-private.pem
+bb-private-misato
+kaji
+kaji.pub
+bb-private
+bb-private Facundo
+handle/_tests_
+# Files ignore.
+*.log
+*.xlsx
+*.csv
+*.ipynb
+*.zip
+*.tar
+*.tar.gz
+
+# New Main
+# main2.py
+# main2_testing.py
+
+# "ver_old"
+ver_old/__pycache__
+ver_old/handle/__pycache__
+ver_old/platforms/__pycache__
 ver_old/geckodriver.log
 ver_old/geckodriver.exe
 ver_old/.vscode
@@ -16,43 +73,40 @@ ver_old/__pycache__
 ver_old/handle/__pycache__
 ver_old/platforms/__pycache__
 ver_old/datos
+
+# Specific Files ignore.
+__pycache__
+handle/__pycache__
+platforms/__pycache__
 handle/__init__.pyc
 piracy/__init__.pyc
 platforms/__init__.pyc
 produ/__init__.pyc
-env
-.env
-.venv
-envagentes
-log/
-*.pyc
-*.log
-output
-data/
-datos/
+handle/mongo.py
+handle/other_mongo.py
 script.log
 root.log
 sagai.csv
 get-pip.py
 platforms/scrapingclaro.py
-bb.pem
-misato
-misato.pub
-bb-private
-bb-private.ppk
-bb-private.pem
-testing
-kaji
-kaji.pub
-bb-private
-.DS_Store
-handle/notepad.py
-*.csv
-*.xlsx
-apuntes.txt
-.data_analysis
-*.ipynb
-excel_exports
-pluto2.py
-allblk_panda.py
-drivers/chromedriver.exe
+pyvenv.cfg
+.gitignore
+*_boja.py
+platforms/beinconnect_.py
+platforms/prueba.py
+panda-scripts.py
+plataf47.py
+run_multiple_platforms.py
+plataformas.json
+deeplink_checker.py
+main_pruebas.py
+local_test.py
+handle/listaPlatformCode.txt
+handle/update_varios.txt
+color_preferences_v2.dat
+recent.connections
+studio3t.connections.v100.list
+bb-private.pub
+apiPresence2PreScraping.py
+vscode
+Youtubeepisodes.py

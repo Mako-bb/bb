@@ -1,0 +1,1186 @@
+[
+    {
+        "location": "Sin VPN",
+        "platforms": [
+            {
+                "PlatformName": "AcornTV",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "TalkTalkTV",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "VirginTvGo",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "DiscoveryPlus",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "DiscoveryPlus",
+                "Process": "scraping",
+                "Country": "IE"
+            },
+            {
+                "PlatformName": "DiscoveryPlus",
+                "Process": "scraping",
+                "Country": "NL"
+            },
+            {
+                "PlatformName": "DiscoveryPlus",
+                "Process": "scraping",
+                "Country": "FI"
+            },
+            {
+                "PlatformName": "DiscoveryPlus",
+                "Process": "scraping",
+                "Country": "IT"
+            },
+            {
+                "PlatformName": "DiscoveryPlus",
+                "Process": "scraping",
+                "Country": "ES"
+            },
+            {
+                "PlatformName": "DiscoveryPlus",
+                "Process": "scraping",
+                "Country": "NO"
+            },
+            {
+                "PlatformName": "DiscoveryPlus",
+                "Process": "scraping",
+                "Country": "SE"
+            },
+            {
+                "PlatformName": "DiscoveryPlus",
+                "Process": "scraping",
+                "Country": "DK"
+            },
+            {
+                "PlatformName": "FuboTV",
+                "Process": "scraping",
+                "Country": "ES"
+            },
+            {
+                "PlatformName": "Maxdome",
+                "Process": "scraping",
+                "Country": "DE"
+            },
+            {
+                "PlatformName": "Microsoft",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "UKTV",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "Hayu",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "NowTV",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "Microsoft",
+                "Process": "scraping",
+                "Country": "ES"
+            },
+            {
+                "PlatformName": "NowTV",
+                "Process": "scraping",
+                "Country": "IE"
+            },
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "Channel5",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "TvDOrange",
+                "Process": "scraping",
+                "Country": "FR"
+            },
+            {
+                "PlatformName": "Microsoft",
+                "Process": "scraping",
+                "Country": "FR"
+            },
+            {
+                "PlatformName": "Microsoft",
+                "Process": "scraping",
+                "Country": "IE"
+            },
+            {
+                "PlatformName": "ITV",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "BBC",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "Shudder",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "Pantaflix",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "BFIPlayer",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "Curzon",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "Chili",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "BBCIPlayer",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "ES"
+            },
+            {
+                "PlatformName": "VodafoneTV",
+                "Process": "scraping",
+                "Country": "ES"
+            },
+            {
+                "PlatformName": "MovistarPlus",
+                "Process": "scraping",
+                "Country": "ES"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "FR"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "IE"
+            },
+            {
+                "PlatformName": "Meo",
+                "Process": "scraping",
+                "Country": "PT"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "PT"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "NO"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "BE"
+            },
+            {
+                "PlatformName": "Rakuten",
+                "Process": "scraping",
+                "Country": "CH"
+            },
+            {
+                "PlatformName": "Sixplay",
+                "Process": "scraping",
+                "Country": "FR"
+            },
+            {
+                "PlatformName": "SkyStore",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "Starzplay",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "Starzplay",
+                "Process": "scraping",
+                "Country": "DE"
+            },
+            {
+                "PlatformName": "Channel4",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "OrangeVOD",
+                "Process": "scraping",
+                "Country": "FR"
+            },
+            {
+                "PlatformName": "Pantaflix",
+                "Process": "scraping",
+                "Country": "FR"
+            },
+            {
+                "PlatformName": "Hayu",
+                "Process": "scraping",
+                "Country": "IE"
+            },
+            {
+                "PlatformName": "Volta",
+                "Process": "scraping",
+                "Country": "IE"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "AO"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "AR"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "AT"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "AU"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "AZ"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "BD"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "BE"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "BG"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "BH"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "CA"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "CH"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "CL"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "CO"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "CY"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "CZ"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "DE"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "DK"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "DZ"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "EC"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "EE"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "EG"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "ES"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "ET"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "FI"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "FR"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "GH"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "GR"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "GT"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "HR"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "HU"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "ID"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "IE"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "IL"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "IQ"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "IT"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "JO"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "JP"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "KE"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "KR"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "KW"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "KZ"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "LB"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "LK"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "LU"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "LV"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "MA"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "MM"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "MT"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "MX"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "MY"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "MZ"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "NG"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "NL"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "NO"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "AE"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "NP"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "NZ"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "OM"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "PA"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "PE"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "PH"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "PK"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "PL"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "PT"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "QA"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "RO"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "RS"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "RU"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "SA"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "SE"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "SG"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "SI"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "SK"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "SV"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "TH"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "TN"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "TR"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "TW"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "TZ"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "UA"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "UG"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "UY"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "VE"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "VN"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "ZA"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "ZW"
+            },
+            {
+                "PlatformName": "Erosnow",
+                "Process": "scraping",
+                "Country": "HK"
+            },
+            {
+                "PlatformName": "NosPlay",
+                "Process": "scraping",
+                "Country": "PT"
+            }
+        ]
+    },
+    {
+        "location": "LT",
+        "platforms": [
+            {
+                "PlatformName": "Megogo",
+                "Process": "scraping",
+                "Country": "LT"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "KZ",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "KZ"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "GB",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "SkyGB",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "Pluto",
+                "Process": "scraping",
+                "Country": "GB"
+            },
+            {
+                "PlatformName": "Youtube",
+                "Process": "scraping",
+                "Country": "GB"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "ES",
+        "platforms": [
+            {
+                "PlatformName": "Atresplayer",
+                "Process": "scraping",
+                "Country": "ES"
+            },
+            {
+                "PlatformName": "Iqiyi",
+                "Process": "scraping",
+                "Country": "ES"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "ES"
+            },
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "ES"
+            },
+            {
+                "PlatformName": "HBOEurope1",
+                "Process": "scraping",
+                "Country": "ES"
+            },
+            {
+                "PlatformName": "Youtube",
+                "Process": "scraping",
+                "Country": "ES"
+            },
+            {
+                "PlatformName": "Pluto",
+                "Process": "scraping",
+                "Country": "ES"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "FR",
+        "platforms": [
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "FR"
+            },
+            {
+                "PlatformName": "SaltoTV",
+                "Process": "scraping",
+                "Country": "FR"
+            },
+            {
+                "PlatformName": "TFOUMax",
+                "Process": "scraping",
+                "Country": "FR"
+            },
+            {
+                "PlatformName": "AnimeDigitalNetwork",
+                "Process": "scraping",
+                "Country": "FR"
+            },
+            {
+                "PlatformName": "Arte",
+                "Process": "scraping",
+                "Country": "FR"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "FR"
+            },
+            {
+                "PlatformName": "OCS",
+                "Process": "scraping",
+                "Country": "FR"
+            },
+            {
+                "PlatformName": "FilmoTV",
+                "Process": "scraping",
+                "Country": "FR"
+            },
+            {
+                "PlatformName": "Cinetek",
+                "Process": "scraping",
+                "Country": "FR"
+            },
+            {
+                "PlatformName": "SFRPlay",
+                "Process": "scraping",
+                "Country": "FR"
+            },
+            {
+                "PlatformName": "Youtube",
+                "Process": "scraping",
+                "Country": "FR"
+            },
+            {
+                "PlatformName": "CanalPlus",
+                "Process": "scraping",
+                "Country": "FR"
+            },
+            {
+                "PlatformName": "Pluto",
+                "Process": "scraping",
+                "Country": "FR"
+            },
+            {
+                "PlatformName": "FranceTV",
+                "Process": "scraping",
+                "Country": "FR"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "PT",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "PT"
+            },
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "PT"
+            },
+            {
+                "PlatformName": "Youtube",
+                "Process": "scraping",
+                "Country": "PT"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "SE",
+        "platforms": [
+            {
+                "PlatformName": "HBOEurope1",
+                "Process": "scraping",
+                "Country": "SE"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "SE"
+            },
+            {
+                "PlatformName": "AcornTV",
+                "Process": "scraping",
+                "Country": "SE"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "PK",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "PK"
+            },
+            {
+                "PlatformName": "Starzplay",
+                "Process": "scraping",
+                "Country": "PK"
+            },
+            {
+                "PlatformName": "Iflix",
+                "Process": "scraping",
+                "Country": "PK"
+            }
+
+        ],
+        "client": "express"
+    },
+    {
+        "location": "KH",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "KH"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "KE",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "KE"
+            },
+            {
+                "PlatformName": "Viu",
+                "Process": "scraping",
+                "Country": "KE"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "FI",
+        "platforms": [
+            {
+                "PlatformName": "HBOEurope1",
+                "Process": "scraping",
+                "Country": "FI"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "NO",
+        "platforms": [
+            {
+                "PlatformName": "HBOEurope1",
+                "Process": "scraping",
+                "Country": "NO"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "NO"
+            },
+            {
+                "PlatformName": "AcornTV",
+                "Process": "scraping",
+                "Country": "NO"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "DK",
+        "platforms": [
+            {
+                "PlatformName": "HBOEurope1",
+                "Process": "scraping",
+                "Country": "DK"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "DK"
+            },
+            {
+                "PlatformName": "AcornTV",
+                "Process": "scraping",
+                "Country": "DK"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "GR",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "GR"
+            },
+            {
+                "PlatformName": "Ertflix",
+                "Process": "scraping",
+                "Country": "GR"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "GE",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "GE"
+            },
+            {
+                "PlatformName": "Megogo",
+                "Process": "scraping",
+                "Country": "GE"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "EE",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "EE"
+            },
+            {
+                "PlatformName": "Megogo",
+                "Process": "scraping",
+                "Country": "EE"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "CY",
+        "platforms": [
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "CY"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "SI",
+        "platforms": [
+            {
+                "PlatformName": "Pickbox",
+                "Process": "scraping",
+                "Country": "SI"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "SI"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "RS",
+        "platforms": [
+            {
+                "PlatformName": "Pickbox",
+                "Process": "scraping",
+                "Country": "RS"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "RS"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "MK",
+        "platforms": [
+            {
+                "PlatformName": "Pickbox",
+                "Process": "scraping",
+                "Country": "MK"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "ME",
+        "platforms": [
+            {
+                "PlatformName": "Pickbox",
+                "Process": "scraping",
+                "Country": "ME"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "BA",
+        "platforms": [
+            {
+                "PlatformName": "Pickbox",
+                "Process": "scraping",
+                "Country": "BA"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "IE",
+        "platforms": [
+            {
+                "PlatformName": "Shudder",
+                "Process": "scraping",
+                "Country": "IE"
+            },
+            {
+                "PlatformName": "CrunchyrollBeta",
+                "Process": "scraping",
+                "Country": "IE"
+            },
+            {
+                "PlatformName": "Channel4",
+                "Process": "scraping",
+                "Country": "IE"
+            },
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "IE"
+            },
+            {
+                "PlatformName": "SkyStore",
+                "Process": "scraping",
+                "Country": "IE"
+            }
+        ],
+        "client": "express"
+    }
+]

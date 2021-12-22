@@ -1,0 +1,1015 @@
+[
+    {
+        "location": "US",
+        "platforms": [
+            {
+                "PlatformName": "MundoNick",
+                "Process": "scraping",
+                "Country": "LATAM"
+            },
+            {
+                "PlatformName": "Microsoft",
+                "Process": "scraping",
+                "Country": "MX"
+            },
+            {
+                "PlatformName": "Microsoft",
+                "Process": "scraping",
+                "Country": "CA"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "ML"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "MR"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "NE"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "SA"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "SD"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "SO"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "TD"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "TM"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "TR"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "AF"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "AM"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "AZ"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "DJ"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "LB"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "LY"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "MA"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "OM"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "PS"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "QA"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "SY"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "TN"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "YE"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "AE"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "BH"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "DZ"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "EG"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "IL"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "IQ"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "IR"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "JO"
+            },
+            {
+                "PlatformName": "Weyyak",
+                "Process": "scraping",
+                "Country": "KW"
+            },
+            {
+                "PlatformName": "Fanatiz",
+                "Process": "scraping",
+                "Country": "AR"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "CL"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "CR"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "AI"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "AW"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "BB"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "BO"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "DO"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "JM"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "MS"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "PY"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "SR"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "TT"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "EC"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "GT"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "HN"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "NI"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "PA"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "PE"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "SV"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "VE"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "CL"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "PY",
+        "platforms": [
+            {
+                "PlatformName": "StarPlus",
+                "Process": "scraping",
+                "Country": "PY"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "HN",
+        "platforms": [
+            {
+                "PlatformName": "StarPlus",
+                "Process": "scraping",
+                "Country": "HN"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "NI",
+        "platforms": [
+            {
+                "PlatformName": "StarPlus",
+                "Process": "scraping",
+                "Country": "NI"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "DO",
+        "platforms": [
+            {
+                "PlatformName": "StarPlus",
+                "Process": "scraping",
+                "Country": "DO"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "SV",
+        "platforms": [
+            {
+                "PlatformName": "StarPlus",
+                "Process": "scraping",
+                "Country": "SV"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "AR",
+        "platforms": [
+            {
+                "PlatformName": "AmericaTV",
+                "Process": "scraping",
+                "Country": "AR"
+            },
+            {
+                "PlatformName": "StarPlus",
+                "Process": "scraping",
+                "Country": "AR"
+            },
+            {
+                "PlatformName": "Blim",
+                "Process": "scraping",
+                "Country": "AR"
+            },
+            {
+                "PlatformName": "DirecTVSports",
+                "Process": "scraping",
+                "Country": "AR"
+            },
+            {
+                "PlatformName": "ParamountPlus",
+                "Process": "scraping",
+                "Country": "AR"
+            },
+            {
+                "PlatformName": "Movistar",
+                "Process": "scraping",
+                "Country": "AR"
+            },
+            {
+                "PlatformName": "Contar",
+                "Process": "scraping",
+                "Country": "AR"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "AR"
+            },
+            {
+                "PlatformName": "Qubit",
+                "Process": "scraping",
+                "Country": "AR"
+            },
+            {
+                "PlatformName": "Cinear",
+                "Process": "scraping",
+                "Country": "OTHER"
+            },
+            {
+                "PlatformName": "TuDiscovery",
+                "Process": "scraping",
+                "Country": "AR"
+            },
+            {
+                "PlatformName": "Microsoft",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "Filmbox",
+                "Process": "scraping",
+                "Country": "LATAM"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "Vix",
+                "Process": "scraping",
+                "Country": "AR"
+            },
+            {
+                "PlatformName": "Telecine",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "TNT",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "Netmovies",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "TubiTV",
+                "Process": "scraping",
+                "Country": "AR"
+            },
+            {
+                "PlatformName": "CanalSony",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "Claro",
+                "Process": "scraping",
+                "Country": "AR"
+            },
+            {
+                "PlatformName": "MundoNick",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "UY"
+            },
+            {
+                "PlatformName": "MCGoLive",
+                "Process": "scraping",
+                "Country": "UY"
+            },
+            {
+                "PlatformName": "LifetimeTest",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "AE",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "AXN",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "HistoryTest",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "CuriosityStream",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "CuriosityStream",
+                "Process": "scraping",
+                "Country": "AR"
+            },
+            {
+                "PlatformName": "Fox",
+                "Process": "scraping",
+                "Country": "CO"
+            },
+            {
+                "PlatformName": "Caracol",
+                "Process": "scraping",
+                "Country": "CO"
+            },
+            {
+                "PlatformName": "Teatrix",
+                "Process": "scraping",
+                "Country": "LATAM"
+            },
+            {
+                "PlatformName": "Retinalatina",
+                "Process": "scraping",
+                "Country": "LATAM"
+            },
+            {
+                "PlatformName": "HistoryTest",
+                "Process": "scraping",
+                "Country": "LATAM"
+            },
+            {
+                "PlatformName": "DKids",
+                "Process": "scraping",
+                "Country": "LATAM"
+            },
+            {
+                "PlatformName": "CanalSony",
+                "Process": "scraping",
+                "Country": "LATAM"
+            },
+            {
+                "PlatformName": "HotGo",
+                "Process": "scraping",
+                "Country": "LATAM"
+            },
+            {
+                "PlatformName": "AXN",
+                "Process": "scraping",
+                "Country": "LATAM"
+            },
+            {
+                "PlatformName": "UniversalTv",
+                "Process": "scraping",
+                "Country": "LATAM"
+            },
+            {
+                "PlatformName": "Pongalo",
+                "Process": "scraping",
+                "Country": "LATAM"
+            },
+            {
+                "PlatformName": "AE",
+                "Process": "scraping",
+                "Country": "LATAM"
+            },
+            {
+                "PlatformName": "Amazon",
+                "Process": "scraping",
+                "Country": "LATAM"
+            },
+            {
+                "PlatformName": "Viki",
+                "Process": "scraping",
+                "Country": "LATAM"
+            },
+            {
+                "PlatformName": "TNT",
+                "Process": "scraping",
+                "Country": "LATAM"
+            },
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "LATAM"
+            },
+            {
+                "PlatformName": "Guidedoc",
+                "Process": "scraping",
+                "Country": "ALL"
+            },
+            {
+                "PlatformName": "Caracol",
+                "Process": "scraping",
+                "Country": "LATAM"
+            },
+            {
+                "PlatformName": "LifetimeTest",
+                "Process": "scraping",
+                "Country": "LATAM"
+            },
+            {
+                "PlatformName": "Youtube",
+                "Process": "scraping",
+                "Country": "LATAM"
+            },
+            {
+                "PlatformName": "Starzplay",
+                "Process": "scraping",
+                "Country": "AR"
+            },
+            {
+                "PlatformName": "AcornTV",
+                "Process": "scraping",
+                "Country": "AR"
+            },
+            {
+                "PlatformName": "Pluto",
+                "Process": "scraping",
+                "Country": "AR"
+            },
+            {
+                "PlatformName": "Globoplay",
+                "Process": "scraping",
+                "Country": "BR"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "UY",
+        "platforms": [
+            {
+                "PlatformName": "StarPlus",
+                "Process": "scraping",
+                "Country": "UY"
+            },
+            {
+                "PlatformName": "DirecTVSports",
+                "Process": "scraping",
+                "Country": "UY"
+            },
+            {
+                "PlatformName": "Movistar",
+                "Process": "scraping",
+                "Country": "UY"
+            },
+            {
+                "PlatformName": "Blim",
+                "Process": "scraping",
+                "Country": "UY"
+            },
+            {
+                "PlatformName": "Pluto",
+                "Process": "scraping",
+                "Country": "UY"
+            },
+            {
+                "PlatformName": "NsNow",
+                "Process": "scraping",
+                "Country": "UY"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "PE",
+        "platforms": [
+            {
+                "PlatformName": "StarPlus",
+                "Process": "scraping",
+                "Country": "PE"
+            },
+            {
+                "PlatformName": "Claro",
+                "Process": "scraping",
+                "Country": "PE"
+            },
+            {
+                "PlatformName": "DirecTVSports",
+                "Process": "scraping",
+                "Country": "PE"
+            },
+            {
+                "PlatformName": "Blim",
+                "Process": "scraping",
+                "Country": "PE"
+            },
+            {
+                "PlatformName": "Movistar",
+                "Process": "scraping",
+                "Country": "PE"
+            },
+            {
+                "PlatformName": "AcornTV",
+                "Process": "scraping",
+                "Country": "PE"
+            },
+            {
+                "PlatformName": "Pluto",
+                "Process": "scraping",
+                "Country": "PE"
+            },
+            {
+                "PlatformName": "Globosat",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "CanalOff",
+                "Process": "scraping",
+                "Country": "BR"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "CR",
+        "platforms": [
+            {
+                "PlatformName": "StarPlus",
+                "Process": "scraping",
+                "Country": "CR"
+            },
+            {
+                "PlatformName": "Blim",
+                "Process": "scraping",
+                "Country": "CR"
+            },
+            {
+                "PlatformName": "Pluto",
+                "Process": "scraping",
+                "Country": "CR"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "BR",
+        "platforms": [
+            {
+                "PlatformName": "StarPlus",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "SkyPlay",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "Starzplay",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "NowOnline",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "Dazn",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "EsporteInterativoPlus",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "CombatePlay",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "ParamountPlus",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "Mubi",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "DKids",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "EspnWatch",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "Vix",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "Claro",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "Movistar",
+                "Process": "scraping",
+                "Country": "BR"
+            },
+            {
+                "PlatformName": "Pluto",
+                "Process": "scraping",
+                "Country": "BR"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "CL",
+        "platforms": [
+            {
+                "PlatformName": "StarPlus",
+                "Process": "scraping",
+                "Country": "CL"
+            },
+            {
+                "PlatformName": "DirecTVSports",
+                "Process": "scraping",
+                "Country": "CL"
+            },
+            {
+                "PlatformName": "Blim",
+                "Process": "scraping",
+                "Country": "CL"
+            },
+            {
+                "PlatformName": "Starzplay",
+                "Process": "scraping",
+                "Country": "CL"
+            },
+            {
+                "PlatformName": "Movistar",
+                "Process": "scraping",
+                "Country": "CL"
+            },
+            {
+                "PlatformName": "AcornTV",
+                "Process": "scraping",
+                "Country": "CL"
+            },
+            {
+                "PlatformName": "Pluto",
+                "Process": "scraping",
+                "Country": "CL"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "CO",
+        "platforms": [
+            {
+                "PlatformName": "RTVC",
+                "Process": "scraping",
+                "Country": "CO"
+            },
+            {
+                "PlatformName": "StarPlus",
+                "Process": "scraping",
+                "Country": "CO"
+            },
+            {
+                "PlatformName": "Claro",
+                "Process": "scraping",
+                "Country": "CO"
+            },
+            {
+                "PlatformName": "DirecTVSports",
+                "Process": "scraping",
+                "Country": "CO"
+            },
+            {
+                "PlatformName": "Blim",
+                "Process": "scraping",
+                "Country": "CO"
+            },
+            {
+                "PlatformName": "Movistar",
+                "Process": "scraping",
+                "Country": "CO"
+            },
+            {
+                "PlatformName": "Starzplay",
+                "Process": "scraping",
+                "Country": "CO"
+            },
+            {
+                "PlatformName": "AcornTV",
+                "Process": "scraping",
+                "Country": "CO"
+            },
+            {
+                "PlatformName": "Pluto",
+                "Process": "scraping",
+                "Country": "CO"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "EC",
+        "platforms": [
+            {
+                "PlatformName": "StarPlus",
+                "Process": "scraping",
+                "Country": "EC"
+            },
+            {
+                "PlatformName": "Claro",
+                "Process": "scraping",
+                "Country": "EC"
+            },
+            {
+                "PlatformName": "DirecTVSports",
+                "Process": "scraping",
+                "Country": "EC"
+            },
+            {
+                "PlatformName": "Blim",
+                "Process": "scraping",
+                "Country": "EC"
+            },
+            {
+                "PlatformName": "Movistar",
+                "Process": "scraping",
+                "Country": "EC"
+            },
+            {
+                "PlatformName": "Pluto",
+                "Process": "scraping",
+                "Country": "EC"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "GT",
+        "platforms": [
+            {
+                "PlatformName": "StarPlus",
+                "Process": "scraping",
+                "Country": "GT"
+            },
+            {
+                "PlatformName": "Blim",
+                "Process": "scraping",
+                "Country": "GT"
+            },
+            {
+                "PlatformName": "Pluto",
+                "Process": "scraping",
+                "Country": "GT"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "BO",
+        "platforms": [
+            {
+                "PlatformName": "StarPlus",
+                "Process": "scraping",
+                "Country": "BO"
+            },
+            {
+                "PlatformName": "Pluto",
+                "Process": "scraping",
+                "Country": "BO"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "PA",
+        "platforms": [
+            {
+                "PlatformName": "StarPlus",
+                "Process": "scraping",
+                "Country": "PA"
+            },
+            {
+                "PlatformName": "Blim",
+                "Process": "scraping",
+                "Country": "PA"
+            },
+            {
+                "PlatformName": "Pluto",
+                "Process": "scraping",
+                "Country": "PA"
+            }
+        ],
+        "client": "express"
+    },
+    {
+        "location": "VE",
+        "platforms": [
+            {
+                "PlatformName": "StarPlus",
+                "Process": "scraping",
+                "Country": "VE"
+            },
+            {
+                "PlatformName": "Blim",
+                "Process": "scraping",
+                "Country": "VE"
+            },
+            {
+                "PlatformName": "Pluto",
+                "Process": "scraping",
+                "Country": "VE"
+            }
+        ],
+        "client": "express"
+    }
+]
