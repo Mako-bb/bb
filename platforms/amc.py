@@ -41,7 +41,7 @@ class Amc():
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
         self.skippedEpis = 0
         self.skippedTitles = 0
-        ################# URLS  #################
+        # ----URLS----
         self._movies_url = self._config['movie_url']
         self._show_url = self._config['show_url']
         #Url para encontrar la información de los contenidos por separado
@@ -187,7 +187,6 @@ class Amc():
         Datamanager._insertIntoDB(self, payloads_series, self.titanScraping)
         print(f'----- Cantidad de series insertadas: {len(payload_show)} -----')
     
-
     def get_payload_episodes(self, content):
         payloads_episodes = []
         list_db_episodes = Datamanager._getListDB(self, self.titanScrapingEpisodios)
@@ -199,14 +198,13 @@ class Amc():
                 
         for serie in data_episodes['children']:
             title = self.get_parent_title(serie)
-            parentId = self.get_parent_id(title)
             for episode in serie['children']:
                 self.get_episode(episode)
                 self.get_title(episode)
                 payload_episodes = {
                             "PlatformCode":  self._platform_code,
                             "Id":            self.get_id(episode),
-                            "ParentId":      parentId(episode),
+                            "ParentId":      self.get_parent_id(title),
                             "ParentTitle":   self.get_parent_title(serie),
                             "Episode":       int(self.get_episodes_number(episode)),
                             "Season":        int(self.get_season_number(episode)),
@@ -243,7 +241,6 @@ class Amc():
                 Datamanager._checkDBandAppend(self, payload_episodes, list_db_episodes, payloads_episodes, isEpi=True)
             Datamanager._insertIntoDB(self, payloads_episodes, self.titanScrapingEpisodios)
  
-
     def get_title(self, data):
         return data['properties']['cardData']['text']['title']
 
@@ -272,9 +269,10 @@ class Amc():
             return data['properties']['cardData']['text']['seasonEpisodeNumber'].split(",")[0].replace("S","")
 
     def get_parent_id(self, title):
-        for id in self.payload_show:
-            if id['Title'] == title:
-                return id['id']
+        for cont in self.matchid:
+            if title == cont['title']:
+                parentId = cont['id']
+                return parentId
     
     def get_parent_title(self, data):
         return data['properties']['title']
