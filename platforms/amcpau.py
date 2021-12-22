@@ -73,13 +73,21 @@ class AmcPau():
 
     def _scraping(self, testing=False):
         # Definimos los links de las apis y con el Datamanager usamos la función _getJson
+        print("Obteniendo la data de los url")
         episode_data = Datamanager._getJSON(self, self._episode_url)
         serie_data = Datamanager._getJSON(self, self._show_url )
         movie_data = Datamanager._getJSON(self, self._movies_url)
 
+        print("Obteniendo películas")
         self.get_payload_movies(movie_data)
+        print("Obteniendo series")
         self.get_payload_series(serie_data)
+        print("Obteniendo episodios")
         self.get_payload_episodes(episode_data)
+
+        self.sesion.close()
+
+        Upload(self._platform_code, self._created_at, testing=self.testing)
 
 
     ########## Payload Movies ##########
@@ -91,28 +99,28 @@ class AmcPau():
         for item in data:
             if item['properties'].get('title'):
                 if 'Movies' in item['properties']['title']:
-                    movies_data = item
+                    _data = item
                     break
-        for movie in movies_data['children']:
+        for movie in _data['children']:
             payload_movies = {
                 "PlatformCode":  self._platform_code,
-                "Title":         self.get_title_movie(movie),
-                "CleanTitle":    self.get_title_movie(movie),
+                "Title":         self.get_title(movie),
+                "CleanTitle":    self.get_title(movie),
                 "OriginalTitle": None,
                 "Type":          "movie",
                 "Year":          None,
                 "Duration":      None,
-                "Id":            self.get_id_movie(movie),
+                "Id":            self.get_id(movie),
                 "Deeplinks": {
-                    "Web":       self.get_deeplink_movie(movie), #no sé cómo va el replace
+                    "Web":       self.get_deeplink(movie), #no sé cómo va el replace
                     "Android":   None,
                     "iOS":       None,
                 },
-                "Synopsis":      self.get_syn_movie(movie),
-                "Image":         self.get_image_movie(movie),
+                "Synopsis":      self.get_syn(movie),
+                "Image":         self.get_image(movie),
                 "Rating":        None,  # Important!
                 "Provider":      None,
-                "Genres":        self.get_genre_movie(movie),  # Important!
+                "Genres":        self.get_genre(movie),  # Important!
                 "Cast":          None,
                 "Directors":     None,  # Important!
                 "Availability":  None,  # Important!
@@ -130,43 +138,8 @@ class AmcPau():
             Datamanager._checkDBandAppend(self, payload_movies, list_db, payloads)
         Datamanager._insertIntoDB(self, payloads, self.titanScraping)
 
-    ########## Métodos movies ##########
 
-    def get_title_movie(self, movies_data):
-        try:
-            title = movies_data['properties']['cardData']['text']['title']
-        except KeyError:
-            print(movies_data)
-            raise
-        return title
-
-
-    def get_id_movie(self, movies_data):
-        id = movies_data['properties']['cardData']['meta']['nid']
-        return id
-
-    
-    def get_deeplink_movie(self, movies_data):
-        deeplink = "https://www.amc.com" + movies_data['properties']['cardData']['meta']['permalink']
-        return deeplink
-
-    
-    def get_syn_movie(self, movies_data):
-        syn = movies_data['properties']['cardData']['text']['description']
-        return syn
-
-
-    def get_genre_movie(self, movies_data):
-        genre = movies_data['properties']['cardData']['meta']['genre']
-        return genre
-
-    
-    def get_image_movie(self, movies_data):
-        image = movies_data['properties']['cardData']['images']
-        return image
-
-
-    ########## Payload series ##########
+        ########## Payload series ##########
 
     def get_payload_series(self, content):
         
@@ -176,12 +149,12 @@ class AmcPau():
         for item in data:
             if item['properties'].get('title'):
                 if 'Shows' in item['properties']['title']:
-                    series_data = item
+                    _data = item
                     break
-        for serie in series_data['children']:
+        for serie in _data['children']:
             payload_series =  {
                 "PlatformCode":     self._platform_code, #Obligatorio   
-                "Id":               self.get_id_serie(serie), #Obligatorio
+                "Id":               self.get_id(serie), #Obligatorio
                 "Seasons":          [ #Unicamente para series
                     {
                     "Id":           None,           #Importante
@@ -203,20 +176,20 @@ class AmcPau():
                         "Name": 'str'
                     },
                 ],
-                "Title":         self.get_title_serie(serie), #Obligatorio      
-                "CleanTitle":    self.get_title_serie(serie), #Obligatorio      
+                "Title":         self.get_title(serie), #Obligatorio      
+                "CleanTitle":    self.get_title(serie), #Obligatorio      
                 "OriginalTitle": None,                          
                 "Type":          None,     #Obligatorio  #movie o serie     
                 "Year":          None,     #Important!  1870 a año actual   
                 "Duration":      None,     #en minutos   
                 "ExternalIds":   None,       
                 "Deeplinks": {
-                    "Web":       self.get_deeplink_serie(serie), #Obligatorio          
+                    "Web":       self.get_deeplink(serie), #Obligatorio          
                     "Android":   None,          
                     "iOS":       None,      
                 },
-                "Synopsis":      self.get_syn_serie(serie),      
-                "Image":         self.get_image_serie(serie),      
+                "Synopsis":      self.get_syn(serie),      
+                "Image":         self.get_image(serie),      
                 "Subtitles":     None,
                 "Dubbed":        None,
                 "Rating":        None,     #Important!      
@@ -241,34 +214,6 @@ class AmcPau():
         Datamanager._insertIntoDB(self, self.payloads_series, self.titanScraping)
 
 
-
-    ########## Métodos series ##########
-
-    def get_title_serie(self, series_data):
-        title = series_data['properties']['cardData']['text']['title']
-        return title
-
-
-    def get_id_serie(self, series_data):
-        id = series_data['properties']['cardData']['meta']['nid']
-        return id
-
-    
-    def get_deeplink_serie(self, series_data):
-        deeplink = "https://www.amc.com" + series_data['properties']['cardData']['meta']['permalink']
-        return deeplink
-
-    
-    def get_syn_serie(self, series_data):
-        syn = series_data['properties']['cardData']['text']['description']
-        return syn
-
-
-    def get_image_serie(self, series_data):
-        image =  series_data['properties']['cardData']['images']
-        return image    
-
-    
     ########## Payload Episodes ##########
                 
     def get_payload_episodes(self, content):
@@ -278,13 +223,13 @@ class AmcPau():
         data = content['data']['children']
         for item in data:
             if item['type']== "list":
-                episodes_data = item
+                _data = item
                 break
-        for serie in episodes_data['children']:
+        for serie in _data['children']:
             for episode in serie['children']:
                 payload_episodios = {      
                     "PlatformCode":  self._platform_code, #Obligatorio      
-                    "Id":            self.get_id_episodes(episode), #Obligatorio
+                    "Id":            self.get_id(episode), #Obligatorio
                     "ParentId":      self.get_parent_id(serie), #Obligatorio #Unicamente en Episodios
                     "ParentTitle":   self.get_parent_title(serie), #Unicamente en Episodios 
                     "Episode":       self.get_episode_num(episode), #Obligatorio #Unicamente en Episodios  
@@ -295,18 +240,18 @@ class AmcPau():
                                             "Name": 'str'
                                         },
                     ],
-                    "Title":         self.get_title_episodes(episode), #Obligatorio      
-                    "OriginalTitle": self.get_title_episodes(episode),                          
+                    "Title":         self.get_title(episode), #Obligatorio      
+                    "OriginalTitle": self.get_title(episode),                          
                     "Year":          None,     #Important!     
                     "Duration":      None,      
                     "ExternalIds":   None,  
                     "Deeplinks": {          
-                        "Web":       self.get_deeplink_episodes(episode) ,       #Obligatorio          
+                        "Web":       self.get_deeplink(episode) ,       #Obligatorio          
                         "Android":   None,          
                         "iOS":       None,      
                     },      
-                    "Synopsis":      self.get_syn_episodes(episode),      
-                    "Image":         self.get_image_episodes(episode),     
+                    "Synopsis":      self.get_syn(episode),      
+                    "Image":         self.get_image(episode),     
                     "Subtitles":     None,
                     "Dubbed":        None,
                     "Rating":        None,     #Important!      
@@ -328,31 +273,39 @@ class AmcPau():
             Datamanager._checkDBandAppend(self, payload_episodios, list_db_episodes, payloads_episodes)
         Datamanager._insertIntoDB(self, payloads_episodes, self.titanScraping)
 
-############# Métodos episodes ######################
 
-    def get_title_episodes(self, episode):
-        title = episode['properties']['cardData']['text']['title']
+    ########## Métodos ##########
+
+    def get_title(self, _data):
+        title = _data['properties']['cardData']['text']['title']
         return title
 
 
-    def get_id_episodes(self, episode):
-        id = episode['properties']['cardData']['meta']['nid']
-        return id   
+    def get_id(self, _data):
+        id = _data['properties']['cardData']['meta']['nid']
+        return str(id)
 
     
-    def get_deeplink_episodes(self, episode):
-        deeplink = "https://www.amc.com" + episode['properties']['cardData']['meta']['permalink']
+    def get_deeplink(self, _data):
+        deeplink = "https://www.amc.com" + _data['properties']['cardData']['meta']['permalink']
         return deeplink
 
     
-    def get_syn_episodes(self, episode):
-        syn =  episode['properties']['cardData']['text']['description']
+    def get_syn(self, _data):
+        syn = _data['properties']['cardData']['text']['description']
         return syn
 
 
-    def get_image_episodes(self, episode):
+    def get_genre(self, _data):
+        genre = []
+        genre = [_data['properties']['cardData']['meta']['genre']]
+        return genre
+
+    
+    def get_image(self, _data):
+        image = []
         try:
-            image = episode['properties']['cardData']['images']
+            image = [_data['properties']['cardData']['images']]
         except:
             image = None
         return image
@@ -367,23 +320,24 @@ class AmcPau():
                 break
             else:
                 parent_id = "no id ", self.counter + 1
-        return parent_id
+        return str(parent_id)
+
 
     def get_parent_title(self, serie):
         parent_title = serie['properties']['title']
         return parent_title
 
 
-    def get_episode_num(self, episodes_data):
+    def get_episode_num(self, _data):
         #"S1, E1"
-        episode_number = episodes_data['properties']['cardData']['text'].get('seasonEpisodeNumber')
+        episode_number = _data['properties']['cardData']['text'].get('seasonEpisodeNumber')
         if episode_number:
             episode = episode_number.split(",")
             return int(episode[-1].replace('E',""))
 
 
-    def get_season(self, episodes_data):
-        episode_season = episodes_data['properties']['cardData']['text'].get('seasonEpisodeNumber')
+    def get_season(self, _data):
+        episode_season = _data['properties']['cardData']['text'].get('seasonEpisodeNumber')
         if episode_season:
             season = episode_season.split(",")
             return int(season[0].replace('S', ""))

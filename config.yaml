@@ -202,7 +202,7 @@ ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrol
   Shoutfactorytv:
     countries:
       US: us.shoutfactorytv
-  SoutfactorytvPau:
+  ShoutfactorytvPau:
     countries:
       US: us.shoutfactorytv
     movie_url: https://www.shoutfactorytv.com/film
