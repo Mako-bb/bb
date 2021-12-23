@@ -141,19 +141,74 @@ class Shoutfactorytv():
 
             for elem in temp:
                 movie_info = elem.find('img')
-
+                
                 try:
-                    title = movie_info['title']
+                    title = movie_info['title']                                             # título de la película
+                    image = movie_info['src']                                               # imsgen promocional
+                    deeplink = self._url + elem.find('a')['href']                           # deeplink a la película
+                    id = hashlib.md5((title + deeplink).encode('utf-8')).hexdigest          # id generado con hashlib con md5, estoy seguro que con el título 
+                                                                                            # y el deeplink no va a generar uno repetido
+
+                    movie_page = requests.get(deeplink)                                     # la siguiente request es para conseguir 
+                    soup2 = BS(movie_page.content, 'html.parser')                           # la synopsis de la película
+                    synopsis = soup2.find('p').getText()
+                    
                     movie_counter_repetidos += 1
                 except: 
-                    title = None
+                    #print("################ FALTAN DATOS PARA DE ESTA PELICULA ################")
+                    title = None                                                            # por las dudas devolvemos None
+                    image = None                                                            # si alguno falla en el try except
+                    deeplink = None
+                    id = None
 
+                # La siguiente condición es para asegurarnos de no guardarnos repetidos
                 if title not in movie_list and title != None:
                     print(title)
                     movie_list.append(title)
-                    movie_counter += 1
- 
 
+                    payload_movies = { 
+                        "PlatformCode":  self._platform_code, #Obligatorio   
+                        "Id":            id, #Obligatorio
+                        "Crew":          [ #Importante
+                                            {
+                                                "Role": "str", 
+                                                "Name": "str"
+                                            },
+                                            ...
+                        ],
+                        "Title":         title, #Obligatorio      
+                        "CleanTitle":    _replace(title), #Obligatorio      
+                        "OriginalTitle": "str",                          
+                        "Type":          "movie",     #Obligatorio  #movie o serie     
+                        "Year":          "int",     #Important!  1870 a año actual   
+                        "Duration":      "int",     #en minutos   
+                        "ExternalIds":   "list", #*      
+                        "Deeplinks": {
+                            "Web":       deeplink,       #Obligatorio          
+                            "Android":   "str",          
+                            "iOS":       "str",      
+                        },
+                        "Synopsis":      synopsis,      
+                        "Image":         image,      
+                        "Subtitles": "list",
+                        "Dubbed": "list",
+                        "Rating":        "str",     #Important!      
+                        "Provider":      "list",      
+                        "Genres":        movie.text,    #Important!      
+                        "Cast":          "list",    #Important!        
+                        "Directors":     "list",    #Important!      
+                        "Availability":  "str",     #Important!      
+                        "Download":      "bool",      
+                        "IsOriginal":    "bool",    #Important!        
+                        "IsAdult":       "bool",    #Important!   
+                        "IsBranded":     "bool",    #Important!   (ver link explicativo)
+                        "Packages":      "list",    #Obligatorio      
+                        "Country":       "list",
+                        "Timestamp":     "str", #Obligatorio
+                        "CreatedAt":     "str", #Obligatorio
+                    }
+
+                    movie_counter += 1
 
             #movies_info = temp.find_all('img')
             #print(movies_info)
@@ -165,47 +220,7 @@ class Shoutfactorytv():
         print("Cantidad de peliculas repetidas", movie_counter_repetidos)
         
 
-        payload_movies = { 
-        "PlatformCode":  "str", #Obligatorio   
-        "Id":            "str", #Obligatorio
-        "Crew":          [ #Importante
-                            {
-                                "Role": "str", 
-                                "Name": "str"
-                            },
-                            ...
-        ],
-        "Title":         "str", #Obligatorio      
-        "CleanTitle":    "_replace(str)", #Obligatorio      
-        "OriginalTitle": "str",                          
-        "Type":          "str",     #Obligatorio  #movie o serie     
-        "Year":          "int",     #Important!  1870 a año actual   
-        "Duration":      "int",     #en minutos   
-        "ExternalIds":   "list", #*      
-        "Deeplinks": {
-            "Web":       "str",       #Obligatorio          
-            "Android":   "str",          
-            "iOS":       "str",      
-        },
-        "Synopsis":      "str",      
-        "Image":         "list",      
-        "Subtitles": "list",
-        "Dubbed": "list",
-        "Rating":        "str",     #Important!      
-        "Provider":      "list",      
-        "Genres":        "list",    #Important!      
-        "Cast":          "list",    #Important!        
-        "Directors":     "list",    #Important!      
-        "Availability":  "str",     #Important!      
-        "Download":      "bool",      
-        "IsOriginal":    "bool",    #Important!        
-        "IsAdult":       "bool",    #Important!   
-        "IsBranded":     "bool",    #Important!   (ver link explicativo)
-        "Packages":      "list",    #Obligatorio      
-        "Country":       "list",
-        "Timestamp":     "str", #Obligatorio
-        "CreatedAt":     "str", #Obligatorio
-        }
+
 
 
            
