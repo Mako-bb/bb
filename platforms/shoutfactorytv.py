@@ -131,7 +131,7 @@ class Shoutfactorytv():
         movie_counter_repetidos = 0
 
         for movie in movie_category:
-            print("######################################################################")
+            print(" ################################## " + movie.text +  " ##################################")
 
             category_link = self._url + movie['href']
             category_page = requests.get(category_link)
