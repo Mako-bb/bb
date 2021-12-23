@@ -85,17 +85,134 @@ class Shoutfactorytv():
             self._scraping()
 
     def _scraping(self, testing=False):
+        
         print(self._url)
+
+
+        self.get_payload_movies()
+        #page = requests.get(self._url)
+
+        #if page.status_code == 200:
+        #    print('La pagina se descargó correctamente')
+        #    soup = BS(page.content, 'html.parser')
+        #    categories = soup.find_all('div', class_='divRow')
+
+
+        #    print("######################################################################")
+        #    films = categories[0]
+        #    films = films.find_all('a')
+
+        #    for film in films:
+        #        print(film.text)
+
+
+        #    print("######################################################################")
+        #    series = categories[1]
+        #    series = series.find_all('a')
+
+        #    for serie in series:
+        #        print(serie.text)
+
+        #    print("######################################################################")
+
+    
+    def get_payload_movies(self):
         page = requests.get(self._url)
 
         if page.status_code == 200:
             print('La pagina se descargó correctamente')
             soup = BS(page.content, 'html.parser')
-            categories = soup.find_all('div', class_='divCell')
-            for tags in categories:
-                print("######################################################################")
-                category_names = tags.find_all('a')
-                print(tags.find(''))
-                for name in category_names:
-                    print(name.text)
+            categories = soup.find_all('div', class_='divRow')
+
+        temp = categories[0]
+        movie_category = temp.find_all('a') 
+        movie_list = []
+        movie_counter = 0
+        movie_counter_repetidos = 0
+
+        for movie in movie_category:
+            print("######################################################################")
+
+            category_link = self._url + movie['href']
+            category_page = requests.get(category_link)
+            soup = BS(category_page.content, 'html.parser')
+
+            temp = soup.find_all('div', class_='img-holder')
+
+            for elem in temp:
+                movie_info = elem.find('img')
+
+                try:
+                    title = movie_info['title']
+                    movie_counter_repetidos += 1
+                except: 
+                    title = None
+
+                if title not in movie_list and title != None:
+                    print(title)
+                    movie_list.append(title)
+                    movie_counter += 1
+ 
+
+
+            #movies_info = temp.find_all('img')
+            #print(movies_info)
+            
+            #for info in movies_info:
+            #    print(info)
+
+        print("Cantidad de peliculas: ", movie_counter) 
+        print("Cantidad de peliculas repetidas", movie_counter_repetidos)
+        
+
+        payload_movies = { 
+        "PlatformCode":  "str", #Obligatorio   
+        "Id":            "str", #Obligatorio
+        "Crew":          [ #Importante
+                            {
+                                "Role": "str", 
+                                "Name": "str"
+                            },
+                            ...
+        ],
+        "Title":         "str", #Obligatorio      
+        "CleanTitle":    "_replace(str)", #Obligatorio      
+        "OriginalTitle": "str",                          
+        "Type":          "str",     #Obligatorio  #movie o serie     
+        "Year":          "int",     #Important!  1870 a año actual   
+        "Duration":      "int",     #en minutos   
+        "ExternalIds":   "list", #*      
+        "Deeplinks": {
+            "Web":       "str",       #Obligatorio          
+            "Android":   "str",          
+            "iOS":       "str",      
+        },
+        "Synopsis":      "str",      
+        "Image":         "list",      
+        "Subtitles": "list",
+        "Dubbed": "list",
+        "Rating":        "str",     #Important!      
+        "Provider":      "list",      
+        "Genres":        "list",    #Important!      
+        "Cast":          "list",    #Important!        
+        "Directors":     "list",    #Important!      
+        "Availability":  "str",     #Important!      
+        "Download":      "bool",      
+        "IsOriginal":    "bool",    #Important!        
+        "IsAdult":       "bool",    #Important!   
+        "IsBranded":     "bool",    #Important!   (ver link explicativo)
+        "Packages":      "list",    #Obligatorio      
+        "Country":       "list",
+        "Timestamp":     "str", #Obligatorio
+        "CreatedAt":     "str", #Obligatorio
+        }
+
+
+           
+            #for tags in categories:
+                #print(tags.find_all('a'))
+                #category_names = tags.find_all('a')
+                #print(tags.find(''))
+                #for name in category_names:
+                #   print(name.text)
     
