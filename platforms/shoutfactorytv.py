@@ -87,9 +87,10 @@ class Shoutfactorytv():
     def _scraping(self, testing=False):
         
         print(self._url)
+        page = requests.get(self._url)
 
-
-        self.get_payload_movies()
+        #self.get_payload_movies(page)
+        self.get_payload_series(page)
         #page = requests.get(self._url)
 
         #if page.status_code == 200:
@@ -116,8 +117,7 @@ class Shoutfactorytv():
         #    print("######################################################################")
 
     
-    def get_payload_movies(self):
-        page = requests.get(self._url)
+    def get_payload_movies(self, page):
 
         if page.status_code == 200:
             print('La pagina se descargó correctamente')
@@ -205,25 +205,116 @@ class Shoutfactorytv():
                         "Packages":      "list",    #Obligatorio      
                         "Country":       "list",
                         "Timestamp":     "str", #Obligatorio
-                        "CreatedAt":     "str", #Obligatorio
+                        "CreatedAt":     self._created_at #Obligatorio
                     }
 
                     movie_counter += 1
-
-            #movies_info = temp.find_all('img')
-            #print(movies_info)
-            
-            #for info in movies_info:
-            #    print(info)
 
         print("Cantidad de peliculas: ", movie_counter) 
         print("Cantidad de peliculas repetidas", movie_counter_repetidos)
         
 
 
+    def get_payload_series(self, page):
 
+        if page.status_code == 200:
+            print('La pagina se descargó correctamente')
+            soup = BS(page.content, 'html.parser')
+            categories = soup.find_all('div', class_='divRow')
 
-           
+        temp = categories[1]
+        series_category = temp.find_all('a') 
+        serie_list = []
+        serie_counter = 0
+        serie_counter_repetidos = 0
+
+        for serie in series_category:
+            print(" ################################## " + serie.text +  " ##################################")
+
+            category_link = self._url + serie['href']
+            category_page = requests.get(category_link)
+            soup = BS(category_page.content, 'html.parser')
+
+            temp = soup.find_all('div', class_='img-holder')
+
+            for elem in temp:
+                serie_info = elem.find('img')
+
+                print(serie_info['title'])
+
+                try:
+                    title = serie_info['title']                                             # título de la serie
+                    image = serie_info['src']                                               # imagen promocional
+                    deeplink = self._url + elem.find('a')['href']                           # deeplink a la serie
+                    id = hashlib.md5((title + deeplink).encode('utf-8')).hexdigest          # id generado con hashlib con md5, estoy seguro que con el título 
+                                                                                            # y el deeplink no va a generar uno repetido
+
+                    serie_page = requests.get(deeplink)                                     # la siguiente request es para conseguir 
+                    soup2 = BS(serie_page.content, 'html.parser')                           # la synopsis de la película
+                    #synopsis = soup2.find('p').getText()                                   # POR AHORA NO HAY SYNOPSYS PARA SERIES
+                    
+                    serie_counter_repetidos += 1
+                except: 
+                    #print("################ FALTAN DATOS PARA DE ESTA PELICULA ################")
+                    title = None                                                            # por las dudas devolvemos None
+                    image = None                                                            # si alguno falla en el try except
+                    deeplink = None
+                    id = None
+
+                # La siguiente condición es para asegurarnos de no guardarnos repetidos
+                if title not in serie_list and title != None:
+                    print(title)
+                    serie_list.append(title)
+
+                    payload_serie = { 
+                        "PlatformCode":  self._platform_code, #Obligatorio   
+                        "Id":            id, #Obligatorio
+                        "Crew":          [ #Importante
+                                            {
+                                                "Role": "str", 
+                                                "Name": "str"
+                                            },
+                                            ...
+                        ],
+                        "Title":         title, #Obligatorio      
+                        "CleanTitle":    _replace(title), #Obligatorio      
+                        "OriginalTitle": "str",                          
+                        "Type":          "movie",     #Obligatorio  #movie o serie     
+                        "Year":          "int",     #Important!  1870 a año actual   
+                        "Duration":      "int",     #en minutos   
+                        "ExternalIds":   "list", #*      
+                        "Deeplinks": {
+                            "Web":       deeplink,       #Obligatorio          
+                            "Android":   "str",          
+                            "iOS":       "str",      
+                        },
+                        "Synopsis":      "str",      
+                        "Image":         image,      
+                        "Subtitles": "list",
+                        "Dubbed": "list",
+                        "Rating":        "str",     #Important!      
+                        "Provider":      "list",      
+                        "Genres":        serie.text,    #Important!      
+                        "Cast":          "list",    #Important!        
+                        "Directors":     "list",    #Important!      
+                        "Availability":  "str",     #Important!      
+                        "Download":      "bool",      
+                        "IsOriginal":    "bool",    #Important!        
+                        "IsAdult":       "bool",    #Important!   
+                        "IsBranded":     "bool",    #Important!   (ver link explicativo)
+                        "Packages":      "list",    #Obligatorio      
+                        "Country":       "list",
+                        "Timestamp":     "str", #Obligatorio
+                        "CreatedAt":     self._created_at #Obligatorio
+                    }
+
+                    serie_counter += 1
+
+        print("Cantidad de series peliculas: ", serie) 
+        print("Cantidad de series repetidas",serie_counter_repetidos)
+        
+        
+
             #for tags in categories:
                 #print(tags.find_all('a'))
                 #category_names = tags.find_all('a')
