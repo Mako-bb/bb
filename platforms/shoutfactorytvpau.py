@@ -88,45 +88,51 @@ self.test = True if operation == "testing" else False
 ############## PAYLOAD MOVIES ##############
     def get_payload_movies(self, movie_data):
         contador = 0
-        soup = BS(movie_data.content, 'html.parser')
-        categorias = soup.find("div")
-        print(categorias)
-        raise KeyError
-        payload_movie = {
-            "PlatformCode":  self._platform_code, #Obligatorio      
-            "Id":            None, #Obligatorio
-            "Title":         None, #Obligatorio      
-            "CleanTitle":    _replace(None), #Obligatorio      
-            "OriginalTitle": None,                          
-            "Type":          "movie",     #Obligatorio      
-            "Year":          None,     #Important!     
-            "Duration":      None,      
-            "ExternalIds":   None,      
-            "Deeplinks": {          
-                "Web":       None,       #Obligatorio          
-                "Android":   None,          
-                "iOS":       None,      
-            },      
-            "Synopsis":      None,      
-            "Image":         None,      
-            "Rating":        None,     #Important!      
-            "Provider":      None,      
-            "Genres":        None,    #Important!      
-            "Cast":          None,      
-            "Directors":     None,    #Important!      
-            "Availability":  None,     #Important!      
-            "Download":      None,      
-            "IsOriginal":    None,    #Important!      
-            "IsAdult":       None,    #Important!   
-            "IsBranded":     None,    #Important!   
-            "Packages":      [{"Type":"subscription-vod"}],    #Obligatorio      
-            "Country":       None,      
-            "Timestamp":     datetime.now().isoformat(), #Obligatorio      
-            "CreatedAt":     self._created_at #Obligatorio
-        }
+        payloads = []
+        list_db = Datamanager._getListDB(self, self.titanScraping)
+        self.get_categories(movie_data)
+        for item in self.container:
+            contador = contador + 1
+            payload_movie = {
+                "PlatformCode":  self._platform_code, #Obligatorio      
+                "Id":            None, #Obligatorio
+                "Title":         self.get_title(item), #Obligatorio      
+                "CleanTitle":    self.get_title(item), #Obligatorio      
+                "OriginalTitle": None,                          
+                "Type":          "movie",     #Obligatorio      
+                "Year":          None,     #Important!     
+                "Duration":      None,      
+                "ExternalIds":   None,      
+                "Deeplinks": {          
+                    "Web":       self.get_deeplink(item),       #Obligatorio          
+                    "Android":   None,          
+                    "iOS":       None,      
+                },      
+                "Synopsis":      self.get_syn(item),      
+                "Image":         self.get_image(item),      
+                "Rating":        None,     #Important!      
+                "Provider":      None,      
+                "Genres":        None,    #Important!      
+                "Cast":          None,      
+                "Directors":     None,    #Important!      
+                "Availability":  None,     #Important!      
+                "Download":      None,      
+                "IsOriginal":    None,    #Important!      
+                "IsAdult":       None,    #Important!   
+                "IsBranded":     None,    #Important!   
+                "Packages":      [{"Type":"subscription-vod"}],    #Obligatorio      
+                "Country":       None,      
+                "Timestamp":     datetime.now().isoformat(), #Obligatorio      
+                "CreatedAt":     self._created_at #Obligatorio
+            }
+
+            Datamanager._checkDBandAppend(self, payload_movie, list_db, payloads)
+        Datamanager._insertIntoDB(self, payloads, self.titanScraping)
 
     ############## PAYLOAD SERIES ##############
     def get_payload_serie(self):
+        payloads_series = []
+        list_db_series = Datamanager._getListDB(self, self.titanScrapingEpisodios)
         payload_serie = {
             "PlatformCode":  self._platform_code, #Obligatorio      
             "Id":            None,            #Obligatorio
@@ -161,9 +167,15 @@ self.test = True if operation == "testing" else False
             "CreatedAt":     self._created_at   #Obligatorio
         }
 
+        Datamanager._checkDBandAppend(self, payload_serie, list_db_series, payloads_series)
+        self.copiapayloads = [{"Id":pay["Id"], "CleanTitle":pay["CleanTitle"].lower().strip()} for pay in payloads_series]
+        Datamanager._insertIntoDB(self, payloads_series, self.titanScraping)
+
 
     ############## PAYLOAD EPISODES ##############
     def get_payload_epis(self):
+        payloads_episodes = []
+        list_db_episodes = Datamanager._getListDB(self, self.titanScrapingEpisodios)
         payload_epi = {
             "PlatformCode":  self._platform_code, #Obligatorio      
             "Id":            None, #Obligatorio
@@ -198,4 +210,39 @@ self.test = True if operation == "testing" else False
             "Timestamp":     datetime.now().isoformat(), #Obligatorio      
             "CreatedAt":     self._created_at, #Obligatorio
         }
+        Datamanager._checkDBandAppend(self, payload_epi, list_db_episodes, payloads_episodes)
+        Datamanager._insertIntoDB(self, payloads_episodes, self.titanScraping)
     
+
+    def get_categories(self, data):
+        soup = BS(data.content, 'html.parser')
+        self.container = soup.find('div', attrs={'class': 'playlist-container'}).find_all("div",{"class":"movies-list"})
+        print("Categorías obtenidas: " + str(len(self.container)))
+
+    
+    def get_title(self, item):
+        '''<a href="/the-autobiography-of-miss-jane-pittman/61523b6119228800013878c6">
+        <img alt="The Autobiography Of Miss Jane Pittman" height="318" src="https://gvupload.zype.com/53c0457a69702d4d66040000/video_image/6173001ebb45210001a94008/1634926622/original.png?1634926622" 
+        title="The Autobiography Of Miss Jane Pittman" width="220"/>
+        </a>'''
+        title = item.img.get('title')
+        return title
+
+    def get_deeplink(self, item):
+        deeplink = self._movies_url + item.a.get('href')
+        return deeplink
+
+
+    def get_syn(self, item):
+        pass
+
+    
+    def get_image(self, item):
+        pass
+
+
+
+
+
+
+

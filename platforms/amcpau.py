@@ -142,9 +142,7 @@ class AmcPau():
         ########## Payload series ##########
 
     def get_payload_series(self, content):
-        
-        list_db_series = Datamanager._getListDB(
-            self, self.titanScrapingEpisodios)
+        list_db_series = Datamanager._getListDB(self, self.titanScrapingEpisodios)
         data = content['data']['children']
         for item in data:
             if item['properties'].get('title'):
@@ -218,8 +216,7 @@ class AmcPau():
                 
     def get_payload_episodes(self, content):
         payloads_episodes = []
-        list_db_episodes = Datamanager._getListDB(
-            self, self.titanScrapingEpisodios)
+        list_db_episodes = Datamanager._getListDB(self, self.titanScrapingEpisodios)
         data = content['data']['children']
         for item in data:
             if item['type']== "list":
