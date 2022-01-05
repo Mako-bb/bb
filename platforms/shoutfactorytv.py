@@ -22,7 +22,7 @@ from updates.upload         import Upload
 
 class Shoutfactorytv():
     """
-    Amc es una ott de Estados Unidos.
+    Shoutfactorytv es una ott de Estados Unidos.
 
     DATOS IMPORTANTES:
     - Versión Final: Si.
@@ -84,13 +84,51 @@ class Shoutfactorytv():
             self.testing = True
             self._scraping()
 
+        self.payload_template = { 
+            "PlatformCode":  None, #Obligatorio   
+            "Id":            None, #Obligatorio
+            "Title":         None, #Obligatorio      
+            "CleanTitle":    None, #Obligatorio      
+            "OriginalTitle": None,          
+            "Type":          None,     #Obligatorio  #movie o serie     
+            "Year":          None,     #Important!  1870 a año actual  
+            "Duration":      None,     #en minutos   
+            "ExternalIds":   "list", #*      
+            "Deeplinks": {
+                "Web":       "str",       #Obligatorio          
+                "Android":   "str",          
+                "iOS":       "str",      
+            },
+            "Synopsis":      "str",      
+            "Image":         "image",    
+            "Rating":        "str",     #Important!      
+            "Provider":      "list",      
+            "Genres":        "movie.text",    #Important!      
+            "Cast":          "list",    #Important!  
+            "Directors":     "list",    #Important!      
+            "Availability":  "str",     #Important!      
+            "Download":      "bool",      
+            "IsOriginal":    "bool",    #Important!  
+            "IsAdult":       "bool",    #Important!   
+            "IsBranded":     "bool",    #Important!   (ver link explicativo)
+            "Packages":      [
+                    {
+                        "asd":"asd"
+                    }
+            ],    #Obligatorio      
+            "Country":       "list",
+            "Timestamp":     "str", #Obligatorio
+            "CreatedAt":     self._created_at #Obligatorio
+        }
+
+
     def _scraping(self, testing=False):
-        
+
         print(self._url)
         page = requests.get(self._url)
 
-        #self.get_payload_movies(page)
-        self.get_payload_series(page)
+        self.get_payload_movies(page)
+        #self.get_payload_series(page)
         #page = requests.get(self._url)
 
         #if page.status_code == 200:
@@ -166,47 +204,60 @@ class Shoutfactorytv():
                     print(title)
                     movie_list.append(title)
 
-                    payload_movies = { 
-                        "PlatformCode":  self._platform_code, #Obligatorio   
-                        "Id":            id, #Obligatorio
-                        "Crew":          [ #Importante
-                                            {
-                                                "Role": "str", 
-                                                "Name": "str"
-                                            },
-                                            ...
-                        ],
-                        "Title":         title, #Obligatorio      
-                        "CleanTitle":    _replace(title), #Obligatorio      
-                        "OriginalTitle": "str",                          
-                        "Type":          "movie",     #Obligatorio  #movie o serie     
-                        "Year":          "int",     #Important!  1870 a año actual   
-                        "Duration":      "int",     #en minutos   
-                        "ExternalIds":   "list", #*      
-                        "Deeplinks": {
-                            "Web":       deeplink,       #Obligatorio          
-                            "Android":   "str",          
-                            "iOS":       "str",      
-                        },
-                        "Synopsis":      synopsis,      
-                        "Image":         image,      
-                        "Subtitles": "list",
-                        "Dubbed": "list",
-                        "Rating":        "str",     #Important!      
-                        "Provider":      "list",      
-                        "Genres":        movie.text,    #Important!      
-                        "Cast":          "list",    #Important!        
-                        "Directors":     "list",    #Important!      
-                        "Availability":  "str",     #Important!      
-                        "Download":      "bool",      
-                        "IsOriginal":    "bool",    #Important!        
-                        "IsAdult":       "bool",    #Important!   
-                        "IsBranded":     "bool",    #Important!   (ver link explicativo)
-                        "Packages":      "list",    #Obligatorio      
-                        "Country":       "list",
-                        "Timestamp":     "str", #Obligatorio
-                        "CreatedAt":     self._created_at #Obligatorio
-                    }
+                    payload_movies = self.payload_template
+
+                    payload_movies["PlatformCode"] = self._platform_code
+                    payload_movies["Id"] = id
+                    payload_movies["Title"] = title
+                    payload_movies["CleanTitle"] = _replace(title)
+                    payload_movies["Type"] = "movie"
+                    payload_movies["Deeplinks"]["Web"] = deeplink
+                    payload_movies["Synopsis"] = synopsis
+                    payload_movies["Image"] = image
+                    payload_movies["Genre"] = movie.text
+                    payload_movies["CreatedAt"] = self._created_at
+
+                    ##payload_movies = { 
+                        ##"PlatformCode":  self._platform_code, #Obligatorio   
+                        ##"Id":            id, #Obligatorio
+                        ##"Crew":          [ #Importante
+                                            ##{
+                                                ##"Role": "str", 
+                                                ##"Name": "str"
+                                            ##},
+                                            ##...
+                        ##],
+                        ##"Title":         title, #Obligatorio      
+                        ##"CleanTitle":    _replace(title), #Obligatorio      
+                        ##"OriginalTitle": "str",                          
+                        ##"Type":          "movie",     #Obligatorio  #movie o serie     
+                        ##"Year":          "int",     #Important!  1870 a año actual   
+                        ##"Duration":      "int",     #en minutos   
+                        ##"ExternalIds":   "list", #*      
+                        ##"Deeplinks": {
+                            ##"Web":       deeplink,       #Obligatorio          
+                            ##"Android":   "str",          
+                            ##"iOS":       "str",      
+                        ##},
+                        ##"Synopsis":      synopsis,      
+                        ##"Image":         image,      
+                        ##"Subtitles": "list",
+                        ##"Dubbed": "list",
+                        ##"Rating":        "str",     #Important!      
+                        ##"Provider":      "list",      
+                        ##"Genres":        movie.text,    #Important!      
+                        ##"Cast":          "list",    #Important!        
+                        ##"Directors":     "list",    #Important!      
+                        ##"Availability":  "str",     #Important!      
+                        ##"Download":      "bool",      
+                        ##"IsOriginal":    "bool",    #Important!        
+                        ##"IsAdult":       "bool",    #Important!   
+                        ##"IsBranded":     "bool",    #Important!   (ver link explicativo)
+                        ##"Packages":      "list",    #Obligatorio      
+                        ##"Country":       "list",
+                        ##"Timestamp":     "str", #Obligatorio
+                        ##"CreatedAt":     self._created_at #Obligatorio
+                    ##}
 
                     movie_counter += 1
 
@@ -310,7 +361,7 @@ class Shoutfactorytv():
 
                     serie_counter += 1
 
-        print("Cantidad de series peliculas: ", serie) 
+        print("Cantidad de series peliculas: ", serie_counter) 
         print("Cantidad de series repetidas",serie_counter_repetidos)
         
         
