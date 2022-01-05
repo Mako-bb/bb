@@ -61,30 +61,8 @@ class Shoutfactorytv():
         self.sesion = requests.session()
         self.headers = {"Accept": "application/json",
                         "Content-Type": "application/json; charset=utf-8"}
-
-        self.list_db_episodes = Datamanager._getListDB(
-            self, self.titanScrapingEpisodios)
-
-        if type == 'return':
-            '''
-            Retorna a la Ultima Fecha
-            '''
-            params = {"PlatformCode": self._platform_code}
-            lastItem = self.mongo.lastCretedAt(self.titanScraping, params)
-            if lastItem.count() > 0:
-                for lastContent in lastItem:
-                    self._created_at = lastContent['CreatedAt']
-
-            self._scraping()
-
-        if type == 'scraping':
-            self._scraping()
-
-        if type == 'testing':
-            self.testing = True
-            self._scraping()
-
-        self.payload_template = { 
+                    
+        self._payload_template = { 
             "PlatformCode":  None, #Obligatorio   
             "Id":            None, #Obligatorio
             "Title":         None, #Obligatorio      
@@ -120,6 +98,30 @@ class Shoutfactorytv():
             "Timestamp":     "str", #Obligatorio
             "CreatedAt":     self._created_at #Obligatorio
         }
+
+        self.list_db_episodes = Datamanager._getListDB(
+            self, self.titanScrapingEpisodios)
+
+        if type == 'return':
+            '''
+            Retorna a la Ultima Fecha
+            '''
+            params = {"PlatformCode": self._platform_code}
+            lastItem = self.mongo.lastCretedAt(self.titanScraping, params)
+            if lastItem.count() > 0:
+                for lastContent in lastItem:
+                    self._created_at = lastContent['CreatedAt']
+
+            self._scraping()
+
+        if type == 'scraping':
+            self._scraping()
+
+        if type == 'testing':
+            self.testing = True
+            self._scraping()
+
+
 
 
     def _scraping(self, testing=False):
@@ -204,7 +206,7 @@ class Shoutfactorytv():
                     print(title)
                     movie_list.append(title)
 
-                    payload_movies = self.payload_template
+                    payload_movies = self._payload_template
 
                     payload_movies["PlatformCode"] = self._platform_code
                     payload_movies["Id"] = id
