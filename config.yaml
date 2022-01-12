@@ -205,8 +205,7 @@ ott_sites: # acá se agregan las nuevas plataformas a medida que se van desarrol
   ShoutfactorytvPau:
     countries:
       US: us.shoutfactorytv
-    movie_url: https://www.shoutfactorytv.com/film
-    serie_url: https://www.shoutfactorytv.com/tv
+    url: https://www.shoutfactorytv.com/
   Fxnow:
     countries:
       US: us.fxnow

@@ -41,8 +41,7 @@ self.test = True if operation == "testing" else False
             self.skippedEpis = 0
             self.skippedTitles = 0
             ################# URLS  #################
-            self._movies_url = self._config['movie_url']
-            self._serie_url = self._config['serie_url']
+            self._url = self._config['url']
             self.testing = False
             self.sesion = requests.session()
             self.headers = {"Accept": "application/json",
@@ -68,15 +67,15 @@ self.test = True if operation == "testing" else False
                 self._scraping()
 
     def _scraping(self, testing=False):
-        # Definimos los links de las páginas y con requests y bs4 traemos la data
+        # Definimos los links de las páginas y con requests y bs4; traemos la data
         print("Haciendo la request")
-        movie_data = requests.get(self._movies_url)
-        serie_data = requests.get(self._serie_url)
+        _data = requests.get(self._url)
+        self.get_categories(_data)
 
         print("Obteniendo películas")
-        self.get_payload_movies(movie_data)
+        self.get_payload_movies(_data)
         print("Obteniendo series")
-        self.get_payload_serie(serie_data)
+        self.get_payload_serie(_data)
         self.get_payload_epis()
 
     # Agregar contador
@@ -86,48 +85,52 @@ self.test = True if operation == "testing" else False
 
 
 ############## PAYLOAD MOVIES ##############
-    def get_payload_movies(self, movie_data):
+    def get_payload_movies(self, rec):
         contador = 0
         payloads = []
-        list_db = Datamanager._getListDB(self, self.titanScraping)
-        self.get_categories(movie_data)
-        for item in self.container:
+        #list_db = Datamanager._getListDB(self, self.titanScraping)
+        for item in data:
             contador = contador + 1
-            payload_movie = {
-                "PlatformCode":  self._platform_code, #Obligatorio      
-                "Id":            None, #Obligatorio
-                "Title":         self.get_title(item), #Obligatorio      
-                "CleanTitle":    self.get_title(item), #Obligatorio      
-                "OriginalTitle": None,                          
-                "Type":          "movie",     #Obligatorio      
-                "Year":          None,     #Important!     
-                "Duration":      None,      
-                "ExternalIds":   None,      
-                "Deeplinks": {          
-                    "Web":       self.get_deeplink(item),       #Obligatorio          
-                    "Android":   None,          
-                    "iOS":       None,      
-                },      
-                "Synopsis":      self.get_syn(item),      
-                "Image":         self.get_image(item),      
-                "Rating":        None,     #Important!      
-                "Provider":      None,      
-                "Genres":        None,    #Important!      
-                "Cast":          None,      
-                "Directors":     None,    #Important!      
-                "Availability":  None,     #Important!      
-                "Download":      None,      
-                "IsOriginal":    None,    #Important!      
-                "IsAdult":       None,    #Important!   
-                "IsBranded":     None,    #Important!   
-                "Packages":      [{"Type":"subscription-vod"}],    #Obligatorio      
-                "Country":       None,      
-                "Timestamp":     datetime.now().isoformat(), #Obligatorio      
-                "CreatedAt":     self._created_at #Obligatorio
-            }
-
-            Datamanager._checkDBandAppend(self, payload_movie, list_db, payloads)
-        Datamanager._insertIntoDB(self, payloads, self.titanScraping)
+            self.get_title(item)
+            self.get_deeplink(item)
+            print(contador)
+        """payload_movie = {
+            "PlatformCode":  self._platform_code, #Obligatorio      
+            "Id":            'None', #Obligatorio
+            "Title":         self.get_title(item), #Obligatorio      
+            "CleanTitle":    self.get_title(item), #Obligatorio      
+            "OriginalTitle": None,                          
+            "Type":          "movie",     #Obligatorio      
+            "Year":          None,     #Important!     
+            "Duration":      None,      
+            "ExternalIds":   None,      
+            "Deeplinks": {          
+                "Web":       self.get_deeplink(item),       #Obligatorio          
+                "Android":   None,          
+                "iOS":       None,      
+            },      
+            "Synopsis":      self.get_syn(item),      
+            "Image":         self.get_image(item),      
+            "Rating":        None,     #Important!      
+            "Provider":      None,      
+            "Genres":        None,    #Important!      
+            "Cast":          None,      
+            "Directors":     None,    #Important!      
+            "Availability":  None,     #Important!      
+            "Download":      None,      
+            "IsOriginal":    None,    #Important!      
+            "IsAdult":       None,    #Important!   
+            "IsBranded":     None,    #Important!   
+            "Packages":      [{"Type":"subscription-vod"}],    #Obligatorio      
+            "Country":       None,      
+            "Timestamp":     datetime.now().isoformat(), #Obligatorio      
+            "CreatedAt":     self._created_at #Obligatorio
+        }
+        payloads.append(payload_movie)
+    print(contador, payloads)"""
+        
+        '''Datamanager._checkDBandAppend(self, payload_movie, list_db, payloads)
+        Datamanager._insertIntoDB(self, payloads, self.titanScraping)'''
 
     ############## PAYLOAD SERIES ##############
     def get_payload_serie(self):
@@ -216,8 +219,32 @@ self.test = True if operation == "testing" else False
 
     def get_categories(self, data):
         soup = BS(data.content, 'html.parser')
-        self.container = soup.find('div', attrs={'class': 'playlist-container'}).find_all("div",{"class":"movies-list"})
-        print("Categorías obtenidas: " + str(len(self.container)))
+        container = soup.find('div', attrs={'class': 'nav-holder'}).find("div",{"class":"dropdown"}).find_all('li')
+        print('************************ Movies ************************')
+        movies_cont = list(container[1:34])
+        print("Categorías movies: " + str(len(movies_cont)))
+        print('************************ Series ************************')
+        series_cont = list(container[36:58])
+        print("Categorías series: " + str(len(series_cont)))
+        
+        print(' URL CATEGORÍAS MOVIES')
+        for item in movies_cont:
+            self.url_movies = self._url +  item.a.get('href')
+            print(self.url_movies)
+
+            for url in self.url_movies:
+                rec = requests.get(url)
+            return rec
+
+
+        print(' URL CATEGORÍAS SERIES')
+        for item in series_cont:
+            self.url_series = self._url +  item.a.get('href')
+            print(self.url_series)
+            
+            for url in self.url_series:
+                req = requests.get(url)
+            return req
 
     
     def get_title(self, item):
@@ -226,19 +253,23 @@ self.test = True if operation == "testing" else False
         title="The Autobiography Of Miss Jane Pittman" width="220"/>
         </a>'''
         title = item.img.get('title')
-        return title
+        print(title)
 
     def get_deeplink(self, item):
-        deeplink = self._movies_url + item.a.get('href')
-        return deeplink
+        self.deeplink = self._movies_url + item.div.li.a.get('href')
+        print(self.deeplink)
 
 
     def get_syn(self, item):
-        pass
+        r = requests.get(self.deeplink)
+        s2 = BS(r.content, 'html.parser')
+        syn = s2.find('div', {"id": "wrapper"}).find('div', {"id": "main"}).find('div', {'class': 'holder'}).find('div', {'class': 'text-holder'}).find('p')
+        print(syn)
 
     
     def get_image(self, item):
-        pass
+        img = item.img.get('src')
+        print(img)
 
 
 
