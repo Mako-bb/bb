@@ -1,4 +1,5 @@
 import time
+from types import NoneType
 from bs4.element import ProcessingInstruction
 import requests
 from handle.replace import _replace
@@ -67,7 +68,7 @@ class Shoutfactorytv():
         self.categories_series_list=self.get_lista_categories(series_cat_links)
               
 
-        self.get_payload_movies(self.categories_pelis_links,self.categories_pelis_list)
+        #self.get_payload_movies(self.categories_pelis_links,self.categories_pelis_list)
         self.get_payload_serie(self.categories_series_links,self.categories_series_list)
 
         Upload(self._platform_code, self._created_at, testing = self.testing)
@@ -80,7 +81,10 @@ class Shoutfactorytv():
             movies_list=BS(web_categories.text,"html.parser")
             movies_list=movies_list.find_all("div",{"class","img-holder"})
             for movie in movies_list:
-                self.payload_movie(movie,list[indice])
+                if movie.img != None:
+                    self.payload_movie(movie,list[indice])
+                else:
+                    pass
             indice+1
 
         Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)
@@ -108,13 +112,18 @@ class Shoutfactorytv():
         for episode_line in episode_list:
             episodes=episode_line.find_all("a")
             for episode in episodes:
+
                 self.payload_episodes(episode,genero)
+        
+        Datamanager._insertIntoDB(self, self.payload_epi, self.titanScrapingEpisodios)
 
 
 
     def payload_movie(self, movie,genero):
+
         str_to_hash=str(movie.img['title'])+ str(self.url+movie.a['href'])
         id=hashlib.md5(str_to_hash.encode('utf-8')).hexdigest()
+
         payload_contenidos = { 
             'PlatformCode':  self._platform_code, #Obligatorio   
             "Id":            str(id), #Obligatorio
@@ -132,12 +141,12 @@ class Shoutfactorytv():
                 "iOS":       None,      
             },
             "Synopsis":      self.get_sinopsis(self.url+movie.a['href']),      
-            "Image":         movie.img['src'],      
+            "Image":         [movie.img['src']],      
             "Subtitles":     None,
             "Dubbed":        None,
             "Rating":        None,     #Important!      
             "Provider":      None,      
-            "Genres":        genero,    #Important!      
+            "Genres":        [genero],    #Important!      
             "Cast":          None,    #Important!        
             "Directors":     None,    #Important!      
             "Availability":  None,     #Important!      
@@ -153,9 +162,10 @@ class Shoutfactorytv():
         Datamanager._checkDBandAppend(self, payload_contenidos, self.list_db, self.payloads)
 
     def payload_serie(self,serie,genero):
+        
         payload_contenido_series = { 
             "PlatformCode":  self._platform_code, #Obligatorio   
-            "Id":            str(self.get_id(serie.img['title'],self.url+serie.a['href'])), #Obligatorio
+            "Id":            str(self.get_id(serie.img['title'])), #Obligatorio
             "Seasons":       [ #Unicamente para series
                                 None
             ],
@@ -175,12 +185,12 @@ class Shoutfactorytv():
                 "iOS":       None,      
             },
             "Synopsis":      self.get_sinopsis(self.url+serie.a['href']),      
-            "Image":         serie.img['src'],      
+            "Image":         [serie.img['src']],      
             "Subtitles":     None,
             "Dubbed":        None,
             "Rating":        None,     #Important!      
             "Provider":      None,      
-            "Genres":        genero,    #Important!      
+            "Genres":        [genero],    #Important!      
             "Cast":          None,    #Important!        
             "Directors":     None,    #Important!      
             "Availability":  None,     #Important!      
@@ -196,15 +206,15 @@ class Shoutfactorytv():
         Datamanager._checkDBandAppend(self, payload_contenido_series, self.list_db, self.payloads)
 
     def payload_episodes(self,episode,genero):
-        numepi=int
-        season=int
-        self.get_epiyseason(episode,season,numepi)
-        str_to_hash=str(episode.img['title'])+ str(numepi)+ str(season)+ str(self.url+episode.a['href'])
+
+        season,numepi=self.get_epiyseason(episode)
+
+        str_to_hash=str(episode.img['title'])+ str(numepi)+ str(season)+ str(self.url+episode['href'])
         id=hashlib.md5(str_to_hash.encode('utf-8')).hexdigest()
         payload_episodios = {      
                 "PlatformCode":  self._platform_code, #Obligatorio      
                 "Id":            str(id), #Obligatorio
-                "ParentId":      str(self.get_id(episode.img['title'])), #Obligatorio #Unicamente en Episodios
+                "ParentId":      str(self.get_id(self.get_serie_title(episode.img['alt']))), #Obligatorio #Unicamente en Episodios
                 "ParentTitle":   self.get_serie_title(episode.img['alt']), #Unicamente en Episodios 
                 "Episode":       int(numepi), #Unicamente en Episodios  
                 "Season":        int(season), #Obligatorio #Unicamente en Episodios
@@ -215,17 +225,17 @@ class Shoutfactorytv():
                 "Duration":      None,      
                 "ExternalIds":   None,     
                 "Deeplinks": {          
-                    "Web":       self.url+episode.a['href'],       #Obligatorio          
+                    "Web":       self.url+episode['href'],       #Obligatorio          
                     "Android":   None,          
                     "iOS":       None,      
                 },      
                 "Synopsis":      None,      
-                "Image":         episode.img['src'],     
+                "Image":         [episode.img['src']],     
                 "Subtitles":     None,
                 "Dubbed":        None,
                 "Rating":        None,     #Important!      
                 "Provider":      None,      
-                "Genres":        genero,    #Important!      
+                "Genres":        [genero],    #Important!      
                 "Cast":          None,    #Important!        
                 "Directors":     None,    #Important!      
                 "Availability":  None,     #Important!      
@@ -239,7 +249,7 @@ class Shoutfactorytv():
                 "CreatedAt":     self._created_at, #Obligatorio 
             }
             
-        Datamanager._checkDBandAppend(self, payload_episodios, self.list_db_epi, self.payloads_epis, isEpi=True)
+        Datamanager._checkDBandAppend(self, payload_episodios, self.list_db_epi, self.payload_epi, isEpi=True)
 
     def get_link_categories(self,genres):
         cat=[]
@@ -262,21 +272,26 @@ class Shoutfactorytv():
         except:
             return None
 
-    def get_epiyseason(self,episode,season,numepi):
+    def get_epiyseason(self,episode):
         episeason=episode.find_all("span")[1].text
         episeason=episeason.split(",")
-        season=episeason[0].replace("\n","")
-        season=season.replace("Season: ","")
+
+        season=episeason[0].replace("Season: ","")
         season=season.strip()
-        numepi=episeason[0].replace("\n","")
+
+        numepi=episeason[1]
         numepi=numepi.replace("Episode: ","")
         numepi=numepi.strip()
+
+        return season,numepi
 
     def get_serie_title(self,episode):
         title=episode.split(":")
         return title[0]
 
     def get_id(self,title):
+
         deeplink=title.replace(" ","-")
         str_to_hash=str(title)+ str(deeplink)
         id=hashlib.md5(str_to_hash.encode('utf-8')).hexdigest()
+        return id
