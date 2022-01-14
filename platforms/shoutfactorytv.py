@@ -1,3 +1,4 @@
+from turtle import title
 from bs4 import BeautifulSoup
 import requests 
 import time
@@ -15,55 +16,95 @@ from updates.upload import Upload
 class Shoutfactorytv():
 
     def __init__(self, ott_site_uid, ott_site_country, type):
-        self._config                = config()['ott_sites'][ott_site_uid]
-        self._platform_code         = self._config['countries'][ott_site_country]
+        self._config = config()['ott_sites'][ott_site_uid]
+        self._platform_code = self._config['countries'][ott_site_country]
+        # self._start_url             = self._config['start_url']
         self._created_at = time.strftime("%Y-%m-%d")
         self.mongo = mongo()
         self.titanPreScraping = config()['mongo']['collections']['prescraping']
-        self.titanScraping = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
         self.skippedEpis = 0
         self.skippedTitles = 0
-
-        #### URL ####
-        #self._url = self._config['url'] 
-        #self._url_movies = self._config['url_movies']
-        #self._url_shows = self._config['url_shows']
-
+   
+        #Url para encontrar la información de los contenidos por separado
         self.testing = False
         self.sesion = requests.session()
-        self.headers = {"Accept": "application/json",
-                        "Content-Type": "application/json; charset=utf-8"}
+        self.headers = {"Accept": "application/json",}
+        self.testing = True
+        self._scraping()
 
-        if type == 'return':
-            '''
-            Retorna a la Ultima Fecha
-            '''
-            params = {"PlatformCode": self._platform_code}
-            lastItem = self.mongo.lastCretedAt(self.titanScraping, params)
-            if lastItem.count() > 0:
-                for lastContent in lastItem:
-                    self._created_at = lastContent['CreatedAt']
 
-            self._scraping()
+    
+    def _scraping(self, testing=False):
+        payloads = []
+        payloads_series = []
+        list_db_series_movies = Datamanager._getListDB(self, self.titanScraping)
+        list_db_episodes = Datamanager._getListDB(self, self.titanScrapingEpisodios)
 
-        if type == 'scraping':
-            self._scraping()
+        #self.get_payload_movies(movie_data)
+        #self.get_payload_series(serie_data)
+        #self.get_payload_episodes(episode_data)
 
-        if type == 'testing':
-            self.testing = True
-            self._scraping()
-
-    # Scripts para traer todas las peliculas
-    def get_movies(self):
-        url_movies = 'https://www.shoutfactorytv.com/film' #Contiene el link de movies
-        response = requests.get(url_movies) #Enviamos una solicitud a la pag
+        self.url = "https://www.shoutfactorytv.com"
+        response = requests.get(self.url) #Enviamos una solicitud a la pag
         content = response.text #Lo transforma en texto 
         soup = BeautifulSoup(content, 'lxml')
         #content = soup.find_all("div", {"class", "movies-list"}) #Por categorias
-        
-        data = soup.find("div", {"class", "tab-content add film"}) #All movies
-        title = data.find_all("img", {"title"}).get_text() #All movies
+        section = soup.find_all("div", {"class", "drop-holder"}) #Por categorias
+        movies_categories = section[0]
+        series_categories = section[1]
+
+        self.get_movies(movies_categories)
+        self.get_series(series_categories)
+
+    # Scripts para traer todas las peliculas
+    def get_movies(self, movies_categories):
+        categ = movies_categories.find_all("a")
+        for item in categ:
+            url_categ = self.url + item['href']
+            print(url_categ)
+
+
+    def get_series(self, series_categories):
+        categ = series_categories.find_all("a")
+        for item in categ:
+            url_categ = self.url + item['href']
+            print(url_categ)
+
+
+    def get_content(self, content):
+        content_movies = BeautifulSoup(content.text, 'lxml')
+        img_holder = content_movies.find_all('div', attrs={'class': 'img-holder'})
+
+        for content in img_holder:
+            title = self.get_title(content)
+            deeplink = self.get_deeplink(content)
+            src = self.get_src(content)
+
+            print(title)
+            print(deeplink)
+            print(src)
+             
+
+    def get_title(self, content):
+        if content.img != None:
+            title = content.img.get('title')
+        else: 
+            title = content.a.get('href').split('/')[1].replace('-', ' ').capitalize
+        return title
+
+    def get_deeplink(self,content):
+        deeplink = content.a
+        deeplink = self.url + deeplink['href']
+        return deeplink
+
+    def get_src(self, content):
+        if content.img != None:
+            src = content.img.get('src')
+        else:
+            src = None
+        return src
+
 
 
     def get_payload_movies(self, payload_movies):
