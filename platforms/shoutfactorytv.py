@@ -49,7 +49,6 @@ class Shoutfactorytv():
         response = requests.get(self.url) #Enviamos una solicitud a la pag
         content = response.text #Lo transforma en texto 
         soup = BeautifulSoup(content, 'lxml')
-        #content = soup.find_all("div", {"class", "movies-list"}) #Por categorias
         section = soup.find_all("div", {"class", "drop-holder"}) #Por categorias
         movies_categories = section[0]
         series_categories = section[1]
