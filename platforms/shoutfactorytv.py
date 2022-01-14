@@ -25,6 +25,7 @@ class Shoutfactorytv():
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
         self.skippedEpis = 0
         self.skippedTitles = 0
+        self.list_id=[]
 
         self.testing = False
         self.sesion = requests.session()
@@ -68,7 +69,7 @@ class Shoutfactorytv():
         self.categories_series_list=self.get_lista_categories(series_cat_links)
               
 
-        #self.get_payload_movies(self.categories_pelis_links,self.categories_pelis_list)
+        self.get_payload_movies(self.categories_pelis_links,self.categories_pelis_list)
         self.get_payload_serie(self.categories_series_links,self.categories_series_list)
 
         Upload(self._platform_code, self._created_at, testing = self.testing)
@@ -82,7 +83,11 @@ class Shoutfactorytv():
             movies_list=movies_list.find_all("div",{"class","img-holder"})
             for movie in movies_list:
                 if movie.img != None:
-                    self.payload_movie(movie,list[indice])
+                    if self.get_id(movie.img['title']) not in self.list_id:
+                        self.payload_movie(movie,list[indice])
+                        self.list_id.append(self.get_id(movie.img['title']))
+                    else:
+                        pass
                 else:
                     pass
             indice+1
@@ -98,13 +103,15 @@ class Shoutfactorytv():
             series_list=series_list.find_all("div",{"class","img-holder"})
             for serie in series_list:
                 self.payload_serie(serie,list[indice])
-                self.get_payload_episodes(serie.a["href"],list[indice])
+                title=self.get_title(serie)
+                print(title)
+                print(type(title))
+                self.get_payload_episodes(serie.a["href"],list[indice],title)
             indice+1
-            print("Serie scrapeada")
         Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)
         
 
-    def get_payload_episodes(self,serie_link,genero):
+    def get_payload_episodes(self,serie_link,genero,serie_title):
         self.payload_epi=[]
         web_serie=requests.get(self.url+serie_link)
         serie_soup=BS(web_serie.text,"html.parser")
@@ -112,8 +119,7 @@ class Shoutfactorytv():
         for episode_line in episode_list:
             episodes=episode_line.find_all("a")
             for episode in episodes:
-
-                self.payload_episodes(episode,genero)
+                self.payload_episodes(episode,genero,serie_title)
         
         Datamanager._insertIntoDB(self, self.payload_epi, self.titanScrapingEpisodios)
 
@@ -205,17 +211,15 @@ class Shoutfactorytv():
             }
         Datamanager._checkDBandAppend(self, payload_contenido_series, self.list_db, self.payloads)
 
-    def payload_episodes(self,episode,genero):
-
+    def payload_episodes(self,episode,genero,serie_title):
         season,numepi=self.get_epiyseason(episode)
-
         str_to_hash=str(episode.img['title'])+ str(numepi)+ str(season)+ str(self.url+episode['href'])
         id=hashlib.md5(str_to_hash.encode('utf-8')).hexdigest()
         payload_episodios = {      
                 "PlatformCode":  self._platform_code, #Obligatorio      
                 "Id":            str(id), #Obligatorio
-                "ParentId":      str(self.get_id(self.get_serie_title(episode.img['alt']))), #Obligatorio #Unicamente en Episodios
-                "ParentTitle":   self.get_serie_title(episode.img['alt']), #Unicamente en Episodios 
+                "ParentId":      str(self.get_id(serie_title)), #Obligatorio #Unicamente en Episodios
+                "ParentTitle":   serie_title, #Unicamente en Episodios 
                 "Episode":       int(numepi), #Unicamente en Episodios  
                 "Season":        int(season), #Obligatorio #Unicamente en Episodios
                 "Crew":          None, #important
@@ -285,12 +289,11 @@ class Shoutfactorytv():
 
         return season,numepi
 
-    def get_serie_title(self,episode):
-        title=episode.split(":")
-        return title[0]
+    def get_title(self,serie):
+        title=serie.img['title']
+        return str(title)
 
     def get_id(self,title):
-
         deeplink=title.replace(" ","-")
         str_to_hash=str(title)+ str(deeplink)
         id=hashlib.md5(str_to_hash.encode('utf-8')).hexdigest()
