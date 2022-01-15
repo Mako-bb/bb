@@ -1,4 +1,4 @@
-import time
+import time 
 import requests
 import hashlib
 from bs4                            import BeautifulSoup as BS
@@ -89,16 +89,17 @@ class Shoutfactorytv():
         links_categories_movies = self.get_categories(response, 0)                                          #Obtiene la lista con todos los links de categorias para peliculas limpias 
         
         count = 0
-        list_title = []
+        list_links_movies = []
         for link_categorie in links_categories_movies:                                                      #Recorre cada categoria de la lista de categorias
-            response_categorie = self.verify_status_code(link_categorie)                                   
+            response_categorie = self.verify_status_code(link_categorie)
+            print("\x1b[1;35;40mCategoria >>> \x1b[0m" + link_categorie)
 
             if response_categorie.status_code == 200:
                 print("\x1b[1;32;40mCódigo de estado >>> \x1b[0m" + str(response_categorie.status_code))                                   
                 soup_link_categorie = BS(response_categorie.text, 'lxml')                                   #Se trae todo el contenido de las categorias
                 content_categorie = soup_link_categorie.find_all("div", class_='img-holder')                #Se queda con los tags que contienen la lista de peliculas
               
-                for item in content_categorie:                                                              #Recorre cada pelicula
+                for item in content_categorie:                                                              #Recorre cada contenido de peliculas
                     list_links = item.find_all("a")                                                         #Obtiene una lista con todos los links de las peliculas sin limpiar
 
                     for link in list_links:
@@ -115,11 +116,11 @@ class Shoutfactorytv():
                             for content in content_link_search:
                                 link_movie = content.find("a")['href']                                      #Se queda con los tags que contienen parte del link de las peliculas
 
-                                if link_movie not in list_title:                                            #Acá corrobora que el link de la pelicula no este duplicado
-                                    if link_movie == link['href']:                                          #Acá corrobora que sea igual al link de la pagina principal de la categoria                                                          
-                                        list_title.append(link_movie)                                       #Agrega a la lista para comparar     
+                                if link['href'] not in list_links_movies:                                   #Acá corrobora que el link de la pelicula no este duplicado
+                                    if link['href'] in link_movie:                                          #Nos aseguramos de extraer la información que corresponde a esa pelicula              
+                                        list_links_movies.append(link['href'])                              #Agrega a la lista para comparar     
                                         
-                                        ###ACÁ OBTIENE LA DATA PARA LAS PELICUAS###
+                                        ###ACÁ OBTIENE LA DATA PARA LAS PELICULAS###
                                         title = content.h2.text.strip()                                     
                                         image = content.img['src'].strip()                                  
                                         duration = int(content.time.text.split(" ")[1].split(":")[0])                               
@@ -129,15 +130,20 @@ class Shoutfactorytv():
 
                                         self.payload_movies(id_hash, deeplink, 
                                                             title, image, 
-                                                            duration, description)     
-                                        break                                                               #Cuando consigue que los links sean iguales corta, así se reduce el tiempo de ejecución                                                                                         
+                                                            duration, description)
+
+                                        print(f"\033[33mPelicula encontrada >>> \033[0m" + title)          
+                                        break                                                               #Cuando consigue que los links sean iguales corta, así se reduce el tiempo de ejecución                                                                                                   
+                                    else:
+                                        print("\x1b[1;31;40m¡Pelicula no encontrada! >>> \x1b[0m" + deeplink)
+                                else:
+                                    print("\x1b[1;31;40m¡Pelicula repetida! >>> \x1b[0m" + deeplink)
+                                    break
                         else:
                             print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_link_search.status_code))
-                            continue
             else:
                 print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_categorie.status_code))
-                continue   
-        print(f"\033[33mCantidad de peliculas encontradadas >>> \033[0m" + str(count))
+        print(f"\033[33mCantidad de peliculas encontradas >>> \033[0m" + str(count))
         
         #Se encarga de insertar en al DB local el payload de peliculas 
         #Datamanager._insertIntoDB(self, self.payloads_movies, self.titanScraping)
@@ -148,9 +154,11 @@ class Shoutfactorytv():
         links_categories_shows = self.get_categories(response, 1)                                           #Obtiene la lista con todos los links de categorias para series limpias
         
         count = 0
+        count_total_episodes = 0
         list_title = []      
         for link_categorie in links_categories_shows:                                                       #Recorre cada categoria de la lista de categorias
-            response_categorie = self.verify_status_code(link_categorie)                                   
+            response_categorie = self.verify_status_code(link_categorie)
+            print("\x1b[1;35;40mCategoria >>> \x1b[0m" + link_categorie)                                 
 
             if response_categorie.status_code == 200: 
                 print("\x1b[1;32;40mCódigo de estado >>> \x1b[0m" + str(response_categorie.status_code))                                  
@@ -183,13 +191,8 @@ class Shoutfactorytv():
                                     description = self.clear_description_show(content_descr)                                                                                                
                                     id_hash = self.generate_id_hash(title, deeplink)                        
                                     count += 1
-                                    
-                                    self.payload_shows(id_hash, deeplink,   
-                                                        title, image,          
-                                                        description)
-                                   
-                                    self.get_payload_episodes(soup_link, deeplink_search_show, 
-                                                                id_hash, title) 
+                                else:
+                                    print("\x1b[1;31;40m¡Serie repetida! >>> \x1b[0m" + deeplink)
                             else:                                                                                                         
                                 title_optional = str(link['href'].split("/")[2].replace("-", " ")).title()  #Titulo que se obtiene desde el link cuando no es accesible desde la pagina
 
@@ -202,21 +205,24 @@ class Shoutfactorytv():
                                     description = None                                                      
                                     id_hash = self.generate_id_hash(title, deeplink)                        
                                     count += 1   
-                                    
-                                    self.payload_shows(id_hash, deeplink,   
-                                                        title, image,          
-                                                        description)
+                                else:
+                                    print("\x1b[1;31;40m¡Serie repetida! >>> \x1b[0m" + deeplink)
 
-                                    print(f"\033[33mComienza Scraping de episodios <<< \033[0m")
-                                    self.get_payload_episodes(soup_link, deeplink_search_show, 
-                                                                id_hash, title)     
+                            self.payload_shows(id_hash, deeplink,   
+                                                                title, image,          
+                                                                description)
+    
+                            print(f"\033[33mSerie encontrada >>> \033[0m" + title)
+    
+                            count_episodes = self.get_payload_episodes(soup_link, deeplink_search_show, 
+                                                        id_hash, title)
+                            count_total_episodes += count_episodes                                          #Incrementa la cantidad de episodios por cada serie            
                         else:
-                            print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_link.status_code))
-                            continue
+                            print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_link.status_code))   
             else:
                 print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_categorie.status_code))
-                continue
         print(f"\033[33mCantidad de series encontradas >>> \033[0m" + str(count))
+        print(f"\033[33mCantidad de episodios encontrados en todas las series >>> \033[0m" + str(count_total_episodes))
         
         #Se encarga de insertar en al DB local el payload de series 
         #Datamanager._insertIntoDB(self, self.payloads_shows, self.titanScraping)
@@ -248,33 +254,30 @@ class Shoutfactorytv():
                         content_link_search_episode = soup_link_search.find_all("article", page='1')                
 
                         for content in content_link_search_episode:                                                 
-                            if content.a['href'] == content_episode['href']:                                        #Nos aseguramos de extraer la información que corresponde a ese episodio 
+                            if content.a['href'] in content_episode['href']:                                        #Nos aseguramos de extraer la información que corresponde a ese episodio 
                                 ###ACÁ OBTIENE LA DATA PARA LOS EPISODIOS###
                                 duration = int(content.time.text.split(" ")[1].split(":")[0])                       
                                 description = content.p.text.strip()                                              
                                 count += 1
-
-                                self.payload_episodes(id_hash, deeplink, title, 
-                                                        image, duration, description, 
-                                                        season, episode, parent_id, 
-                                                        parent_title)
                             else:
                                 ###ACÁ OBTIENE LA DATA PARA LOS EPISODIOS###
                                 duration = None                                                                     
                                 description = None                                                                  
                                 count += 1
                          
-                                self.payload_episodes(id_hash, deeplink, title, 
-                                                        image, duration, description, 
-                                                        season, episode, parent_id, 
-                                                        parent_title)
+                            self.payload_episodes(id_hash, deeplink, title, 
+                                                image, duration, description, 
+                                                season, episode, parent_id, 
+                                                parent_title)
+
+                            print(f"\033[33mEpisodio encontrado >>> \033[0m" + title)
                     else:
                         print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_deeplink_search_episode.status_code))
-                        continue
                 tab_increment += 1
             else:
                 break
         print(f"\033[33mCantidad de episodios encontrados en: \033[0m" + parent_title + " = " + str(count))
+        return count                                                                                                #Cantidad de episodios en una serie
 
         #Se encarga de insertar en al DB local el payload de episodios 
         #Datamanager._insertIntoDB(self, self.payloads_episodes, self.titanScraping)
