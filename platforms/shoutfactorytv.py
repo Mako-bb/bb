@@ -158,7 +158,7 @@ class Shoutfactorytv():
         list_title = []      
         for link_categorie in links_categories_shows:                                                       #Recorre cada categoria de la lista de categorias
             response_categorie = self.verify_status_code(link_categorie)
-            print("\x1b[1;35;40mCategoria >>> \x1b[0m" + link_categorie)                                 
+            print(f"\033[33mCategoria >>> \033[0m" + link_categorie)                                   
 
             if response_categorie.status_code == 200: 
                 print("\x1b[1;32;40mCódigo de estado >>> \x1b[0m" + str(response_categorie.status_code))                                  
@@ -180,43 +180,41 @@ class Shoutfactorytv():
                             content_link = soup_link.find("div", class_='s1')                               #Se queda con los tags que contienen la información de las series
                         
                             if content_link.img:                                                            #Acá corrobora que exista el atributo title                                                                         
-                                title = content_link.img['title']                                                            
-                                if title not in list_title:                                                 #Acá corrobora que el titulo de la serie no este duplicado
-                                    list_title.append(title.strip())                                        #Agrega a la lista para comparar     
-                                    
-                                    ###ACÁ OBTIENE LA DATA PARA LAS SERIES###
-                                    title = title.strip()                                                                                                                        
+                                title = content_link.img['title']                                           
+                            else:
+                                title = str(link['href'].split("/")[2].replace("-", " ")).title()           #Titulo que se obtiene desde el link cuando no es accesible desde la pagina
+                            
+                            if title not in list_title:                                                     #Acá corrobora que el titulo de la serie no este duplicado
+                                list_title.append(title.strip())                                            #Agrega a la lista para comparar     
+                                
+                                ###ACÁ OBTIENE LA DATA PARA LAS SERIES###
+                                title = title.strip()                                                                                                                        
+                                
+                                try:
                                     image = self.clear_image_show(content_link)                             
+                                except:
+                                    image = None
+                                
+                                try:
                                     content_descr = soup_link.find("div", id='info-slide-content')
-                                    description = self.clear_description_show(content_descr)                                                                                                
-                                    id_hash = self.generate_id_hash(title, deeplink)                        
-                                    count += 1
-                                else:
-                                    print("\x1b[1;31;40m¡Serie repetida! >>> \x1b[0m" + deeplink)
-                            else:                                                                                                         
-                                title_optional = str(link['href'].split("/")[2].replace("-", " ")).title()  #Titulo que se obtiene desde el link cuando no es accesible desde la pagina
+                                    description = self.clear_description_show(content_descr)
+                                except:
+                                    description = None
+                                                                                                                                   
+                                id_hash = self.generate_id_hash(title, deeplink)                        
+                                count += 1
 
-                                if title_optional not in list_title:
-                                    list_title.append(title_optional) 
+                                self.payload_shows(id_hash, deeplink,   
+                                                    title, image,          
+                                                    description)
 
-                                    ###ACÁ OBTIENE LA DATA PARA LAS SERIES###
-                                    title = title_optional                                                  
-                                    image = None                                                            
-                                    description = None                                                      
-                                    id_hash = self.generate_id_hash(title, deeplink)                        
-                                    count += 1   
-                                else:
-                                    print("\x1b[1;31;40m¡Serie repetida! >>> \x1b[0m" + deeplink)
+                                print(f"\033[33mSerie encontrada >>> \033[0m" + title)
 
-                            self.payload_shows(id_hash, deeplink,   
-                                                                title, image,          
-                                                                description)
-    
-                            print(f"\033[33mSerie encontrada >>> \033[0m" + title)
-    
-                            count_episodes = self.get_payload_episodes(soup_link, deeplink_search_show, 
-                                                        id_hash, title)
-                            count_total_episodes += count_episodes                                          #Incrementa la cantidad de episodios por cada serie            
+                                count_episodes = self.get_payload_episodes(soup_link, deeplink_search_show, 
+                                                                            id_hash, title)
+                                count_total_episodes += count_episodes                                      #Incrementa la cantidad de episodios por cada serie           
+                            else:
+                                print("\x1b[1;31;40m¡Serie repetida! >>> \x1b[0m" + deeplink)                                                                                                                                      
                         else:
                             print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_link.status_code))   
             else:
@@ -270,7 +268,7 @@ class Shoutfactorytv():
                                                 season, episode, parent_id, 
                                                 parent_title)
 
-                            print(f"\033[33mEpisodio encontrado >>> \033[0m" + title)
+                            print(f"\033[33mEpisodio encontrado >>> \033[0m" + title + " - " + "S" +str(season) + " " + "E" + str(episode))
                     else:
                         print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_deeplink_search_episode.status_code))
                 tab_increment += 1
@@ -348,7 +346,10 @@ class Shoutfactorytv():
             title = title.strip()
         elif len(title.split(":")) == 2:
             if "-" in title.split(":")[1]:
-                title = title.split(":")[1].split("-")[1].strip()
+                if len(title.split(":")[1].split("-")) == 3:
+                    title = title.split(":")[1].split("-")[2].strip()
+                else:
+                    title = title.split(":")[1].split("-")[1].strip()
             else:
                 title = title.split(":")[1].strip()
         elif len(title.split(":")) == 3:
