@@ -23,8 +23,8 @@ class Shoutfactorytv():
     - ¿Usa BS4?: Si.
     - ¿Se relaciona con scripts TP? No.
     - ¿Instanacia otro archivo de la carpeta "platforms"?: No.
-    - ¿Cuanto demoró la ultima vez? Tiempo de ejecución 2:23:59.884644 - Fecha 16/01/2022
-    - ¿Cuanto contenidos trajo la ultima vez? 1422 Peliculas, 130 Series y 5266 Episodios - Fecha 16/01/2022
+    - ¿Cuanto demoró la ultima vez? 
+    - ¿Cuanto contenidos trajo la ultima vez? 
     """
     #Constructor, instancia variables
     def __init__(self, ott_site_uid, ott_site_country, type):
@@ -236,10 +236,10 @@ class Shoutfactorytv():
         tab_increment = 0
         count = 0
         while True:
-            content_episodes_page = soup.find("div", id='tab' + str(tab_increment))                                 #Obtiene todo el contenido de la serie
+            content_episodes_page = soup.find("div", id='tab' + str(tab_increment))                         #Obtiene todo el contenido de la serie
             if content_episodes_page != None:                                                                          
-                for content_episode in content_episodes_page.find_all("a"):                                         #Recorre todo el contenido que contiene el tag 
-                    if content_episode.img['title'].split(":")[0] == parent_title:                                  #Corrobora que la serie del episodio sea la correcta
+                for content_episode in content_episodes_page.find_all("a"):                                 #Recorre todo el contenido que contiene el tag 
+                    if content_episode.img['title'].split(":")[0] == parent_title:                          #Corrobora que la serie del episodio sea la correcta
                         ###ACÁ OBTIENE LA DATA PARA LOS EPISODIOS###
                         deeplink = self.url_base + content_episode['href']                                              
                         title = self.clear_title_episode(content_episode)                                               
@@ -248,15 +248,15 @@ class Shoutfactorytv():
                         episode = content_episode.find_all('span')[1].text.split(",")[1].split(":")[1].strip()                  
                         id_hash = self.generate_id_hash(title, deeplink)                                                
 
-                        deeplink_search_episode = show + content_episode['href']                                        #Acá guarda el link del episodio para ingresar en el search                    
+                        deeplink_search_episode = show + content_episode['href']                            #Acá guarda el link del episodio para ingresar en el search                    
                         response_deeplink_search_episode = self.verify_status_code(deeplink_search_episode)            
 
                         if response_deeplink_search_episode.status_code == 200:                                                 
-                            soup_link_search = BS(response_deeplink_search_episode.text, 'lxml')                        #Extrae todo el contenido del link del episodio en el search
+                            soup_link_search = BS(response_deeplink_search_episode.text, 'lxml')            #Extrae todo el contenido del link del episodio en el search
                             content_link_search_episode = soup_link_search.find_all("article", page='1')                
 
                             for content in content_link_search_episode:                                                 
-                                if content.a['href'] in content_episode['href']:                                        #Nos aseguramos de extraer la información que corresponde a ese episodio 
+                                if content.a['href'] in content_episode['href']:                            #Nos aseguramos de extraer la información que corresponde a ese episodio 
                                     ###ACÁ OBTIENE LA DATA PARA LOS EPISODIOS###
                                     duration = int(content.time.text.split(" ")[1].split(":")[0])                       
                                     description = content.p.text.strip()                                              
@@ -287,7 +287,7 @@ class Shoutfactorytv():
         Datamanager._insertIntoDB(self, self.payloads_episodes, self.titanScraping)
         print("\x1b[1;32;40mPayloads insertados en la base de datos >>> \x1b[0m")
 
-        return count                                                                                                #Cantidad de episodios en una serie
+        return count                                                                                        #Cantidad de episodios en una serie
 
     #Comprobación del estado de la respuesta a la petición HTTP (intenta 10 veces)
     def verify_status_code(self, link):        
