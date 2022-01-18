@@ -23,8 +23,8 @@ class Shoutfactorytv():
     - ¿Usa BS4?: Si.
     - ¿Se relaciona con scripts TP? No.
     - ¿Instanacia otro archivo de la carpeta "platforms"?: No.
-    - ¿Cuanto demoró la ultima vez? 
-    - ¿Cuanto contenidos trajo la ultima vez? 
+    - ¿Cuanto demoró la ultima vez? Tiempo: 1:53:35.139544 (17/01/2022)
+    - ¿Cuanto contenidos trajo la ultima vez? Peliculas: 1422 | Series: 124 | Episodios: 5131 (17/01/2022) 
     """
     #Constructor, instancia variables
     def __init__(self, ott_site_uid, ott_site_country, type):
@@ -58,17 +58,17 @@ class Shoutfactorytv():
                 for lastContent in lastItem:
                     self._created_at = lastContent['CreatedAt']
 
-            self._scraping()
+            self.scraping()
 
         if type == 'scraping':
-            self._scraping()
+            self.scraping()
 
         if type == 'testing':
             self.testing = True
-            self._scraping()
+            self.scraping()
 
     #Se encarga de instanciar las listas de la DB y llamar a los métodos que hacen el Scraping
-    def _scraping(self):
+    def scraping(self):
         print("\x1b[1;36;40mInicia el Scraping >>> \x1b[0m")
         self.list_db_movies_shows = Datamanager._getListDB(self, self.titanScraping)
         self.list_db_episodes = Datamanager._getListDB(self, self.titanScrapingEpisodios)
@@ -90,7 +90,6 @@ class Shoutfactorytv():
         print(f"\033[33mComienza Scraping de peliculas <<< \033[0m")
         links_categories_movies = self.get_categories(response, 0)                                          #Obtiene la lista con todos los links de categorias para peliculas limpias 
         
-        count = 0
         list_links_movies = []
         for link_categorie in links_categories_movies:                                                      #Recorre cada categoria de la lista de categorias
             response_categorie = self.verify_status_code(link_categorie)
@@ -128,7 +127,6 @@ class Shoutfactorytv():
                                         duration = int(content.time.text.split(" ")[1].split(":")[0])                               
                                         description = content.p.text.replace("\n", "").strip()              
                                         id_hash = self.generate_id_hash(title, deeplink)                    
-                                        count += 1
 
                                         print(f"\033[33mPelicula encontrada >>> \033[0m" + title)
 
@@ -145,19 +143,15 @@ class Shoutfactorytv():
                             print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_link_search.status_code))
             else:
                 print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_categorie.status_code))
-        print(f"\033[33mCantidad de peliculas encontradas >>> \033[0m" + str(count))
         
         #Se encarga de insertar en la DB local el payload de peliculas 
         Datamanager._insertIntoDB(self, self.payloads_movies, self.titanScraping)
-        print("\x1b[1;32;40mPayloads insertados en la base de datos >>> \x1b[0m")
 
     #Se encarga de extraer información de series
     def get_payload_shows(self, response):
         print(f"\033[33mComienza Scraping de series <<< \033[0m")        
         links_categories_shows = self.get_categories(response, 1)                                           #Obtiene la lista con todos los links de categorias para series limpias
         
-        count = 0
-        count_total_episodes = 0
         list_title = []      
         for link_categorie in links_categories_shows:                                                       #Recorre cada categoria de la lista de categorias
             response_categorie = self.verify_status_code(link_categorie)
@@ -188,7 +182,7 @@ class Shoutfactorytv():
                                 title = str(link['href'].split("/")[2].replace("-", " ")).title()           #Titulo que se obtiene desde el link cuando no es accesible desde la pagina
                             
                             if title not in list_title:                                                     #Acá corrobora que el titulo de la serie no este duplicado
-                                list_title.append(title.strip())                                            #Agrega a la lista para comparar     
+                                list_title.append(title)                                                    #Agrega a la lista para comparar     
                                 
                                 ###ACÁ OBTIENE LA DATA PARA LAS SERIES###
                                 title = title.strip()                                                                                                                        
@@ -205,89 +199,77 @@ class Shoutfactorytv():
                                     description = None
                                                                                                                                    
                                 id_hash = self.generate_id_hash(title, deeplink)                        
-                                count += 1
 
                                 print(f"\033[33mSerie encontrada >>> \033[0m" + title)
+                                
+                                seasons = self.get_payload_episodes(soup_link, deeplink_search_show, 
+                                                                            id_hash, title)
 
                                 self.payload_shows(id_hash, deeplink,   
                                                     title, image,          
-                                                    description)
+                                                    description, seasons)
 
-                                count_episodes = self.get_payload_episodes(soup_link, deeplink_search_show, 
-                                                                            id_hash, title)
-                                count_total_episodes += count_episodes                                      #Incrementa la cantidad de episodios por cada serie           
+                                #Se encarga de insertar en la DB local el payload de series 
+                                Datamanager._insertIntoDB(self, self.payloads_shows, self.titanScraping)
                             else:
                                 print("\x1b[1;31;40m¡Serie repetida! >>> \x1b[0m" + deeplink)                                                                                                                                      
                         else:
                             print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_link.status_code))   
             else:
                 print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_categorie.status_code))
-        print(f"\033[33mCantidad de series encontradas >>> \033[0m" + str(count))
-        print(f"\033[33mCantidad de episodios encontrados en todas las series >>> \033[0m" + str(count_total_episodes))
-        
-        #Se encarga de insertar en la DB local el payload de series 
-        Datamanager._insertIntoDB(self, self.payloads_shows, self.titanScraping)
-        print("\x1b[1;32;40mPayloads insertados en la base de datos >>> \x1b[0m")
-
+                                
     #Se encarga de extraer información de episodios 
     def get_payload_episodes(self, soup, show, parent_id, parent_title):        
         print(f"\033[33mComienza Scraping de episodios <<< \033[0m")
 
         tab_increment = 0
-        count = 0
+        seasons = []
         while True:
             content_episodes_page = soup.find("div", id='tab' + str(tab_increment))                         #Obtiene todo el contenido de la serie
             if content_episodes_page != None:                                                                          
                 for content_episode in content_episodes_page.find_all("a"):                                 #Recorre todo el contenido que contiene el tag 
-                    if content_episode.img['title'].split(":")[0] == parent_title:                          #Corrobora que la serie del episodio sea la correcta
-                        ###ACÁ OBTIENE LA DATA PARA LOS EPISODIOS###
-                        deeplink = self.url_base + content_episode['href']                                              
-                        title = self.clear_title_episode(content_episode)                                               
-                        image = content_episode.img['src'].strip()                                                      
-                        season = content_episode.find_all('span')[1].text.split(",")[0].split(":")[1].strip()              
-                        episode = content_episode.find_all('span')[1].text.split(",")[1].split(":")[1].strip()                  
-                        id_hash = self.generate_id_hash(title, deeplink)                                                
-
-                        deeplink_search_episode = show + content_episode['href']                            #Acá guarda el link del episodio para ingresar en el search                    
-                        response_deeplink_search_episode = self.verify_status_code(deeplink_search_episode)            
-
-                        if response_deeplink_search_episode.status_code == 200:                                                 
-                            soup_link_search = BS(response_deeplink_search_episode.text, 'lxml')            #Extrae todo el contenido del link del episodio en el search
-                            content_link_search_episode = soup_link_search.find_all("article", page='1')                
-
-                            for content in content_link_search_episode:                                                 
-                                if content.a['href'] in content_episode['href']:                            #Nos aseguramos de extraer la información que corresponde a ese episodio 
-                                    ###ACÁ OBTIENE LA DATA PARA LOS EPISODIOS###
-                                    duration = int(content.time.text.split(" ")[1].split(":")[0])                       
-                                    description = content.p.text.strip()                                              
-                                    count += 1
-                                else:
-                                    ###ACÁ OBTIENE LA DATA PARA LOS EPISODIOS###
-                                    duration = None                                                                     
-                                    description = None                                                                  
-                                    count += 1
-
-                                print(f"\033[33mEpisodio encontrado >>> \033[0m" + title + " - " + "S" +str(season) + " " + "E" + str(episode))
-
-                                self.payload_episodes(id_hash, deeplink, title, 
-                                                    image, duration, description, 
-                                                    season, episode, parent_id, 
-                                                    parent_title)
-                        else:
-                            print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_deeplink_search_episode.status_code))
+                    ###ACÁ OBTIENE LA DATA PARA LOS EPISODIOS###
+                    deeplink = self.url_base + content_episode['href']                                              
+                    title = self.clear_title_episode(content_episode)                                               
+                    image = content_episode.img['src'].strip()                                                      
+                    season = content_episode.find_all('span')[1].text.split(",")[0].split(":")[1].strip()              
+                    episode = content_episode.find_all('span')[1].text.split(",")[1].split(":")[1].strip()                  
+                    id_hash = self.generate_id_hash(title, deeplink)                                                
+                    
+                    deeplink_search_episode = show + content_episode['href']                                #Acá guarda el link del episodio para ingresar en el search                    
+                    response_deeplink_search_episode = self.verify_status_code(deeplink_search_episode)                                   
+                    
+                    if response_deeplink_search_episode.status_code == 200:                                                     
+                        soup_link_search = BS(response_deeplink_search_episode.text, 'lxml')                #Extrae todo el contenido del link del episodio en el search
+                        content_link_search_episode = soup_link_search.find_all("article", page='1')                    
+                        
+                        for content in content_link_search_episode:                                                     
+                            if content.a['href'] in content_episode['href']:                                #Nos aseguramos de extraer la información que corresponde a ese episodio 
+                                ###ACÁ OBTIENE LA DATA PARA LOS EPISODIOS###
+                                duration = int(content.time.text.split(" ")[1].split(":")[0])                       
+                                description = content.p.text.strip()                                              
+                            else:
+                                ###ACÁ OBTIENE LA DATA PARA LOS EPISODIOS###
+                                duration = None                                                                     
+                                description = None                                                                  
+                            
+                            print(f"\033[33mEpisodio encontrado >>> \033[0m" + title + " - " + "S" +str(season) + " " + "E" + str(episode))
+                            
+                            self.payload_episodes(id_hash, deeplink, title, 
+                                                image, duration, description, 
+                                                season, episode, parent_id, 
+                                                parent_title)
                     else:
-                        print("\x1b[1;31;40m¡Episodio no corresponde, serie equivocada! >>> \x1b[0m" + content_episode.img['title'].split(":")[0])
-                        break
+                        print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_deeplink_search_episode.status_code))
                 tab_increment += 1
+                seasons.append(season)
             else:
                 break
-        print(f"\033[33mCantidad de episodios encontrados en: \033[0m" + parent_title + " = " + str(count))
 
         #Se encarga de insertar en la DB local el payload de episodios 
-        Datamanager._insertIntoDB(self, self.payloads_episodes, self.titanScraping)
-        print("\x1b[1;32;40mPayloads insertados en la base de datos >>> \x1b[0m")
+        Datamanager._insertIntoDB(self, self.payloads_episodes, self.titanScrapingEpisodios)
 
-        return count                                                                                        #Cantidad de episodios en una serie
+        return len(seasons)                                                                                 #Cantidad de seasons por serie
 
     #Comprobación del estado de la respuesta a la petición HTTP (intenta 10 veces)
     def verify_status_code(self, link):        
@@ -408,11 +390,11 @@ class Shoutfactorytv():
         Datamanager._checkDBandAppend(self, payload_movie, self.list_db_movies_shows, self.payloads_movies)
 
     #Se encarga de llenar el payload de series
-    def payload_shows(self, id_hash, deeplink, title, image, description):
+    def payload_shows(self, id_hash, deeplink, title, image, description, seasons):
         payload_show = {
             "PlatformCode":  self._platform_code,                                                           #Obligatorio      
             "Id":            id_hash,                                                                       #Obligatorio
-            "Seasons":       None,                                                                          #Dejar en None (se va a hacer al final cuando Samuel diga)
+            "Seasons":       seasons,                                                                       #Dejar en None (se va a hacer al final cuando Samuel diga)
             "Title":         title,                                                                         #Obligatorio      
             "CleanTitle":    _replace(title),                                                               #Obligatorio      
             "OriginalTitle": None,                                                                      
@@ -482,4 +464,4 @@ class Shoutfactorytv():
             "CreatedAt":     self._created_at,                                                              #Obligatorio
         }
         #Compara el payload_episode con lo que existe en la DB y lo guarda en payload_episodes
-        Datamanager._checkDBandAppend(self, payload_episode, self.list_db_episodes, self.payloads_episodes)
+        Datamanager._checkDBandAppend(self, payload_episode, self.list_db_episodes, self.payloads_episodes, isEpi=True)
