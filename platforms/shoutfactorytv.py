@@ -1,4 +1,5 @@
 from turtle import title
+from urllib import response
 from bs4 import BeautifulSoup
 import requests 
 import time
@@ -22,6 +23,7 @@ class Shoutfactorytv():
         self._created_at = time.strftime("%Y-%m-%d")
         self.mongo = mongo()
         self.titanPreScraping = config()['mongo']['collections']['prescraping']
+        self.titanScraping = config()['mongo']['collections']['scraping']
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
         self.skippedEpis = 0
         self.skippedTitles = 0
@@ -62,19 +64,23 @@ class Shoutfactorytv():
         for item in categ:
             url_categ = self.url + item['href']
             print(url_categ)
-
+            for content in url_categ:
+                content = requests.get(url_categ)
+                self.get_content(content)
+                #print('------------------------------------')
+            print('------------URL MOVIES-----------')
 
     def get_series(self, series_categories):
         categ = series_categories.find_all("a")
         for item in categ:
             url_categ = self.url + item['href']
             print(url_categ)
-
-
+            
+        print('------------URL SERIES-----------')
+    
     def get_content(self, content):
         content_movies = BeautifulSoup(content.text, 'lxml')
         img_holder = content_movies.find_all('div', attrs={'class': 'img-holder'})
-
         for content in img_holder:
             title = self.get_title(content)
             deeplink = self.get_deeplink(content)
@@ -83,7 +89,7 @@ class Shoutfactorytv():
             print(title)
             print(deeplink)
             print(src)
-             
+            print('-------------------------')
 
     def get_title(self, content):
         if content.img != None:
