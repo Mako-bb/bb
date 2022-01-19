@@ -1,5 +1,6 @@
 ############## IMPORTS ##############
 import time
+from urllib import response
 import requests
 #import pymongo
 import re
@@ -68,14 +69,22 @@ self.test = True if operation == "testing" else False
 
     def _scraping(self, testing=False):
         # Definimos los links de las páginas y con requests y bs4; traemos la data
-        print("Haciendo la request")
+        print("*********** Obteniendo categorías ***********")
         _data = requests.get(self._url)
         self.get_categories(_data)
+        self.movies_list = []
+        print('*********** Haciendo las request *************')
+        for url in self.url_movies:
+            req_movies = requests.get(url, 'lxml')
+            soup_category = BS(req_movies.text, 'lxml')
+            soup_movies = soup_category.find_all('div', {'class':'img-holder'})
+            self.movies_list.append(soup_movies)
+        
+        print("Obteniendo peliculas")
+        self.get_payload_movies()
 
-        print("Obteniendo películas")
-        self.get_payload_movies(_data)
         print("Obteniendo series")
-        self.get_payload_serie(_data)
+        self.get_payload_serie()
         self.get_payload_epis()
 
     # Agregar contador
@@ -85,49 +94,51 @@ self.test = True if operation == "testing" else False
 
 
 ############## PAYLOAD MOVIES ##############
-    def get_payload_movies(self, rec):
+    def get_payload_movies(self):
         contador = 0
         payloads = []
         #list_db = Datamanager._getListDB(self, self.titanScraping)
-        for item in data:
-            contador = contador + 1
-            self.get_title(item)
-            self.get_deeplink(item)
-            print(contador)
-        """payload_movie = {
-            "PlatformCode":  self._platform_code, #Obligatorio      
-            "Id":            'None', #Obligatorio
-            "Title":         self.get_title(item), #Obligatorio      
-            "CleanTitle":    self.get_title(item), #Obligatorio      
-            "OriginalTitle": None,                          
-            "Type":          "movie",     #Obligatorio      
-            "Year":          None,     #Important!     
-            "Duration":      None,      
-            "ExternalIds":   None,      
-            "Deeplinks": {          
-                "Web":       self.get_deeplink(item),       #Obligatorio          
-                "Android":   None,          
-                "iOS":       None,      
-            },      
-            "Synopsis":      self.get_syn(item),      
-            "Image":         self.get_image(item),      
-            "Rating":        None,     #Important!      
-            "Provider":      None,      
-            "Genres":        None,    #Important!      
-            "Cast":          None,      
-            "Directors":     None,    #Important!      
-            "Availability":  None,     #Important!      
-            "Download":      None,      
-            "IsOriginal":    None,    #Important!      
-            "IsAdult":       None,    #Important!   
-            "IsBranded":     None,    #Important!   
-            "Packages":      [{"Type":"subscription-vod"}],    #Obligatorio      
-            "Country":       None,      
-            "Timestamp":     datetime.now().isoformat(), #Obligatorio      
-            "CreatedAt":     self._created_at #Obligatorio
-        }
-        payloads.append(payload_movie)
-    print(contador, payloads)"""
+        for items in self.movies_list:
+            for item in items:
+                self.get_title(item)
+                self.get_deeplink(item)
+                self.get_syn()
+                self.get_image(item)
+                raise KeyError
+                payload_movie = {
+                    "PlatformCode":  self._platform_code, #Obligatorio      
+                    "Id":            'None', #Obligatorio
+                    "Title":         self.get_title(item), #Obligatorio      
+                    "CleanTitle":    self.get_title(item), #Obligatorio      
+                    "OriginalTitle": None,                          
+                    "Type":          "movie",     #Obligatorio      
+                    "Year":          None,     #Important!     
+                    "Duration":      None,      
+                    "ExternalIds":   None,      
+                    "Deeplinks": {          
+                        "Web":       self.get_deeplink(item),       #Obligatorio          
+                        "Android":   None,          
+                        "iOS":       None,      
+                    },      
+                    "Synopsis":      self.get_syn(item),      
+                    "Image":         self.get_image(item),      
+                    "Rating":        None,     #Important!      
+                    "Provider":      None,      
+                    "Genres":        None,    #Important!      
+                    "Cast":          None,      
+                    "Directors":     None,    #Important!      
+                    "Availability":  None,     #Important!      
+                    "Download":      None,      
+                    "IsOriginal":    None,    #Important!      
+                    "IsAdult":       None,    #Important!   
+                    "IsBranded":     None,    #Important!   
+                    "Packages":      [{"Type":"subscription-vod"}],    #Obligatorio      
+                    "Country":       None,      
+                    "Timestamp":     datetime.now().isoformat(), #Obligatorio      
+                    "CreatedAt":     self._created_at #Obligatorio
+                }
+                payloads.append(payload_movie)
+            print(contador, payloads)
         
         '''Datamanager._checkDBandAppend(self, payload_movie, list_db, payloads)
         Datamanager._insertIntoDB(self, payloads, self.titanScraping)'''
@@ -221,56 +232,53 @@ self.test = True if operation == "testing" else False
         soup = BS(data.content, 'html.parser')
         container = soup.find('div', attrs={'class': 'nav-holder'}).find("div",{"class":"dropdown"}).find_all('li')
         print('************************ Movies ************************')
-        movies_cont = list(container[1:34])
+        movies_cont = list(container[1:35])
         print("Categorías movies: " + str(len(movies_cont)))
         print('************************ Series ************************')
         series_cont = list(container[36:58])
         print("Categorías series: " + str(len(series_cont)))
-        
+        print('')
         print(' URL CATEGORÍAS MOVIES')
+        self.url_movies = []
         for item in movies_cont:
-            self.url_movies = self._url +  item.a.get('href')
-            print(self.url_movies)
+            url_movies = self._url +  item.a.get('href')
+            self.url_movies.append(url_movies)
+        print(self.url_movies)
 
-            for url in self.url_movies:
-                rec = requests.get(url)
-            return rec
-
-
-        print(' URL CATEGORÍAS SERIES')
+        """print(' URL CATEGORÍAS SERIES')
         for item in series_cont:
             self.url_series = self._url +  item.a.get('href')
             print(self.url_series)
             
             for url in self.url_series:
-                req = requests.get(url)
-            return req
+                req = requests.get(url)"""
 
     
     def get_title(self, item):
-        '''<a href="/the-autobiography-of-miss-jane-pittman/61523b6119228800013878c6">
-        <img alt="The Autobiography Of Miss Jane Pittman" height="318" src="https://gvupload.zype.com/53c0457a69702d4d66040000/video_image/6173001ebb45210001a94008/1634926622/original.png?1634926622" 
-        title="The Autobiography Of Miss Jane Pittman" width="220"/>
-        </a>'''
+        """<div class="img-holder">
+        <a href="/yodelin-kid-from-pine-ridge/5f6251e896afcd0001926991">
+        <img alt="Yodelin’ Kid From Pine Ridge" height="318" src="https://gvupload.zype.com/53c0457a69702d4d66040000/video_image/5f728120aeb01e0001c37309/1601339680/original.jpg?1601339680" 
+        title="Yodelin’ Kid From Pine Ridge" width="220"/>
+        </a>"""
         title = item.img.get('title')
         print(title)
 
     def get_deeplink(self, item):
-        self.deeplink = self._movies_url + item.div.li.a.get('href')
+        self.deeplink = self._url + item.a.get('href')
         print(self.deeplink)
 
 
-    def get_syn(self, item):
-        r = requests.get(self.deeplink)
-        s2 = BS(r.content, 'html.parser')
-        syn = s2.find('div', {"id": "wrapper"}).find('div', {"id": "main"}).find('div', {'class': 'holder'}).find('div', {'class': 'text-holder'}).find('p')
+    def get_syn(self):
+        r = requests.get(self.deeplink, 'lxml')
+        self.s2 = BS(r.text, 'lxml')
+        syn = self.s2.find('div', {"id": "main"}).find('div', {'class': 'holder'}).find('p').text
         print(syn)
 
     
     def get_image(self, item):
-        img = item.img.get('src')
+        img = item.find('img')
         print(img)
-
+        raise KeyError
 
 
 
