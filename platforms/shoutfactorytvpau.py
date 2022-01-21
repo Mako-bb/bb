@@ -87,10 +87,11 @@ self.test = True if operation == "testing" else False
         self.get_payload_serie()
         self.get_payload_epis()
 
-    # Agregar contador
     # Agregar timer
-    # Agregar def/find_all de obtención de categorías, puede ser el mismo para ambos scraps
-    # Agregar print de obtención de categorías
+    # Agregar validador de títulos/deeplinks repetidos. Lista de deeplinks y recorrer con un for.
+    # Averiguar de dónde puedo obtener la duración
+    # CHEQUEAR ITEMS Y ITEM para ver la forma de obtención de las pelis
+    # Agregar un método que haga las request para optimizar el tiempo
 
 
 ############## PAYLOAD MOVIES ##############
@@ -99,12 +100,13 @@ self.test = True if operation == "testing" else False
         payloads = []
         #list_db = Datamanager._getListDB(self, self.titanScraping)
         for items in self.movies_list:
+            print('***** ITEMS *****')
+            print(items)
             for item in items:
-                self.get_title(item)
                 self.get_deeplink(item)
-                self.get_syn()
-                self.get_image(item)
-                raise KeyError
+                self.load()
+                print('***** ITEM *****')
+                print(item)
                 payload_movie = {
                     "PlatformCode":  self._platform_code, #Obligatorio      
                     "Id":            'None', #Obligatorio
@@ -120,7 +122,7 @@ self.test = True if operation == "testing" else False
                         "Android":   None,          
                         "iOS":       None,      
                     },      
-                    "Synopsis":      self.get_syn(item),      
+                    "Synopsis":      self.get_syn(),      
                     "Image":         self.get_image(item),      
                     "Rating":        None,     #Important!      
                     "Provider":      None,      
@@ -137,8 +139,10 @@ self.test = True if operation == "testing" else False
                     "Timestamp":     datetime.now().isoformat(), #Obligatorio      
                     "CreatedAt":     self._created_at #Obligatorio
                 }
+                contador += 1
                 payloads.append(payload_movie)
-            print(contador, payloads)
+        print('Cantidad de pelis: ' + str(contador))
+        raise KeyError
         
         '''Datamanager._checkDBandAppend(self, payload_movie, list_db, payloads)
         Datamanager._insertIntoDB(self, payloads, self.titanScraping)'''
@@ -254,33 +258,43 @@ self.test = True if operation == "testing" else False
                 req = requests.get(url)"""
 
     
+    def load(self):
+        r = requests.get(self.deeplink, 'lxml')
+        self.s2 = BS(r.text, 'lxml')
+        print('    LOADING.....................')
+        time.sleep(1)
+
+
     def get_title(self, item):
-        """<div class="img-holder">
-        <a href="/yodelin-kid-from-pine-ridge/5f6251e896afcd0001926991">
-        <img alt="Yodelin’ Kid From Pine Ridge" height="318" src="https://gvupload.zype.com/53c0457a69702d4d66040000/video_image/5f728120aeb01e0001c37309/1601339680/original.jpg?1601339680" 
-        title="Yodelin’ Kid From Pine Ridge" width="220"/>
-        </a>"""
-        title = item.img.get('title')
+        title = self.s2.find('div', {"id": "main"}).find('div', {'class': 'holder'}).find('h2').find('span').text
         print(title)
+        return title
 
     def get_deeplink(self, item):
         self.deeplink = self._url + item.a.get('href')
         print(self.deeplink)
+        return self.deeplink
 
 
     def get_syn(self):
-        r = requests.get(self.deeplink, 'lxml')
-        self.s2 = BS(r.text, 'lxml')
         syn = self.s2.find('div', {"id": "main"}).find('div', {'class': 'holder'}).find('p').text
         print(syn)
+        return syn
 
     
     def get_image(self, item):
-        img = item.find('img')
+        try:
+            img = [item.img.get('src')]
+        except:
+            img = None
         print(img)
-        raise KeyError
+        return img
 
+    def get_duration():
+        pass
 
+    def validar_repetidos():
+        pass
 
 
 
