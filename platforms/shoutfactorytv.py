@@ -73,14 +73,16 @@ class Shoutfactorytv():
 
     #Se encarga de instanciar las listas de la DB y llamar a los métodos que hacen el Scraping
     def scraping(self):
-        print("\x1b[1;36;40mInicia el Scraping >>> \x1b[0m")
+        print("\x1b[1;36;40m************************** \x1b[0m")
+        print("\x1b[1;36;40m*** Inicia el Scraping *** \x1b[0m")
+        print("\x1b[1;36;40m************************** \x1b[0m")
         self.list_db_movies_shows = Datamanager._getListDB(self, self.titanScraping)
         self.list_db_episodes = Datamanager._getListDB(self, self.titanScrapingEpisodios)
         
         response_url = self.verify_status_code(self.url)                                                               
         if response_url.status_code == 200:                                                          
             print("\x1b[1;32;40mCódigo de estado >>> \x1b[0m" + str(response_url.status_code))   
-            self.get_payload_movies(response_url)                                                           
+            #self.get_payload_movies(response_url)                                                           
             self.get_payload_shows(response_url)                                                              
         else:
             print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_url.status_code))
@@ -93,163 +95,133 @@ class Shoutfactorytv():
     #Se encarga de extraer información de peliculas
     def get_payload_movies(self, response):   
         print(f"\033[33mComienza Scraping de peliculas <<< \033[0m")
+        
         #Lista con los links de las categorias de peliculas (parametro 'POSITION' en 0)
         POSITION = 0
-        links_categories_movies = self.get_categories(response, POSITION)                                          
+        links_categories_movies = self.get_links_categories(response, POSITION)
+
+        #Lista con parte del link de todas las peliculas en todas las categorias
+        links_movies = self.get_links_movies_shows(links_categories_movies)
         
-        list_links_movies = []
-        #Recorre cada link de categoria
-        for link_categorie in links_categories_movies:                                                      
-            response_categorie = self.verify_status_code(link_categorie)
-            print("\x1b[1;35;40mCategoria >>> \x1b[0m" + link_categorie)
-
-            if response_categorie.status_code == 200:
-                print("\x1b[1;32;40mCódigo de estado >>> \x1b[0m" + str(response_categorie.status_code))                                   
-                soup_link_categorie = BS(response_categorie.text, 'lxml')                                   
-                #Se queda con los tags que contienen la lista de peliculas de esa categoria 
-                content_categorie = soup_link_categorie.find_all("div", class_='img-holder')                
-              
-                #Recorre cada contenido de esa categoria y se queda con los links de las peliculas
-                for item in content_categorie:                                                             
-                    list_links = item.find_all("a")                                                         
-
-                    #Recorre la lista de links de peliculas
-                    for link in list_links:
-                        ###ACÁ OBTIENE EL DEEPLINK PARA LAS PELICULAS###
-                        deeplink = self.url_base + link['href']                                                       
-                        #Link de la pelicula para buscar en el search
-                        link_search_page = self.clear_link_search_movies(link['href'])                       
-                        response_link_search = self.verify_status_code(link_search_page)                              
+        list_links_movies = []                                                    
+        #Recorre la lista de links de peliculas
+        for link in links_movies:
+            ###ACÁ OBTIENE EL DEEPLINK PARA LAS PELICULAS###
+            deeplink = self.url_base + link                                                       
+            #Link de la pelicula para buscar en el search
+            deeplink_search_movie = self.clear_link_search_movies_shows(link)
+            response_link = self.verify_status_code(deeplink_search_movie)                                
+            
+            if response_link.status_code == 200:                                
+                print("\x1b[1;32;40mCódigo de estado >>> \x1b[0m" + str(response_link.status_code))
+                #Se trae todo el contenido de la búsqueda con el link en el search 
+                #y se queda con los tags que contienen la data para cada pelicula
+                soup_link_search = BS(response_link.text, 'lxml')                        
+                content = soup_link_search.find("article", class_='post')
+                
+                #Corrobora que el link de la pelicula no este duplicado
+                if link not in list_links_movies:                                   
+                    #Nos aseguramos de extraer la información que corresponde a esa pelicula             
+                    if link in content.a['href']:                                          
+                        list_links_movies.append(link)                                         
+                        ###ACÁ OBTIENE LA DATA PARA LAS PELICULAS###
+                        title = content.h2.text.strip()                                                           
+                        image =  self.clear_image(content)                                  
+                        duration = self.clear_duration_movies_episodes(content)                               
+                        description = self.clear_description_movies_episodes(content)         
+                        id_hash = self.generate_id_hash(title, deeplink)                               
                         
-                        if response_link_search.status_code == 200:                                
-                            print("\x1b[1;32;40mCódigo de estado >>> \x1b[0m" + str(response_link_search.status_code))
-                            #Se trae todo el contenido de la búsqueda con el link en el search 
-                            #y se queda con los tags que contienen la data para cada pelicula
-                            soup_link_search = BS(response_link_search.text, 'lxml')                        
-                            content_link_search = soup_link_search.find_all("article", class_='post')       
-
-                            #Recorre el contenido y se queda con los tags que contienen parte del link de las peliculas
-                            for content in content_link_search:
-                                link_movie = content.find("a")['href']                                      
-
-                                #Corrobora que el link de la pelicula no este duplicado
-                                if link['href'] not in list_links_movies:                                   
-                                    #Nos aseguramos de extraer la información que corresponde a esa pelicula             
-                                    if link['href'] in link_movie:                                          
-                                        list_links_movies.append(link['href'])                                         
-                                        ###ACÁ OBTIENE LA DATA PARA LAS PELICULAS###
-                                        title = content.h2.text.strip()                                                           
-                                        image =  self.clear_image(content)                                  
-                                        duration = self.clear_duration_movies_episodes(content)                               
-                                        description = self.clear_description_movies_episodes(content)         
-                                        id_hash = self.generate_id_hash(title, deeplink)                               
-
-                                        #Agrega a la lista para corroborar que no se repitan en series y episodios
-                                        self.list_titles_movies.append(title)                 
-
-                                        print(f"\033[33mPelicula encontrada >>> \033[0m" + title)
-
-                                        self.payload_movies(id_hash, deeplink, 
-                                                            title, image, 
-                                                            duration, description)                                                                                                           
-                                        break                                                              
-                                    else:
-                                        print("\x1b[1;31;40m¡Pelicula no encontrada! >>> \x1b[0m" + deeplink)
-                                else:
-                                    print("\x1b[1;31;40m¡Pelicula repetida! >>> \x1b[0m" + deeplink)            
-                        else:
-                            print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_link_search.status_code))
+                        #Agrega a la lista para corroborar que no se repitan en series y episodios
+                        self.list_titles_movies.append(title)                 
+                        
+                        print(f"\033[33mPelicula encontrada >>> \033[0m" + title)
+                        
+                        self.payload_movies(id_hash, deeplink, 
+                                            title, image, 
+                                            duration, description)                                                                                                                                                                         
+                    else:
+                        print("\x1b[1;31;40m¡Pelicula no encontrada! >>> \x1b[0m" + deeplink)
+                else:
+                    print("\x1b[1;31;40m¡Pelicula repetida! >>> \x1b[0m" + deeplink)            
             else:
-                print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_categorie.status_code))
-        
+                print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_link.status_code))
+            
         #Se encarga de insertar en la DB local el payload de peliculas 
         Datamanager._insertIntoDB(self, self.payloads_movies, self.titanScraping)
 
     #Se encarga de extraer información de series
     def get_payload_shows(self, response):
         print(f"\033[33mComienza Scraping de series <<< \033[0m")        
+        
         #Lista con los links de las categorias de series (parametro 'POSITION' en 1)
         POSITION = 1
-        links_categories_shows = self.get_categories(response, POSITION)                                          
+        links_categories_shows = self.get_links_categories(response, POSITION)                                          
+        
+        #Lista con parte del link de todas las series en todas las categorias
+        links_shows = self.get_links_movies_shows(links_categories_shows)
         
         list_title_shows = []
-        #Recorre cada link de categoria
-        for link_categorie in links_categories_shows:                                                       
-            response_categorie = self.verify_status_code(link_categorie)
-            print(f"\033[33mCategoria >>> \033[0m" + link_categorie)                                   
-
-            if response_categorie.status_code == 200: 
-                print("\x1b[1;32;40mCódigo de estado >>> \x1b[0m" + str(response_categorie.status_code))                                  
-                soup_link_categorie = BS(response_categorie.text, 'lxml')                                   
-                #Se queda con los tags que contienen la lista de series de esa categoria 
-                content_categorie = soup_link_categorie.find_all("div", id='tab1')                          
-                
-                #Recorre cada contenido de esa categoria y se queda con los links de las series
-                for item in content_categorie:                                                              
-                    list_links = item.find_all("a")                                                        
-
-                    for link in list_links:
-                        ###ACÁ OBTIENE EL DEEPLINK PARA LAS SERIES###                                       
-                        deeplink = self.url_base + link['href']                                                                                                                                                                
-                        #Link de la pelicula para buscar en el search
-                        deeplink_search_show = self.url_search_page + "1&q=" + link['href'].split("/")[2].replace("-series", "") 
-                        response_link = self.verify_status_code(deeplink)                        
-                        
-                        if response_link.status_code == 200:
-                            print("\x1b[1;32;40mCódigo de estado >>> \x1b[0m" + str(response_link.status_code))
-                            #Se trae todo el contenido de la búsqueda con el link en el search 
-                            #y se queda con los tags que contienen la data para cada serie
-                            soup_link_search = BS(response_link.text, 'lxml')                                      
-                            content_link_search = soup_link_search.find("div", class_='s1')                               
-                        
-                            #Corrobora que exista el titulo                                                                    
-                            if content_link_search.img:                                                            
-                                title = content_link_search.img['title'].strip()                                           
-                            else:
-                                #Titulo que se obtiene desde el link cuando no es accesible desde la pagina
-                                title = str(link['href'].split("/")[2].replace("-", " ")).title()          
-                            
-                            #Corrobora que el titulo de la serie no este duplicado
-                            if title not in list_title_shows:                                                     
-                                #Agrega a la lista para comparar que no esten repetidos
-                                list_title_shows.append(title)                                                   
-                                #Corrobora que no sea una pelicula ya obtenida
-                                if title not in self.list_titles_movies:                                    
-                                    ###ACÁ OBTIENE LA DATA PARA LAS SERIES###
-                                    title = title.strip()                                                                                                                        
-                                    image = self.clear_image(content_link_search)                             
-                                    content_description = soup_link_search.find("div", id='info-slide-content')
-                                    description = self.clear_description_shows(content_description)
-                                    id_hash = self.generate_id_hash(title, deeplink)          
-
-                                    print(f"\033[33mSerie encontrada >>> \033[0m" + title)
-
-                                    seasons = self.get_payload_episodes(soup_link_search, deeplink_search_show, 
-                                                                        id_hash, title,
-                                                                        deeplink)
-
-                                    #Corrobora que la serie tenga episodios, sino no la inserta
-                                    if len(seasons) > 1:                                                  
-                                        self.payload_shows(id_hash, deeplink,   
-                                                            title, image,          
-                                                            description, seasons)
-                                    else:
-                                        print("\x1b[1;31;40m¡Serie no contiene episodios, es posible que se haya insertado como pelicula! >>> \x1b[0m" + deeplink)
-
-                                    #Se encarga de insertar en la DB local el payload de series 
-                                    Datamanager._insertIntoDB(self, self.payloads_shows, self.titanScraping)
-                                
-                                else:
-                                    print("\x1b[1;31;40m¡Serie fue insertada como pelicula! >>> \x1b[0m" + deeplink)                    
-                            else:
-                                print("\x1b[1;31;40m¡Serie repetida! >>> \x1b[0m" + deeplink)                                                                                                                                                                   
+        #Recorre la lista de links de series
+        for link in links_shows:
+            ###ACÁ OBTIENE EL DEEPLINK PARA LAS SERIES###                                       
+            deeplink = self.url_base + link                                                                                                                                                              
+            #Link de la serie para buscar en el search
+            deeplink_search_show = self.clear_link_search_movies_shows(link).replace("-series", "") 
+            response_link = self.verify_status_code(deeplink)                        
+ 
+            if response_link.status_code == 200:
+                print("\x1b[1;32;40mCódigo de estado >>> \x1b[0m" + str(response_link.status_code))
+                #Se trae todo el contenido de la búsqueda con el link en el search 
+                #y se queda con los tags que contienen la data para cada serie
+                soup_link_search = BS(response_link.text, 'lxml')                                      
+                content = soup_link_search.find("div", class_='s1')                               
+ 
+                #Corrobora que exista el titulo                                                                    
+                if content.img:                                                            
+                    title = content.img['title'].strip()                                           
+                else:
+                    #Titulo que se obtiene desde el link cuando no es accesible desde la pagina
+                    title = str(link['href'].split("/")[2].replace("-", " ")).title()          
+ 
+                #Corrobora que el titulo de la serie no este duplicado
+                if title not in list_title_shows:                                                     
+                    #Agrega a la lista para comparar que no esten repetidos
+                    list_title_shows.append(title)                                                   
+                    #Corrobora que no sea una pelicula ya obtenida
+                    if title not in self.list_titles_movies:                                    
+                        ###ACÁ OBTIENE LA DATA PARA LAS SERIES###
+                        title = title.strip()                                                                                                                        
+                        image = self.clear_image(content)                             
+                        content_description = soup_link_search.find("div", id='info-slide-content')
+                        description = self.clear_description_shows(content_description)
+                        id_hash = self.generate_id_hash(title, deeplink)          
+ 
+                        print(f"\033[33mSerie encontrada >>> \033[0m" + title)
+ 
+                        seasons = self.get_payload_episodes(soup_link_search, deeplink_search_show, 
+                                                            id_hash, title,
+                                                            deeplink)
+ 
+                        #Corrobora que la serie tenga episodios, sino no la inserta
+                        if len(seasons) > 0:                                                  
+                            self.payload_shows(id_hash, deeplink,   
+                                                title, image,          
+                                                description, seasons)
                         else:
-                            print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_link.status_code))   
+                            print("\x1b[1;31;40m¡Serie no contiene episodios, es posible que se haya insertado como pelicula! >>> \x1b[0m" + deeplink)
+ 
+                        #Se encarga de insertar en la DB local el payload de series 
+                        Datamanager._insertIntoDB(self, self.payloads_shows, self.titanScraping)
+ 
+                    else:
+                        print("\x1b[1;31;40m¡Serie fue insertada como pelicula! >>> \x1b[0m" + deeplink)                    
+                else:
+                    print("\x1b[1;31;40m¡Serie repetida! >>> \x1b[0m" + deeplink)                                                                                                                                                                   
             else:
-                print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_categorie.status_code))
-                                
+                print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_link.status_code))   
+                                 
     #Se encarga de extraer información de episodios 
-    def get_payload_episodes(self, soup, show, parent_id, parent_title, parent_deeplink):        
+    def get_payload_episodes(self, soup_show, link_show, parent_id, parent_title, parent_deeplink):        
         print(f"\033[33mComienza Scraping de episodios <<< \033[0m")
 
         #Se inicializan variables que son necesarias para controlar que se inserten
@@ -263,7 +235,7 @@ class Shoutfactorytv():
         while True:
             #Obtiene todo los episodios de la serie en cada temporada 
             #(la variable 'tab_increment' se va incrementando para conseguir la temporada)
-            content_episodes = soup.find("div", id='tab' + str(tab_increment))                         
+            content_episodes = soup_show.find("div", id='tab' + str(tab_increment))                         
             if content_episodes != None:                                                                  
                 #Recorre todo el contenido que contiene la temporada
                 for content_episode in content_episodes.find_all("a"):                                 
@@ -282,18 +254,18 @@ class Shoutfactorytv():
                         id_hash = self.generate_id_hash(title, deeplink)                                                
 
                         #Link del episodio para buscar en el search                    
-                        deeplink_search_episode = show + content_episode['href']                            
-                        response_deeplink_search_episode = self.verify_status_code(deeplink_search_episode)                            
+                        deeplink_search_episode = link_show + content_episode['href']                            
+                        response_link = self.verify_status_code(deeplink_search_episode)                            
                         
-                        if response_deeplink_search_episode.status_code == 200:                                                 
+                        if response_link.status_code == 200:                                                 
                             #Se trae todo el contenido de la búsqueda con el link en el search 
                             #y se queda con los tags que contienen la data para cada episodio,
                             #esto lo hace siempre seteado en page='1'
-                            soup_link_search = BS(response_deeplink_search_episode.text, 'lxml')            
+                            soup_link_search = BS(response_link.text, 'lxml')            
                             content = soup_link_search.find("article", page='1')                        
                                                  
                             #Nos aseguramos de extraer la información que corresponde a ese episodio 
-                            if content.a['href'] in content_episode['href']:                                  
+                            if content_episode['href'] in content.a['href']:                                  
                                 ###ACÁ OBTIENE LA DATA PARA LOS EPISODIOS###
                                 duration = self.clear_duration_movies_episodes(content)                
                                 description = self.clear_description_movies_episodes(content)
@@ -314,7 +286,7 @@ class Shoutfactorytv():
                             else:    
                                 count_episodes_for_season += 1                              
                         else:
-                            print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_deeplink_search_episode.status_code))
+                            print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_link.status_code))
                     else:
                         print("\x1b[1;31;40m¡Episodio fue insertado como pelicula! >>> \x1b[0m" + deeplink)                            
                 
@@ -374,7 +346,7 @@ class Shoutfactorytv():
                 #y le asigna a 'count_season' el número de la temporada siguiente,
                 #de lo contrario la setea en None.
                 try:
-                    new_count_season = int(soup.find("div", id='tab' + str(tab_increment)).find_all('span')[1].text.split(",")[0].split(":")[1].strip())
+                    new_count_season = int(soup_show.find("div", id='tab' + str(tab_increment)).find_all('span')[1].text.split(",")[0].split(":")[1].strip())
                     count_season = new_count_season
                 except:
                     count_season = None
@@ -401,22 +373,44 @@ class Shoutfactorytv():
                 print("\x1b[1;32;40mIntentando ingresar al sitio, código de estado >>> \x1b[0m" + str(response_link.status_code))
             return response_link
 
-    #Extrae los links de todas categorias de peliculas y series
-    def get_categories(self, response, position):   
+    #Extrae los links de todas las categorias de peliculas y series
+    def get_links_categories(self, response, position):   
         soup_categories = BS(response.text, 'lxml')                                                         
         categories = soup_categories.find_all("div", class_='divRow')                                       
-        list_categories = categories[position].find_all("a")                                                
+        list_categories = categories[position].find_all("a")                                         
         
         links_categories = []         
         for item in list_categories:        
              links_categories.append(self.url_base + item['href'])                                          
         return links_categories
 
+    #Extrae parte del link de las peliculas y series de todas las categorias
+    def get_links_movies_shows(self, links):        
+        list_links = []
+        
+        for link_categorie in links:                                                      
+            response_categorie = self.verify_status_code(link_categorie)
+            print("\x1b[1;35;40mCategoria >>> \x1b[0m" + link_categorie)    
+            
+            if response_categorie.status_code == 200:
+                print("\x1b[1;32;40mCódigo de estado >>> \x1b[0m" + str(response_categorie.status_code))                                   
+                soup_link_categorie = BS(response_categorie.text, 'lxml')                                          
+                content_categorie = soup_link_categorie.find_all("div", class_='img-holder')                
+
+                for content in content_categorie:                                                             
+                    content_links = content.find_all("a")
+
+                    for item in content_links:
+                        list_links.append(item['href'])
+            else:
+                print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_categorie.status_code))
+        return list_links
+
     #Genera el id hash
     def generate_id_hash(self, title, deeplink):
         id_hash = str(title) + str(deeplink)    
         id_hash = hashlib.md5(id_hash.encode('utf-8')).hexdigest()
-        return id_hash
+        return str(id_hash)
 
     #Filtra y limpia el link de la imagen
     def clear_image(self, content):
@@ -426,12 +420,12 @@ class Shoutfactorytv():
             image = None
         return image
 
-    #Filtra y limpia el link de las peliculas para buscar en el search (lupa de la pagina)
-    def clear_link_search_movies(self, link):
-        if int(len(link.split("/"))) == 3:                                          
-            link_search_page = self.url_search + link.split("/")[2]                
-        elif int(len(link.split("/"))) == 4:
-            link_search_page = self.url_search + link.split("/")[3]
+    #Filtra y limpia el link de las peliculas y series para buscar en el search (lupa de la pagina)
+    def clear_link_search_movies_shows(self, link):
+        if len(link.split("/")) == 3:                                          
+            link_search_page = self.url_search + "1&q=" + link.split("/")[2]                
+        elif len(link.split("/")) == 4:
+            link_search_page = self.url_search + "1&q=" + link.split("/")[3]
         return link_search_page
 
     #Filtra y limpia la descripción de las peliculas y episodios
