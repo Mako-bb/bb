@@ -26,6 +26,7 @@ class Shoutfactorytv():
         self.skippedEpis = 0
         self.skippedTitles = 0
         self.list_id=[]
+        self.list_id_epi=[]
 
         self.testing = False
         self.sesion = requests.session()
@@ -104,8 +105,6 @@ class Shoutfactorytv():
             for serie in series_list:
                 self.payload_serie(serie,list[indice])
                 title=self.get_title(serie)
-                print(title)
-                print(type(title))
                 self.get_payload_episodes(serie.a["href"],list[indice],title)
             indice+1
         Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)
@@ -119,7 +118,9 @@ class Shoutfactorytv():
         for episode_line in episode_list:
             episodes=episode_line.find_all("a")
             for episode in episodes:
-                self.payload_episodes(episode,genero,serie_title)
+                if self.get_epi_id(episode) not in self.list_id_epi:
+                    self.payload_episodes(episode,genero,serie_title)
+                    self.list_id_epi.append(self.get_epi_id(episode))
         
         Datamanager._insertIntoDB(self, self.payload_epi, self.titanScrapingEpisodios)
 
@@ -213,11 +214,9 @@ class Shoutfactorytv():
 
     def payload_episodes(self,episode,genero,serie_title):
         season,numepi=self.get_epiyseason(episode)
-        str_to_hash=str(episode.img['title'])+ str(numepi)+ str(season)+ str(self.url+episode['href'])
-        id=hashlib.md5(str_to_hash.encode('utf-8')).hexdigest()
         payload_episodios = {      
                 "PlatformCode":  self._platform_code, #Obligatorio      
-                "Id":            str(id), #Obligatorio
+                "Id":            str(self.get_epi_id(episode)), #Obligatorio
                 "ParentId":      str(self.get_id(serie_title)), #Obligatorio #Unicamente en Episodios
                 "ParentTitle":   serie_title, #Unicamente en Episodios 
                 "Episode":       int(numepi), #Unicamente en Episodios  
@@ -296,5 +295,11 @@ class Shoutfactorytv():
     def get_id(self,title):
         deeplink=title.replace(" ","-")
         str_to_hash=str(title)+ str(deeplink)
+        id=hashlib.md5(str_to_hash.encode('utf-8')).hexdigest()
+        return id
+
+    def get_epi_id(self,episode):
+        season,numepi=self.get_epiyseason(episode)
+        str_to_hash=str(episode.img['title'])+ str(numepi)+ str(season)+ str(self.url+episode['href'])
         id=hashlib.md5(str_to_hash.encode('utf-8')).hexdigest()
         return id
