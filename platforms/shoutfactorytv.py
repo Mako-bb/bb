@@ -118,7 +118,7 @@ class Shoutfactorytv():
                         ###ACÁ OBTIENE EL DEEPLINK PARA LAS PELICULAS###
                         deeplink = self.url_base + link['href']                                                       
                         #Link de la pelicula para buscar en el search
-                        link_search_page = self.clear_link_search_movie(link['href'])                       
+                        link_search_page = self.clear_link_search_movies(link['href'])                       
                         response_link_search = self.verify_status_code(link_search_page)                              
                         
                         if response_link_search.status_code == 200:                                
@@ -140,9 +140,9 @@ class Shoutfactorytv():
                                         ###ACÁ OBTIENE LA DATA PARA LAS PELICULAS###
                                         title = content.h2.text.strip()                                                           
                                         image =  self.clear_image(content)                                  
-                                        duration = int(content.time.text.split(" ")[1].split(":")[0])                               
-                                        description = self.clear_description(content)             
-                                        id_hash = self.generate_id_hash(title, deeplink)   
+                                        duration = self.clear_duration_movies_episodes(content)                               
+                                        description = self.clear_description_movies_episodes(content)         
+                                        id_hash = self.generate_id_hash(title, deeplink)                               
 
                                         #Agrega a la lista para corroborar que no se repitan en series y episodios
                                         self.list_titles_movies.append(title)                 
@@ -204,7 +204,7 @@ class Shoutfactorytv():
                         
                             #Corrobora que exista el titulo                                                                    
                             if content_link_search.img:                                                            
-                                title = content_link_search.img['title']                                           
+                                title = content_link_search.img['title'].strip()                                           
                             else:
                                 #Titulo que se obtiene desde el link cuando no es accesible desde la pagina
                                 title = str(link['href'].split("/")[2].replace("-", " ")).title()          
@@ -219,8 +219,8 @@ class Shoutfactorytv():
                                     title = title.strip()                                                                                                                        
                                     image = self.clear_image(content_link_search)                             
                                     content_description = soup_link_search.find("div", id='info-slide-content')
-                                    description = self.clear_description_show(content_description)
-                                    id_hash = self.generate_id_hash(title, deeplink)                        
+                                    description = self.clear_description_shows(content_description)
+                                    id_hash = self.generate_id_hash(title, deeplink)          
 
                                     print(f"\033[33mSerie encontrada >>> \033[0m" + title)
 
@@ -229,7 +229,7 @@ class Shoutfactorytv():
                                                                         deeplink)
 
                                     #Corrobora que la serie tenga episodios, sino no la inserta
-                                    if len(seasons) > 0:                                                  
+                                    if len(seasons) > 1:                                                  
                                         self.payload_shows(id_hash, deeplink,   
                                                             title, image,          
                                                             description, seasons)
@@ -240,7 +240,7 @@ class Shoutfactorytv():
                                     Datamanager._insertIntoDB(self, self.payloads_shows, self.titanScraping)
                                 
                                 else:
-                                    print("\x1b[1;31;40m¡Fue insertado como pelicula! >>> \x1b[0m" + deeplink)                    
+                                    print("\x1b[1;31;40m¡Serie fue insertada como pelicula! >>> \x1b[0m" + deeplink)                    
                             else:
                                 print("\x1b[1;31;40m¡Serie repetida! >>> \x1b[0m" + deeplink)                                                                                                                                                                   
                         else:
@@ -275,7 +275,7 @@ class Shoutfactorytv():
                     #Corrobora que no sea una pelicula ya obtenida                                                        
                     if title not in self.list_titles_movies:                                                
                         ###ACÁ OBTIENE LA DATA PARA LOS EPISODIOS###
-                        title = self.clear_title_episode(content_episode)                                   
+                        title = self.clear_title_episodes(content_episode)                                   
                         image = self.clear_image(content_episode)                                                      
                         season = int(content_episode.find_all('span')[1].text.split(",")[0].split(":")[1].strip())                                   
                         episode = int(content_episode.find_all('span')[1].text.split(",")[1].split(":")[1].strip())                  
@@ -290,45 +290,40 @@ class Shoutfactorytv():
                             #y se queda con los tags que contienen la data para cada episodio,
                             #esto lo hace siempre seteado en page='1'
                             soup_link_search = BS(response_deeplink_search_episode.text, 'lxml')            
-                            content_link_search_episode = soup_link_search.find_all("article", page='1')             
-
-                            #Recorre el contenido y se queda con los tags que contienen parte del link de ese episodio
-                            for content in content_link_search_episode:                                                 
-                                #Nos aseguramos de extraer la información que corresponde a ese episodio 
-                                if content.a['href'] in content_episode['href']:                                  
-                                    ###ACÁ OBTIENE LA DATA PARA LOS EPISODIOS###
-                                    duration = int(content.time.text.split(" ")[1].split(":")[0])                       
-                                    description = self.clear_description(content)                                             
-                                else:
-                                    #Setea en None si no encuentra
-                                    duration = None                                                                     
-                                    description = None                                                                  
-
-                                print(f"\033[33mEpisodio encontrado >>> \033[0m" + title + " - " + "S" +str(season) + " " + "E" + str(episode))
-
-                                self.payload_episodes(id_hash, deeplink, title, 
-                                                    image, duration, description, 
-                                                    season, episode, parent_id, 
-                                                    parent_title)
-
-                                #Ataja inconsistencias de la plataforma a la hora de mostrar las temporadas y sus episodios
-                                if season != count_season:                                                  
-                                    seasons_and_episodes.append({"Season": season,
-                                                                "Espidoes": count_episodes_for_season})
-                                    count_season = season
-                                    #Se setea 'count_episodes_for_season' en 0 pero luego en el payload
-                                    #se incrementa +1 para no perder el episodio ya encontrado
-                                    count_episodes_for_season = 0
-                                else:    
-                                    count_episodes_for_season += 1                              
+                            content = soup_link_search.find("article", page='1')                        
+                                                 
+                            #Nos aseguramos de extraer la información que corresponde a ese episodio 
+                            if content.a['href'] in content_episode['href']:                                  
+                                ###ACÁ OBTIENE LA DATA PARA LOS EPISODIOS###
+                                duration = self.clear_duration_movies_episodes(content)                
+                                description = self.clear_description_movies_episodes(content)
+                                                                          
+                            print(f"\033[33mEpisodio encontrado >>> \033[0m" + title + " - " + "S" +str(season) + " " + "E" + str(episode))
+                            
+                            self.payload_episodes(id_hash, deeplink, title, 
+                                                image, duration, description, 
+                                                season, episode, parent_id, 
+                                                parent_title)
+                            
+                            #Ataja inconsistencias de la plataforma a la hora de mostrar las temporadas y sus episodios
+                            if season != count_season:                                                 
+                                seasons_and_episodes.append({"Season": season,
+                                                            "Episodes": count_episodes_for_season})
+                                count_season = season
+                                count_episodes_for_season = 1
+                            else:    
+                                count_episodes_for_season += 1                              
                         else:
                             print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_deeplink_search_episode.status_code))
                     else:
-                        print("\x1b[1;31;40m¡Fue insertado como pelicula! >>> \x1b[0m" + deeplink)                             
+                        print("\x1b[1;31;40m¡Episodio fue insertado como pelicula! >>> \x1b[0m" + deeplink)                            
+                
+                #Si en una temporada existieron siempre episodios de esa temporada unicamente
+                if len(seasons_and_episodes) == 0:
+                    seasons_and_episodes.append({"Season": season,
+                                                "Episodes": count_episodes_for_season})             
 
-                seasons_and_episodes.append({"Season": season,
-                                            "Episodes": count_episodes_for_season})             
-
+                #Si en una temporada existieron episodios de otras temporadas
                 if len(seasons_and_episodes) > 1:             
                     for content in seasons_and_episodes:
                         ###ACÁ OBTIENE LA DATA PARA LAS SERIES###
@@ -347,7 +342,7 @@ class Shoutfactorytv():
                                     "Image":      None,                                                     
                                     "Directors":  None,                                                         #Importante
                                     "Cast":       None,                                                         #Importante
-                                    "Episodes":   number_episodes+1,                                            #Importante
+                                    "Episodes":   number_episodes,                                              #Importante
                                     "IsOriginal": None,   
                                     })
                 else:
@@ -377,7 +372,7 @@ class Shoutfactorytv():
 
                 #Corrobora que exista otra temporada siguiente que contenga episodios
                 #y le asigna a 'count_season' el número de la temporada siguiente,
-                #de lo contrario la setea en None
+                #de lo contrario la setea en None.
                 try:
                     new_count_season = int(soup.find("div", id='tab' + str(tab_increment)).find_all('span')[1].text.split(",")[0].split(":")[1].strip())
                     count_season = new_count_season
@@ -406,7 +401,7 @@ class Shoutfactorytv():
                 print("\x1b[1;32;40mIntentando ingresar al sitio, código de estado >>> \x1b[0m" + str(response_link.status_code))
             return response_link
 
-    #Extrae los links de todas categorias (peliculas y series)   
+    #Extrae los links de todas categorias de peliculas y series
     def get_categories(self, response, position):   
         soup_categories = BS(response.text, 'lxml')                                                         
         categories = soup_categories.find_all("div", class_='divRow')                                       
@@ -423,15 +418,7 @@ class Shoutfactorytv():
         id_hash = hashlib.md5(id_hash.encode('utf-8')).hexdigest()
         return id_hash
 
-    #Filtra y limpia el link de la pelicula para buscar en el search (lupa de la pagina)
-    def clear_link_search_movie(self, link):
-        if int(len(link.split("/"))) == 3:                                          
-            link_search_page = self.url_search + link.split("/")[2]                
-        elif int(len(link.split("/"))) == 4:
-            link_search_page = self.url_search + link.split("/")[3]
-        return link_search_page
-
-    #Filtra y limpia el link de la imagen de cada serie
+    #Filtra y limpia el link de la imagen
     def clear_image(self, content):
         try:                     
             image = content.img['src'].strip()                                                     
@@ -439,19 +426,43 @@ class Shoutfactorytv():
             image = None
         return image
 
-    #Filtra y limpia la descripción de cada serie
-    def clear_description(self, content):        
-        try:                                                                     
-            if content.div:   
-                description = content.div.text.strip()    
-            elif content.p:   
-                description = content.p.text.strip()  
-        except:   
+    #Filtra y limpia el link de las peliculas para buscar en el search (lupa de la pagina)
+    def clear_link_search_movies(self, link):
+        if int(len(link.split("/"))) == 3:                                          
+            link_search_page = self.url_search + link.split("/")[2]                
+        elif int(len(link.split("/"))) == 4:
+            link_search_page = self.url_search + link.split("/")[3]
+        return link_search_page
+
+    #Filtra y limpia la descripción de las peliculas y episodios
+    def clear_description_movies_episodes(self, content):
+        try:
+            description = content.p.text.replace("\n", "").strip()
+        except:
+            description = None
+        return description
+
+    #Filtra y limpia la duración de las peliculas y episodios
+    def clear_duration_movies_episodes(self, content):
+        try:
+            duration = int(content.time.text.split(" ")[1].split(":")[0])
+        except:
+            duration = None
+        return duration
+    
+    #Filtra y limpia la descripción de las series
+    def clear_description_shows(self, content):                                                                                     
+        try:
+            if content.div:
+                description = content.div.text.replace("\r\n", "").strip()      
+            else: 
+                description = content.p.text.replace("\r\n", "").strip()  
+        except:
             description = None
         return description  
 
-    #Filtra y limpia el titulo de cada episodio
-    def clear_title_episode(self, content):        
+    #Filtra y limpia el titulo de los episodios
+    def clear_title_episodes(self, content):        
         title = content.img['title']
         
         if ":" not in title:
