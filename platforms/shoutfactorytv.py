@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import time
+from webbrowser import get
 from pymongo import response
 import requests
 import hashlib   
@@ -40,6 +41,16 @@ class Shoutfactorytv():
     OTROS COMENTARIOS:
         Contenia series sin episodios, se modificó el script para excluirlas.
 
+        #########################################################################
+                                        | |           (_)          
+            ___ ___  _ __ ___   ___ _ __ | |_ __ _ _ __ _  ___  ___ 
+            / __/ _ \| '_ ` _ \ / _ \ '_ \| __/ _` | '__| |/ _ \/ __|
+            | (_| (_) | | | | | |  __/ | | | || (_| | |  | | (_) \__ \
+            \___\___/|_| |_| |_|\___|_| |_|\__\__,_|_|  |_|\___/|___/
+
+
+        Para los episodios falta conseguir la duración y las synopsis. No llegué con eso!
+                                                          
     """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config = config()['ott_sites'][ott_site_uid]
@@ -53,7 +64,10 @@ class Shoutfactorytv():
         self.parent_ids = {}
 
         self.payloads = []
+        self.payloads_episodes = []
         self.payloads_db = Datamanager._getListDB(self, self.titanScraping)
+        self.payloads_episodes_db = Datamanager._getListDB(self, self.titanScrapingEpisodios)
+
 
         self.skippedEpis = 0
         self.skippedTitles = 0
@@ -109,13 +123,6 @@ class Shoutfactorytv():
             "ParentTitle":   "str", #Unicamente en Episodios 
             "Episode":       "int",#Obligatorio #Unicamente en Episodios  
             "Season":        "int", #Obligatorio #Unicamente en Episodios
-            "Crew":          [ #Importante
-                                {
-                                    "Role": str, 
-                                    "Name": str
-                                },
-                                ...
-            ],
             "Title":         "str", #Obligatorio      
             "OriginalTitle": "str",                          
             "Year":          "int",     #Important!     
@@ -127,14 +134,13 @@ class Shoutfactorytv():
                 "iOS":       "str",      
             },      
             "Synopsis":      "str",      
-            "Image":         "list",     
+            "Image":         list(),     
             "Subtitles": "list",
-            "Dubbed": "list",
             "Rating":        "str",     #Important!      
-            "Provider":      "list",      
-            "Genres":        "list",    #Important!      
-            "Cast":          "list",    #Important!        
-            "Directors":     "list",    #Important!      
+            "Provider":      None,      
+            "Genres":        None,    #Important!      
+            "Cast":          None,    #Important!        
+            "Directors":     None,    #Important!      
             "Availability":  "str",     #Important!      
             "Download":      "bool",      
             "IsOriginal":    "bool",    #Important!      
@@ -145,8 +151,6 @@ class Shoutfactorytv():
             "Timestamp":     "str", #Obligatorio      
             "CreatedAt":     "str", #Obligatorio 
         }
-        self.list_db_episodes = Datamanager._getListDB(
-            self, self.titanScrapingEpisodios)
 
         if type == 'return':
             '''
@@ -172,14 +176,22 @@ class Shoutfactorytv():
         print(self._url)
         content = requests.get(self._url)
 
-        #self.get_payload_movies(page) 
-        #self.get_payload_series(content)
-        #self.get_payload(type='movie', page=content)
-        #self.get_payload(type='serie', page=content)
+        self.get_payload(type='movie', page=content)
+        self.get_payload(type='serie', page=content)        # Tambie
 
-        self.get_number_of_episodes_from_season("https://www.shoutfactorytv.com/series/danger-5", 1)
+
+        """
+            Sólo para terminar
+
+        #print("number of seasons: ", self.get_number_of_seasons("https://www.shoutfactorytv.com/series/danger-5"))
+        #self.get_number_of_episodes_from_season("https://www.shoutfactorytv.com/series/danger-5", 1)
+        #print(self.get_episode_info("https://www.shoutfactorytv.com/series/danger-5"))
+        #print("número de temporadas:", self.get_number_of_seasons("https://www.shoutfactorytv.com/series/the-saint"))
+        #print(self.get_episode_info("https://www.shoutfactorytv.com/series/the-saint"))
+        #self.get_payload_episodes("buenas", "ABC123", "https://www.shoutfactorytv.com/series/the-saint")
         #self.test_function("https://www.shoutfactorytv.com/series/fridays")
 
+        """
 
     def get_category_link(self, content):
         return self._url + content['href']
@@ -211,45 +223,40 @@ class Shoutfactorytv():
         return soup.find_all('div', class_='divRow') 
 
     def get_number_of_episodes_from_season(self, deeplink, season):
+
         page = requests.get(deeplink)
         soup = BS(page.content, "html.parser")
-        temp  = soup.find_all("span", class_="title")
-
-        season_index = temp[0].text.split().index("S1")
-        episode_index = temp[0].text.split().index("E1")
-
-        print(season_index)
-        print(episode_index)
-
-        last_episode = 0
+        temp  = soup.find_all("div", class_="caption")
 
         for episode in temp:
-            text = str(episode.text)
-            episode_info = text.split()
-            print(episode_info)
-            #if int(episode_info[season_index].split("S")[1]) == season:
-            #    last_episode = int(episode_info[episode_index].split("E")[1])
+            episode_season = episode.find('span')[1].text
+            print(episode_season)
 
-        return last_episode
-    
+        return 0
+
     def get_number_of_seasons(self, deeplink):
+        print(deeplink)
         page = requests.get(deeplink)
         soup = BS(page.content, 'html.parser')
         temp = soup.find_all("ul", class_="tabset series")
         number_of_season = temp[0].find_all('a')
 
-        return number_of_season 
+        return len(number_of_season)
 
     def get_episode_info(self, deeplink):
         seasons = self.get_number_of_seasons(deeplink)
 
         page = requests.get(deeplink)
         soup = BS(page.content, "html.parser")
-        temp  = soup.find_all("span", class_="title")
+        temp  = soup.find_all("div", class_="caption")
+
+        info = list()
 
         for episode in temp:
-            text = str(episode.text)
-            print(text.split())
+            episode_info = episode.find_all('span')[1].text
+            info.append(episode_info.split())
+        
+        return info
 
     def test_function(self, deeplink):
         page = requests.get(deeplink)
@@ -279,123 +286,12 @@ class Shoutfactorytv():
 
         return season_list
 
-    def get_payload_movies(self, page):
-        if page.status_code == 200:
-            print('La pagina se descargó correctamente')
-            categories = self.get_content_soup(page)
-
-        temp = categories[0]
-        movie_category = temp.find_all('a') 
-        movie_list = {}
-        movie_counter = 0
-        movie_counter_repetidos = 0
-
-        for movie in movie_category:
-            print(" ################################## " + movie.text +  " ##################################")
-
-            category_link = self.get_category_link(movie)                           # obtenemos el enlace de cada categoria para empezar a scrapear peliculas en ese orden
-
-            temp = self.get_soup_from_category(category_link) 
-
-            for elem in temp:
-                movie_info = elem.find('img')
-                
-                if movie_info == None:
-                    break
-
-                title = self.get_title(movie_info)                                      # título de la película
-                image = self.get_image(movie_info)                                      # imagen promocional
-                deeplink = self.get_deeplink(elem)                                      # deeplink a la película
-                id = self.get_id(title, deeplink)                                       # id generado con hashlib con md5, estoy seguro que con el título 
-                                                                                        # y el deeplink no va a generar uno repetido
-
-                synopsis = self.get_synopsis(deeplink)                                  # la siguiente request es para conseguir                                   
-                                                                                        # la synopsis de la película
-                movie_counter_repetidos += 1
-
-                if title not in movie_list:
-                    movie_list[title] = True
-
-                    payload_movies = self._payload_template.copy()
-
-                    payload_movies["PlatformCode"] =                self._platform_code
-                    payload_movies["Id"] =                          id
-                    payload_movies["Title"] =                       title
-                    payload_movies["CleanTitle"] =                  _replace(title)
-                    payload_movies["Type"] =                        "movie"
-                    payload_movies["Deeplinks"]["Web"] =            deeplink
-                    payload_movies["Synopsis"] =                    synopsis
-                    payload_movies["Image"] =                       image
-                    payload_movies["Genre"] =                       movie.text
-                    payload_movies["CreatedAt"] =                   self._created_at
-                    payload_movies["Packages"] =                    [{"Type":"free-vod"}]
-
-                    movie_counter += 1
-        print("Cantidad de peliculas: ", movie_counter) 
-        print("Cantidad de peliculas repetidas", movie_counter_repetidos)
-        
-    def get_payload_series(self, page):
-
-        if page.status_code == 200:
-            print('La pagina se descargó correctamente')
-            categories = self.get_content_soup(page)
-
-        temp = categories[1]
-        series_category = temp.find_all('a') 
-        serie_list = {}
-        serie_counter = 0
-        serie_counter_repetidos = 0
-
-        for serie in series_category:
-            print(" ################################## " + serie.text +  " ##################################")
-
-            category_link = self.get_category_link(serie)
-            temp = self.get_soup_from_category(category_link)
-
-            for elem in temp:
-                serie_info = elem.find('img')
-
-                if serie_info == None:
-                    break
-                
-                title = self.get_title(serie_info)                                      # título de la serie
-                image = self.get_image(serie_info)                                      # imagen promocional
-                deeplink = self.get_deeplink(elem)                                      # deeplink a la serie
-                id = self.get_id(title, deeplink)                                       # id generado con hashlib con md5, estoy seguro que con el título 
-                                                                                        # y el deeplink no va a generar uno repetido
-                #self.get_episode_info(deeplink)
-
-                #synopsis = self.get_synopsis(deeplink)                                 # la siguiente request es para conseguir  
-                                                                                        # la synopsis de la serie
-                serie_counter_repetidos += 1                                            # POR AHORA NO HAY SYNOPSYS PARA SERIES
-
-                # La siguiente condición es para asegurarnos de no guardarnos repetidos
-                if title not in serie_list:
-                    serie_list[title] = True
-
-                    payload_serie = self._payload_template.copy()
-
-                    payload_serie["PlatformCode"] = self._platform_code
-                    payload_serie["Id"] = id                    
-                    payload_serie["Title"] = title
-                    payload_serie["CleanTitle"] = _replace(title)
-                    payload_serie["Type"] = "serie"             
-                    payload_serie["Deeplinks"]["Web"] = deeplink
-                    #payload_serie["Synopsis"] = synopsis  
-                    payload_serie["Image"] = image
-                    payload_serie["Genre"] = serie.text
-                    payload_serie["CreatedAt"] = self._created_at
-
-                    serie_counter += 1
-
-        print("Cantidad de series: ", serie_counter) 
-        print("Cantidad de series repetidas: ",serie_counter_repetidos)
-
-
     def get_payload(self, type, page):
         if page.status_code == 200:
-            print('La pagina se descargó correctamente')
             categories = self.get_content_soup(page)
+        else:
+            print("Error volver a correr el script")
+            return
 
         if type == 'movie':
             temp = categories[0]
@@ -404,14 +300,11 @@ class Shoutfactorytv():
             
         content_category = temp.find_all('a') 
         content_dicc = {}
-        content_counter = 0
-        content_counter_repeated = 0
 
         for content in content_category:
-            print(" ################################## " + content.text +  " ##################################")
+            #print(" ################################## " + content.text +  " ##################################")
 
             category_link = self.get_category_link(content)                           # obtenemos el enlace de cada categoria para empezar a scrapear peliculas en ese orden
-
             temp = self.get_soup_from_category(category_link) 
 
             for elem in temp:
@@ -425,9 +318,6 @@ class Shoutfactorytv():
                 deeplink = self.get_deeplink(elem)                                      # deeplink a la película
                 id = self.get_id(title, deeplink)                                       # id generado con hashlib con md5, estoy seguro que con el título 
                                                                                         # y el deeplink no va a generar uno repetido
-
-                content_counter_repeated += 1
-
                 if title not in content_dicc:
                     content_dicc[title] = True
 
@@ -446,30 +336,66 @@ class Shoutfactorytv():
                         payload_movies["Synopsis"] =                    synopsis
                         payload_movies["Image"] =                       image
                         payload_movies["Genre"] =                       content.text
+                        payload_movies["Timestamp"] =                   datetime.now().isoformat()
                         payload_movies["CreatedAt"] =                   self._created_at
                         payload_movies["Packages"] =                    [{"Type":"free-vod"}]
                         Datamanager._checkDBandAppend(self, payload_movies, self.payloads_db, self.payloads)
 
                     elif type == 'serie':
                         payload_serie = self._payload_template.copy()
+
                         self.parent_ids[title] = id
     
                         payload_serie["PlatformCode"] =                 self._platform_code
                         payload_serie["Id"] =                           id                    
-                        payload_serie["Seasons"] =                      self.get_season_info(id, title, image, deeplink)
+                        payload_serie["Seasons"] =                      self.get_number_of_seasons(deeplink)
                         payload_serie["Title"] =                        title
                         payload_serie["CleanTitle"] =                   _replace(title)
                         payload_serie["Type"] =                         "serie"             
                         payload_serie["Deeplinks"]["Web"] =             deeplink
-                        #payload_serie["Synopsis"] =                    synopsis  
                         payload_serie["Image"] =                        image
                         payload_serie["Genre"] =                        content.text
+                        payload_serie["Timestamp"] =                    datetime.now().isoformat()
                         payload_serie["CreatedAt"] =                    self._created_at
                         payload_serie["Packages"] =                     [{"Type":"free-vod"}]                          
-                        Datamanager._checkDBandAppend(self, payload_serie, self.payloads_db, self.payloads)
-                    content_counter += 1
 
+                        Datamanager._checkDBandAppend(self, payload_serie, self.payloads_db, self.payloads)
+                        self.get_payload_episodes(title, id, content, deeplink)
         Datamanager._insertIntoDB(self, self.payloads_db, self.titanScraping)
-        #print("Cantidad de peliculas: ", content_counter) 
-        #print("Cantidad de peliculas repetidas", content_counter_repeated)
- 
+
+
+    def get_payload_episodes(self, parentTitle, parentId, genre, deeplink):
+        #number_of_seasons = self.get_number_of_seasons(deeplink)
+
+        serie = requests.get(deeplink)
+        soup = BS(serie.content, 'html.parser')
+
+        #info = soup.find_all('ul', class_="thumbnails")
+
+        deeplinks = soup.find_all('a', href=True)
+        titles = soup.find_all('span', class_="title")
+        serie_info = self.get_episode_info(deeplink)
+
+        for i in range(0, len(titles)):
+            payload_episode = self._payload_episode_template.copy()
+            payload_episode["PlatformCode"]     = self._platform_code
+            payload_episode["Id"]               = self.get_id(titles[i].text, deeplink)
+            payload_episode["ParentId"]         = parentId
+            payload_episode["ParentTitle"]      = parentTitle
+            payload_episode["Episode"]          = str(serie_info[i][3])
+            payload_episode["Season"]           = str(re.sub(r"[^0-9]", '', serie_info[i][1]))
+            payload_episode["Title"]            = str(titles[i].text)
+            payload_episode["OriginalTitle"]    = str(titles[i].text)
+            payload_episode["Year"]             = int(1999)
+            #payload_episode["Duration"]         = int(100)             #A terminar
+            payload_episode["Deeplinks"]["Web"] = deeplink
+            #payload_episode["Synopsis"]         = 0                    #A terminar
+            payload_episode["Genre"]            = genre.text
+            payload_episode['Packages']         = [{"Type":"free-vod"}]
+            payload_episode['Country']          = "US"
+            payload_episode["Timestamp"]        = datetime.now().isoformat()
+            payload_episode["CreatedAt"]        = self._created_at
+            
+
+            Datamanager._checkDBandAppend(self, payload_episode, self.payloads_episodes_db, self.payloads_episodes, isEpi = True)
+        Datamanager._insertIntoDB(self, self.payloads_episodes_db, self.titanScrapingEpisodios)
