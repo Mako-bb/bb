@@ -1,5 +1,6 @@
 from turtle import title
 from urllib import response
+from wsgiref.simple_server import demo_app
 from bs4 import BeautifulSoup
 import requests 
 import time
@@ -64,17 +65,16 @@ class Shoutfactorytv():
         for item in categ:
             url_categ = self.url + item['href']
             print(url_categ)
-            for content in url_categ:
-                content = requests.get(url_categ)
-                self.get_content(content)
-                #print('------------------------------------')
-            print('------------URL MOVIES-----------')
+            content = requests.get(url_categ)
+            self.get_content(content)
+            print('---------------------URL MOVIES--------------------')
 
     def get_series(self, series_categories):
         categ = series_categories.find_all("a")
         for item in categ:
             url_categ = self.url + item['href']
             print(url_categ)
+        
             
         print('------------URL SERIES-----------')
     
@@ -82,14 +82,74 @@ class Shoutfactorytv():
         content_movies = BeautifulSoup(content.text, 'lxml')
         img_holder = content_movies.find_all('div', attrs={'class': 'img-holder'})
         for content in img_holder:
-            title = self.get_title(content)
-            deeplink = self.get_deeplink(content)
-            src = self.get_src(content)
-
-            print(title)
-            print(deeplink)
-            print(src)
+            #title = self.get_title(content)
+            #deeplink = self.get_deeplink(content)
+            #src = self.get_src(content)
+            data = self.get_data(content)
+            #print(title)
+            #print(deeplink)
+            #print(src)
+            print(data)
             print('-------------------------')
+        
+    def get_data(self, content):
+        url_content =  'https://www.shoutfactorytv.com/videos?utf8=%E2%9C%93&commit=submit&q={title}'.format(title = self.get_title(content))
+        content = requests.get(url_content)
+        soup = BeautifulSoup(content.text, 'lxml')
+        article = soup.find_all('article', {'class': 'post'})
+        #print(url_content)
+        for item in article:
+            link = item.find('a')['href'] 
+            link_movies = self.url + link
+            if link_movies == self.get_deeplink: 
+                data = link_movies.find('div', {'class', 'holder'})
+                for i in data:
+                    synopsis = i.find('p')
+                    print(synopsis)
+
+                
+                '''holder = item.find('div', {'class', 'holder'})
+                sinopsis = holder.find('p')
+                print(sinopsis)'''
+                
+
+            '''#duration = holder.find('time', {'class', 'duration'})
+            #duration = item.find('p')
+            print(holder)'''
+        
+        
+        
+        
+        '''title = self.get_title 
+        URLmovies = 'https://www.shoutfactorytv.com/videos?utf8=%E2%9C%93&commit=submit&q={title}'.format(name=title)
+        response = requests.get(URLmovies) #Enviamos una solicitud a la pag
+        #content = response.text #Lo transforma en texto 
+        soup = BeautifulSoup(response.text, 'lxml')
+        print(soup)'''
+
+
+
+        '''url_content = self.url + '/videos?utf8=✓&commit=submit&q=' + self.get_title
+        content = requests.get(url_content)
+        for item in content:
+            print(item)
+            '''
+            
+
+
+        '''response = requests.get(self.url)
+        soup = BeautifulSoup(response.text, 'lxml')
+        search = soup.find('input', {'placeholder', 'Search'})
+        print(search)
+        '''
+
+        '''for item in URLmovies:
+            title = self.get_title 
+            url = URLmovies + title 
+            holder = soup.find_all('div', attrs={'class': 'holder'})
+            print(holder)
+        #for item in holder:
+         #   pass'''
 
     def get_title(self, content):
         if content.img != None:

@@ -40,11 +40,12 @@ def show_help():
     print('\t\t\033[1m--mongo\033[0m\t\t necesario para que busque en la db')
     print('\t\t\033[1m--export\033[0m\t es un opcional para que guarde lo que se imprime en pantalla en un .log')
     print('\t\t\033[1m--epis\033[0m\t\t es un opcional para que compare episodios ')
+    print('\t\t\033[1m--kaji\033[0m\t\t es un opcional para comparar con la metadata de Kaji en vez de la de Misato')
 
 
 class Comparator():
 
-    def __init__(self, dbs_or_source_files: list, column: str, use_mongo: bool, list_created_at=[], epis=False) -> None:
+    def __init__(self, dbs_or_source_files: list, column: str, use_mongo: bool, list_created_at=[], epis=False, kaji=False) -> None:
         self.__dbs_source_file = dbs_or_source_files
         self.__column = column
         self.__use_mongo = use_mongo
@@ -163,6 +164,7 @@ class Comparator():
             col = col.split('.')
             sub_col = col[1]
             col = col[0]
+            
 
         dict_dbs = {
             "db1": [],  # local fecha1
@@ -219,7 +221,12 @@ class Comparator():
         if len(list_created_at) == 1:
             apipresence = []
             try:
-                ssh_connection = servers.MisatoConnection()
+                if kaji:
+                    ssh_connection = servers.KajiConnection()
+                    print('Conectando a Kaji')
+                else:
+                    ssh_connection = servers.MisatoConnection()
+                    print('Conectando a Misato')
                 with ssh_connection.connect() as server:
                     client   = pymongo.MongoClient('127.0.0.1', server.local_bind_port)
                     business = client['business']
@@ -361,7 +368,8 @@ if __name__ == '__main__':
     parser.add_argument('--export', help='Nombre de archivo donde guardar lo que se imprime en pantalla', type=str)
     parser.add_argument('--epis', help='Si se desea comparar episodios', nargs='?', default=False, const=True)
     parser.add_argument('--h', help='Ver ayuda', nargs='?', default=False, const=True)
-
+    parser.add_argument('--kaji', help='Comparar con metadata de Kaji', nargs='?', default=False, const=True)
+    
     try:
         args = parser.parse_args()
         dbs             = args.dbs
@@ -372,10 +380,11 @@ if __name__ == '__main__':
         export          = args.export
         epis            = args.epis
         _help           = args.h
+        kaji            = args.kaji
         if _help:
             show_help()
         else:
-            comparator = Comparator(dbs_or_source_files=dbs, column=col, use_mongo=mongo, list_created_at=list_created_at, epis=epis)
+            comparator = Comparator(dbs_or_source_files=dbs, column=col, use_mongo=mongo, list_created_at=list_created_at, epis=epis, kaji=kaji)
             comparator.compare(export_file=export, sin_match=sin_match)
     except Exception as e:
         show_help()

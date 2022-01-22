@@ -258,7 +258,7 @@ class Datamanager():
         soup = BeautifulSoup(content.text, features="html.parser")
         return soup
 
-    def _getJSON(self, URL, headers=None, data=None, json=None, showURL=True, usePOST=False, timeOut=0):
+    def _getJSON(self, URL, headers=None, data=None, json=None, showURL=True, usePOST=False, timeOut=0, params=None):
         '''
         Devuelve un JSON con el contenido de la URL solicitada, se le pueden pasar headers o payloads si es necesario
         usePOST determina si se va a usar POST para la request, por defecto False.
@@ -277,7 +277,7 @@ class Datamanager():
                 if usePOST:
                     content = self.sesion.post(URL,headers=headers,data=data,json=json)
                 else:
-                    content = self.sesion.get(URL,headers=headers)
+                    content = self.sesion.get(URL,headers=headers, params=params)
 
                 if showURL == True:
                     print("\x1b[1;33;40m STATUS {} URL: \x1b[0m{}".format(content.status_code,URL))

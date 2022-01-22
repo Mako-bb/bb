@@ -18,6 +18,7 @@ fixtures = [
 ]
 TEMPLATE_COMMIT = """{filename}: Commit from {root_name} at {datetime} -> {custom_msg}"""
 HOSTNAME = settings.DLV_ROOT_NAME or socket.gethostname()
+DEFAULT_BRANCH = "master"
 
 
 class GitManager():
@@ -38,7 +39,7 @@ class GitManager():
         _ = self.__run_command(command=command.split())
 
     def pull(self) -> None:
-        command = "git pull origin git_manager --no-edit"
+        command = f"git pull origin {DEFAULT_BRANCH} --no-edit"
         _ = self.__run_command(command=command.split())
         command_status = "git status"
         output = self.__run_command(command=command_status.split())
@@ -46,7 +47,7 @@ class GitManager():
             self._solve_conflicts()
 
     def push(self) -> None:
-        command = "git push origin git_manager"
+        command = f"git push origin {DEFAULT_BRANCH}"
         _ = self.__run_command(command=command.split())
 
     def commit(self, msg: str) -> None:
