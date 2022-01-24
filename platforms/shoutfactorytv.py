@@ -2,6 +2,7 @@ from turtle import title
 from urllib import response
 from wsgiref.simple_server import demo_app
 from bs4 import BeautifulSoup
+from httpx import get
 import requests 
 import time
 import requests
@@ -82,86 +83,51 @@ class Shoutfactorytv():
         content_movies = BeautifulSoup(content.text, 'lxml')
         img_holder = content_movies.find_all('div', attrs={'class': 'img-holder'})
         for content in img_holder:
-            #title = self.get_title(content)
+            title = self.get_title(content)
             #deeplink = self.get_deeplink(content)
             #src = self.get_src(content)
             data = self.get_data(content)
-            #print(title)
+            print(title)
             #print(deeplink)
             #print(src)
             print(data)
             print('-------------------------')
+
         
     def get_data(self, content):
         url_content =  'https://www.shoutfactorytv.com/videos?utf8=%E2%9C%93&commit=submit&q={title}'.format(title = self.get_title(content))
         content = requests.get(url_content)
         soup = BeautifulSoup(content.text, 'lxml')
-        article = soup.find_all('article', {'class': 'post'})
-        #print(url_content)
-        for item in article:
-            link = item.find('a')['href'] 
-            link_movies = self.url + link
-            if link_movies == self.get_deeplink: 
-                data = link_movies.find('div', {'class', 'holder'})
-                for i in data:
-                    synopsis = i.find('p')
-                    print(synopsis)
-
-                
-                '''holder = item.find('div', {'class', 'holder'})
-                sinopsis = holder.find('p')
+        article = soup.find('article', {'class': 'post'})
+        title = article.find('img')['title'] 
+        for item in title:
+            getTitle = self.get_title(content)
+            if title == getTitle:
+                sinopsis = item.p
+                print(sinopsis)
+        
+        
+        '''if link_movies == deeplink(content):
+                holder = item.find('div', {'class', 'holder'})
+                sinopsis = holder.get('p')
                 print(sinopsis)'''
-                
-
-            '''#duration = holder.find('time', {'class', 'duration'})
-            #duration = item.find('p')
-            print(holder)'''
-        
-        
-        
-        
-        '''title = self.get_title 
-        URLmovies = 'https://www.shoutfactorytv.com/videos?utf8=%E2%9C%93&commit=submit&q={title}'.format(name=title)
-        response = requests.get(URLmovies) #Enviamos una solicitud a la pag
-        #content = response.text #Lo transforma en texto 
-        soup = BeautifulSoup(response.text, 'lxml')
-        print(soup)'''
-
-
-
-        '''url_content = self.url + '/videos?utf8=✓&commit=submit&q=' + self.get_title
-        content = requests.get(url_content)
-        for item in content:
-            print(item)
-            '''
-            
-
-
-        '''response = requests.get(self.url)
-        soup = BeautifulSoup(response.text, 'lxml')
-        search = soup.find('input', {'placeholder', 'Search'})
-        print(search)
-        '''
-
-        '''for item in URLmovies:
-            title = self.get_title 
-            url = URLmovies + title 
-            holder = soup.find_all('div', attrs={'class': 'holder'})
-            print(holder)
-        #for item in holder:
-         #   pass'''
-
+                      
+                    
     def get_title(self, content):
-        if content.img != None:
-            title = content.img.get('title')
-        else: 
-            title = content.a.get('href').split('/')[1].replace('-', ' ').capitalize
-        return title
+        content_movies = BeautifulSoup(content.text, 'lxml')
+        img_holder = content_movies.find_all('div', attrs={'class': 'img-holder'})
+        for content in img_holder:
+            if content.img != None:
+                title = content.img.get('title')
+            else: 
+                title = content.a.get('href').split('/')[1].replace('-', ' ').capitalize
+            return title
 
     def get_deeplink(self,content):
         deeplink = content.a
         deeplink = self.url + deeplink['href']
         return deeplink
+
 
     def get_src(self, content):
         if content.img != None:
@@ -172,11 +138,11 @@ class Shoutfactorytv():
 
 
 
-    def get_payload_movies(self, payload_movies):
+    def get_payload_movies(self):
         payload_movies= {
                         "PlatformCode":  self._platform_code, #Obligatorio      
                         "Id":            None, #Obligatorio
-                        "Title":         None, #Obligatorio      
+                        "Title":         self.get_title, #Obligatorio      
                         "CleanTitle":    _replace(None), #Obligatorio      
                         "OriginalTitle": None,                          
                         "Type":          "movie",     #Obligatorio      
@@ -184,12 +150,12 @@ class Shoutfactorytv():
                         "Duration":      None,      
                         "ExternalIds":   None,      
                         "Deeplinks": {          
-                            "Web":       None,       #Obligatorio          
+                            "Web":       self.get_deeplink,       #Obligatorio          
                             "Android":   None,          
                             "iOS":       None,      
                         },      
                         "Synopsis":      None,      
-                        "Image":         None,      
+                        "Image":         self.get_src,      
                         "Rating":        None,     #Important!      
                         "Provider":      None,      
                         "Genres":        None,    #Important!      
@@ -206,12 +172,12 @@ class Shoutfactorytv():
                         "CreatedAt":     self._created_at #Obligatorio
     }
 
-    def get_payload_series(self, payload_series):
+    def get_payload_series(self):
         payload_series = {
                         "PlatformCode":  self._platform_code, #Obligatorio      
                         "Id":            None,            #Obligatorio
                         "Seasons":       None, #DEJAR EN NONE, se va a hacer al final cuando samuel diga
-                        "Title":         None,         #Obligatorio      
+                        "Title":         self.get_title,         #Obligatorio      
                         "CleanTitle":    _replace(None), #Obligatorio      
                         "OriginalTitle": None,                          
                         "Type":          "serie",            #Obligatorio      
@@ -219,7 +185,7 @@ class Shoutfactorytv():
                         "Duration":      None,      
                         "ExternalIds":   None,      
                         "Deeplinks": {          
-                            "Web":       None,     #Obligatorio          
+                            "Web":       self.get_deeplink,     #Obligatorio          
                             "Android":   None,          
                             "iOS":       None,      
                         },      
