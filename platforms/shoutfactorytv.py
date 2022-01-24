@@ -1,3 +1,4 @@
+from os import link
 from turtle import title
 from urllib import response
 from wsgiref.simple_server import demo_app
@@ -86,7 +87,7 @@ class Shoutfactorytv():
             title = self.get_title(content)
             #deeplink = self.get_deeplink(content)
             #src = self.get_src(content)
-            data = self.get_data(content)
+            data = self.get_duration_and_synopsis(content)
             print(title)
             #print(deeplink)
             #print(src)
@@ -94,17 +95,17 @@ class Shoutfactorytv():
             print('-------------------------')
 
         
-    def get_data(self, content):
+    def get_duration_and_synopsis(self, content):
         url_content =  'https://www.shoutfactorytv.com/videos?utf8=%E2%9C%93&commit=submit&q={title}'.format(title = self.get_title(content))
-        content = requests.get(url_content)
-        soup = BeautifulSoup(content.text, 'lxml')
+        data = requests.get(url_content)
+        soup = BeautifulSoup(data.text, 'lxml')
         article = soup.find('article', {'class': 'post'})
-        title = article.find('img')['title'] 
-        for item in title:
-            getTitle = self.get_title(content)
-            if title == getTitle:
-                sinopsis = item.p
-                print(sinopsis)
+        link = article.find('a')['href']
+        link_movies = self.url + link 
+        getDeeplink = self.get_deeplink(content)
+        if link_movies == getDeeplink:
+            sinopsis = article.p
+            print(sinopsis)
         
         
         '''if link_movies == deeplink(content):
@@ -114,9 +115,6 @@ class Shoutfactorytv():
                       
                     
     def get_title(self, content):
-        content_movies = BeautifulSoup(content.text, 'lxml')
-        img_holder = content_movies.find_all('div', attrs={'class': 'img-holder'})
-        for content in img_holder:
             if content.img != None:
                 title = content.img.get('title')
             else: 
