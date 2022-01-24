@@ -99,19 +99,17 @@ class Shoutfactorytv():
         url_content =  'https://www.shoutfactorytv.com/videos?utf8=%E2%9C%93&commit=submit&q={title}'.format(title = self.get_title(content))
         data = requests.get(url_content)
         soup = BeautifulSoup(data.text, 'lxml')
-        article = soup.find('article', {'class': 'post'})
-        link = article.find('a')['href']
-        link_movies = self.url + link 
-        getDeeplink = self.get_deeplink(content)
-        if link_movies == getDeeplink:
-            sinopsis = article.p
-            print(sinopsis)
+        article = soup.find_all('article', {'class': 'post'})
+        for item in article:
+            link = item.a
+            link_movies = self.url + link['href'] 
+            getDeeplink = self.get_deeplink(content)
+            if link_movies == getDeeplink:
+                sinopsis = item.p
+                duration = item.find('time', {'class', 'duration'})
+                print(sinopsis.text)
+                print(duration.text)
         
-        
-        '''if link_movies == deeplink(content):
-                holder = item.find('div', {'class', 'holder'})
-                sinopsis = holder.get('p')
-                print(sinopsis)'''
                       
                     
     def get_title(self, content):
