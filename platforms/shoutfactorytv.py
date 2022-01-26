@@ -182,10 +182,10 @@ class Shoutfactorytv():
  
             if response_link.status_code == 200:
                 print("\x1b[1;32;40mCódigo de estado >>> \x1b[0m" + str(response_link.status_code))
-                #Se trae todo el contenido de la búsqueda con el link en el search 
+                #Se trae todo el contenido de la búsqueda con el deeplink
                 #y se queda con los tags que contienen la data para cada serie
-                soup_link_search = BS(response_link.text, 'lxml')                                      
-                content = soup_link_search.find("div", class_='s1')                               
+                soup_link = BS(response_link.text, 'lxml')                                      
+                content = soup_link.find("div", class_='s1')                               
                 
                 #Titulo que se obtiene desde el tag 'img', 
                 #o bien desde el link cuando no es accesible desde la pagina
@@ -198,13 +198,13 @@ class Shoutfactorytv():
                     ###ACÁ OBTIENE LA DATA PARA LAS SERIES###
                     title = title                                                                                                                        
                     image = self.clear_image(content)                             
-                    content_description = soup_link_search.find("div", id='info-slide-content')
+                    content_description = soup_link.find("div", id='info-slide-content')
                     description = self.clear_description_shows(content_description)
                     id_hash = self.generate_id_hash(title, deeplink)          
 
                     print(f"\033[33mSerie encontrada >>> \033[0m" + title)
 
-                    seasons = self.get_payload_episodes(soup_link_search, id_hash, 
+                    seasons = self.get_payload_episodes(soup_link, id_hash, 
                                                         title, deeplink)
 
                     #Corrobora que la serie tenga al menos una temporada con uno o más episodios,
