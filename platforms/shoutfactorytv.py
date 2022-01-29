@@ -1,3 +1,4 @@
+from gettext import find
 from os import link
 from turtle import title
 from urllib import response
@@ -14,7 +15,9 @@ from common import config
 from datetime import datetime
 from handle.mongo import mongo
 from handle.datamanager import Datamanager
+from updates import deeplinks
 from updates.upload import Upload
+import hashlib
 
 
 class Shoutfactorytv():
@@ -37,8 +40,6 @@ class Shoutfactorytv():
         self.headers = {"Accept": "application/json",}
         self.testing = True
         self._scraping()
-
-
     
     def _scraping(self, testing=False):
         payloads = []
@@ -47,7 +48,7 @@ class Shoutfactorytv():
         list_db_episodes = Datamanager._getListDB(self, self.titanScrapingEpisodios)
 
         #self.get_payload_movies(movie_data)
-        #self.get_payload_series(serie_data)
+        #self.get_payload_series(payloads_series)
         #self.get_payload_episodes(episode_data)
 
         self.url = "https://www.shoutfactorytv.com"
@@ -68,71 +69,114 @@ class Shoutfactorytv():
             url_categ = self.url + item['href']
             print(url_categ)
             content = requests.get(url_categ)
-            self.get_content(content)
+            self.get_content_movies(content)
             print('---------------------URL MOVIES--------------------')
 
     def get_series(self, series_categories):
-        categ = series_categories.find_all("a")
-        for item in categ:
-            url_categ = self.url + item['href']
-            print(url_categ)
-        
-            
-        print('------------URL SERIES-----------')
-    
-    def get_content(self, content):
-        content_movies = BeautifulSoup(content.text, 'lxml')
-        img_holder = content_movies.find_all('div', attrs={'class': 'img-holder'})
-        for content in img_holder:
-            title = self.get_title(content)
-            #deeplink = self.get_deeplink(content)
-            #src = self.get_src(content)
-            data = self.get_duration_and_synopsis(content)
-            print(title)
-            #print(deeplink)
-            #print(src)
-            print(data)
-            print('-------------------------')
+        categ_serie = series_categories.find_all("a")
+        for i in categ_serie:
+            url_categ_serie = self.url + i['href']
+            print(url_categ_serie)
+            contenido = requests.get(url_categ_serie)         
+            self.get_content_series(contenido)
+            self.get_synopsis_serie(contenido)
 
+            print('------------URL SERIES-----------')
+                
+    def get_content_movies(self, content):
+        content_movies = self.get_data(content)
+        for movie in content_movies:
+            title = self.get_title(movie)
+            deeplink = self.get_deeplink(movie)
+            src = self.get_src(movie) 
+            duration = self.get_duration_movies(movie)
+            synopsis = self.get_synopsis_movies(movie)
+
+            print(title)
+            print(deeplink)
+            print(src)
+            print(duration)
+            print(synopsis)
+            print('-------------------------')    
+
+    def get_content_series(self, content):
+        content_series = self.get_data(content)
+        for serie in content_series:
+            title = self.get_title(serie)
+            deeplink = self.get_deeplink(serie)
+            src = self.get_src(serie)
+            print(title)
+            print(deeplink)
+            print(src)
+            print('-------------------------')   
+
+    def get_synopsis_serie(self, content):
+        series = self.get_data(content)
+        for serie in series:
+            deeplink = self.get_deeplink(serie)
+            response = requests.get(deeplink)
+            soup = BeautifulSoup(response.text, 'html.parser')
+            s2 = soup.find_all('div', attrs={'id': 'info-slide-content'})
+            for data in s2:
+                synopsis = data.p.text
+                print(synopsis)
         
-    def get_duration_and_synopsis(self, content):
-        url_content =  'https://www.shoutfactorytv.com/videos?utf8=%E2%9C%93&commit=submit&q={title}'.format(title = self.get_title(content))
-        data = requests.get(url_content)
-        soup = BeautifulSoup(data.text, 'lxml')
-        article = soup.find_all('article', {'class': 'post'})
+        #Buscar el link de las series, para entrar a cada una y ver su informacion
+        #Busco el tag en donde se encuentra la sinopsis
+        #Despues recorro cada una de las sinopsis y/o info
+        #
+
+    #Esta funcion busca el tag img_holder en donde se encuentra el title, deeplink y src.
+    def get_data(self, content):
+        content_movies = BeautifulSoup(content.text, 'lxml')
+        img_holder_data = content_movies.find_all('div', attrs={'class': 'img-holder'})
+        return img_holder_data
+
+    def get_synopsis_movies(self, content):
+        article_synopsis = self.get_article_duration_and_synopsis(content)
+        for item in article_synopsis:
+            link_synopsis = item.a
+            link = self.url + link_synopsis['href'] 
+            getDeeplink = self.get_deeplink(content)
+            if link == getDeeplink:
+                synopsis = (item.p).text
+                return synopsis
+        
+    def get_duration_movies(self, content):
+        article = self.get_article_duration_and_synopsis(content)
         for item in article:
             link = item.a
             link_movies = self.url + link['href'] 
             getDeeplink = self.get_deeplink(content)
             if link_movies == getDeeplink:
-                sinopsis = item.p
-                duration = item.find('time', {'class', 'duration'})
-                print(sinopsis.text)
-                print(duration.text)
-        
-                      
-                    
-    def get_title(self, content):
-            if content.img != None:
-                title = content.img.get('title')
+                duration = (item.find('time', {'class', 'duration'}).text.split(" ")[1].split(":")[0])
+                return duration
+
+    def get_article_duration_and_synopsis(self, content):
+        url_content =  'https://www.shoutfactorytv.com/videos?utf8=%E2%9C%93&commit=submit&q={title}'.format(title = self.get_title(content))
+        data = requests.get(url_content)
+        soup = BeautifulSoup(data.text, 'lxml')
+        article = soup.find_all('article', {'class': 'post'})
+        return article
+
+    def get_title(self, data):
+            if data.img != None:
+                title = data.img.get('title')
             else: 
-                title = content.a.get('href').split('/')[1].replace('-', ' ').capitalize
+                title = data.a.get('href').split('/')[1].replace('-', ' ').capitalize
             return title
 
-    def get_deeplink(self,content):
-        deeplink = content.a
+    def get_deeplink(self, data):
+        deeplink = data.a
         deeplink = self.url + deeplink['href']
         return deeplink
 
-
-    def get_src(self, content):
-        if content.img != None:
-            src = content.img.get('src')
+    def get_src(self, data):
+        if data.img != None:
+            src = data.img.get('src')
         else:
             src = None
         return src
-
-
 
     def get_payload_movies(self):
         payload_movies= {
@@ -143,14 +187,14 @@ class Shoutfactorytv():
                         "OriginalTitle": None,                          
                         "Type":          "movie",     #Obligatorio      
                         "Year":          None,     #Important!     
-                        "Duration":      None,      
+                        "Duration":      self.get_duration,      
                         "ExternalIds":   None,      
                         "Deeplinks": {          
                             "Web":       self.get_deeplink,       #Obligatorio          
                             "Android":   None,          
                             "iOS":       None,      
                         },      
-                        "Synopsis":      None,      
+                        "Synopsis":      self.get_synopsis,      
                         "Image":         self.get_src,      
                         "Rating":        None,     #Important!      
                         "Provider":      None,      
@@ -185,8 +229,8 @@ class Shoutfactorytv():
                             "Android":   None,          
                             "iOS":       None,      
                         },      
-                        "Synopsis":      None,      
-                        "Image":         None,      
+                        "Synopsis":      self.get_synopsis_series,      
+                        "Image":         self.get_src,      
                         "Rating":        None,               #Important!      
                         "Provider":      None,      
                         "Genres":        None,    #Important!      
