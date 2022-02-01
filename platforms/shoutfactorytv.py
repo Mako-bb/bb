@@ -33,7 +33,10 @@ class Shoutfactorytv():
         self.titanScrapingEpisodios = config()['mongo']['collections']['episode']
         self.skippedEpis = 0
         self.skippedTitles = 0
-   
+        self.list_db_series_movies = Datamanager._getListDB(self, self.titanScraping)
+        self.list_db_episodes = Datamanager._getListDB(self, self.titanScrapingEpisodios)
+        self.payloads = []  #Se agrega los payloads de series y movies
+        self.payloads_episodes = []
         #Url para encontrar la información de los contenidos por separado
         self.testing = False
         self.sesion = requests.session()
@@ -42,15 +45,6 @@ class Shoutfactorytv():
         self._scraping()
     
     def _scraping(self, testing=False):
-        payloads = []
-        payloads_series = []
-        list_db_series_movies = Datamanager._getListDB(self, self.titanScraping)
-        list_db_episodes = Datamanager._getListDB(self, self.titanScrapingEpisodios)
-
-        #self.get_payload_movies(movie_data)
-        #self.get_payload_series(payloads_series)
-        #self.get_payload_episodes(episode_data)
-
         self.url = "https://www.shoutfactorytv.com"
         response = requests.get(self.url) #Enviamos una solicitud a la pag
         content = response.text #Lo transforma en texto 
@@ -62,6 +56,10 @@ class Shoutfactorytv():
         self.get_movies(movies_categories)
         #self.get_series(series_categories)
 
+        #Datamanager._insertIntoDB(self, self.payloads, self.titanScraping) aca termina de agregar los datos y los sube
+
+    
+
     # Scripts para traer todas las peliculas
     def get_movies(self, movies_categories): #Contiene el tag con la info de las categorias
         categ = movies_categories.find_all("a") #Le pido que encuentre el tag 'a' 
@@ -70,7 +68,6 @@ class Shoutfactorytv():
             print(url_categ)
             content = requests.get(url_categ) #Le hago una solicitud a la pag.
             self.get_content_movies(content)
-            
             print('---------------------URL MOVIES--------------------')
 
     #Traemos la informacion de las series
@@ -93,28 +90,23 @@ class Shoutfactorytv():
     
     def get_content_movies(self, content):
         content_movies = self.get_data(content)
-        list_deeplink = []
+        list_id_movies = []
         for movie in content_movies:
             title = self.get_title(movie)
             deeplink = self.get_deeplink(movie)
             src = self.get_src(movie) 
-            duration = self.get_duration_movies(movie)
-            synopsis = self.get_synopsis_movies(movie)
+            try: 
+                duration = self.get_duration_and_synopsis(movie)['duration']
+            except:
+                print(title, deeplink)
+                raise 
 
-            print(title)
-            print(deeplink)
-            print(src)
-            print(duration)
-            print(synopsis)
+            synopsis = self.get_duration_and_synopsis(movie)['synopsis']
+            id = self.genere_id(title, deeplink)
 
-            id_hash = str(title) + str(deeplink)    
-            id_hash = hashlib.md5(id_hash.encode('utf-8')).hexdigest()
-            print(id_hash)
-
-            #list_deeplink.append(deeplink)
-            #print(list_deeplink)
-            print('-------------------------') 
-        #list_deeplink = self.validateList(list_deeplink) 
+            if id not in list_id_movies:
+                list_id_movies.append(id)
+                self.get_payload_movies(title, id, deeplink, src, synopsis, duration)
 
     '''def validateList(self, list_deeplink):
         nueva=[]
@@ -123,24 +115,24 @@ class Shoutfactorytv():
                 nueva.append(elemento)
         return nueva    '''
 
+    def genere_id(self, title, deeplink):
+        id_hash = str(title) + str(deeplink)    
+        id_hash = hashlib.md5(id_hash.encode('utf-8')).hexdigest()
+        return id_hash
 
     def get_content_series(self, content):
         content_series = self.get_data(content)
+        list_id_series = []
         for serie in content_series:
             title = self.get_title(serie)
             deeplink = self.get_deeplink(serie)
             src = self.get_src(serie)
             synopsis = self.get_synopsis_serie(serie)
+            id = self.genere_id(title, deeplink)
 
-            print(title)
-            print(deeplink)
-            print(src)
-            print(synopsis)
-
-            id_hash = str(title) + str(deeplink)    
-            id_hash = hashlib.md5(id_hash.encode('utf-8')).hexdigest()
-            print(id_hash)
-            print('-------------------------')  
+            if id not in list_id_series:
+                list_id_series.append(id)
+                self.get_payload_series(title, id, deeplink, src, synopsis) 
 
     def get_content_episodes(self, content):
         pass
@@ -180,53 +172,41 @@ class Shoutfactorytv():
                 print(synopsis)
 
     #Contiene el tag article en donde se encuenta la duracion y la sinopsis de movies
-    def get_article_duration_and_synopsis(self, content):
+    def get_duration_and_synopsis(self, content):
         url_content =  'https://www.shoutfactorytv.com/videos?utf8=%E2%9C%93&commit=submit&q={title}'.format(title = self.get_title(content))
         data = requests.get(url_content)
         soup = BeautifulSoup(data.text, 'lxml')
         article = soup.find_all('article', {'class': 'post'})
-        return article
-
-    #Contiene la funcion de article y busca la synopsis a partir de eso
-    def get_synopsis_movies(self, content):
-        article_synopsis = self.get_article_duration_and_synopsis(content)
-        for item in article_synopsis:
-            link_synopsis = item.a
-            link = self.url + link_synopsis['href'] 
-            getDeeplink = self.get_deeplink(content)
-            if link == getDeeplink:
-                synopsis = (item.p).text
-                return synopsis
-
-    #Contiene la funcion de article y busca la duration a partir de eso
-    def get_duration_movies(self, content):
-        article = self.get_article_duration_and_synopsis(content)
         for item in article:
             link = item.a
             link_movies = self.url + link['href'] 
             getDeeplink = self.get_deeplink(content)
+            print(link_movies)
+            print(getDeeplink)
+            print("---------------------------------------------------------")
             if link_movies == getDeeplink:
-                duration = (item.find('time', {'class', 'duration'}).text.split(" ")[1].split(":")[0])
-                return duration 
+                duration = int(item.find('time', {'class', 'duration'}).text.split(" ")[1].split(":")[0])
+                synopsis = item.find('p').text.strip() #Si hay algun espacio lo elimina, al final o principio 
+                return {"duration": duration, "synopsis": synopsis}
 
-    def get_payload_movies(self, movie):
+    def get_payload_movies(self, title, id, deeplink, src, synopsis, duration):
         payload_movies= {
                         "PlatformCode":  self._platform_code, #Obligatorio      
-                        "Id":            None, #Obligatorio
-                        "Title":         self.get_title(movie), #Obligatorio      
-                        "CleanTitle":    _replace(None), #Obligatorio      
+                        "Id":            id, #Obligatorio
+                        "Title":         title, #Obligatorio      
+                        "CleanTitle":    _replace(title), #Obligatorio      
                         "OriginalTitle": None,                          
                         "Type":          "movie",     #Obligatorio      
                         "Year":          None,     #Important!     
-                        "Duration":      self.get_duration_movies(movie),      
+                        "Duration":      duration,      
                         "ExternalIds":   None,      
                         "Deeplinks": {          
-                            "Web":       self.get_deeplink(movie),       #Obligatorio          
+                            "Web":       deeplink,       #Obligatorio          
                             "Android":   None,          
                             "iOS":       None,      
                         },      
-                        "Synopsis":      self.get_synopsis_movies(movie),      
-                        "Image":         self.get_src(movie),      
+                        "Synopsis":      synopsis,      
+                        "Image":         src,      
                         "Rating":        None,     #Important!      
                         "Provider":      None,      
                         "Genres":        None,    #Important!      
@@ -241,14 +221,16 @@ class Shoutfactorytv():
                         "Country":       None,      
                         "Timestamp":     datetime.now().isoformat(), #Obligatorio      
                         "CreatedAt":     self._created_at #Obligatorio
-    }
-
-    def get_payload_series(self):
+        }
+        Datamanager._checkDBandAppend(self, payload_movies, self.list_db_series_movies, self.payloads)
+        Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)
+    
+    def get_payload_series(self, title, id, deeplink, src, synopsis):
         payload_series = {
                         "PlatformCode":  self._platform_code, #Obligatorio      
-                        "Id":            None,            #Obligatorio
+                        "Id":            id,            #Obligatorio
                         "Seasons":       None, #DEJAR EN NONE, se va a hacer al final cuando samuel diga
-                        "Title":         self.get_title,         #Obligatorio      
+                        "Title":         title,         #Obligatorio      
                         "CleanTitle":    _replace(None), #Obligatorio      
                         "OriginalTitle": None,                          
                         "Type":          "serie",            #Obligatorio      
@@ -256,12 +238,12 @@ class Shoutfactorytv():
                         "Duration":      None,      
                         "ExternalIds":   None,      
                         "Deeplinks": {          
-                            "Web":       self.get_deeplink,     #Obligatorio          
+                            "Web":       deeplink,     #Obligatorio          
                             "Android":   None,          
                             "iOS":       None,      
                         },      
-                        "Synopsis":      self.get_synopsis_series,      
-                        "Image":         self.get_src,      
+                        "Synopsis":      synopsis,      
+                        "Image":         src,      
                         "Rating":        None,               #Important!      
                         "Provider":      None,      
                         "Genres":        None,    #Important!      
@@ -276,7 +258,10 @@ class Shoutfactorytv():
                         "Country":       None,      
                         "Timestamp":     datetime.now().isoformat(), #Obligatorio      
                         "CreatedAt":     self._created_at   #Obligatorio
-    }
+        }
+        Datamanager._checkDBandAppend(self, payload_series, self.list_db_series_movies, self.payloads)
+        Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)
+
 
     def get_payload_episodes(self, payload_episodes):
         payload_episodes = {
@@ -312,4 +297,7 @@ class Shoutfactorytv():
                                 "Country":       None,      
                                 "Timestamp":     datetime.now().isoformat(), #Obligatorio      
                                 "CreatedAt":     self._created_at, #Obligatorio
-    }
+        }
+        Datamanager._checkDBandAppend(self, payload_episodes, self.payloads_db, self.payloads, isEpi=True)
+        Datamanager._insertIntoDB(self, self.payloads_episodes, self.titanScrapingEpisodios)
+        
