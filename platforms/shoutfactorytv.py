@@ -84,9 +84,9 @@ class Shoutfactorytv():
             movies_list=movies_list.find_all("div",{"class","img-holder"})
             for movie in movies_list:
                 if movie.img != None:
-                    if self.get_id(movie.img['title']) not in self.list_id:
+                    if self.get_id(movie.img['title'],movie.a['href']) not in self.list_id:
                         self.payload_movie(movie,list[indice])
-                        self.list_id.append(self.get_id(movie.img['title']))
+                        self.list_id.append(self.get_id(movie.img['title'],movie.a['href']))
                     else:
                         pass
                 else:
@@ -105,12 +105,13 @@ class Shoutfactorytv():
             for serie in series_list:
                 self.payload_serie(serie,list[indice])
                 title=self.get_title(serie)
-                self.get_payload_episodes(serie.a["href"],list[indice],title)
+                serie_id=self.get_id(serie.img['title'],serie.a['href'])
+                self.get_payload_episodes(serie.a["href"],list[indice],title,serie_id)
             indice+1
         Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)
         
 
-    def get_payload_episodes(self,serie_link,genero,serie_title):
+    def get_payload_episodes(self,serie_link,genero,serie_title,serie_id):
         self.payload_epi=[]
         web_serie=requests.get(self.url+serie_link)
         serie_soup=BS(web_serie.text,"html.parser")
@@ -119,7 +120,7 @@ class Shoutfactorytv():
             episodes=episode_line.find_all("a")
             for episode in episodes:
                 if self.get_epi_id(episode) not in self.list_id_epi:
-                    self.payload_episodes(episode,genero,serie_title)
+                    self.payload_episodes(episode,genero,serie_title,serie_id)
                     self.list_id_epi.append(self.get_epi_id(episode))
         
         Datamanager._insertIntoDB(self, self.payload_epi, self.titanScrapingEpisodios)
@@ -128,12 +129,9 @@ class Shoutfactorytv():
 
     def payload_movie(self, movie,genero):
 
-        str_to_hash=str(movie.img['title'])+ str(self.url+movie.a['href'])
-        id=hashlib.md5(str_to_hash.encode('utf-8')).hexdigest()
-
         payload_contenidos = { 
             'PlatformCode':  self._platform_code, #Obligatorio   
-            "Id":            str(id), #Obligatorio
+            "Id":            str(self.get_id(movie.img['title'],movie.a['href'])), #Obligatorio
             "Crew":          None,
             "Title":         movie.img['title'], #Obligatorio      
             "CleanTitle":    _replace(movie.img['title']), #Obligatorio      
@@ -168,11 +166,10 @@ class Shoutfactorytv():
             }
         Datamanager._checkDBandAppend(self, payload_contenidos, self.list_db, self.payloads)
 
-    def payload_serie(self,serie,genero):
-        
+    def payload_serie(self,serie,genero):      
         payload_contenido_series = { 
             "PlatformCode":  self._platform_code, #Obligatorio   
-            "Id":            str(self.get_id(serie.img['title'])), #Obligatorio
+            "Id":            str(self.get_id(serie.img['title'],serie.a['href'])), #Obligatorio
             "Seasons":       [ #Unicamente para series
                                 None
             ],
@@ -212,12 +209,12 @@ class Shoutfactorytv():
             }
         Datamanager._checkDBandAppend(self, payload_contenido_series, self.list_db, self.payloads)
 
-    def payload_episodes(self,episode,genero,serie_title):
+    def payload_episodes(self,episode,genero,serie_title,serie_id):
         season,numepi=self.get_epiyseason(episode)
         payload_episodios = {      
                 "PlatformCode":  self._platform_code, #Obligatorio      
                 "Id":            str(self.get_epi_id(episode)), #Obligatorio
-                "ParentId":      str(self.get_id(serie_title)), #Obligatorio #Unicamente en Episodios
+                "ParentId":      str(serie_id), #Obligatorio #Unicamente en Episodios
                 "ParentTitle":   serie_title, #Unicamente en Episodios 
                 "Episode":       int(numepi), #Unicamente en Episodios  
                 "Season":        int(season), #Obligatorio #Unicamente en Episodios
@@ -292,9 +289,8 @@ class Shoutfactorytv():
         title=serie.img['title']
         return str(title)
 
-    def get_id(self,title):
-        deeplink=title.replace(" ","-")
-        str_to_hash=str(title)+ str(deeplink)
+    def get_id(self,title,link):
+        str_to_hash=str(title)+ str(self.url+link)
         id=hashlib.md5(str_to_hash.encode('utf-8')).hexdigest()
         return id
 
