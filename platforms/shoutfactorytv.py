@@ -54,37 +54,46 @@ class Shoutfactorytv():
         self.url = "https://www.shoutfactorytv.com"
         response = requests.get(self.url) #Enviamos una solicitud a la pag
         content = response.text #Lo transforma en texto 
-        soup = BeautifulSoup(content, 'lxml')
+        soup = BeautifulSoup(content, 'lxml') #Transformar un doc. HTML o XML en un árbol complejo de objetos Python
         section = soup.find_all("div", {"class", "drop-holder"}) #Por categorias
         movies_categories = section[0]
-        series_categories = section[1]
+        #series_categories = section[1]
 
         self.get_movies(movies_categories)
-        self.get_series(series_categories)
+        #self.get_series(series_categories)
 
     # Scripts para traer todas las peliculas
-    def get_movies(self, movies_categories):
-        categ = movies_categories.find_all("a")
-        for item in categ:
-            url_categ = self.url + item['href']
+    def get_movies(self, movies_categories): #Contiene el tag con la info de las categorias
+        categ = movies_categories.find_all("a") #Le pido que encuentre el tag 'a' 
+        for item in categ: #Itero cada tag 'a' de cada pelicula
+            url_categ = self.url + item['href'] #Hago que en cada item encuentre el tag 'href'
             print(url_categ)
-            content = requests.get(url_categ)
+            content = requests.get(url_categ) #Le hago una solicitud a la pag.
             self.get_content_movies(content)
+            
             print('---------------------URL MOVIES--------------------')
 
-    def get_series(self, series_categories):
+    #Traemos la informacion de las series
+    '''def get_series(self, series_categories):
         categ_serie = series_categories.find_all("a")
         for i in categ_serie:
-            url_categ_serie = self.url + i['href']
+            url_categ_serie = self.url + i['href'] #Links de las categorias
             print(url_categ_serie)
-            contenido = requests.get(url_categ_serie)         
+            contenido = requests.get(url_categ_serie)   
+            print(contenido)      
             self.get_content_series(contenido)
-            self.get_synopsis_serie(contenido)
 
-            print('------------URL SERIES-----------')
-                
+            print('------------URL SERIES-----------')'''
+    
+    #Esta funcion busca la clase img_holder en donde se encuentra el title, deeplink y src.
+    def get_data(self, content):
+        content_movies = BeautifulSoup(content.text, 'lxml')
+        img_holder_data = content_movies.find_all('div', attrs={'class': 'img-holder'})
+        return img_holder_data
+    
     def get_content_movies(self, content):
         content_movies = self.get_data(content)
+        list_deeplink = []
         for movie in content_movies:
             title = self.get_title(movie)
             deeplink = self.get_deeplink(movie)
@@ -97,7 +106,23 @@ class Shoutfactorytv():
             print(src)
             print(duration)
             print(synopsis)
-            print('-------------------------')    
+
+            id_hash = str(title) + str(deeplink)    
+            id_hash = hashlib.md5(id_hash.encode('utf-8')).hexdigest()
+            print(id_hash)
+
+            #list_deeplink.append(deeplink)
+            #print(list_deeplink)
+            print('-------------------------') 
+        #list_deeplink = self.validateList(list_deeplink) 
+
+    '''def validateList(self, list_deeplink):
+        nueva=[]
+        for elemento in list_deeplink:
+            if not elemento in nueva:
+                nueva.append(elemento)
+        return nueva    '''
+
 
     def get_content_series(self, content):
         content_series = self.get_data(content)
@@ -105,11 +130,44 @@ class Shoutfactorytv():
             title = self.get_title(serie)
             deeplink = self.get_deeplink(serie)
             src = self.get_src(serie)
+            synopsis = self.get_synopsis_serie(serie)
+
             print(title)
             print(deeplink)
             print(src)
-            print('-------------------------')   
+            print(synopsis)
 
+            id_hash = str(title) + str(deeplink)    
+            id_hash = hashlib.md5(id_hash.encode('utf-8')).hexdigest()
+            print(id_hash)
+            print('-------------------------')  
+
+    def get_content_episodes(self, content):
+        pass
+
+    #Se busca el title de cada movie y serie
+    def get_title(self, data):
+            if data.img != None:
+                title = data.img.get('title')
+            else: 
+                title = data.a.get('href').split('/')[1].replace('-', ' ').capitalize
+            return title
+
+    #Se busca el link de cada movie y serie
+    def get_deeplink(self, data):
+        deeplink = data.a
+        deeplink = self.url + deeplink['href']
+        return deeplink
+
+    #Se busca la imagen de cada movie y serie
+    def get_src(self, data):
+        if data.img != None:
+            src = data.img.get('src')
+        else:
+            src = None
+        return src  
+    
+    #Se busca synopsis de series
     def get_synopsis_serie(self, content):
         series = self.get_data(content)
         for serie in series:
@@ -120,18 +178,16 @@ class Shoutfactorytv():
             for data in s2:
                 synopsis = data.p.text
                 print(synopsis)
-        
-        #Buscar el link de las series, para entrar a cada una y ver su informacion
-        #Busco el tag en donde se encuentra la sinopsis
-        #Despues recorro cada una de las sinopsis y/o info
-        #
 
-    #Esta funcion busca el tag img_holder en donde se encuentra el title, deeplink y src.
-    def get_data(self, content):
-        content_movies = BeautifulSoup(content.text, 'lxml')
-        img_holder_data = content_movies.find_all('div', attrs={'class': 'img-holder'})
-        return img_holder_data
+    #Contiene el tag article en donde se encuenta la duracion y la sinopsis de movies
+    def get_article_duration_and_synopsis(self, content):
+        url_content =  'https://www.shoutfactorytv.com/videos?utf8=%E2%9C%93&commit=submit&q={title}'.format(title = self.get_title(content))
+        data = requests.get(url_content)
+        soup = BeautifulSoup(data.text, 'lxml')
+        article = soup.find_all('article', {'class': 'post'})
+        return article
 
+    #Contiene la funcion de article y busca la synopsis a partir de eso
     def get_synopsis_movies(self, content):
         article_synopsis = self.get_article_duration_and_synopsis(content)
         for item in article_synopsis:
@@ -141,7 +197,8 @@ class Shoutfactorytv():
             if link == getDeeplink:
                 synopsis = (item.p).text
                 return synopsis
-        
+
+    #Contiene la funcion de article y busca la duration a partir de eso
     def get_duration_movies(self, content):
         article = self.get_article_duration_and_synopsis(content)
         for item in article:
@@ -150,52 +207,26 @@ class Shoutfactorytv():
             getDeeplink = self.get_deeplink(content)
             if link_movies == getDeeplink:
                 duration = (item.find('time', {'class', 'duration'}).text.split(" ")[1].split(":")[0])
-                return duration
+                return duration 
 
-    def get_article_duration_and_synopsis(self, content):
-        url_content =  'https://www.shoutfactorytv.com/videos?utf8=%E2%9C%93&commit=submit&q={title}'.format(title = self.get_title(content))
-        data = requests.get(url_content)
-        soup = BeautifulSoup(data.text, 'lxml')
-        article = soup.find_all('article', {'class': 'post'})
-        return article
-
-    def get_title(self, data):
-            if data.img != None:
-                title = data.img.get('title')
-            else: 
-                title = data.a.get('href').split('/')[1].replace('-', ' ').capitalize
-            return title
-
-    def get_deeplink(self, data):
-        deeplink = data.a
-        deeplink = self.url + deeplink['href']
-        return deeplink
-
-    def get_src(self, data):
-        if data.img != None:
-            src = data.img.get('src')
-        else:
-            src = None
-        return src
-
-    def get_payload_movies(self):
+    def get_payload_movies(self, movie):
         payload_movies= {
                         "PlatformCode":  self._platform_code, #Obligatorio      
                         "Id":            None, #Obligatorio
-                        "Title":         self.get_title, #Obligatorio      
+                        "Title":         self.get_title(movie), #Obligatorio      
                         "CleanTitle":    _replace(None), #Obligatorio      
                         "OriginalTitle": None,                          
                         "Type":          "movie",     #Obligatorio      
                         "Year":          None,     #Important!     
-                        "Duration":      self.get_duration,      
+                        "Duration":      self.get_duration_movies(movie),      
                         "ExternalIds":   None,      
                         "Deeplinks": {          
-                            "Web":       self.get_deeplink,       #Obligatorio          
+                            "Web":       self.get_deeplink(movie),       #Obligatorio          
                             "Android":   None,          
                             "iOS":       None,      
                         },      
-                        "Synopsis":      self.get_synopsis,      
-                        "Image":         self.get_src,      
+                        "Synopsis":      self.get_synopsis_movies(movie),      
+                        "Image":         self.get_src(movie),      
                         "Rating":        None,     #Important!      
                         "Provider":      None,      
                         "Genres":        None,    #Important!      
