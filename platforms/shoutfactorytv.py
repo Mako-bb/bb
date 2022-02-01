@@ -42,10 +42,10 @@ class Shoutfactorytv():
         self.payloads_movies        = []                                                                    
         self.payloads_shows         = []                                                                    
         self.payloads_episodes      = []                                                                    
-        #URLs necesarias para concatenar en el Scraping
-        self.url_base               = "https://www.shoutfactorytv.com"                                      
+        #URL necesaria para concatenar y armar el Deeplink
+        self.url_base               = "https://www.shoutfactorytv.com"
+        #URL necesaria para concatenar y armar el Deeplink del search (lupa)                      
         self.url_search             = "https://www.shoutfactorytv.com/videos?utf8=✓&commit=submit&q="
-        self.url_search_page        = "https://www.shoutfactorytv.com/videos?page="
         self.url                    = self._config['url']                                                    
         self.testing                = False
         self.sesion                 = requests.session()
