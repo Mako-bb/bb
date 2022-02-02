@@ -71,7 +71,7 @@ class Shoutfactorytv():
             print('---------------------URL MOVIES--------------------')
 
     #Traemos la informacion de las series
-    '''def get_series(self, series_categories):
+    def get_series(self, series_categories):
         categ_serie = series_categories.find_all("a")
         for i in categ_serie:
             url_categ_serie = self.url + i['href'] #Links de las categorias
@@ -80,7 +80,7 @@ class Shoutfactorytv():
             print(contenido)      
             self.get_content_series(contenido)
 
-            print('------------URL SERIES-----------')'''
+            print('------------URL SERIES-----------')
     
     #Esta funcion busca la clase img_holder en donde se encuentra el title, deeplink y src.
     def get_data(self, content):
@@ -95,30 +95,22 @@ class Shoutfactorytv():
             title = self.get_title(movie)
             deeplink = self.get_deeplink(movie)
             src = self.get_src(movie) 
-            try: 
-                duration = self.get_duration_and_synopsis(movie)['duration']
-            except:
-                print(title, deeplink)
-                raise 
+            duration = self.get_duration_and_synopsis(deeplink)['duration']
+            synopsis = self.get_duration_and_synopsis(deeplink)['synopsis']
+            
+            #try: 
+            #    duration = self.get_duration_and_synopsis(movie)['duration']
+            #    print(duration)
+            #except:
+            #    print(title, deeplink)
+            #    raise 
 
-            synopsis = self.get_duration_and_synopsis(movie)['synopsis']
-            id = self.genere_id(title, deeplink)
+            #synopsis = self.get_duration_and_synopsis(movie)['synopsis']
+            id = self.generate_id(title, deeplink)
 
             if id not in list_id_movies:
                 list_id_movies.append(id)
                 self.get_payload_movies(title, id, deeplink, src, synopsis, duration)
-
-    '''def validateList(self, list_deeplink):
-        nueva=[]
-        for elemento in list_deeplink:
-            if not elemento in nueva:
-                nueva.append(elemento)
-        return nueva    '''
-
-    def genere_id(self, title, deeplink):
-        id_hash = str(title) + str(deeplink)    
-        id_hash = hashlib.md5(id_hash.encode('utf-8')).hexdigest()
-        return id_hash
 
     def get_content_series(self, content):
         content_series = self.get_data(content)
@@ -128,7 +120,7 @@ class Shoutfactorytv():
             deeplink = self.get_deeplink(serie)
             src = self.get_src(serie)
             synopsis = self.get_synopsis_serie(serie)
-            id = self.genere_id(title, deeplink)
+            id = self.generate_id(title, deeplink)
 
             if id not in list_id_series:
                 list_id_series.append(id)
@@ -137,18 +129,28 @@ class Shoutfactorytv():
     def get_content_episodes(self, content):
         pass
 
+    def generate_id(self, title, deeplink):
+        id_hash = str(title) + str(deeplink)    
+        id_hash = hashlib.md5(id_hash.encode('utf-8')).hexdigest()
+        return id_hash
+
     #Se busca el title de cada movie y serie
     def get_title(self, data):
-            if data.img != None:
-                title = data.img.get('title')
-            else: 
-                title = data.a.get('href').split('/')[1].replace('-', ' ').capitalize
-            return title
+        if data.img != None:
+            title = data.img.get('title')
+        elif data.img != None: 
+            title = data.a.get('href').split('/')[1].replace('-', ' ').capitalize
+        else: 
+            title = None
+        return title
 
     #Se busca el link de cada movie y serie
     def get_deeplink(self, data):
-        deeplink = data.a
-        deeplink = self.url + deeplink['href']
+        if data.a != None:
+            deeplink = data.a
+            deeplink = self.url + deeplink['href']
+        else: 
+            deeplink = None
         return deeplink
 
     #Se busca la imagen de cada movie y serie
@@ -171,23 +173,62 @@ class Shoutfactorytv():
                 synopsis = data.p.text
                 print(synopsis)
 
-    #Contiene el tag article en donde se encuenta la duracion y la sinopsis de movies
-    def get_duration_and_synopsis(self, content):
+    #Se encuenta la duracion y la sinopsis de movies
+    def get_duration_and_synopsis(self, deeplink):
+        url_content = 'https://www.shoutfactorytv.com/videos?utf8=✓&commit=submit&q=1&q={deeplink}'.format(deeplink = deeplink.split("/")[-1] )   
+        data = requests.get(url_content)
+        soup = BeautifulSoup(data.text, 'lxml')
+        article = soup.find_all('article', {'class': 'post'})
+        for item in article:
+            try:
+                duration = int(item.time.text.split(" ")[1].split(":")[0])
+            except:
+                duration = None
+            #duration = int(item.time.text.split(" ")[1].split(":")[0])
+            synopsis = item.find('p').text.strip()
+            return {"duration": duration, "synopsis": synopsis}
+            
+
+        '''def get_duration_and_synopsis(self, content):
+        #slug = self.get_title(content).replace(" ","+").replace("&","%26").replace(":","%3A")
         url_content =  'https://www.shoutfactorytv.com/videos?utf8=%E2%9C%93&commit=submit&q={title}'.format(title = self.get_title(content))
         data = requests.get(url_content)
         soup = BeautifulSoup(data.text, 'lxml')
         article = soup.find_all('article', {'class': 'post'})
         for item in article:
-            link = item.a
-            link_movies = self.url + link['href'] 
-            getDeeplink = self.get_deeplink(content)
+            link = item.a['href'].split("/")[-1]
+            #id_movies = link['href'].split("/")[-1]
+            url_id = 'https://www.shoutfactorytv.com/videos?utf8=✓&commit=submit&q=1&q={id}'.format(id = link)
+            print(url_content)
+            print(url_id)
+            r = requests.get(url_id)
+            soup_id = BeautifulSoup(r.text, 'lxml')
+            tag_holder = soup_id.find_all('div', {'class', 'holder'})
+            for data_id in tag_holder:
+                duration = data_id.time.text
+                print(duration)'''
+                    #duration = data_id.find('time', {'class', 'duration'}).split(" ")[1].split(":")[0]
+                    #print(duration)
+
+                #duration = int(data_id.find('time', {'class', 'duration'}).text.split(" ")[1].split(":")[0])
+                #print(duration)
+                #synopsis = data_id.find('p').text.strip() #Si hay algun espacio lo elimina, al final o principio 
+                #print(synopsis)
+                #return {"duration": duration, "synopsis": synopsis}
+
+
+            
+            #link.split("/")[2].replace("-series", "")
+
+
+        '''getDeeplink = self.get_deeplink(content)
             print(link_movies)
             print(getDeeplink)
-            print("---------------------------------------------------------")
+            print('##########################################')
             if link_movies == getDeeplink:
                 duration = int(item.find('time', {'class', 'duration'}).text.split(" ")[1].split(":")[0])
                 synopsis = item.find('p').text.strip() #Si hay algun espacio lo elimina, al final o principio 
-                return {"duration": duration, "synopsis": synopsis}
+                return {"duration": duration, "synopsis": synopsis}'''
 
     def get_payload_movies(self, title, id, deeplink, src, synopsis, duration):
         payload_movies= {
@@ -261,7 +302,6 @@ class Shoutfactorytv():
         }
         Datamanager._checkDBandAppend(self, payload_series, self.list_db_series_movies, self.payloads)
         Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)
-
 
     def get_payload_episodes(self, payload_episodes):
         payload_episodes = {
