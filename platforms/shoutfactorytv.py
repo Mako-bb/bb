@@ -43,10 +43,10 @@ class Shoutfactorytv():
         self.payloads_shows         = []                                                                    
         self.payloads_episodes      = []                                                                    
         #URL necesaria para concatenar y armar el Deeplink
-        self.url_base               = "https://www.shoutfactorytv.com"
+        self.url                    = self._config['url']
+        print("\x1b[1;36;40mScraping a plataforma >>> \x1b[0m" + self.url)
         #URL necesaria para concatenar y armar el Deeplink del search (lupa)                      
-        self.url_search             = "https://www.shoutfactorytv.com/videos?utf8=✓&commit=submit&q="
-        self.url                    = self._config['url']                                                    
+        self.url_search             = "https://www.shoutfactorytv.com/videos?utf8=✓&commit=submit&q="                                                   
         self.testing                = False
         self.sesion                 = requests.session()
         self.headers                = {"Accept": "application/json", "Content-Type": "application/json; charset=utf-8"}
@@ -118,7 +118,7 @@ class Shoutfactorytv():
         #Recorre la lista de links de peliculas
         for link in links_movies:
             ###ACÁ OBTIENE EL DEEPLINK PARA LAS PELICULAS###
-            deeplink = self.url_base + link                                                       
+            deeplink = self.url + link                                                       
             #Link de la pelicula para buscar en el search
             deeplink_search_movie = self.clear_link_search(link)
             response_link = self.verify_status_code(deeplink_search_movie)                                
@@ -177,7 +177,7 @@ class Shoutfactorytv():
         #Recorre la lista de links de series
         for link in links_shows:
             ###ACÁ OBTIENE EL DEEPLINK PARA LAS SERIES###                                       
-            deeplink = self.url_base + link                                                                                                                                                              
+            deeplink = self.url + link                                                                                                                                                              
             response_link = self.verify_status_code(deeplink)               
  
             if response_link.status_code == 200:
@@ -250,7 +250,7 @@ class Shoutfactorytv():
                 for content_episode in content_episodes.find_all("a"):                                 
                     ###ACÁ OBTIENE LA DATA PARA LOS EPISODIOS###                                          
                     title = content_episode.img['title'].strip()                                       
-                    deeplink = self.url_base + content_episode['href']
+                    deeplink = self.url + content_episode['href']
   
                     #Corrobora que el titulo del episodio no sea una pelicula ya obtenida                                                        
                     if title not in self.list_titles:                                                
@@ -377,7 +377,7 @@ class Shoutfactorytv():
         
         links_categories = []         
         for item in list_categories:        
-             links_categories.append(self.url_base + item['href'])                                          
+             links_categories.append(self.url + item['href'])                                          
         return links_categories
 
     #Extrae parte del link de las peliculas y series de todas las categorias
