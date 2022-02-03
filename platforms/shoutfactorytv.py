@@ -58,8 +58,6 @@ class Shoutfactorytv():
 
         #Datamanager._insertIntoDB(self, self.payloads, self.titanScraping) aca termina de agregar los datos y los sube
 
-    
-
     # Scripts para traer todas las peliculas
     def get_movies(self, movies_categories): #Contiene el tag con la info de las categorias
         categ = movies_categories.find_all("a") #Le pido que encuentre el tag 'a' 
@@ -97,15 +95,7 @@ class Shoutfactorytv():
             src = self.get_src(movie) 
             duration = self.get_duration_and_synopsis(deeplink)['duration']
             synopsis = self.get_duration_and_synopsis(deeplink)['synopsis']
-            
-            #try: 
-            #    duration = self.get_duration_and_synopsis(movie)['duration']
-            #    print(duration)
-            #except:
-            #    print(title, deeplink)
-            #    raise 
 
-            #synopsis = self.get_duration_and_synopsis(movie)['synopsis']
             id = self.generate_id(title, deeplink)
 
             if id not in list_id_movies:
@@ -138,8 +128,8 @@ class Shoutfactorytv():
     def get_title(self, data):
         if data.img != None:
             title = data.img.get('title')
-        elif data.img != None: 
-            title = data.a.get('href').split('/')[1].replace('-', ' ').capitalize
+        #elif data.img != None: 
+        #    title = data.a.get('href').split('/')[1].replace('-', ' ').capitalize
         else: 
             title = None
         return title
@@ -188,47 +178,6 @@ class Shoutfactorytv():
             synopsis = item.find('p').text.strip()
             return {"duration": duration, "synopsis": synopsis}
             
-
-        '''def get_duration_and_synopsis(self, content):
-        #slug = self.get_title(content).replace(" ","+").replace("&","%26").replace(":","%3A")
-        url_content =  'https://www.shoutfactorytv.com/videos?utf8=%E2%9C%93&commit=submit&q={title}'.format(title = self.get_title(content))
-        data = requests.get(url_content)
-        soup = BeautifulSoup(data.text, 'lxml')
-        article = soup.find_all('article', {'class': 'post'})
-        for item in article:
-            link = item.a['href'].split("/")[-1]
-            #id_movies = link['href'].split("/")[-1]
-            url_id = 'https://www.shoutfactorytv.com/videos?utf8=✓&commit=submit&q=1&q={id}'.format(id = link)
-            print(url_content)
-            print(url_id)
-            r = requests.get(url_id)
-            soup_id = BeautifulSoup(r.text, 'lxml')
-            tag_holder = soup_id.find_all('div', {'class', 'holder'})
-            for data_id in tag_holder:
-                duration = data_id.time.text
-                print(duration)'''
-                    #duration = data_id.find('time', {'class', 'duration'}).split(" ")[1].split(":")[0]
-                    #print(duration)
-
-                #duration = int(data_id.find('time', {'class', 'duration'}).text.split(" ")[1].split(":")[0])
-                #print(duration)
-                #synopsis = data_id.find('p').text.strip() #Si hay algun espacio lo elimina, al final o principio 
-                #print(synopsis)
-                #return {"duration": duration, "synopsis": synopsis}
-
-
-            
-            #link.split("/")[2].replace("-series", "")
-
-
-        '''getDeeplink = self.get_deeplink(content)
-            print(link_movies)
-            print(getDeeplink)
-            print('##########################################')
-            if link_movies == getDeeplink:
-                duration = int(item.find('time', {'class', 'duration'}).text.split(" ")[1].split(":")[0])
-                synopsis = item.find('p').text.strip() #Si hay algun espacio lo elimina, al final o principio 
-                return {"duration": duration, "synopsis": synopsis}'''
 
     def get_payload_movies(self, title, id, deeplink, src, synopsis, duration):
         payload_movies= {
