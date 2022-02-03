@@ -82,9 +82,6 @@ self.test = True if operation == "testing" else False
             soup_category = BS(req_movies.text, 'lxml')
             soup_movies = soup_category.find_all('div', {'class':'img-holder'})
             self.movies_list.append(soup_movies)
-        
-        print("Obteniendo series")
-        self.get_payload_serie()
 
         print("Obteniendo peliculas")
         self.get_payload_movies()
@@ -100,7 +97,9 @@ self.test = True if operation == "testing" else False
     # Intentar la obtención de la duración
     # titanScraping: total 1530
     # titanScrapingEpisodes: total 5375
-    # Movies: 1422 Series: 124
+    # Movies: 1440 Series: 124
+    # DIVIDIR el validador en uno para series y otro para movies, para probar lo del id del deeplink
+    # O SACAR PRIMERO EL ID Y COMPARAR IDS
 
 
 ############## PAYLOAD MOVIES ##############
@@ -109,8 +108,6 @@ self.test = True if operation == "testing" else False
         payloads = []
         #list_db = Datamanager._getListDB(self, self.titanScraping)
         for items in self.movies_list:
-            print('***** ITEMS *****') 
-            print(items)
             for item in items:
                 self.get_deeplink(item)
                 self.validar_repetidos()
@@ -125,8 +122,8 @@ self.test = True if operation == "testing" else False
             payload_movie = {
                 "PlatformCode":  self._platform_code, #Obligatorio      
                 "Id":            'None', #Obligatorio
-                "Title":         self.get_title(), #Obligatorio      
-                "CleanTitle":    self.get_title(), #Obligatorio      
+                "Title":         self.get_title(movie), #Obligatorio      
+                "CleanTitle":    self.get_title(movie), #Obligatorio      
                 "OriginalTitle": None,                          
                 "Type":          "movie",     #Obligatorio      
                 "Year":          None,     #Important!     
@@ -166,25 +163,21 @@ self.test = True if operation == "testing" else False
         payloads_series = []
         #list_db_series = Datamanager._getListDB(self, self.titanScrapingEpisodios)
         for items in self.url_series:
-            print('***** ITEMS *****')  #Muestra los urls de las categorías de las series
-            print(items)
             r = requests.get(items, 'html.parser')
             self.s1 = BS(r.text, 'html.parser')
             time.sleep(1)
             print('    LOADING.....................')
             series = self.s1.find('div', {"id": "main"}).find('div', {'class': 'holder'}).find_all('div', {'class': 'img-holder'})
-            print(series)
             for item in series:
-                print('***** ITEM *****')
                 self.get_deeplink(item)
                 self.validar_repetidos()
-        self.validar_titulos()
+        print(len(self.url_validator))
         for serie in self.url_validator:
             r = requests.get(serie, 'html.parser')
             self.s2 = BS(r.text, 'html.parser')
             print('    LOADING.....................')
             time.sleep(1)
-            self.get_title()
+            self.get_title(serie)
             """payload_serie = {
                 "PlatformCode":  self._platform_code, #Obligatorio      
                 "Id":            None,            #Obligatorio
@@ -289,42 +282,67 @@ self.test = True if operation == "testing" else False
             url_series = self._url +  item.a.get('href')
             self.url_series.append(url_series)
         print(self.url_series)
+                
 
-    
     def validar_repetidos(self):
         if self.deeplink not in self.url_validator:
-            self.url_validator.append(self.deeplink)
+            url = self.deeplink.split('/')
+            if url[-1] not in self.url_validator:
+                print('---------- Agregando contenido ----------')
+                self.url_validator.append(self.deeplink)
+                print(len(self.url_validator))
+                print('----------------------------------')
+            else:
+                print('---------- Contenido repetido ----------')
+                print('----------------------------------') 
         else:
             print('---------- Contenido repetido ----------')
+            print('----------------------------------')
 
     
-    def validar_titulos(self):
+    """ def validar_titulos(self):
+        print('TITLE')
+        print(len(self.title_validator))
+        print('URL')
+        print(len(self.url_validator))
         for content in self.url_validator:
+            print(content)
             r = requests.get(content, 'html.parser')
             self.s2 = BS(r.text, 'html.parser')
             print('    LOADING.....................')
             time.sleep(1)
-            self.get_title()
+            self.get_title(content)
             if self.title not in self.title_validator:
                 self.title_validator.append(self.title)
+                print('TITLE')
                 print(len(self.title_validator))
-                self.contador += 1
+                print('URL')
+                print(len(self.url_validator))
+                print('----------------------------------')
             else:
-                self.url_validator.remove(self.deeplink) # NOPE, BUSCÁ OTRA FORMA
-            print(self.url_validator)
-        raise KeyError
+                print('    REMOVING REPETED CONTENT -----')
+                print(self.title)
+                self.url_validator.remove(content) # Será?
+                print(content)
+                print('TITLE')
+                print(len(self.title_validator))
+                print('URL')
+                print(len(self.url_validator))
+                print('----------------------------------') """
 
-    def get_title(self):
+    def get_title(self, content):
         try:
-            self.title = self.s2.find('div', {"id": "main"}).find('div', {'class': 'holder'}).find('h2').find('span').get_text()
+            try:
+                self.title = self.s2.find('div', {"id": "main"}).find('div', {'class': 'holder'}).find('h2').find('span').get_text()
+            except:
+                pass
+            print(self.title)
         except:
-            pass
-        try:
-            self.title = self.s2.find('div', {"id": "main"}).find('h1').get_text().replace('                                                ','')
-        except:
-            self.title = self.deeplink.replace('https://www.shoutfactorytv.com/series/', '').replace('-', ' ').replace('series', '').title()
-        self.title_validator.append(list(dict.fromkeys(self.title)))
-        print(self.title)
+            try:
+                self.title = self.s2.find('div', {"id": "main"}).find('h1').get_text()
+            except:
+                self.title = content.replace('https://www.shoutfactorytv.com/series/', '').replace('-', ' ').replace('series', '').title()
+            print(self.title)
         return self.title
 
     def get_deeplink(self, item):
@@ -351,14 +369,6 @@ self.test = True if operation == "testing" else False
         pass       
 
 
-    """ def series_title(self):
-        # Usar el try except; poner los replace todos juntos; reemplazar el series del titulo
-        try:
-            self.stitle = self.s2.find('div', {"id": "main"}).find('h1').get_text().replace('                                                ','')
-        except:
-            self.stitle = self.deeplink.replace('https://www.shoutfactorytv.com/series/', '').replace('-', ' ').replace('series', '').title()
-        self.title_validator.append(self.stitle)
-        print(self.stitle)
-        return self.stitle  """
+    
 
 
