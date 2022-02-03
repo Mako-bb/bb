@@ -81,10 +81,8 @@ class Shoutfactorytv():
         response_url = self.verify_status_code(self.url)                                                               
         if response_url.status_code == 200:                                                          
             print("\x1b[1;32;40mCódigo de estado >>> \x1b[0m" + str(response_url.status_code))   
-            
             #Se encarga de extraer toda la data de las peliculas
             self.get_payload_movies(response_url)
-            
             #Se encarga de extraer toda la data de las series, dentro llama a get_payload_episodes()
             #para extraer la data de los episodios                                                   
             self.get_payload_shows(response_url)                                                              
@@ -481,7 +479,6 @@ class Shoutfactorytv():
 
     #Se encarga de llenar el payload de peliculas
     def payload_movies(self, id_hash, deeplink, title, image, duration, description, genre):
-        genre = [genre]
         payload_movie = {
             "PlatformCode":  self._platform_code,                                                           #Obligatorio
             "Id":            id_hash,                                                                       #Obligatorio
@@ -501,7 +498,7 @@ class Shoutfactorytv():
             "Image":         image,                                                  
             "Rating":        None,                                                                          #Important!      
             "Provider":      None,                                                  
-            "Genres":        genre,                                                                         #Important!      
+            "Genres":        [genre],                                                                       #Important!      
             "Cast":          None,                                                  
             "Directors":     None,                                                                          #Important!      
             "Availability":  None,                                                                          #Important!      
@@ -520,7 +517,6 @@ class Shoutfactorytv():
 
     #Se encarga de llenar el payload de series
     def payload_shows(self, id_hash, deeplink, title, image, description, seasons, genre):
-        genre = [genre]
         payload_show = {
             "PlatformCode":  self._platform_code,                                                           #Obligatorio      
             "Id":            id_hash,                                                                       #Obligatorio
@@ -541,7 +537,7 @@ class Shoutfactorytv():
             "Image":         image,                                                  
             "Rating":        None,                                                                          #Important!      
             "Provider":      None,                                                  
-            "Genres":        genre,                                                                         #Important!      
+            "Genres":        [genre],                                                                       #Important!      
             "Cast":          None,                                                  
             "Directors":     None,                                                                          #Important!      
             "Availability":  None,                                                                          #Important!      
@@ -560,7 +556,6 @@ class Shoutfactorytv():
 
     #Se encarga de llenar el payload de episodios
     def payload_episodes(self, id_hash, deeplink, title, image, duration, description, season, episode, parent_id, parent_title, genre):
-        genre = [genre]
         payload_episode = {
             "PlatformCode":  self._platform_code,                                                           #Obligatorio      
             "Id":            id_hash,                                                                       #Obligatorio
@@ -582,7 +577,7 @@ class Shoutfactorytv():
             "Image":         image,                                                                               
             "Rating":        None,                                                                          #Important!      
             "Provider":      None,                                                                               
-            "Genres":        genre,                                                                         #Important!      
+            "Genres":        [genre],                                                                       #Important!      
             "Cast":          None,                                                                               
             "Directors":     None,                                                                          #Important!      
             "Availability":  None,                                                                          #Important!      
