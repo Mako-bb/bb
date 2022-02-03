@@ -81,8 +81,10 @@ class Shoutfactorytv():
         response_url = self.verify_status_code(self.url)                                                               
         if response_url.status_code == 200:                                                          
             print("\x1b[1;32;40mCódigo de estado >>> \x1b[0m" + str(response_url.status_code))   
+            
             #Se encarga de extraer toda la data de las peliculas
             self.get_payload_movies(response_url)
+            
             #Se encarga de extraer toda la data de las series, dentro llama a get_payload_episodes()
             #para extraer la data de los episodios                                                   
             self.get_payload_shows(response_url)                                                              
@@ -137,7 +139,7 @@ class Shoutfactorytv():
                         
                         #Nos aseguramos de extraer la información que corresponde a esa pelicula             
                         if link in content.a['href']:                                                                     
-                            ###ACÁ OBTIENE EL RESTO DE LA DATA PARA LAS PELICULAS###                                           
+                            ###ACÁ OBTIENE EL RESTO DE LA DATA PARA LAS PELICULAS###                                   
                             image =  self.clear_image(content)                                  
                             duration = self.clear_duration_movies_episodes(content)                               
                             description = self.clear_description_movies_episodes(content)         
@@ -191,7 +193,7 @@ class Shoutfactorytv():
                     if title not in self.list_titles:
                         #Agrega a la lista para comparar que no esten repetidos
                         self.list_titles.append(title)                                    
-                        ###ACÁ OBTIENE PARTE DE LA DATA PARA LAS SERIES###                                                                                                   
+                        ###ACÁ OBTIENE PARTE DE LA DATA PARA LAS SERIES###                                                                                                 
                         image = self.clear_image(content)                             
                         content_description = soup_link.find("div", id='info-slide-content')
                         description = self.clear_description_shows(content_description)
@@ -200,7 +202,8 @@ class Shoutfactorytv():
                         print(f"\033[33mSerie encontrada >>> \033[0m" + title)
 
                         seasons = self.get_payload_episodes(soup_link, id_hash, 
-                                                            title, deeplink)
+                                                            title, deeplink,
+                                                            genre)
 
                         #Corrobora que la serie tenga al menos una temporada con uno o más episodios,
                         #de lo contrario no la inserta
@@ -224,7 +227,7 @@ class Shoutfactorytv():
                     print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_link.status_code))   
                                  
     #Se encarga de extraer información de episodios 
-    def get_payload_episodes(self, soup_show, parent_id, parent_title, parent_deeplink):        
+    def get_payload_episodes(self, soup_show, parent_id, parent_title, parent_deeplink, parent_genre):        
         print(f"\033[33mComienza Scraping de episodios <<< \033[0m")
 
         #Se inicializan variables que son necesarias para controlar que se inserten
@@ -292,7 +295,7 @@ class Shoutfactorytv():
                             self.payload_episodes(id_hash, deeplink, title, 
                                                 image, duration, description, 
                                                 season, episode, parent_id, 
-                                                parent_title)
+                                                parent_title, parent_genre)
 
                             #Ataja inconsistencias de la plataforma a la hora de mostrar las temporadas y sus episodios
                             if season != count_season:                                                 
@@ -404,14 +407,18 @@ class Shoutfactorytv():
         id_hash = hashlib.md5(id_hash.encode('utf-8')).hexdigest()
         return str(id_hash)
 
-    #Filtra y limpia el link de la imagen
+    #Filtra y limpia los links de la imagen
     def clear_image(self, content):
         image = []
         
-        try:                     
-            image.append(content.img['src'].strip())                                                    
-        except:                   
-            image = None
+        if type(content.img['src']) == list:
+            for link in content.img['src']:
+                image.append(link)
+        else:
+            try:                     
+                image.append(content.img['src'])                                                    
+            except:                   
+                image = None
         return image
 
     #Filtra y limpia el titulo de las peliculas y series
@@ -425,7 +432,7 @@ class Shoutfactorytv():
     #Filtra y limpia la descripción de las peliculas y episodios
     def clear_description_movies_episodes(self, content):
         try:
-            description = content.p.text.replace("\n", "").strip()
+            description = content.p.text.replace("\r\n", "").strip()
         except:
             description = None
         return description
@@ -474,6 +481,7 @@ class Shoutfactorytv():
 
     #Se encarga de llenar el payload de peliculas
     def payload_movies(self, id_hash, deeplink, title, image, duration, description, genre):
+        genre = [genre]
         payload_movie = {
             "PlatformCode":  self._platform_code,                                                           #Obligatorio
             "Id":            id_hash,                                                                       #Obligatorio
@@ -512,6 +520,7 @@ class Shoutfactorytv():
 
     #Se encarga de llenar el payload de series
     def payload_shows(self, id_hash, deeplink, title, image, description, seasons, genre):
+        genre = [genre]
         payload_show = {
             "PlatformCode":  self._platform_code,                                                           #Obligatorio      
             "Id":            id_hash,                                                                       #Obligatorio
@@ -550,7 +559,8 @@ class Shoutfactorytv():
         Datamanager._checkDBandAppend(self, payload_show, self.list_db_movies_shows, self.payloads_shows)
 
     #Se encarga de llenar el payload de episodios
-    def payload_episodes(self, id_hash, deeplink, title, image, duration, description, season, episode, parent_id, parent_title):
+    def payload_episodes(self, id_hash, deeplink, title, image, duration, description, season, episode, parent_id, parent_title, genre):
+        genre = [genre]
         payload_episode = {
             "PlatformCode":  self._platform_code,                                                           #Obligatorio      
             "Id":            id_hash,                                                                       #Obligatorio
@@ -572,7 +582,7 @@ class Shoutfactorytv():
             "Image":         image,                                                                               
             "Rating":        None,                                                                          #Important!      
             "Provider":      None,                                                                               
-            "Genres":        None,                                                                          #Important!      
+            "Genres":        genre,                                                                         #Important!      
             "Cast":          None,                                                                               
             "Directors":     None,                                                                          #Important!      
             "Availability":  None,                                                                          #Important!      
