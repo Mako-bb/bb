@@ -299,36 +299,6 @@ self.test = True if operation == "testing" else False
             print('---------- Contenido repetido ----------')
             print('----------------------------------')
 
-    
-    """ def validar_titulos(self):
-        print('TITLE')
-        print(len(self.title_validator))
-        print('URL')
-        print(len(self.url_validator))
-        for content in self.url_validator:
-            print(content)
-            r = requests.get(content, 'html.parser')
-            self.s2 = BS(r.text, 'html.parser')
-            print('    LOADING.....................')
-            time.sleep(1)
-            self.get_title(content)
-            if self.title not in self.title_validator:
-                self.title_validator.append(self.title)
-                print('TITLE')
-                print(len(self.title_validator))
-                print('URL')
-                print(len(self.url_validator))
-                print('----------------------------------')
-            else:
-                print('    REMOVING REPETED CONTENT -----')
-                print(self.title)
-                self.url_validator.remove(content) # Será?
-                print(content)
-                print('TITLE')
-                print(len(self.title_validator))
-                print('URL')
-                print(len(self.url_validator))
-                print('----------------------------------') """
 
     def get_title(self, content):
         try:
