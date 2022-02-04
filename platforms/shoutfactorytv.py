@@ -171,9 +171,10 @@ class Shoutfactorytv():
         print(self._url)
         content = requests.get(self._url)
         #self.get_payload(type='movie', page=content)
-        #self.get_payload(type='serie', page=content)        # Tambien
+        self.get_payload(type='serie', page=content)        # Tambien
 
-        print(self.get_duration_for_movie("https://www.shoutfactorytv.com//the-shooting/60a9882bf2c83c00016dbee3", "buenas"))
+        #print(self.get_duration_for_movie("https://www.shoutfactorytv.com//the-shooting/60a9882bf2c83c00016dbee3", "buenas"))
+        #self.get_payload_episodes("ricky", "jorge", "pepe", "https://www.shoutfactorytv.com/series/danger-5")
         """
             Sólo para terminar
 
@@ -279,9 +280,10 @@ class Shoutfactorytv():
 
     def get_duration_for_movie(self, deeplink, title):
         movie_id = deeplink.split("/")[-1]
+
         search_info = 'https://www.shoutfactorytv.com/videos?utf8=%E2%9C%93&commit=submit&q=' + movie_id 
-        response = requests.get(search_info)
-        content = response.text
+        page = requests.get(search_info)
+        content = page.text
 
         soup = BS(content, 'lxml')
         search_movie_soup = soup.find("div",{"class":"video-container"})
@@ -294,7 +296,8 @@ class Shoutfactorytv():
                     return int(movie.time.text.split(':')[1])
 
     def get_duration_and_synopsis_for_episode(self, deeplink):
-
+        episode_id = episodes.split(" ")[0]
+        episode_search = 'https://www.shoutfactorytv.com/videos?utf8=%E2%9C%93&commit=submit&q=' + episode_id
         return 0
 
 
@@ -378,13 +381,18 @@ class Shoutfactorytv():
         #number_of_seasons = self.get_number_of_seasons(deeplink)
 
         serie = requests.get(deeplink)
-        soup = BS(serie.content, 'html.parser')
+        soup = BS(serie.content, 'lxml')
 
         #info = soup.find_all('ul', class_="thumbnails")
 
-        deeplinks = soup.find_all('a', href=True)
+        #soup.find_all("div",{"class":"holder"})
+
+        deeplinks = soup.find_all('div', class_='holder')
+        deeplinks = deeplinks[1].find_all('a')
         titles = soup.find_all('span', class_="title")
         serie_info = self.get_episode_info(deeplink)
+        print("CANTIDAD DE TITLES: ", len(titles))
+        print("CANTIDAD DE DEEPLINKS: ", len(deeplinks))
 
         for i in range(0, len(titles)):
             payload_episode = self._payload_episode_template.copy()
@@ -398,7 +406,7 @@ class Shoutfactorytv():
             payload_episode["OriginalTitle"]    = str(titles[i].text)
             payload_episode["Year"]             = int(1999)
             #payload_episode["Duration"]         = int(100)             #A terminar
-            payload_episode["Deeplinks"]["Web"] = deeplink
+            payload_episode["Deeplinks"]["Web"] = "https://www.shoutfactorytv.com" + deeplinks[i]['href']
             #payload_episode["Synopsis"]         = 0                    #A terminar
             payload_episode["Genre"]            = genre.text
             payload_episode['Packages']         = [{"Type":"free-vod"}]
