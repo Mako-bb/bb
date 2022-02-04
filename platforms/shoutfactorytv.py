@@ -77,8 +77,9 @@ class Shoutfactorytv():
 
     def get_payload_movies(self,links,list):
         self.payloads = []
+        indice=0
         for categories in links:
-            indice=0
+            print(list[indice])
             web_categories= requests.get(self.url+categories)
             movies_list=BS(web_categories.text,"html.parser")
             movies_list=movies_list.find_all("div",{"class","img-holder"})
@@ -90,8 +91,16 @@ class Shoutfactorytv():
                     else:
                         pass
                 else:
-                    pass
-            indice+1
+                    web=requests.get(self.url+movie.a['href'])
+                    soup=BS(web.text,"html.parser")
+                    web_movie=soup.find("div",{"class","text-holder"})
+                    if self.get_id(web_movie.span.text,movie.a['href']) not in self.list_id:
+                        self.payload_movie_noimg(web_movie,list[indice],movie.a['href'])
+                        self.list_id.append(self.get_id(web_movie.span.text,movie.a['href']))
+                    else:
+                        pass
+                    
+            indice+=1
 
         Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)
 
@@ -107,7 +116,7 @@ class Shoutfactorytv():
                 title=self.get_title(serie)
                 serie_id=self.get_id(serie.img['title'],serie.a['href'])
                 self.get_payload_episodes(serie.a["href"],list[indice],title,serie_id)
-            indice+1
+            indice+=1
         Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)
         
 
@@ -125,10 +134,45 @@ class Shoutfactorytv():
         
         Datamanager._insertIntoDB(self, self.payload_epi, self.titanScrapingEpisodios)
 
-
+    def payload_movie_noimg(self, movie,genero,href):
+            payload_contenidos = { 
+                'PlatformCode':  self._platform_code, #Obligatorio   
+                "Id":            str(self.get_id(movie.span.text,href)), #Obligatorio
+                "Crew":          None,
+                "Title":         movie.span.text, #Obligatorio      
+                "CleanTitle":    _replace(movie.span.text), #Obligatorio      
+                "OriginalTitle": None,                          
+                "Type":          'movie',     #Obligatorio  #movie o serie     
+                "Year":          None,     #Important!  1870 a año actual   
+                "Duration":      int(self.get_duration(movie.span.text,href)),     #en minutos   
+                "ExternalIds":   None,    
+                "Deeplinks": {
+                    "Web":       self.url+href,       #Obligatorio          
+                    "Android":   None,          
+                    "iOS":       None,      
+                },
+                "Synopsis":      movie.p.text,      
+                "Image":         None,      
+                "Subtitles":     None,
+                "Dubbed":        None,
+                "Rating":        None,     #Important!      
+                "Provider":      None,      
+                "Genres":        [genero],    #Important!      
+                "Cast":          None,    #Important!        
+                "Directors":     None,    #Important!      
+                "Availability":  None,     #Important!      
+                "Download":      None,      
+                "IsOriginal":    None,    #Important!        
+                "IsAdult":       None,    #Important!   
+                "IsBranded":     None,    #Important!   (ver link explicativo)
+                "Packages":      [{'Type': 'tv-everywhere'}],    #Obligatorio      
+                "Country":       None,
+                "Timestamp":     datetime.now().isoformat(), #Obligatorio
+                "CreatedAt":     self._created_at, #Obligatorio
+                }
+            Datamanager._checkDBandAppend(self, payload_contenidos, self.list_db, self.payloads)
 
     def payload_movie(self, movie,genero):
-
         payload_contenidos = { 
             'PlatformCode':  self._platform_code, #Obligatorio   
             "Id":            str(self.get_id(movie.img['title'],movie.a['href'])), #Obligatorio
@@ -138,7 +182,7 @@ class Shoutfactorytv():
             "OriginalTitle": None,                          
             "Type":          'movie',     #Obligatorio  #movie o serie     
             "Year":          None,     #Important!  1870 a año actual   
-            "Duration":      None,     #en minutos   
+            "Duration":      self.get_duration(movie.img['title'],movie.a['href']),     #en minutos   
             "ExternalIds":   None,    
             "Deeplinks": {
                 "Web":       self.url+movie.a['href'],       #Obligatorio          
@@ -222,7 +266,7 @@ class Shoutfactorytv():
                 "Title":         episode.img['title'], #Obligatorio      
                 "OriginalTitle": None,                          
                 "Year":          None,     #Important!     
-                "Duration":      None,      
+                "Duration":      self.get_duration(episode.img['title'],episode['href']),      
                 "ExternalIds":   None,     
                 "Deeplinks": {          
                     "Web":       self.url+episode['href'],       #Obligatorio          
@@ -299,3 +343,18 @@ class Shoutfactorytv():
         str_to_hash=str(episode.img['title'])+ str(numepi)+ str(season)+ str(self.url+episode['href'])
         id=hashlib.md5(str_to_hash.encode('utf-8')).hexdigest()
         return id
+
+    def get_duration(self,title,href):
+        try:
+            duration=""
+            response= requests.get('https://www.shoutfactorytv.com/videos?utf8=%E2%9C%93&commit=submit&q='+href)
+            soup= BS(response.text, 'html.parser')
+            content_list=soup.find_all("div",{"class","video-container"})
+            for item in content_list:
+                if item.a['href'] == href:
+                    duration=item.time.text
+                    duration=duration.split(':')[1].strip()
+            if duration!="": return int(duration) 
+            else: return None
+        except:
+            return None
