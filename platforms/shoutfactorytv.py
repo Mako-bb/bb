@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from pydoc import synopsis
 import time
 from webbrowser import get
 from pymongo import response
@@ -6,8 +7,6 @@ import requests
 import hashlib   
 import pymongo 
 import re
-import json
-import platform
 from requests.api import request
 from handle.replace         import _replace
 from common                 import config
@@ -46,8 +45,7 @@ class Shoutfactorytv():
             | (_| (_) | | | | | |  __/ | | | || (_| | |  | | (_) \__ \
             \___\___/|_| |_| |_|\___|_| |_|\__\__,_|_|  |_|\___/|___/
 
-        Para los episodios falta conseguir la duración y las synopsis. No llegué con eso!
-                                                          
+        Si se corta es por conexión
     """
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config = config()['ott_sites'][ott_site_uid]
@@ -168,25 +166,9 @@ class Shoutfactorytv():
             self._scraping()
 
     def _scraping(self, testing=False):
-        print(self._url)
         content = requests.get(self._url)
-        #self.get_payload(type='movie', page=content)
+        self.get_payload(type='movie', page=content)
         self.get_payload(type='serie', page=content)        # Tambien
-
-        #print(self.get_duration_for_movie("https://www.shoutfactorytv.com//the-shooting/60a9882bf2c83c00016dbee3", "buenas"))
-        #self.get_payload_episodes("ricky", "jorge", "pepe", "https://www.shoutfactorytv.com/series/danger-5")
-        """
-            Sólo para terminar
-
-        #print("number of seasons: ", self.get_number_of_seasons("https://www.shoutfactorytv.com/series/danger-5"))
-        #self.get_number_of_episodes_from_season("https://www.shoutfactorytv.com/series/danger-5", 1)
-        #print(self.get_episode_info("https://www.shoutfactorytv.com/series/danger-5"))
-        #print("número de temporadas:", self.get_number_of_seasons("https://www.shoutfactorytv.com/series/the-saint"))
-        #print(self.get_episode_info("https://www.shoutfactorytv.com/series/the-saint"))
-        #self.get_payload_episodes("buenas", "ABC123", "https://www.shoutfactorytv.com/series/the-saint")
-        #self.test_function("https://www.shoutfactorytv.com/series/fridays")
-
-        """
 
     def get_category_link(self, content):
         return self._url + content['href']
@@ -236,8 +218,7 @@ class Shoutfactorytv():
         return len(number_of_season)
 
     def get_episode_info(self, deeplink):
-        seasons = self.get_number_of_seasons(deeplink)
-
+        #seasons = self.get_number_of_seasons(deeplink)
         page = requests.get(deeplink)
         soup = BS(page.content, "html.parser")
         temp  = soup.find_all("div", class_="caption")
@@ -295,10 +276,24 @@ class Shoutfactorytv():
                 else:
                     return int(movie.time.text.split(':')[1])
 
-    def get_duration_and_synopsis_for_episode(self, deeplink):
-        episode_id = episodes.split(" ")[0]
-        episode_search = 'https://www.shoutfactorytv.com/videos?utf8=%E2%9C%93&commit=submit&q=' + episode_id
-        return 0
+    def get_duration_and_synopsis_for_episode(self, href):
+        search_info = 'https://www.shoutfactorytv.com/videos?utf8=%E2%9C%93&commit=submit&q=' + href 
+        page = requests.get(search_info)
+        content = page.text
+        soup = BS(content, 'lxml')
+        search_episode_soup = soup.find('div', class_='video-container')
+        temp = search_episode_soup.find('time')
+
+        try:
+            if int(temp.text.split(':')[2]) > 29:
+                duration = int(temp.text.split(':')[1]) + 1
+            else: 
+                duration = int(temp.text.split(':')[1])
+        except:
+            duration = None
+        
+        synopsis = search_episode_soup.find('p').text.lstrip()
+        return duration, synopsis
 
 
     def get_payload(self, type, page):
@@ -355,11 +350,9 @@ class Shoutfactorytv():
                         payload_movies["CreatedAt"] =                   self._created_at
                         payload_movies["Packages"] =                    [{"Type":"free-vod"}]
                         Datamanager._checkDBandAppend(self, payload_movies, self.payloads_db, self.payloads)
-
                     elif type == 'serie':
                         payload_serie = self._payload_template.copy()
                         self.parent_ids[title] = id
-    
                         payload_serie["PlatformCode"] =                 self._platform_code
                         payload_serie["Id"] =                           id                    
                         payload_serie["Seasons"] =                      self.get_number_of_seasons(deeplink)
@@ -378,23 +371,17 @@ class Shoutfactorytv():
         Datamanager._insertIntoDB(self, self.payloads_db, self.titanScraping)
 
     def get_payload_episodes(self, parentTitle, parentId, genre, deeplink):
-        #number_of_seasons = self.get_number_of_seasons(deeplink)
-
         serie = requests.get(deeplink)
         soup = BS(serie.content, 'lxml')
-
-        #info = soup.find_all('ul', class_="thumbnails")
-
-        #soup.find_all("div",{"class":"holder"})
 
         deeplinks = soup.find_all('div', class_='holder')
         deeplinks = deeplinks[1].find_all('a')
         titles = soup.find_all('span', class_="title")
         serie_info = self.get_episode_info(deeplink)
-        print("CANTIDAD DE TITLES: ", len(titles))
-        print("CANTIDAD DE DEEPLINKS: ", len(deeplinks))
 
         for i in range(0, len(titles)):
+            href = deeplinks[i]['href']
+            duration, synopsis = self.get_duration_and_synopsis_for_episode(href)
             payload_episode = self._payload_episode_template.copy()
             payload_episode["PlatformCode"]     = self._platform_code
             payload_episode["Id"]               = self.get_id(titles[i].text, deeplink)
@@ -405,9 +392,9 @@ class Shoutfactorytv():
             payload_episode["Title"]            = str(titles[i].text)
             payload_episode["OriginalTitle"]    = str(titles[i].text)
             payload_episode["Year"]             = int(1999)
-            #payload_episode["Duration"]         = int(100)             #A terminar
-            payload_episode["Deeplinks"]["Web"] = "https://www.shoutfactorytv.com" + deeplinks[i]['href']
-            #payload_episode["Synopsis"]         = 0                    #A terminar
+            payload_episode["Duration"]         = duration
+            payload_episode["Deeplinks"]["Web"] = "https://www.shoutfactorytv.com" + href 
+            payload_episode["Synopsis"]         = synopsis
             payload_episode["Genre"]            = genre.text
             payload_episode['Packages']         = [{"Type":"free-vod"}]
             payload_episode['Country']          = "US"
