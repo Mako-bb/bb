@@ -395,14 +395,6 @@ class Shoutfactorytv():
     #Metodo que se encarga de realizar el soup a la url indicada
     def soup(self, deeplink):
         self.get_status_code(deeplink) #Primero se intenta ingresar a la pagina
-        response = requests.get(deeplink)
-        content = response.text
-        soup = BS(content, 'lxml')
-        return soup
-
-    #Metodo que se encarga de realizar el soup a la url indicada
-    def soup(self, deeplink):
-        self.get_status_code(deeplink) #Primero se intenta ingresar a la pagina
         response = self.currentSession.get(deeplink)
         content = response.text
         soup = BS(content, "lxml")
