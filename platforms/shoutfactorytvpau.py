@@ -1,4 +1,6 @@
 ############## IMPORTS ##############
+from ast import Raise
+from operator import index
 import time
 from urllib import response
 import requests
@@ -85,9 +87,10 @@ self.test = True if operation == "testing" else False
 
         print("Obteniendo peliculas")
         self.get_payload_movies()
-
+        
         print("Obteniendo series")
-        self.get_payload_serie()        
+        self.get_payload_serie()
+        raise KeyError       
 
         self.get_payload_epis()
 
@@ -111,48 +114,52 @@ self.test = True if operation == "testing" else False
             for item in items:
                 self.get_deeplink(item)
                 self.validar_repetidos()
-        for movie in self.url_validator:
-            r = requests.get(movie, 'html.parser')
-            self.s2 = BS(r.text, 'html.parser')
-            print('    LOADING.....................')
-            time.sleep(1)
-            self.get_title(movie)
-            print('***** ITEM *****')
-            print(movie)
-            payload_movie = {
-                "PlatformCode":  self._platform_code, #Obligatorio      
-                "Id":            'None', #Obligatorio
-                "Title":         self.get_title(movie), #Obligatorio      
-                "CleanTitle":    self.get_title(movie), #Obligatorio      
-                "OriginalTitle": None,                          
-                "Type":          "movie",     #Obligatorio      
-                "Year":          None,     #Important!     
-                "Duration":      None,      
-                "ExternalIds":   None,      
-                "Deeplinks": {          
-                    "Web":       self.get_deeplink(item),       #Obligatorio          
-                    "Android":   None,          
-                    "iOS":       None,      
-                },      
-                "Synopsis":      self.get_syn(),      
-                "Image":         self.get_image(item),      
-                "Rating":        None,     #Important!      
-                "Provider":      None,      
-                "Genres":        None,    #Important!      
-                "Cast":          None,      
-                "Directors":     None,    #Important!      
-                "Availability":  None,     #Important!      
-                "Download":      None,      
-                "IsOriginal":    None,    #Important!      
-                "IsAdult":       None,    #Important!   
-                "IsBranded":     None,    #Important!   
-                "Packages":      [{"Type":"subscription-vod"}],    #Obligatorio      
-                "Country":       None,      
-                "Timestamp":     datetime.now().isoformat(), #Obligatorio      
-                "CreatedAt":     self._created_at #Obligatorio
-            }
-            payloads.append(payload_movie)
-        print(self.url_validator)
+                r = requests.get(self.url_validator[-1], 'html.parser')
+                self.s2 = BS(r.text, 'html.parser')
+                print('    LOADING.....................')
+                time.sleep(1)
+                if self.url_validator[-1] not in payloads:
+                    payload_movie = {
+                        "PlatformCode":  self._platform_code, #Obligatorio      
+                        "Id":            'None', #Obligatorio
+                        "Title":         self.get_title(item), #Obligatorio      
+                        "CleanTitle":    self.get_title(item), #Obligatorio      
+                        "OriginalTitle": None,                          
+                        "Type":          "movie",     #Obligatorio      
+                        "Year":          None,     #Important!     
+                        "Duration":      None,      
+                        "ExternalIds":   None,      
+                        "Deeplinks": {          
+                            "Web":       self.get_deeplink(item),     #Obligatorio          
+                            "Android":   None,          
+                            "iOS":       None,      
+                        },      
+                        "Synopsis":      self.get_syn(),      
+                        "Image":         self.get_image(item),      
+                        "Rating":        None,     #Important!      
+                        "Provider":      None,      
+                        "Genres":        None,    #Important!      
+                        "Cast":          None,      
+                        "Directors":     None,    #Important!      
+                        "Availability":  None,     #Important!      
+                        "Download":      None,      
+                        "IsOriginal":    None,    #Important!      
+                        "IsAdult":       None,    #Important!   
+                        "IsBranded":     None,    #Important!   
+                        "Packages":      [{"Type":"free-vod"}],    #Obligatorio      
+                        "Country":       None,      
+                        "Timestamp":     datetime.now().isoformat(), #Obligatorio      
+                        "CreatedAt":     self._created_at #Obligatorio
+                    } 
+                if payload_movie not in payloads:
+                    payloads.append(payload_movie)
+                    print('Len payloads: ')
+                    print(len(payloads))
+                else:
+                    # No entra a este else y no sé por qué
+                    print(len(payloads))
+                    print('----------------------------------')
+                    continue
         
         '''Datamanager._checkDBandAppend(self, payload_movie, list_db, payloads)
         Datamanager._insertIntoDB(self, payloads, self.titanScraping)'''
@@ -171,47 +178,54 @@ self.test = True if operation == "testing" else False
             for item in series:
                 self.get_deeplink(item)
                 self.validar_repetidos()
-        print(len(self.url_validator))
-        for serie in self.url_validator:
-            r = requests.get(serie, 'html.parser')
-            self.s2 = BS(r.text, 'html.parser')
-            print('    LOADING.....................')
-            time.sleep(1)
-            self.get_title(serie)
-            """payload_serie = {
-                "PlatformCode":  self._platform_code, #Obligatorio      
-                "Id":            None,            #Obligatorio
-                "Seasons":       None, #DEJAR EN NONE, se va a hacer al final cuando samuel diga
-                "Title":         None,         #Obligatorio      
-                "CleanTitle":    _replace(None), #Obligatorio      
-                "OriginalTitle": None,                          
-                "Type":          "serie",            #Obligatorio      
-                "Year":          None,               #Important!     
-                "Duration":      None,      
-                "ExternalIds":   None,      
-                "Deeplinks": {          
-                    "Web":       None,     #Obligatorio          
-                    "Android":   None,          
-                    "iOS":       None,      
-                },      
-                "Synopsis":      None,      
-                "Image":         None,      
-                "Rating":        None,               #Important!      
-                "Provider":      None,      
-                "Genres":        None,    #Important!      
-                "Cast":          None,      
-                "Directors":     None,               #Important!      
-                "Availability":  None,               #Important!      
-                "Download":      None,      
-                "IsOriginal":    None,               #Important!      
-                "IsAdult":       None,               #Important!   
-                "IsBranded":     None,               #Important!   
-                "Packages":      [{"Type":"Subscription-vod"}],            #Obligatorio      
-                "Country":       None,      
-                "Timestamp":     datetime.now().isoformat(), #Obligatorio      
-                "CreatedAt":     self._created_at   #Obligatorio
-            }"""
-        raise KeyError
+                r = requests.get(self.url_validator[-1], 'html.parser')
+                self.s3 = BS(r.text, 'html.parser')
+                print('    LOADING.....................')
+                print(self.s3)
+                time.sleep(1)
+                if self.url_validator[-1] not in payloads_series:
+                    payload_serie = {
+                        "PlatformCode":  self._platform_code, #Obligatorio      
+                        "Id":            None,            #Obligatorio
+                        "Seasons":       None, #DEJAR EN NONE, se va a hacer al final cuando samuel diga
+                        "Title":         self.get_title(item),         #Obligatorio      
+                        "CleanTitle":    self.get_title(item), #Obligatorio      
+                        "OriginalTitle": None,                          
+                        "Type":          "serie",            #Obligatorio      
+                        "Year":          None,               #Important!     
+                        "Duration":      None,      
+                        "ExternalIds":   None,      
+                        "Deeplinks": {          
+                            "Web":       None,     #Obligatorio          
+                            "Android":   None,          
+                            "iOS":       None,      
+                        },      
+                        "Synopsis":      self.get_syn(),      
+                        "Image":         self.get_image(item),      
+                        "Rating":        None,               #Important!      
+                        "Provider":      None,      
+                        "Genres":        None,    #Important!      
+                        "Cast":          None,      
+                        "Directors":     None,               #Important!      
+                        "Availability":  None,               #Important!      
+                        "Download":      None,      
+                        "IsOriginal":    None,               #Important!      
+                        "IsAdult":       None,               #Important!   
+                        "IsBranded":     None,               #Important!   
+                        "Packages":      [{"Type":"Subscription-vod"}],            #Obligatorio      
+                        "Country":       None,      
+                        "Timestamp":     datetime.now().isoformat(), #Obligatorio      
+                        "CreatedAt":     self._created_at   #Obligatorio
+                    }
+                if payload_serie.values() not in payloads_series:
+                    payloads_series.append(payload_serie)
+                    print('Len payloads: ')
+                    print(len(payloads_series))
+                else:
+                    print('NOOOOOOOOOOOOOOOOO')
+                    print(len(payloads_series))
+                    print('----------------------------------')
+                    continue
         """Datamanager._checkDBandAppend(self, payload_serie, list_db_series, payloads_series)
         self.copiapayloads = [{"Id":pay["Id"], "CleanTitle":pay["CleanTitle"].lower().strip()} for pay in payloads_series]
         Datamanager._insertIntoDB(self, payloads_series, self.titanScraping)"""
@@ -294,26 +308,22 @@ self.test = True if operation == "testing" else False
                 print('----------------------------------')
             else:
                 print('---------- Contenido repetido ----------')
-                print('----------------------------------') 
+                print('----------------------------------')
         else:
             print('---------- Contenido repetido ----------')
             print('----------------------------------')
 
 
-    def get_title(self, content):
+    def get_title(self, serie):
         try:
-            try:
-                self.title = self.s2.find('div', {"id": "main"}).find('div', {'class': 'holder'}).find('h2').find('span').get_text()
-            except:
-                pass
-            print(self.title)
+            self.title = self.s2.find('div', {"id": "main"}).find('div', {'class': 'holder'}).find('h2').find('span').get_text()
         except:
             try:
-                self.title = self.s2.find('div', {"id": "main"}).find('h1').get_text()
+                self.title = self.s3.find('div', {"id": "main"}).find('h1').get_text()
             except:
-                self.title = content.replace('https://www.shoutfactorytv.com/series/', '').replace('-', ' ').replace('series', '').title()
-            print(self.title)
+                self.title = serie.replace('https://www.shoutfactorytv.com/series/', '').replace('-', ' ').replace('series', '').title()
         return self.title
+
 
     def get_deeplink(self, item):
         self.deeplink = self._url + item.a.get('href')
@@ -322,16 +332,27 @@ self.test = True if operation == "testing" else False
 
 
     def get_syn(self):
-        syn = self.s2.find('div', {"id": "main"}).find('div', {'class': 'holder'}).find('p').get_text()
+        try:
+            syn = self.s2.find('div', {"id": "main"}).find('div', {'class': 'holder'}).find('p').get_text()
+        except:
+            try:
+                syn = self.s3.find('div', {"id": "main"}).find('div', {'class': 'visual add'}).find('div', {'id' : 'info-slide'}).find('p').get_text()
+            except:
+                syn = None
         return syn
 
     
     def get_image(self, item):
         try:
-            img = [item.img.get('src')]
+            try:
+                img = item.img.get('src')
+            except:
+                img = None
         except:
-            img = None
-        print(img)
+            try:
+                img = self.s1.img.get('src')
+            except:
+                img = None
         return img
 
 
