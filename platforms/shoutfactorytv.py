@@ -165,7 +165,7 @@ class Shoutfactorytv():
                 "IsOriginal":    None,    #Important!        
                 "IsAdult":       None,    #Important!   
                 "IsBranded":     None,    #Important!   (ver link explicativo)
-                "Packages":      [{'Type': 'tv-everywhere'}],    #Obligatorio      
+                "Packages":      [{'Type': 'free-vod'}],    #Obligatorio      
                 "Country":       None,
                 "Timestamp":     datetime.now().isoformat(), #Obligatorio
                 "CreatedAt":     self._created_at, #Obligatorio
@@ -203,7 +203,7 @@ class Shoutfactorytv():
             "IsOriginal":    None,    #Important!        
             "IsAdult":       None,    #Important!   
             "IsBranded":     None,    #Important!   (ver link explicativo)
-            "Packages":      [{'Type': 'tv-everywhere'}],    #Obligatorio      
+            "Packages":      [{'Type': 'free-vod'}],    #Obligatorio      
             "Country":       None,
             "Timestamp":     datetime.now().isoformat(), #Obligatorio
             "CreatedAt":     self._created_at, #Obligatorio
@@ -246,7 +246,7 @@ class Shoutfactorytv():
             "IsOriginal":    None,    #Important!        
             "IsAdult":       None,    #Important!   
             "IsBranded":     None,    #Important!   (ver link explicativo)
-            "Packages":      [{'Type': 'tv-everywhere'}],    #Obligatorio      
+            "Packages":      [{'Type': 'free-vod'}],    #Obligatorio      
             "Country":       None,
             "Timestamp":     datetime.now().isoformat(), #Obligatorio
             "CreatedAt":     self._created_at, #Obligatorio
@@ -287,7 +287,7 @@ class Shoutfactorytv():
                 "IsOriginal":    None,    #Important!      
                 "IsAdult":       None,    #Important!   
                 "IsBranded":     None,    #Important!   (ver link explicativo)
-                "Packages":      [{'Type': 'tv-everywhere'}],    #Obligatorio      
+                "Packages":      [{'Type': 'free-vod'}],    #Obligatorio      
                 "Country":       None,      
                 "Timestamp":     datetime.now().isoformat(), #Obligatorio      
                 "CreatedAt":     self._created_at, #Obligatorio 
