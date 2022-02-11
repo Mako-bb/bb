@@ -9,7 +9,8 @@ from handle.datamanager             import Datamanager
 from updates.upload                 import Upload
 from bs4                            import BeautifulSoup    as BS
 
-#Comando para correr el Script: python main.py Shoutfactorytv --c US --o testing
+#Comando para correr el Script: 
+#python main.py Shoutfactorytv --c US --o testing
 
 class Shoutfactorytv():
     """
@@ -25,6 +26,17 @@ class Shoutfactorytv():
     - ¿Instanacia otro archivo de la carpeta "platforms"?: No.
     - ¿Cuanto demoró la ultima vez? Tiempo: 1:54:32.778170 ~ Fecha: 25/01/2022
     - ¿Cuanto contenidos trajo la ultima vez? Peliculas: 1408 | Series: 118 | Episodios: 5376 ~ Fecha: 25/01/2022
+    
+    OTROS COMENTARIOS:
+    - Si bien el Script es sencillo, la plataforma tiene algunas inconsistencias para mostrar el contenido, exísten películas duplicadas,
+      películas que son episodios de alguna serie y quizás alguna serie que es una película en realidad.
+    - Para las películas se decidió insertarlas como las muestra la plataforma en sus categorias dandole prioridad a estas, aunque luego se repitan
+      en las categorias de series y episodios.
+    - Para las series se decidio no insertar aquellas que no tienen episodios, o bien que todos los episodios fueron insertados como películas.
+    - Para los episodios se respeta el formato de la plataforma, tanto el nombre, el número de episodio y número de temporada es seteado como lo muestra la plataforma.
+    
+    IMPORTANTE:
+    - El Script corrobora el estado de la requests que se hacen con 'requests.session()' y además el estado de la conexión.
     """
     #Constructor, instancia variables
     def __init__(self, ott_site_uid, ott_site_country, type):
@@ -44,8 +56,7 @@ class Shoutfactorytv():
         #URL necesaria para concatenar y armar el Deeplink del search (lupa)                      
         self.url_search             = "https://www.shoutfactorytv.com/videos?utf8=✓&commit=submit&q=1&q="                                                   
         self.testing                = False
-        self.sesion                 = requests.session()
-        self.headers                = {"Accept": "application/json", "Content-Type": "application/json; charset=utf-8"}
+        self.sessionRequests        = requests.session()
         #Lista necesaria para corroborar repetidos en el Scraping de peliculas, series y episodios
         self.list_titles            = []
 
@@ -78,9 +89,8 @@ class Shoutfactorytv():
         self.list_db_movies_shows = Datamanager._getListDB(self, self.titanScraping)
         self.list_db_episodes = Datamanager._getListDB(self, self.titanScrapingEpisodios)
         
-        response_url = self.verify_status_code(self.url)                                                               
-        if response_url.status_code == 200:                                                          
-            print("\x1b[1;32;40mCódigo de estado >>> \x1b[0m" + str(response_url.status_code))   
+        response_url = self.verify_connection(self.url)                                                               
+        if response_url:                                                            
             #Se encarga de extraer toda la data de las peliculas
             self.get_payload_movies(response_url)
             #Se encarga de extraer toda la data de las series, dentro llama a get_payload_episodes()
@@ -93,7 +103,7 @@ class Shoutfactorytv():
         print("\x1b[1;36;40m***  Fin del Scraping  *** \x1b[0m")
         print("\x1b[1;36;40m************************** \x1b[0m")    
 
-        self.sesion.close()
+        self.sessionRequests.close()
         
         #print(f"\033[33mComienza a subirse el Scraping a Misato <<< \033[0m")
         
@@ -117,10 +127,9 @@ class Shoutfactorytv():
                 deeplink = self.url + link                                                       
                 #Link de la pelicula para buscar en el search
                 deeplink_search_movie = self.url_search + link.split("/")[-1].replace("-series", "")
-                response_link = self.verify_status_code(deeplink_search_movie)                                
+                response_link = self.verify_connection(deeplink_search_movie)                                
                 
-                if response_link.status_code == 200:                                
-                    print("\x1b[1;32;40mCódigo de estado >>> \x1b[0m" + str(response_link.status_code))
+                if response_link:                                
                     #Se trae todo el contenido de la búsqueda con el link en el search 
                     #y se queda con los tags que contienen la data para cada pelicula
                     soup_link_search = BS(response_link.text, 'lxml')                        
@@ -174,10 +183,9 @@ class Shoutfactorytv():
         for genre in dict_links_for_genre_shows.keys():
             for link in dict_links_for_genre_shows.get(genre):                                         
                 deeplink = self.url + link                                                                                                                                                              
-                response_link = self.verify_status_code(deeplink)               
+                response_link = self.verify_connection(deeplink)               
     
-                if response_link.status_code == 200:
-                    print("\x1b[1;32;40mCódigo de estado >>> \x1b[0m" + str(response_link.status_code))
+                if response_link:
                     #Se trae todo el contenido de la búsqueda con el deeplink
                     #y se queda con los tags que contienen la data para cada serie
                     soup_link = BS(response_link.text, 'lxml')                                      
@@ -259,9 +267,9 @@ class Shoutfactorytv():
 
                         #Link del episodio para buscar en el search                    
                         deeplink_search_episode = self.url_search + content_episode['href'].split("/")[-1].replace("-series", "")                
-                        response_link = self.verify_status_code(deeplink_search_episode)                            
+                        response_link = self.verify_connection(deeplink_search_episode)                            
                         
-                        if response_link.status_code == 200:                                                 
+                        if response_link:                                                 
                             #Se trae todo el contenido de la búsqueda con el link en el search 
                             #y se queda con los tags que contienen la data para cada episodio,
                             #esto lo hace siempre seteado en page='1'
@@ -350,18 +358,30 @@ class Shoutfactorytv():
                 break
         return list_seasons
 
+    #Comprueba la conexión de la respuesta a la petición HTTP 
+    def verify_connection(self, link):
+        while True:
+            try:
+                response_link = self.verify_status_code(link)
+                return response_link
+            except requests.exceptions.ConnectionError as C:
+                print(C)
+                time.sleep(15)
+
     #Comprobación del estado de la respuesta a la petición HTTP (intenta 10 veces)
     def verify_status_code(self, link):        
-        response_link = requests.get(link)
+        response_link = self.sessionRequests.get(link)
         
         if response_link.status_code == 200:
+            print("\x1b[1;32;40mCódigo de estado >>> \x1b[0m" + str(response_link.status_code))
             return response_link
         else:            
             count = 0
             while count != 10 and response_link.status_code != 200:                                        
-                response_link = requests.get(link)
+                response_link = self.sessionRequests.get(link)
                 count += 1
                 print("\x1b[1;32;40mIntentando ingresar al sitio, código de estado >>> \x1b[0m" + str(response_link.status_code))
+            print("\x1b[1;32;40mCódigo de estado >>> \x1b[0m" + str(response_link.status_code))
             return response_link
 
     #Extrae los links de todas las categorias de peliculas y series
@@ -382,7 +402,7 @@ class Shoutfactorytv():
         
         for link_categorie in links:
             print("\x1b[1;35;40mCategoria >>> \x1b[0m" + link_categorie)                                                 
-            response_categorie = self.verify_status_code(link_categorie)
+            response_categorie = self.verify_connection(link_categorie)
             
             if response_categorie.status_code == 200:
                 print("\x1b[1;32;40mCódigo de estado >>> \x1b[0m" + str(response_categorie.status_code))
