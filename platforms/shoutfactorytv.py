@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from pydoc import synopsis
 import time
+from tkinter import W
 from webbrowser import get
 from pymongo import response
 import requests
@@ -193,7 +194,10 @@ class Shoutfactorytv():
     def get_synopsis(self, deeplink):
         page_content = requests.get(deeplink)
         soup = BS(page_content.content, 'html.parser')
-        return soup.find('p').getText()
+        try:
+            return soup.find('p').getText()
+        except:
+            return None
 
     def get_content_soup(self, page):
         soup = BS(page.content, 'html.parser')
