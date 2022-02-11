@@ -24,8 +24,8 @@ class Shoutfactorytv():
     - ¿Usa BS4?: Si.
     - ¿Se relaciona con scripts TP? No.
     - ¿Instanacia otro archivo de la carpeta "platforms"?: No.
-    - ¿Cuanto demoró la ultima vez? Tiempo: 1:54:32.778170 ~ Fecha: 25/01/2022
-    - ¿Cuanto contenidos trajo la ultima vez? Peliculas: 1408 | Series: 118 | Episodios: 5376 ~ Fecha: 25/01/2022
+    - ¿Cuanto demoró la ultima vez? Tiempo: 1:22:59.797433 ~ Fecha: 11/02/2022
+    - ¿Cuanto contenidos trajo la ultima vez? Peliculas: 1426 | Series: 118 | Episodios: 5376 ~ Fecha: 11/02/2022
     
     OTROS COMENTARIOS:
     - Si bien el Script es sencillo, la plataforma tiene algunas inconsistencias para mostrar el contenido, exísten películas duplicadas,
