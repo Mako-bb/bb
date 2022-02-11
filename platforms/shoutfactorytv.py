@@ -429,13 +429,13 @@ class Shoutfactorytv():
     def clear_image(self, content):
         image = []
         
-        if type(content.img['src']) == list:
-            for link in content.img['src']:
-                image.append(link)
-        else:
-            try:                     
+        try: 
+            if type(content.img['src']) == list:
+                for link in content.img['src']:
+                    image.append(link)
+            else:                    
                 image.append(content.img['src'])                                                    
-            except:                   
+        except:                   
                 image = None
         return image
 
