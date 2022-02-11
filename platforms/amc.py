@@ -148,7 +148,7 @@ class Amc():
                     break
 
         for serie in serie_data['children']:
-            self.matchid.append({'title':self.get_title(serie),'id':self.get_id(serie)})
+            self.matchid.append({'title': self.get_title(serie),'id': self.get_id(serie)})
             self.get_title(serie)
             payload_show = {
                 "PlatformCode":  self._platform_code,

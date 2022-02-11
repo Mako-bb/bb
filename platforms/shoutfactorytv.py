@@ -1,5 +1,6 @@
 from gettext import find
 from os import link
+from socket import TIPC_LOW_IMPORTANCE
 from turtle import title
 from urllib import response
 from wsgiref.simple_server import demo_app
@@ -50,23 +51,23 @@ class Shoutfactorytv():
         content = response.text #Lo transforma en texto 
         soup = BeautifulSoup(content, 'lxml') #Transformar un doc. HTML o XML en un árbol complejo de objetos Python
         section = soup.find_all("div", {"class", "drop-holder"}) #Por categorias
-        movies_categories = section[0]
+        #movies_categories = section[0]
         #series_categories = section[1]
 
-        self.get_movies(movies_categories)
+        #self.get_movies(movies_categories)
         #self.get_series(series_categories)
 
-        #Datamanager._insertIntoDB(self, self.payloads, self.titanScraping) aca termina de agregar los datos y los sube
+        self.get_content_episodes()
 
     # Scripts para traer todas las peliculas
-    def get_movies(self, movies_categories): #Contiene el tag con la info de las categorias
+    '''def get_movies(self, movies_categories): #Contiene el tag con la info de las categorias
         categ = movies_categories.find_all("a") #Le pido que encuentre el tag 'a' 
         for item in categ: #Itero cada tag 'a' de cada pelicula
             url_categ = self.url + item['href'] #Hago que en cada item encuentre el tag 'href'
             print(url_categ)
             content = requests.get(url_categ) #Le hago una solicitud a la pag.
             self.get_content_movies(content)
-            print('---------------------URL MOVIES--------------------')
+            print('---------------------URL MOVIES--------------------')'''
 
     #Traemos la informacion de las series
     def get_series(self, series_categories):
@@ -74,10 +75,9 @@ class Shoutfactorytv():
         for i in categ_serie:
             url_categ_serie = self.url + i['href'] #Links de las categorias
             print(url_categ_serie)
-            contenido = requests.get(url_categ_serie)   
-            print(contenido)      
+            contenido = requests.get(url_categ_serie)       
             self.get_content_series(contenido)
-
+            #self.get_content_episodes(contenido)
             print('------------URL SERIES-----------')
     
     #Esta funcion busca la clase img_holder en donde se encuentra el title, deeplink y src.
@@ -90,9 +90,9 @@ class Shoutfactorytv():
         content_movies = self.get_data(content)
         list_id_movies = []
         for movie in content_movies:
-            title = self.get_title(movie)
             deeplink = self.get_deeplink(movie)
-            src = self.get_src(movie) 
+            title = self.get_title_and_imagen(deeplink)['title']
+            src = self.get_title_and_imagen(deeplink)['imagen'] 
             duration = self.get_duration_and_synopsis(deeplink)['duration']
             synopsis = self.get_duration_and_synopsis(deeplink)['synopsis']
 
@@ -102,9 +102,20 @@ class Shoutfactorytv():
                 list_id_movies.append(id)
                 self.get_payload_movies(title, id, deeplink, src, synopsis, duration)
 
+    def get_title_and_imagen(self, deeplink):
+        url_contenido = 'https://www.shoutfactorytv.com/videos?utf8=✓&commit=submit&q=1&q={deeplink}'.format(deeplink = deeplink.split("/")[-1])   
+        data = requests.get(url_contenido)
+        soup = BeautifulSoup(data.text, 'lxml')
+        img_holder = soup.find_all('div', {'class', 'img-holder'})
+        for movie in img_holder:
+            title = self.get_title(movie)
+            imagen = self.get_src(movie)
+            return {"title": title, "imagen": imagen}
+            
     def get_content_series(self, content):
         content_series = self.get_data(content)
         list_id_series = []
+        self.list_series = []
         for serie in content_series:
             title = self.get_title(serie)
             deeplink = self.get_deeplink(serie)
@@ -112,26 +123,45 @@ class Shoutfactorytv():
             synopsis = self.get_synopsis_serie(serie)
             id = self.generate_id(title, deeplink)
 
+            self.list_series.append({'title': self.get_title(serie),'id': self.generate_id(deeplink, serie)})
+            print(self.list_series)
+
             if id not in list_id_series:
                 list_id_series.append(id)
                 self.get_payload_series(title, id, deeplink, src, synopsis) 
 
-    def get_content_episodes(self, content):
-        pass
+    def get_content_episodes(self, deeplink):
+        url_content = deeplink
+        data = requests.get(url_content)
+        soup = BeautifulSoup(data.text, 'lxml')
+        link_episodes = soup.find_all('div', {'class', 'img-holder'})
+        for items in link_episodes:
+            title = self.get_title(items)
+            imagen = self.get_src(items)
+            deeplink = self.get_deeplink_episodes(deeplink)
+            number_season = self.get_season_and_number(deeplink)['season']
+            number_episode = self.get_season_and_number(deeplink)['episode']
+            duration = self.get_duration_and_synopsis(deeplink)['duration']
+            synopsis = self.get_duration_and_synopsis(deeplink)['synopsis']
+            parentId = self.get_parent_id(title) 
+            parentTitle = self.get_parent_title(title) #o serie 
 
-    def generate_id(self, title, deeplink):
-        id_hash = str(title) + str(deeplink)    
-        id_hash = hashlib.md5(id_hash.encode('utf-8')).hexdigest()
-        return id_hash
+            print(title)
+            print(imagen)
+            print(deeplink)
+            print(number_season)
+            print(number_episode)
+            print(duration)
+            print(synopsis)
+            print(parentId)
+            print(parentTitle)
 
     #Se busca el title de cada movie y serie
     def get_title(self, data):
         if data.img != None:
             title = data.img.get('title')
-        #elif data.img != None: 
-        #    title = data.a.get('href').split('/')[1].replace('-', ' ').capitalize
-        else: 
-            title = None
+        else:
+            title = data.a.get('href').split('/')[1].replace('-', ' ').capitalize
         return title
 
     #Se busca el link de cada movie y serie
@@ -151,6 +181,11 @@ class Shoutfactorytv():
             src = None
         return src  
     
+    def generate_id(self, title, deeplink):
+        id_hash = str(title) + str(deeplink)    
+        id_hash = hashlib.md5(id_hash.encode('utf-8')).hexdigest()
+        return id_hash
+
     #Se busca synopsis de series
     def get_synopsis_serie(self, content):
         series = self.get_data(content)
@@ -161,23 +196,51 @@ class Shoutfactorytv():
             s2 = soup.find_all('div', attrs={'id': 'info-slide-content'})
             for data in s2:
                 synopsis = data.p.text
-                print(synopsis)
+                return synopsis
 
     #Se encuenta la duracion y la sinopsis de movies
     def get_duration_and_synopsis(self, deeplink):
-        url_content = 'https://www.shoutfactorytv.com/videos?utf8=✓&commit=submit&q=1&q={deeplink}'.format(deeplink = deeplink.split("/")[-1] )   
+        url_content = 'https://www.shoutfactorytv.com/videos?utf8=✓&commit=submit&q=1&q={deeplink}'.format(deeplink = deeplink.split("/")[-1])   
         data = requests.get(url_content)
         soup = BeautifulSoup(data.text, 'lxml')
         article = soup.find_all('article', {'class': 'post'})
         for item in article:
-            try:
-                duration = int(item.time.text.split(" ")[1].split(":")[0])
-            except:
-                duration = None
-            #duration = int(item.time.text.split(" ")[1].split(":")[0])
+            duration = int(item.time.text.split(" ")[1].split(":")[0])
             synopsis = item.find('p').text.strip()
             return {"duration": duration, "synopsis": synopsis}
+
+    def get_deeplink_episodes(self, deeplink):
+        url_contenido = deeplink
+        data_url = requests.get(url_contenido)
+        soup = BeautifulSoup(data_url.text, 'lxml')
+        link_episodes = soup.find_all('ul', {'class', 'thumbnails'})
+        for items in link_episodes:
+            deep_link = items.find_all('li')
+            for i in deep_link:
+                deeplink = i.a
+                deeplink = self.url + deeplink['href']
+
+    def get_season_and_number(self, deeplink):
+        url_content = deeplink
+        data = requests.get(url_content)
+        soup = BeautifulSoup(data.text, 'lxml')
+        link_episodes = soup.find_all('div', {'class', 'caption'})
+        for item in link_episodes:
+            span_content = item.find_all('span')[1]
+            for i in span_content:
+                season =  int(i.split(",")[0].split(":")[1].strip())
+                episode = int(i.split(",")[1].split(":")[1].strip())
+                return {"season": season, "episode": episode} 
+
+    def get_parent_id(self, title):
+        for i in self.list_series:
+            if title == i['title']:
+                parentId = i['id']
+                return parentId 
             
+    def get_parent_title(self, title):
+        title = self.get_title(title)
+        return title 
 
     def get_payload_movies(self, title, id, deeplink, src, synopsis, duration):
         payload_movies= {
@@ -221,7 +284,7 @@ class Shoutfactorytv():
                         "Id":            id,            #Obligatorio
                         "Seasons":       None, #DEJAR EN NONE, se va a hacer al final cuando samuel diga
                         "Title":         title,         #Obligatorio      
-                        "CleanTitle":    _replace(None), #Obligatorio      
+                        "CleanTitle":    _replace(title), #Obligatorio      
                         "OriginalTitle": None,                          
                         "Type":          "serie",            #Obligatorio      
                         "Year":          None,               #Important!     
