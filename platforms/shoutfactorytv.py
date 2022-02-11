@@ -36,8 +36,9 @@ class Shoutfactorytv():
     - Para los episodios se respeta el formato de la plataforma, tanto el nombre, el número de episodio y número de temporada es seteado como lo muestra la plataforma.
     
     IMPORTANTE:
-    - El Script corrobora el estado de la requests que se hacen con 'requests.session()' y además el estado de la conexión.
+    - El Script corrobora el estado de las requests que se hacen con 'requests.session()' y además el estado de la conexión.
     """
+    
     #Constructor, instancia variables
     def __init__(self, ott_site_uid, ott_site_country, type):
         self._config                = config()['ott_sites'][ott_site_uid]
@@ -404,8 +405,7 @@ class Shoutfactorytv():
             print("\x1b[1;35;40mCategoria >>> \x1b[0m" + link_categorie)                                                 
             response_categorie = self.verify_connection(link_categorie)
             
-            if response_categorie.status_code == 200:
-                print("\x1b[1;32;40mCódigo de estado >>> \x1b[0m" + str(response_categorie.status_code))
+            if response_categorie:
                 genre = link_categorie.split("/")[-1].replace("-", " ").title()                           
                 soup_link_categorie = BS(response_categorie.text, 'lxml')                                          
                 content_categorie = soup_link_categorie.find_all("div", class_='img-holder')                
