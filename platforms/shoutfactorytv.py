@@ -1,6 +1,5 @@
 from gettext import find
 from os import link
-from socket import TIPC_LOW_IMPORTANCE
 from turtle import title
 from urllib import response
 from wsgiref.simple_server import demo_app
@@ -52,12 +51,11 @@ class Shoutfactorytv():
         soup = BeautifulSoup(content, 'lxml') #Transformar un doc. HTML o XML en un árbol complejo de objetos Python
         section = soup.find_all("div", {"class", "drop-holder"}) #Por categorias
         #movies_categories = section[0]
-        #series_categories = section[1]
+        series_categories = section[1]
 
         #self.get_movies(movies_categories)
-        #self.get_series(series_categories)
+        self.get_series(series_categories)
 
-        self.get_content_episodes()
 
     # Scripts para traer todas las peliculas
     '''def get_movies(self, movies_categories): #Contiene el tag con la info de las categorias
@@ -124,14 +122,14 @@ class Shoutfactorytv():
             id = self.generate_id(title, deeplink)
 
             episodios = self.get_content_episodes(deeplink)
-
+            print(episodios)
 
             self.list_series.append({'title': self.get_title(serie),'id': self.generate_id(deeplink, serie)})
-            print(self.list_series)
 
             if id not in list_id_series:
                 list_id_series.append(id)
                 self.get_payload_series(title, id, deeplink, src, synopsis) 
+
 
     def get_content_episodes(self, deeplink):
         url_content = deeplink
@@ -141,23 +139,24 @@ class Shoutfactorytv():
         for items in link_episodes:
             title = self.get_title(items)
             imagen = self.get_src(items)
-            deeplink = self.get_deeplink_episodes(deeplink)
-            number_season = self.get_season_and_number(deeplink)['season']
-            number_episode = self.get_season_and_number(deeplink)['episode']
+            #deeplink = self.get_deeplink_episodes(items)
+            season_number = self.get_season_and_number(deeplink)['season']
+            episode_number = self.get_season_and_number(deeplink)['episode']
             duration = self.get_duration_and_synopsis(deeplink)['duration']
             synopsis = self.get_duration_and_synopsis(deeplink)['synopsis']
             parentId = self.get_parent_id(title) 
-            parentTitle = self.get_parent_title(title) #o serie 
+            #parentTitle = self.get_parent_title(title) #o serie 
 
             print(title)
             print(imagen)
-            print(deeplink)
-            print(number_season)
-            print(number_episode)
+            print(season_number)
+            print(episode_number)
             print(duration)
             print(synopsis)
             print(parentId)
-            print(parentTitle)
+            #print(parentTitle)
+
+        self.get_payload_episodes(title, imagen, season_number, episode_number, duration, synopsis, parentId)
 
     #Se busca el title de cada movie y serie
     def get_title(self, data):
@@ -241,9 +240,9 @@ class Shoutfactorytv():
                 parentId = i['id']
                 return parentId 
             
-    def get_parent_title(self, title):
+    ''' def get_parent_title(self, title):
         title = self.get_title(title)
-        return title 
+        return title '''
 
     def get_payload_movies(self, title, id, deeplink, src, synopsis, duration):
         payload_movies= {
@@ -318,26 +317,26 @@ class Shoutfactorytv():
         Datamanager._checkDBandAppend(self, payload_series, self.list_db_series_movies, self.payloads)
         Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)
 
-    def get_payload_episodes(self, payload_episodes):
+    def get_payload_episodes(self, title, imagen, season_number, episode_number, duration, synopsis, parentId):
         payload_episodes = {
                                 "PlatformCode":  self._platform_code, #Obligatorio      
                                 "Id":            None, #Obligatorio
-                                "ParentId":      None, #Obligatorio #Unicamente en Episodios
+                                "ParentId":      parentId, #Obligatorio #Unicamente en Episodios
                                 "ParentTitle":   None, #Unicamente en Episodios 
-                                "Episode":       None, #Obligatorio #Unicamente en Episodios  
-                                "Season":        None, #Obligatorio #Unicamente en Episodios
-                                "Title":         None, #Obligatorio           
+                                "Episode":       episode_number, #Obligatorio #Unicamente en Episodios  
+                                "Season":        season_number, #Obligatorio #Unicamente en Episodios
+                                "Title":         title, #Obligatorio           
                                 "OriginalTitle": None,                                
                                 "Year":          None,     #Important!     
-                                "Duration":      None,      
+                                "Duration":      duration,      
                                 "ExternalIds":   None,      
                                 "Deeplinks": {          
                                     "Web":       None,       #Obligatorio          
                                     "Android":   None,          
                                     "iOS":       None,      
                                 },      
-                                "Synopsis":      None,      
-                                "Image":         None,      
+                                "Synopsis":      synopsis,      
+                                "Image":         imagen,      
                                 "Rating":        None,     #Important!      
                                 "Provider":      None,      
                                 "Genres":        None,    #Important!      
@@ -353,6 +352,6 @@ class Shoutfactorytv():
                                 "Timestamp":     datetime.now().isoformat(), #Obligatorio      
                                 "CreatedAt":     self._created_at, #Obligatorio
         }
-        Datamanager._checkDBandAppend(self, payload_episodes, self.payloads_db, self.payloads, isEpi=True)
+        Datamanager._checkDBandAppend(self, payload_episodes, self.list_db_episodes, self.payloads, isEpi=True)
         Datamanager._insertIntoDB(self, self.payloads_episodes, self.titanScrapingEpisodios)
         
