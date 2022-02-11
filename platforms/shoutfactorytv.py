@@ -123,6 +123,9 @@ class Shoutfactorytv():
             synopsis = self.get_synopsis_serie(serie)
             id = self.generate_id(title, deeplink)
 
+            episodios = self.get_content_episodes(deeplink)
+
+
             self.list_series.append({'title': self.get_title(serie),'id': self.generate_id(deeplink, serie)})
             print(self.list_series)
 
