@@ -56,7 +56,6 @@ class Shoutfactorytv():
         #self.get_movies(movies_categories)
         self.get_series(series_categories)
 
-
     # Scripts para traer todas las peliculas
     '''def get_movies(self, movies_categories): #Contiene el tag con la info de las categorias
         categ = movies_categories.find_all("a") #Le pido que encuentre el tag 'a' 
@@ -113,7 +112,6 @@ class Shoutfactorytv():
     def get_content_series(self, content):
         content_series = self.get_data(content)
         list_id_series = []
-        self.list_series = []
         for serie in content_series:
             title = self.get_title(serie)
             deeplink = self.get_deeplink(serie)
@@ -121,42 +119,33 @@ class Shoutfactorytv():
             synopsis = self.get_synopsis_serie(serie)
             id = self.generate_id(title, deeplink)
 
-            episodios = self.get_content_episodes(deeplink)
-            print(episodios)
-
-            self.list_series.append({'title': self.get_title(serie),'id': self.generate_id(deeplink, serie)})
+            self.get_content_episodes(deeplink, title, id)
 
             if id not in list_id_series:
                 list_id_series.append(id)
                 self.get_payload_series(title, id, deeplink, src, synopsis) 
 
 
-    def get_content_episodes(self, deeplink):
-        url_content = deeplink
-        data = requests.get(url_content)
-        soup = BeautifulSoup(data.text, 'lxml')
-        link_episodes = soup.find_all('div', {'class', 'img-holder'})
-        for items in link_episodes:
-            title = self.get_title(items)
-            imagen = self.get_src(items)
-            #deeplink = self.get_deeplink_episodes(items)
-            season_number = self.get_season_and_number(deeplink)['season']
-            episode_number = self.get_season_and_number(deeplink)['episode']
-            duration = self.get_duration_and_synopsis(deeplink)['duration']
-            synopsis = self.get_duration_and_synopsis(deeplink)['synopsis']
-            parentId = self.get_parent_id(title) 
-            #parentTitle = self.get_parent_title(title) #o serie 
+    def get_content_episodes(self, deeplink, parent_title, parent_id):
+        url_contenido = deeplink
+        data_url = requests.get(url_contenido)
+        soup = BeautifulSoup(data_url.text, 'lxml')
+        list_episodes = soup.find_all('ul', {'class', 'thumbnails'})
+        for list_epis in list_episodes:
+            li = list_epis.find_all('li')
+            for episodes in li:
+                deeplink = episodes.a
+                deeplink = self.url + deeplink['href']
+                title = self.get_title(episodes)
+                imagen = self.get_src(episodes)
+                duration = self.get_duration_and_synopsis(deeplink)['duration']
+                synopsis = self.get_duration_and_synopsis(deeplink)['synopsis']
+                span_content = episodes.find_all('span')[1]
+                for i in span_content:
+                    season_number =  int(i.split(",")[0].split(":")[1].strip())
+                    episode_number = int(i.split(",")[1].split(":")[1].strip())
 
-            print(title)
-            print(imagen)
-            print(season_number)
-            print(episode_number)
-            print(duration)
-            print(synopsis)
-            print(parentId)
-            #print(parentTitle)
-
-        self.get_payload_episodes(title, imagen, season_number, episode_number, duration, synopsis, parentId)
+        self.get_payload_episodes(title, imagen, season_number, episode_number, duration, synopsis, parent_id, parent_title)
 
     #Se busca el title de cada movie y serie
     def get_title(self, data):
@@ -211,7 +200,7 @@ class Shoutfactorytv():
             synopsis = item.find('p').text.strip()
             return {"duration": duration, "synopsis": synopsis}
 
-    def get_deeplink_episodes(self, deeplink):
+    '''def get_deeplink_episodes(self, deeplink):
         url_contenido = deeplink
         data_url = requests.get(url_contenido)
         soup = BeautifulSoup(data_url.text, 'lxml')
@@ -221,8 +210,9 @@ class Shoutfactorytv():
             for i in deep_link:
                 deeplink = i.a
                 deeplink = self.url + deeplink['href']
+        return deeplink'''
 
-    def get_season_and_number(self, deeplink):
+    '''def get_season_and_number(self, deeplink):
         url_content = deeplink
         data = requests.get(url_content)
         soup = BeautifulSoup(data.text, 'lxml')
@@ -232,17 +222,9 @@ class Shoutfactorytv():
             for i in span_content:
                 season =  int(i.split(",")[0].split(":")[1].strip())
                 episode = int(i.split(",")[1].split(":")[1].strip())
-                return {"season": season, "episode": episode} 
-
-    def get_parent_id(self, title):
-        for i in self.list_series:
-            if title == i['title']:
-                parentId = i['id']
-                return parentId 
-            
-    ''' def get_parent_title(self, title):
-        title = self.get_title(title)
-        return title '''
+                print(season)
+                print(episode)
+                return {"season": season, "episode": episode} '''
 
     def get_payload_movies(self, title, id, deeplink, src, synopsis, duration):
         payload_movies= {
@@ -317,12 +299,12 @@ class Shoutfactorytv():
         Datamanager._checkDBandAppend(self, payload_series, self.list_db_series_movies, self.payloads)
         Datamanager._insertIntoDB(self, self.payloads, self.titanScraping)
 
-    def get_payload_episodes(self, title, imagen, season_number, episode_number, duration, synopsis, parentId):
+    def get_payload_episodes(self, title, imagen, season_number, episode_number, duration, synopsis, parent_id, parent_title):
         payload_episodes = {
                                 "PlatformCode":  self._platform_code, #Obligatorio      
-                                "Id":            None, #Obligatorio
-                                "ParentId":      parentId, #Obligatorio #Unicamente en Episodios
-                                "ParentTitle":   None, #Unicamente en Episodios 
+                                "Id":            parent_id, #Obligatorio
+                                "ParentId":      parent_id, #Obligatorio #Unicamente en Episodios
+                                "ParentTitle":   parent_title, #Unicamente en Episodios 
                                 "Episode":       episode_number, #Obligatorio #Unicamente en Episodios  
                                 "Season":        season_number, #Obligatorio #Unicamente en Episodios
                                 "Title":         title, #Obligatorio           
