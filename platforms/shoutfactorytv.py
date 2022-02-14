@@ -9,8 +9,7 @@ from handle.datamanager             import Datamanager
 from updates.upload                 import Upload
 from bs4                            import BeautifulSoup    as BS
 
-#Comando para correr el Script: 
-#python main.py Shoutfactorytv --c US --o testing
+#Comando para correr el Script: python main.py Shoutfactorytv --c US --o testing
 
 class Shoutfactorytv():
     """
@@ -99,17 +98,15 @@ class Shoutfactorytv():
             self.get_payload_shows(response_url)                                                              
         else:
             print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_url.status_code))
+
+        self.sessionRequests.close()
                  
         print("\x1b[1;36;40m************************** \x1b[0m")
         print("\x1b[1;36;40m***  Fin del Scraping  *** \x1b[0m")
         print("\x1b[1;36;40m************************** \x1b[0m")    
-
-        self.sessionRequests.close()
-        
-        #print(f"\033[33mComienza a subirse el Scraping a Misato <<< \033[0m")
         
         #Sube a Misato el contenido Scrapeado que se encuentra en la DB Local
-        #Upload(self._platform_code, self._created_at, testing=self.testing)
+        Upload(self._platform_code, self._created_at, testing=self.testing)
 
     #Se encarga de extraer información de peliculas
     def get_payload_movies(self, response):   
@@ -151,18 +148,20 @@ class Shoutfactorytv():
                             image =  self.clear_image(content)                                  
                             duration = self.clear_duration_movies_episodes(content)                               
                             description = self.clear_description_movies_episodes(content)         
-                            id_hash = self.generate_id_hash(title, deeplink)                                          
-                            
+                            id_hash = self.generate_id_hash(title, deeplink)
+                            isoriginal = self.clear_isoriginal_movies_shows(genre)
+
                             print(f"\033[33mPelicula encontrada >>> \033[0m" + title)
 
                             self.payload_movies(id_hash, deeplink, 
                                                 title, image, 
                                                 duration, description,
-                                                genre)                                                                                                                                                                         
+                                                genre, isoriginal)                                                                                                                                                                         
                         else:
                             print("\x1b[1;31;40m¡Pelicula no encontrada! >>> \x1b[0m" + deeplink)
                     else:
-                        print("\x1b[1;31;40m¡Pelicula repetida! >>> \x1b[0m" + deeplink)            
+                        print("\x1b[1;31;40m¡Pelicula repetida! >>> \x1b[0m" + deeplink)
+                        self.insert_genres_movies_shows(genre, title, 0)
                 else:
                     print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_link.status_code))
 
@@ -204,13 +203,14 @@ class Shoutfactorytv():
                         image = self.clear_image(content)                             
                         content_description = soup_link.find("div", id='info-slide-content')
                         description = self.clear_description_shows(content_description)
-                        id_hash = self.generate_id_hash(title, deeplink)          
+                        id_hash = self.generate_id_hash(title, deeplink)
+                        isoriginal = self.clear_isoriginal_movies_shows(genre)          
 
                         print(f"\033[33mSerie encontrada >>> \033[0m" + title)
 
                         seasons = self.get_payload_episodes(soup_link, id_hash, 
                                                             title, deeplink,
-                                                            genre)
+                                                            genre, isoriginal)
 
                         #Corrobora que la serie tenga al menos una temporada con uno o más episodios,
                         #de lo contrario no la inserta
@@ -219,22 +219,23 @@ class Shoutfactorytv():
                             self.payload_shows(id_hash, deeplink,   
                                                 title, image,          
                                                 description, seasons,
-                                                genre)
-
-                            #Se encarga de insertar en la DB Local el payload de series 
-                            Datamanager._insertIntoDB(self, self.payloads_shows, self.titanScraping)
-
-                            #Se encarga de insertar en la DB Local el payload de episodios 
-                            Datamanager._insertIntoDB(self, self.payloads_episodes, self.titanScrapingEpisodios)
+                                                genre, isoriginal)
                         else:
                             print("\x1b[1;31;40m¡Serie no contiene episodios, es posible que se haya insertado como pelicula! >>> \x1b[0m" + deeplink)                                     
                     else:
-                        print("\x1b[1;31;40m¡Serie fue insertada como pelicula, o bien es una serie repetida! >>> \x1b[0m" + deeplink)                                                                                                                                                                   
+                        print("\x1b[1;31;40m¡Serie fue insertada como pelicula, o bien es una serie repetida! >>> \x1b[0m" + deeplink)
+                        self.insert_genres_movies_shows(genre, title, 1)                                                                                                                                                                   
                 else:
-                    print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_link.status_code))   
+                    print("\x1b[1;31;40mCódigo de estado >>> \x1b[0m" + str(response_link.status_code))
+
+        #Se encarga de insertar en la DB Local el payload de series 
+        Datamanager._insertIntoDB(self, self.payloads_shows, self.titanScraping)
+
+        #Se encarga de insertar en la DB Local el payload de episodios 
+        Datamanager._insertIntoDB(self, self.payloads_episodes, self.titanScrapingEpisodios)  
                                  
     #Se encarga de extraer información de episodios 
-    def get_payload_episodes(self, soup_show, parent_id, parent_title, parent_deeplink, parent_genre):        
+    def get_payload_episodes(self, soup_show, parent_id, parent_title, parent_deeplink, parent_genre, parent_isoriginal):        
         print(f"\033[33mComienza Scraping de episodios <<< \033[0m")
 
         #Se inicializan variables que son necesarias para controlar que se inserten
@@ -302,7 +303,8 @@ class Shoutfactorytv():
                             self.payload_episodes(id_hash, deeplink, title, 
                                                 image, duration, description, 
                                                 season, episode, parent_id, 
-                                                parent_title, parent_genre)
+                                                parent_title, parent_genre,
+                                                parent_isoriginal)
 
                             #Ataja inconsistencias de la plataforma a la hora de mostrar las temporadas y sus episodios
                             if season != count_season:                                                 
@@ -340,7 +342,7 @@ class Shoutfactorytv():
                                 "Directors":  None,                                                         #Importante
                                 "Cast":       None,                                                         #Importante
                                 "Episodes":   number_episodes,                                              #Importante
-                                "IsOriginal": None,   
+                                "IsOriginal": parent_isoriginal,   
                                 })
                
                 count_episodes_for_season = 0
@@ -446,6 +448,29 @@ class Shoutfactorytv():
         except:                       
             title = str(link.split("/")[2].replace("-", " ")).title()
         return title
+        
+    #Filtra y limpia si es original las peliculas y series
+    def clear_isoriginal_movies_shows(self, genre):
+        if genre == 'Shout! Originals' or genre == 'Shout! Studios' or genre == 'Shout! Originals Series':
+            return True
+        return False
+
+    #Inserta a la lista otros generos de las peliculas y series (además actualiza la lista de generos de episodios)
+    def insert_genres_movies_shows(self, genre, title, position):
+        if position == 0:
+            for movie in self.payloads_movies:
+                if movie.get('Title') == title:
+                    if genre not in movie.get('Genres'):
+                        movie.get('Genres').append(genre)
+        elif position == 1:
+            for show in self.payloads_shows:
+                if show.get('Title') == title:
+                    if genre not in show.get('Genres'):
+                        show.get('Genres').append(genre)
+            for episode in self.payloads_episodes:
+                if episode.get('ParentTitle') == title:
+                    if genre not in episode.get('Genres'):
+                        episode.get('Genres').append(genre)
 
     #Filtra y limpia la descripción de las peliculas y episodios
     def clear_description_movies_episodes(self, content):
@@ -472,7 +497,7 @@ class Shoutfactorytv():
                 description = content.p.text.replace("\r\n", "").strip()  
         except:
             description = None
-        return description  
+        return description
 
     #Filtra y limpia el titulo de los episodios
     def clear_title_episodes(self, content):        
@@ -498,7 +523,7 @@ class Shoutfactorytv():
         return title.strip()
 
     #Se encarga de llenar el payload de peliculas
-    def payload_movies(self, id_hash, deeplink, title, image, duration, description, genre):
+    def payload_movies(self, id_hash, deeplink, title, image, duration, description, genre, isoriginal):
         payload_movie = {
             "PlatformCode":  self._platform_code,                                                           #Obligatorio
             "Id":            id_hash,                                                                       #Obligatorio
@@ -523,7 +548,7 @@ class Shoutfactorytv():
             "Directors":     None,                                                                          #Important!      
             "Availability":  None,                                                                          #Important!      
             "Download":      None,                                                                                
-            "IsOriginal":    None,                                                                          #Important!      
+            "IsOriginal":    isoriginal,                                                                    #Important!      
             "IsAdult":       None,                                                                          #Important!   
             "IsBranded":     None,                                                                          #Important!   
             "Packages":      [{"Type":"Subscription-vod"}],                                                 #Obligatorio      
@@ -536,7 +561,7 @@ class Shoutfactorytv():
         Datamanager._checkDBandAppend(self, payload_movie, self.list_db_movies_shows, self.payloads_movies)
 
     #Se encarga de llenar el payload de series
-    def payload_shows(self, id_hash, deeplink, title, image, description, seasons, genre):
+    def payload_shows(self, id_hash, deeplink, title, image, description, seasons, genre, isoriginal):
         payload_show = {
             "PlatformCode":  self._platform_code,                                                           #Obligatorio      
             "Id":            id_hash,                                                                       #Obligatorio
@@ -562,7 +587,7 @@ class Shoutfactorytv():
             "Directors":     None,                                                                          #Important!      
             "Availability":  None,                                                                          #Important!      
             "Download":      None,                                                                  
-            "IsOriginal":    None,                                                                          #Important!      
+            "IsOriginal":    isoriginal,                                                                    #Important!      
             "IsAdult":       None,                                                                          #Important!   
             "IsBranded":     None,                                                                          #Important!   
             "Packages":      [{"Type":"Subscription-vod"}],                                                 #Obligatorio      
@@ -575,7 +600,7 @@ class Shoutfactorytv():
         Datamanager._checkDBandAppend(self, payload_show, self.list_db_movies_shows, self.payloads_shows)
 
     #Se encarga de llenar el payload de episodios
-    def payload_episodes(self, id_hash, deeplink, title, image, duration, description, season, episode, parent_id, parent_title, genre):
+    def payload_episodes(self, id_hash, deeplink, title, image, duration, description, season, episode, parent_id, parent_title, parent_genre, parent_isoriginal):
         payload_episode = {
             "PlatformCode":  self._platform_code,                                                           #Obligatorio      
             "Id":            id_hash,                                                                       #Obligatorio
@@ -597,18 +622,18 @@ class Shoutfactorytv():
             "Image":         image,                                                                               
             "Rating":        None,                                                                          #Important!      
             "Provider":      None,                                                                               
-            "Genres":        [genre],                                                                       #Important!      
+            "Genres":        [parent_genre],                                                                #Important!      
             "Cast":          None,                                                                               
             "Directors":     None,                                                                          #Important!      
             "Availability":  None,                                                                          #Important!      
             "Download":      None,                                                                               
-            "IsOriginal":    None,                                                                          #Important!      
+            "IsOriginal":    parent_isoriginal,                                                             #Important!      
             "IsAdult":       None,                                                                          #Important!   
             "IsBranded":     None,                                                                          #Important!   
             "Packages":      [{"Type":"Subscription-vod"}],                                                 #Obligatorio      
             "Country":       None,      
             "Timestamp":     datetime.now().isoformat(),                                                    #Obligatorio      
-            "CreatedAt":     self._created_at,                                                              #Obligatorio
+            "CreatedAt":     self._created_at                                                               #Obligatorio
         }
 
         #Compara el payload_episode con lo que existe en la DB y lo guarda en payload_episodes
