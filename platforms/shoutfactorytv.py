@@ -115,13 +115,13 @@ class Shoutfactorytv():
             "Id":            "str", #Obligatorio
             "ParentId":      "str", #Obligatorio #Unicamente en Episodios
             "ParentTitle":   "str", #Unicamente en Episodios 
-            "Episode":       "int",#Obligatorio #Unicamente en Episodios  
-            "Season":        "int", #Obligatorio #Unicamente en Episodios
+            "Episode":       int(),#Obligatorio #Unicamente en Episodios  
+            "Season":        int(), #Obligatorio #Unicamente en Episodios
             "Title":         "str", #Obligatorio      
             "OriginalTitle": "str",                          
             "Year":          "int",     #Important!     
             "Duration":      "int",      
-            "ExternalIds":   "list", 
+            "ExternalIds":   [], 
             "Deeplinks": {          
                 "Web":       "str",       #Obligatorio          
                 "Android":   "str",          
@@ -136,12 +136,12 @@ class Shoutfactorytv():
             "Cast":          None,    #Important!        
             "Directors":     None,    #Important!      
             "Availability":  "str",     #Important!      
-            "Download":      "bool",      
-            "IsOriginal":    "bool",    #Important!      
-            "IsAdult":       "bool",    #Important!   
+            "Download":      False,      
+            "IsOriginal":    True,    #Important!      
+            "IsAdult":       None,    #Important!   
             "IsBranded":     "bool",    #Important!   (ver link explicativo)
             "Packages":      "list",    #Obligatorio      
-            "Country":       "list",      
+            "Country":       [],      
             "Timestamp":     "str", #Obligatorio      
             "CreatedAt":     "str", #Obligatorio 
         }
@@ -166,9 +166,11 @@ class Shoutfactorytv():
             self._scraping()
 
     def _scraping(self, testing=False):
+        ## ACA COMIENZA EL SCRAPREO
         content = requests.get(self._url)
         self.get_payload(type='movie', page=content)
         self.get_payload(type='serie', page=content)        # Tambien
+        Upload(self._platform_code, self._created_at, testing=self.testing)
 
     def get_category_link(self, content):
         return self._url + content['href']
@@ -193,7 +195,10 @@ class Shoutfactorytv():
     def get_synopsis(self, deeplink):
         page_content = requests.get(deeplink)
         soup = BS(page_content.content, 'html.parser')
-        return soup.find('p').getText()
+        try:
+            return soup.find('p').getText()
+        except:
+            return None
 
     def get_content_soup(self, page):
         soup = BS(page.content, 'html.parser')
@@ -268,6 +273,8 @@ class Shoutfactorytv():
 
         soup = BS(content, 'lxml')
         search_movie_soup = soup.find("div",{"class":"video-container"})
+        if search_movie_soup == None:
+            return 0
         movies = search_movie_soup.find_all("article")
         for movie in movies: 
             if movie_id == (movie.a["href"].split("/")[-1]):
@@ -387,8 +394,8 @@ class Shoutfactorytv():
             payload_episode["Id"]               = self.get_id(titles[i].text, deeplink)
             payload_episode["ParentId"]         = parentId
             payload_episode["ParentTitle"]      = parentTitle
-            payload_episode["Episode"]          = str(serie_info[i][3])
-            payload_episode["Season"]           = str(re.sub(r"[^0-9]", '', serie_info[i][1]))
+            payload_episode["Episode"]          = int(serie_info[i][3])
+            payload_episode["Season"]           = int(re.sub(r"[^0-9]", '', serie_info[i][1]))
             payload_episode["Title"]            = str(titles[i].text)
             payload_episode["OriginalTitle"]    = str(titles[i].text)
             payload_episode["Year"]             = int(1999)
@@ -397,7 +404,7 @@ class Shoutfactorytv():
             payload_episode["Synopsis"]         = synopsis
             payload_episode["Genre"]            = genre.text
             payload_episode['Packages']         = [{"Type":"free-vod"}]
-            payload_episode['Country']          = "US"
+            payload_episode['Country']          = ["US"]
             payload_episode["Timestamp"]        = datetime.now().isoformat()
             payload_episode["CreatedAt"]        = self._created_at
             Datamanager._checkDBandAppend(self, payload_episode, self.payloads_episodes_db, self.payloads_episodes, isEpi = True)
