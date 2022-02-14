@@ -83,30 +83,30 @@ class Shoutfactorytv():
             "Type":             None,     #Obligatorio  #movie o serie     
             "Year":             None,     #Important!  1870 a año actual  
             "Duration":         None,     #en minutos   
-            "ExternalIds":      "list", #*      
+            "ExternalIds":      [], #*      
             "Deeplinks": {
                 "Web":          "str",       #Obligatorio          
                 "Android":      "str",          
                 "iOS":          "str",      
             },
             "Synopsis":         "str",      
-            "Image":            "image",    
+            "Image":            [],    
             "Rating":           "str",     #Important!      
-            "Provider":         "list",      
+            "Provider":         [],      
             "Genres":           None,    #Important!      
-            "Cast":             "list",    #Important!  
-            "Directors":        "list",    #Important!      
+            "Cast":             [],    #Important!  
+            "Directors":        [],    #Important!      
             "Availability":     "str",     #Important!      
-            "Download":         "bool",      
-            "IsOriginal":       "bool",    #Important!  
-            "IsAdult":          "bool",    #Important!   
-            "IsBranded":        "bool",    #Important!   (ver link explicativo)
+            "Download":         None,      
+            "IsOriginal":       None,    #Important!  
+            "IsAdult":          None,    #Important!   
+            "IsBranded":        None,    #Important!   (ver link explicativo)
             "Packages": [
                     {
                         "asd":"asd"
                     }
             ],    #Obligatorio      
-            "Country":          "list",
+            "Country":          [],
             "Timestamp":        "str", #Obligatorio
             "CreatedAt":        self._created_at #Obligatorio
         }
@@ -168,9 +168,11 @@ class Shoutfactorytv():
 
     def _scraping(self, testing=False):
         ## ACA COMIENZA EL SCRAPREO
-        content = requests.get(self._url)
+        content = self.sesion.get(self._url)
         self.get_payload(type='movie', page=content)
         self.get_payload(type='serie', page=content)        # Tambien
+
+        self.sesion.close()
         Upload(self._platform_code, self._created_at, testing=self.testing)
 
     def get_category_link(self, content):
@@ -189,12 +191,12 @@ class Shoutfactorytv():
         return hashlib.md5((title + deeplink).encode('utf-8')).hexdigest()
     
     def get_soup_from_category(self, category):
-        category_page = requests.get(category)
+        category_page = self.sesion.get(category)
         soup = BS(category_page.content, 'html.parser')
         return soup.find_all('div', class_='img-holder')
 
     def get_synopsis(self, deeplink):
-        page_content = requests.get(deeplink)
+        page_content = self.sesion.get(deeplink)
         soup = BS(page_content.content, 'html.parser')
         try:
             return soup.find('p').getText()
@@ -206,7 +208,7 @@ class Shoutfactorytv():
         return soup.find_all('div', class_='divRow') 
 
     def get_number_of_episodes_from_season(self, deeplink, season):
-        page = requests.get(deeplink)
+        page = self.sesion.get(deeplink)
         soup = BS(page.content, "html.parser")
         temp  = soup.find_all("div", class_="caption")
         for episode in temp:
@@ -216,7 +218,7 @@ class Shoutfactorytv():
         return 0
 
     def get_number_of_seasons(self, deeplink):
-        page = requests.get(deeplink)
+        page = self.sesion.get(deeplink)
         soup = BS(page.content, 'html.parser')
         temp = soup.find_all("ul", class_="tabset series")
         number_of_season = temp[0].find_all('a')
@@ -225,7 +227,7 @@ class Shoutfactorytv():
 
     def get_episode_info(self, deeplink):
         #seasons = self.get_number_of_seasons(deeplink)
-        page = requests.get(deeplink)
+        page = self.sesion.get(deeplink)
         soup = BS(page.content, "html.parser")
         temp  = soup.find_all("div", class_="caption")
 
@@ -238,7 +240,7 @@ class Shoutfactorytv():
         return info
 
     def test_function(self, deeplink):
-        page = requests.get(deeplink)
+        page = self.sesion.get(deeplink)
         self.get_number_of_seasons(page)
 
     def get_season_info(self, id, title, image, deeplink):
@@ -269,7 +271,7 @@ class Shoutfactorytv():
         movie_id = deeplink.split("/")[-1]
 
         search_info = 'https://www.shoutfactorytv.com/videos?utf8=%E2%9C%93&commit=submit&q=' + movie_id 
-        page = requests.get(search_info)
+        page = self.sesion.get(search_info)
         content = page.text
 
         soup = BS(content, 'lxml')
@@ -286,7 +288,7 @@ class Shoutfactorytv():
 
     def get_duration_and_synopsis_for_episode(self, href):
         search_info = 'https://www.shoutfactorytv.com/videos?utf8=%E2%9C%93&commit=submit&q=' + href 
-        page = requests.get(search_info)
+        page = self.sesion.get(search_info)
         content = page.text
         soup = BS(content, 'lxml')
         search_episode_soup = soup.find('div', class_='video-container')
@@ -379,7 +381,7 @@ class Shoutfactorytv():
         Datamanager._insertIntoDB(self, self.payloads_db, self.titanScraping)
 
     def get_payload_episodes(self, parentTitle, parentId, genre, deeplink):
-        serie = requests.get(deeplink)
+        serie = self.sesion.get(deeplink)
         soup = BS(serie.content, 'lxml')
 
         deeplinks = soup.find_all('div', class_='holder')
